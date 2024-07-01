@@ -19,7 +19,7 @@ function copy_daml {
     done
 }
 
-pkgs=$(ls -I "dars*" -I "splitwell*" $CN_REPO_ROOT/daml)
+pkgs=$(ls "$CN_REPO_ROOT/daml" | grep -v '^\(dars\|splitwell\)')
 
 copy_daml $CN_REPO_ROOT/daml daml
 
