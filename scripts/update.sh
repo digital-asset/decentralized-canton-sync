@@ -23,19 +23,4 @@ pkgs=$(ls "$CN_REPO_ROOT/daml" | grep -v '^\(dars\|splitwell\)')
 
 copy_daml $CN_REPO_ROOT/daml daml
 
-prepend_copyright() {
-    read -r -d '' COPYRIGHT_ESCAPED << 'EOF'
--- Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
--- SPDX-License-Identifier: Apache-2.0
-EOF
-    file="$1"
-    first_line=$(head -n 1 "$file")
-    if [[ ! "$first_line" =~ ^--\ Copyright ]]; then
-        echo -e "$COPYRIGHT_ESCAPED\n" | cat - "$file" > "$file.tmp" && mv "$file.tmp" "$file"
-    fi    
-}
-export -f prepend_copyright
-
-find daml -type f -name \*.daml -exec bash -c 'prepend_copyright "$0"' {} \;
-
 copy_daml daml $SPLICE_REPO_ROOT/daml
