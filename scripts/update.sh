@@ -24,3 +24,6 @@ pkgs=$(ls "$CN_REPO_ROOT/daml" | grep -v '^\(dars\|splitwell\)')
 copy_daml $CN_REPO_ROOT/daml daml
 
 copy_daml daml $SPLICE_REPO_ROOT/daml
+
+cp -r $CN_REPO_ROOT/scripts/scan-txlog scripts/scan-txlog
+cp -r scripts/scan-txlog $SPLICE_REPO_ROOT/scripts/scan-txlog
