@@ -1,0 +1,18 @@
+# Replace MIGRATION_ID with the current migration ID of the global synchronizer.
+migration:
+  id: "MIGRATION_ID"
+
+# replace MIGRATION_ID with the current migration ID of the global synchronizer
+participantAddress: "participant-MIGRATION_ID"
+
+svValidator: true
+useSequencerConnectionsFromScan: false
+# Replace MIGRATION_ID with the current migration ID of the global synchronizer.
+decentralizedSynchronizerUrl: "https://sequencer-MIGRATION_ID.sv-2.TARGET_HOSTNAME"
+
+persistence:
+  host: apps-pg
+  secretName: apps-pg-secret
+
+topup:
+  enabled: false

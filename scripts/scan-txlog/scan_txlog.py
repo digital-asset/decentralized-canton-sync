@@ -1746,6 +1746,13 @@ class State:
                 cause=e,
             )
 
+        for cid, ev in self.active_contracts.items():
+            if not isinstance(ev, CreatedEvent):
+                self._fail(
+                    transaction,
+                    f"Unexpected non-create event in active contracts for {cid}: {ev}",
+                )
+
         # This is a sanity check to make sure the code does not
         # forget tracking an ACS change.
         acs_diff = transaction.acs_diff()
@@ -2170,7 +2177,7 @@ class State:
                         if i.initial_amount
                         else DamlDecimal(0)
                     ),
-                    "currency": "CC"
+                    "currency": "CC",
                 },
                 parties=interested_parties,
             )
@@ -2263,7 +2270,8 @@ class State:
         for event_id in event.child_event_ids:
             event = transaction.events_by_id[event_id]
             if (
-                event.template_id.qualified_name
+                isinstance(event, CreatedEvent)
+                and event.template_id.qualified_name
                 == TemplateQualifiedNames.validator_reward_coupon
             ):
                 self.active_contracts[event.contract_id] = event
@@ -2351,7 +2359,7 @@ class State:
                         if i.initial_amount
                         else DamlDecimal(0)
                     ),
-                    "currency": " CC"
+                    "currency": " CC",
                 },
                 parties=interested_parties,
             )
@@ -3308,8 +3316,8 @@ async def _process_transaction(args, app_state, scan_client, transaction):
 
     if transaction.is_acs_import():
         # We need to skip ACS imports for hard domain migrations since those contracts have already been processed on the old migration id.
-        # Note that this also ignores the ACS import of non-founding SVs atm. This would be correct once we do backfilling of history
-        # but until then this script can only run against the founding SV.
+        # Note that this also ignores the ACS import of non-sv1 SVs atm. This would be correct once we do backfilling of history
+        # but until then this script can only run against sv1.
         LOG.debug(
             f"Skipping ACS import in transaction ${transaction.update_id} at ({transaction.migration_id}, {transaction.record_time})"
         )
