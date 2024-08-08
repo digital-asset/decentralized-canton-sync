@@ -1,0 +1,13 @@
+clusterUrl: "TARGET_HOSTNAME"
+
+# Replace MIGRATION_ID with the current migration ID of the global synchronizer.
+migration:
+  id: "MIGRATION_ID"
+
+# Replace MIGRATION_ID with the current migration ID of the global synchronizer.
+participantAddress: "participant-MIGRATION_ID"
+sequencerAddress: "global-domain-MIGRATION_ID-sequencer"
+
+persistence:
+  host: apps-pg
+  secretName: apps-pg-secret
