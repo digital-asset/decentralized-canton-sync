@@ -53,11 +53,16 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters.*
 
 trait MultiDomainAcsStore extends HasIngestionSink with AutoCloseable with NamedLogging {
-  private implicit val mc: MetricsContext = MetricsContext(
-    "store_name" -> this.getClass.getSimpleName
+  protected def storeName: String
+  protected def storeParty: String
+
+  protected implicit lazy val mc: MetricsContext = MetricsContext(
+    "store_name" -> storeName,
+    "store_party" -> storeParty,
   )
   protected def metricsFactory: LabeledMetricsFactory
-  val metrics = new StoreMetrics(metricsFactory)
+
+  protected def metrics: StoreMetrics
 
   import MultiDomainAcsStore.*
 
