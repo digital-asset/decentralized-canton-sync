@@ -5,27 +5,32 @@ package com.digitalasset.canton.participant.protocol.validation
 
 import cats.data.EitherT
 import cats.syntax.parallel.*
+import com.daml.lf.data.ImmArray
+import com.daml.lf.data.Ref.{PackageId, PackageName}
+import com.daml.lf.engine
+import com.daml.lf.language.Ast.{Expr, GenPackage, PackageMetadata}
+import com.daml.lf.language.LanguageVersion
 import com.daml.nonempty.{NonEmpty, NonEmptyUtil}
-import com.digitalasset.canton.data.*
-import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
-import com.digitalasset.canton.logging.pretty.Pretty
-import com.digitalasset.canton.participant.protocol.EngineController.{
-  EngineAbortStatus,
-  GetEngineAbortStatus,
+import com.digitalasset.canton.data.{
+  CantonTimestamp,
+  FreeKey,
+  FullTransactionViewTree,
+  TransactionView,
 }
+import com.digitalasset.canton.logging.pretty.Pretty
 import com.digitalasset.canton.participant.protocol.submission.TransactionTreeFactoryImpl
 import com.digitalasset.canton.participant.protocol.validation.ModelConformanceChecker.*
 import com.digitalasset.canton.participant.protocol.{
   SerializableContractAuthenticator,
   TransactionProcessingSteps,
 }
-import com.digitalasset.canton.participant.store.ContractLookupAndVerification
-import com.digitalasset.canton.participant.util.DAMLe
-import com.digitalasset.canton.participant.util.DAMLe.{EngineError, HasReinterpret, PackageResolver}
-import com.digitalasset.canton.protocol.ExampleTransactionFactory.*
+import com.digitalasset.canton.participant.store.ContractLookup
+import com.digitalasset.canton.participant.util.DAMLe.PackageResolver
+import com.digitalasset.canton.protocol.ExampleTransactionFactory.{lfHash, submittingParticipant}
 import com.digitalasset.canton.protocol.*
 import com.digitalasset.canton.topology.client.TopologySnapshot
-import com.digitalasset.canton.topology.store.PackageDependencyResolverUS
+import com.digitalasset.canton.topology.transaction.VettedPackagesX
+import com.digitalasset.canton.topology.{TestingIdentityFactoryX, TestingTopologyX}
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.FutureInstances.*
 import com.digitalasset.canton.{
@@ -37,16 +42,11 @@ import com.digitalasset.canton.{
   LfPartyId,
   RequestCounter,
 }
-import com.digitalasset.daml.lf.data.ImmArray
-import com.digitalasset.daml.lf.data.Ref.{PackageId, PackageName}
-import com.digitalasset.daml.lf.engine.Error as LfError
-import com.digitalasset.daml.lf.language.Ast.{Expr, GenPackage, PackageMetadata}
-import com.digitalasset.daml.lf.language.LanguageVersion
+import org.scalatest.Assertion
 import org.scalatest.wordspec.AsyncWordSpec
 import pprint.Tree
 
 import java.time.Duration
-import scala.annotation.unused
 import scala.concurrent.{ExecutionContext, Future}
 
 class ModelConformanceCheckerTest extends AsyncWordSpec with BaseTest {
@@ -60,66 +60,49 @@ class ModelConformanceCheckerTest extends AsyncWordSpec with BaseTest {
   val ledgerTimeRecordTimeTolerance: Duration = Duration.ofSeconds(10)
 
   def validateContractOk(
-      @unused _contract: SerializableContract,
-      @unused _getEngineAbortStatus: GetEngineAbortStatus,
-      @unused _context: TraceContext,
+      contract: SerializableContract,
+      context: TraceContext,
   ): EitherT[Future, ContractValidationFailure, Unit] = EitherT.pure(())
 
-  def reinterpretExample(
-      example: ExampleTransaction,
-      usedPackages: Set[PackageId] = Set.empty,
-  ): HasReinterpret = new HasReinterpret {
+  def reinterpret(example: ExampleTransaction)(
+      _contracts: ContractLookup,
+      _submitters: Set[LfPartyId],
+      cmd: LfCommand,
+      ledgerTime: CantonTimestamp,
+      submissionTime: CantonTimestamp,
+      rootSeed: Option[LfHash],
+      _inRollback: Boolean,
+      _viewHash: ViewHash,
+      _traceContext: TraceContext,
+      _packageResolution: Map[PackageName, PackageId],
+  ): EitherT[Future, DAMLeError, (LfVersionedTransaction, TransactionMetadata, LfKeyResolver)] = {
 
-    override def reinterpret(
-        contracts: ContractLookupAndVerification,
-        submitters: Set[LfPartyId],
-        command: LfCommand,
-        ledgerTime: CantonTimestamp,
-        submissionTime: CantonTimestamp,
-        rootSeed: Option[LfHash],
-        packageResolution: Map[PackageName, PackageId],
-        expectFailure: Boolean,
-        getEngineAbortStatus: GetEngineAbortStatus,
-    )(implicit traceContext: TraceContext): EitherT[
-      Future,
-      DAMLe.ReinterpretationError,
-      (LfVersionedTransaction, TransactionMetadata, LfKeyResolver, Set[PackageId]),
-    ] = {
-      ledgerTime shouldEqual factory.ledgerTime
-      submissionTime shouldEqual factory.submissionTime
+    ledgerTime shouldEqual factory.ledgerTime
+    submissionTime shouldEqual factory.submissionTime
 
-      val (_, (reinterpretedTx, metadata, keyResolver), _) = {
-        // The code below assumes that for reinterpretedSubtransactions the combination
-        // of command and root-seed wil be unique. In the examples used to date this is
-        // the case. A limitation of this approach is that only one LookupByKey transaction
-        // can be returned as the root seed is unset in the ReplayCommand.
-        example.reinterpretedSubtransactions.find { case (viewTree, (tx, md, _), _) =>
-          viewTree.viewParticipantData.rootAction.command == command &&
-          md.seeds.get(tx.roots(0)) == rootSeed
-        }.value
-      }
+    val (_viewTree, (reinterpretedTx, metadata, keyResolver), _witnesses) =
+      example.reinterpretedSubtransactions.find { case (viewTree, (tx, md, keyResolver), _) =>
+        viewTree.viewParticipantData.rootAction.command == cmd &&
+        // Commands are otherwise not sufficiently unique (whereas with nodes, we can produce unique nodes).
+        rootSeed == md.seeds.get(tx.roots(0))
+      }.value
 
-      EitherT.rightT((reinterpretedTx, metadata, keyResolver, usedPackages))
-    }
+    EitherT.rightT[Future, DAMLeError]((reinterpretedTx, metadata, keyResolver))
   }
 
-  val failOnReinterpret: HasReinterpret = new HasReinterpret {
-    override def reinterpret(
-        contracts: ContractLookupAndVerification,
-        submitters: Set[LfPartyId],
-        command: LfCommand,
-        ledgerTime: CantonTimestamp,
-        submissionTime: CantonTimestamp,
-        rootSeed: Option[LfHash],
-        packageResolution: Map[PackageName, PackageId],
-        expectFailure: Boolean,
-        getEngineAbortStatus: GetEngineAbortStatus,
-    )(implicit traceContext: TraceContext): EitherT[
-      Future,
-      DAMLe.ReinterpretationError,
-      (LfVersionedTransaction, TransactionMetadata, LfKeyResolver, Set[PackageId]),
-    ] = fail("Reinterpret should not be called by this test case.")
-  }
+  def failOnReinterpret(
+      _contracts: ContractLookup,
+      _submitters: Set[LfPartyId],
+      cmd: LfCommand,
+      ledgerTime: CantonTimestamp,
+      submissionTime: CantonTimestamp,
+      rootSeed: Option[LfHash],
+      _inRollback: Boolean,
+      _viewHash: ViewHash,
+      _traceContext: TraceContext,
+      _packageResolution: Map[PackageName, PackageId],
+  ): EitherT[Future, DAMLeError, (LfVersionedTransaction, TransactionMetadata, LfKeyResolver)] =
+    fail("Reinterpret should not be called by this test case.")
 
   def viewsWithNoInputKeys(
       rootViews: Seq[FullTransactionViewTree]
@@ -127,7 +110,7 @@ class ModelConformanceCheckerTest extends AsyncWordSpec with BaseTest {
     NonEmptyUtil.fromUnsafe(rootViews.map { viewTree =>
       // Include resolvers for all the subviews
       val resolvers =
-        viewTree.view.allSubviewsWithPosition(viewTree.viewPosition).map { case (view, _) =>
+        viewTree.view.allSubviewsWithPosition(viewTree.viewPosition).map { case (view, _viewPos) =>
           view -> (Map.empty: LfKeyResolver)
         }
       (viewTree, resolvers)
@@ -158,17 +141,8 @@ class ModelConformanceCheckerTest extends AsyncWordSpec with BaseTest {
   ): EitherT[Future, ErrorWithSubTransaction, Result] = {
     val rootViewTrees = views.map(_._1)
     val commonData = TransactionProcessingSteps.tryCommonData(rootViewTrees)
-    val keyResolvers = views.forgetNE.flatMap { case (_, resolvers) => resolvers }.toMap
-    mcc
-      .check(
-        rootViewTrees,
-        keyResolvers,
-        RequestCounter(0),
-        ips,
-        commonData,
-        getEngineAbortStatus = () => EngineAbortStatus.notAborted,
-      )
-      .failOnShutdown
+    val keyResolvers = views.forgetNE.flatMap { case (_vt, resolvers) => resolvers }.toMap
+    mcc.check(rootViewTrees, keyResolvers, RequestCounter(0), ips, commonData)
   }
 
   val packageName: LfPackageName = PackageName.assertFromString("package-name")
@@ -176,18 +150,8 @@ class ModelConformanceCheckerTest extends AsyncWordSpec with BaseTest {
   val packageMetadata: PackageMetadata = PackageMetadata(packageName, packageVersion, None)
   val genPackage: GenPackage[Expr] =
     GenPackage(Map.empty, Set.empty, LanguageVersion.default, packageMetadata)
-  val packageResolver: PackageResolver = _ => _ => Future.successful(Some(genPackage))
-
-  def buildUnderTest(reinterpretCommand: HasReinterpret): ModelConformanceChecker =
-    new ModelConformanceChecker(
-      reinterpretCommand,
-      validateContractOk,
-      transactionTreeFactory,
-      submittingParticipant,
-      dummyAuthenticator,
-      packageResolver,
-      loggerFactory,
-    )
+  val packageResolver: PackageResolver = pkgId =>
+    traceContext => Future.successful(Some(genPackage))
 
   "A model conformance checker" when {
     val relevantExamples = factory.standardHappyCases.filter {
@@ -199,7 +163,16 @@ class ModelConformanceCheckerTest extends AsyncWordSpec with BaseTest {
     forEvery(relevantExamples) { example =>
       s"checking $example" must {
 
-        val sut = buildUnderTest(reinterpretExample(example))
+        val sut =
+          new ModelConformanceChecker(
+            reinterpret(example),
+            validateContractOk,
+            transactionTreeFactory,
+            submittingParticipant,
+            dummyAuthenticator,
+            packageResolver,
+            loggerFactory,
+          )
 
         "yield the correct result" in {
           for {
@@ -241,7 +214,15 @@ class ModelConformanceCheckerTest extends AsyncWordSpec with BaseTest {
     }
 
     "transaction id is inconsistent" must {
-      val sut = buildUnderTest(failOnReinterpret)
+      val sut = new ModelConformanceChecker(
+        failOnReinterpret,
+        validateContractOk,
+        transactionTreeFactory,
+        submittingParticipant,
+        dummyAuthenticator,
+        packageResolver,
+        loggerFactory,
+      )
 
       val singleCreate = factory.SingleCreate(seed = ExampleTransactionFactory.lfHash(0))
       val viewTreesWithInconsistentTransactionIds = Seq(
@@ -265,53 +246,59 @@ class ModelConformanceCheckerTest extends AsyncWordSpec with BaseTest {
         override def treeOf(t: ViewHash): Tree = Apply("[ViewHash]", Seq.empty.iterator)
       })
 
-      val lfError = mock[LfError]
-      val error = EngineError(lfError)
+      val error = DAMLeError(mock[engine.Error], mockViewHash)
 
-      val sut = buildUnderTest(new HasReinterpret {
-        override def reinterpret(
-            contracts: ContractLookupAndVerification,
-            submitters: Set[LfPartyId],
-            command: LfCommand,
-            ledgerTime: CantonTimestamp,
-            submissionTime: CantonTimestamp,
-            rootSeed: Option[LfHash],
-            packageResolution: Map[PackageName, PackageId],
-            expectFailure: Boolean,
-            getEngineAbortStatus: GetEngineAbortStatus,
-        )(implicit traceContext: TraceContext): EitherT[
-          Future,
-          DAMLe.ReinterpretationError,
-          (LfVersionedTransaction, TransactionMetadata, LfKeyResolver, Set[PackageId]),
-        ] = EitherT.leftT(error)
-      })
-
+      val sut = new ModelConformanceChecker(
+        (_, _, _, _, _, _, _, _, _, _) =>
+          EitherT.leftT[Future, (LfVersionedTransaction, TransactionMetadata, LfKeyResolver)](
+            error
+          ),
+        validateContractOk,
+        transactionTreeFactory,
+        submittingParticipant,
+        dummyAuthenticator,
+        packageResolver,
+        loggerFactory,
+      )
       val example = factory.MultipleRootsAndViewNestings
 
+      def countLeaves(views: NonEmpty[Seq[TransactionView]]): Int =
+        views.foldLeft(0)((count, view) => {
+          NonEmpty.from(view.subviews.unblindedElements) match {
+            case Some(subviewsNE) => count + countLeaves(subviewsNE)
+            case None => count + 1
+          }
+        })
+      val nbLeafViews = countLeaves(NonEmptyUtil.fromUnsafe(example.rootViews))
+
       "yield an error" in {
-        val exampleTree = example.transactionViewTree0
         for {
           failure <- leftOrFail(
             check(
               sut,
-              viewsWithNoInputKeys(Seq(exampleTree)),
+              viewsWithNoInputKeys(example.rootTransactionViewTrees),
             )
           )("reinterpretation fails")
-        } yield {
-          failure.errors.forgetNE shouldBe Seq(
-            DAMLeError(EngineError(lfError), exampleTree.viewHash)
-          )
-        }
+        } yield failure.errors shouldBe Seq.fill(nbLeafViews)(error) // One error per leaf
       }
     }
 
-    "checking an upgraded contract" should {
+    "contract upgrading is enabled" should {
 
       val example: factory.UpgradedSingleExercise = factory.UpgradedSingleExercise(lfHash(0))
 
-      "allow the choice package to differ from the contract package" in {
+      "the choice package may differ from the contract package" in {
 
-        val sut = buildUnderTest(reinterpretExample(example))
+        val sut =
+          new ModelConformanceChecker(
+            reinterpret(example),
+            validateContractOk,
+            transactionTreeFactory,
+            submittingParticipant,
+            dummyAuthenticator,
+            packageResolver,
+            loggerFactory,
+          )
 
         valueOrFail(
           check(sut, viewsWithNoInputKeys(example.rootTransactionViewTrees))
@@ -331,30 +318,21 @@ class ModelConformanceCheckerTest extends AsyncWordSpec with BaseTest {
           fetchNode(
             subviewMissing.contractId,
             actingParties = Set(submitter),
-            signatories = Set(submitter, extra),
+            signatories = Set(submitter),
           ),
         )
-
-        val sut = buildUnderTest(new HasReinterpret {
-          override def reinterpret(
-              contracts: ContractLookupAndVerification,
-              submitters: Set[LfPartyId],
-              command: LfCommand,
-              ledgerTime: CantonTimestamp,
-              submissionTime: CantonTimestamp,
-              rootSeed: Option[LfHash],
-              packageResolution: Map[PackageName, PackageId],
-              expectFailure: Boolean,
-              getEngineAbortStatus: GetEngineAbortStatus,
-          )(implicit traceContext: TraceContext): EitherT[
-            Future,
-            DAMLe.ReinterpretationError,
-            (LfVersionedTransaction, TransactionMetadata, LfKeyResolver, Set[PackageId]),
-          ] = EitherT.pure(
-            (reinterpreted, subviewMissing.metadata, subviewMissing.keyResolver, Set.empty)
-          )
-        })
-
+        val sut = new ModelConformanceChecker(
+          (_, _, _, _, _, _, _, _, _, _) =>
+            EitherT.pure[Future, DAMLeError](
+              (reinterpreted, subviewMissing.metadata, subviewMissing.keyResolver)
+            ),
+          validateContractOk,
+          transactionTreeFactory,
+          submittingParticipant,
+          dummyAuthenticator,
+          packageResolver,
+          loggerFactory,
+        )
         for {
           result <- leftOrFail(
             check(sut, viewsWithNoInputKeys(subviewMissing.rootTransactionViewTrees))
@@ -375,92 +353,100 @@ class ModelConformanceCheckerTest extends AsyncWordSpec with BaseTest {
        */
     }
 
-    "reinterpretation used package vetting" must {
-
-      "fail conformance if an un-vetted package is used" in {
-        val unexpectedPackageId = PackageId.assertFromString("unexpected-pkg")
-        val example = factory.SingleCreate(seed = factory.deriveNodeSeed(0))
-        val sut =
-          buildUnderTest(reinterpretExample(example, usedPackages = Set(unexpectedPackageId)))
-        val expected = Left(
-          ErrorWithSubTransaction(
-            NonEmpty(
-              Seq,
-              UnvettedPackages(
-                Map(
-                  submittingParticipant -> Set(unexpectedPackageId),
-                  observerParticipant -> Set(unexpectedPackageId),
-                )
-              ),
-            ),
-            None,
-            Seq.empty,
-          )
+    "a package (referenced by create) is not vetted by some participant" must {
+      "yield an error" in {
+        import ExampleTransactionFactory.*
+        testVettingError(
+          NonEmpty.from(factory.SingleCreate(lfHash(0)).rootTransactionViewTrees).value,
+          // The package is not vetted for signatoryParticipant
+          vettings = Seq(VettedPackagesX(submittingParticipant, None, Seq(packageId))),
+          packageDependenciesLookup = _ => EitherT.rightT(Set()),
+          expectedError = UnvettedPackages(Map(signatoryParticipant -> Set(packageId))),
         )
-        for {
-          actual <- check(sut, viewsWithNoInputKeys(example.rootTransactionViewTrees)).value
-        } yield {
-          actual shouldBe expected
-        }
       }
+    }
+
+    "a package (referenced by key lookup) is not vetted by some participant" must {
+      "yield an error" in {
+        import ExampleTransactionFactory.*
+
+        val key = defaultGlobalKey
+        val maintainers = Set(submitter)
+        val view = factory.view(
+          lookupByKeyNode(key, Set(submitter), None),
+          0,
+          Set.empty,
+          Seq.empty,
+          Seq.empty,
+          Map(key -> FreeKey(maintainers)(LfTransactionVersion.minVersion)),
+          None,
+          isRoot = true,
+        )
+        val viewTree = factory.rootTransactionViewTree(view)
+
+        testVettingError(
+          NonEmpty(Seq, viewTree),
+          // The package is not vetted for submittingParticipant
+          vettings = Seq.empty,
+          packageDependenciesLookup = _ => EitherT.rightT(Set()),
+          expectedError = UnvettedPackages(Map(submittingParticipant -> Set(key.packageId.value))),
+        )
+      }
+    }
+
+    def testVettingError(
+        rootViewTrees: NonEmpty[Seq[FullTransactionViewTree]],
+        vettings: Seq[VettedPackagesX],
+        packageDependenciesLookup: PackageId => EitherT[Future, PackageId, Set[PackageId]],
+        expectedError: UnvettedPackages,
+    ): Future[Assertion] = {
+      import ExampleTransactionFactory.*
+
+      val sut = new ModelConformanceChecker(
+        reinterpret = failOnReinterpret,
+        validateContract = validateContractOk,
+        transactionTreeFactory = transactionTreeFactory,
+        participantId = submittingParticipant,
+        serializableContractAuthenticator = dummyAuthenticator,
+        packageResolver = packageResolver,
+        loggerFactory,
+      )
+
+      val snapshot = TestingIdentityFactoryX(
+        TestingTopologyX(
+        ).withTopology(Map(submitter -> submittingParticipant, observer -> signatoryParticipant))
+          .withPackages(vettings.map(vetting => vetting.participantId -> vetting.packageIds).toMap),
+        loggerFactory,
+        TestDomainParameters.defaultDynamic,
+      ).topologySnapshot(packageDependencies = packageDependenciesLookup)
+
+      for {
+        error <- check(sut, viewsWithNoInputKeys(rootViewTrees), snapshot).value
+      } yield error shouldBe Left(
+        ErrorWithSubTransaction(
+          NonEmpty(Seq, expectedError),
+          None,
+          Seq.empty,
+        )
+      )
     }
 
     "a package is not found in the package store" must {
-
-      "fail with an engine error" in {
-
-        val missingPackageId = PackageId.assertFromString("missing-pkg")
-        val example = factory.SingleCreate(seed = factory.deriveNodeSeed(0))
-        val engineError =
-          EngineError(new LfError.Package(LfError.Package.MissingPackage(missingPackageId)))
-        val sut =
-          buildUnderTest(new HasReinterpret {
-            override def reinterpret(
-                contracts: ContractLookupAndVerification,
-                submitters: Set[LfPartyId],
-                command: LfCommand,
-                ledgerTime: CantonTimestamp,
-                submissionTime: CantonTimestamp,
-                rootSeed: Option[LfHash],
-                packageResolution: Map[PackageName, PackageId],
-                expectFailure: Boolean,
-                getEngineAbortStatus: GetEngineAbortStatus,
-            )(implicit traceContext: TraceContext): EitherT[
-              Future,
-              DAMLe.ReinterpretationError,
-              (LfVersionedTransaction, TransactionMetadata, LfKeyResolver, Set[PackageId]),
-            ] = EitherT.fromEither(Left(engineError))
-          })
-        val viewHash = example.transactionViewTrees.head.viewHash
-        val expected = Left(
-          ErrorWithSubTransaction(
-            NonEmpty(
-              Seq,
-              DAMLeError(engineError, viewHash),
-            ),
-            None,
-            Seq.empty,
-          )
+      "yield an error" in {
+        import ExampleTransactionFactory.*
+        testVettingError(
+          NonEmpty.from(factory.SingleCreate(lfHash(0)).rootTransactionViewTrees).value,
+          vettings = Seq(
+            VettedPackagesX(submittingParticipant, None, Seq(packageId)),
+            VettedPackagesX(signatoryParticipant, None, Seq(packageId)),
+          ),
+          // Submitter participant is unable to lookup dependencies.
+          // Therefore, the validation concludes that the package is not in the store
+          // and thus that the package is not vetted.
+          packageDependenciesLookup = EitherT.leftT(_),
+          expectedError = UnvettedPackages(Map(submittingParticipant -> Set(packageId))),
         )
-        for {
-          actual <- check(sut, viewsWithNoInputKeys(example.rootTransactionViewTrees)).value
-        } yield {
-          actual shouldBe expected
-        }
       }
-
-    }
-
-  }
-
-  class TestPackageResolver(result: Either[PackageId, Set[PackageId]])
-      extends PackageDependencyResolverUS {
-    import cats.syntax.either.*
-    override def packageDependencies(packageId: PackageId)(implicit
-        traceContext: TraceContext
-    ): EitherT[FutureUnlessShutdown, PackageId, Set[PackageId]] = {
-      result.toEitherT
     }
   }
-
 }

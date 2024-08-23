@@ -7,9 +7,7 @@ import cats.syntax.functor.*
 import cats.syntax.option.*
 import com.daml.error.{ErrorCategory, ErrorCode, Explanation, Resolution}
 import com.daml.nameof.NameOf.functionFullName
-import com.digitalasset.canton.SequencerCounter
 import com.digitalasset.canton.config.ProcessingTimeout
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.error.CantonError
 import com.digitalasset.canton.error.CantonErrorGroups.SequencerSubscriptionErrorGroup
 import com.digitalasset.canton.health.{CloseableAtomicHealthComponent, ComponentHealthState}
@@ -18,19 +16,18 @@ import com.digitalasset.canton.logging.{ErrorLoggingContext, NamedLoggerFactory,
 import com.digitalasset.canton.sequencing.SerializedEventHandler
 import com.digitalasset.canton.sequencing.client.ResilientSequencerSubscription.LostSequencerSubscription
 import com.digitalasset.canton.sequencing.client.SequencerClientSubscriptionError.{
-  ApplicationHandlerException,
   ApplicationHandlerPassive,
   ApplicationHandlerShutdown,
 }
-import com.digitalasset.canton.sequencing.client.SubscriptionCloseReason.HandlerException
 import com.digitalasset.canton.sequencing.client.transports.SequencerClientTransport
 import com.digitalasset.canton.sequencing.handlers.{CounterCapture, HasReceivedEvent}
 import com.digitalasset.canton.sequencing.protocol.SubscriptionRequest
-import com.digitalasset.canton.topology.{Member, SequencerId}
+import com.digitalasset.canton.topology.{DomainId, Member, SequencerId}
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.tracing.TraceContext.withNewTraceContext
 import com.digitalasset.canton.util.{DelayUtil, FutureUtil, LoggerUtil}
 import com.digitalasset.canton.version.ProtocolVersion
+import com.digitalasset.canton.{DiscardOps, SequencerCounter}
 import org.apache.pekko.stream.AbruptStageTerminationException
 
 import java.util.concurrent.atomic.AtomicReference
@@ -53,7 +50,7 @@ import scala.util.{Failure, Success, Try}
   * For this subscription [[ResilientSequencerSubscription.start]] must be called for the underlying subscriptions to begin.
   */
 class ResilientSequencerSubscription[HandlerError](
-    sequencerId: SequencerId,
+    domainId: DomainId,
     startingFrom: SequencerCounter,
     handler: SerializedEventHandler[HandlerError],
     subscriptionFactory: SequencerSubscriptionFactory[HandlerError],
@@ -173,7 +170,7 @@ class ResilientSequencerSubscription[HandlerError](
     } else if (!isClosing) {
       TraceContext.withNewTraceContext { tx =>
         this.failureOccurred(
-          LostSequencerSubscription.Warn(sequencerId)(this.errorLoggingContext(tx))
+          LostSequencerSubscription.Warn(SequencerId(domainId))(this.errorLoggingContext(tx))
         )
       }
     }
@@ -219,11 +216,6 @@ class ResilientSequencerSubscription[HandlerError](
         logger.info("Sequencer subscription is being closed due to an ongoing shutdown")
       case Success(SubscriptionCloseReason.HandlerError(_: ApplicationHandlerShutdown.type)) =>
         logger.info("Sequencer subscription is being closed due to handler shutdown")
-      case Success(SubscriptionCloseReason.HandlerError(exception: ApplicationHandlerException)) =>
-        logger.error(
-          s"Sequencer subscription is being closed due to handler exception (this indicates a bug): $exception"
-        )
-        fatalOccurred(exception.toString)
       case Success(SubscriptionCloseReason.HandlerError(ApplicationHandlerPassive(reason))) =>
         logger.warn(
           s"Closing resilient sequencer subscription because instance became passive: $reason"
@@ -232,14 +224,10 @@ class ResilientSequencerSubscription[HandlerError](
         logger.info(
           s"Closing resilient sequencer subscription after an error due to an ongoing shutdown: $reason"
         )
-      case Success(ex: HandlerException) =>
-        logger.error(s"Closing resilient sequencer subscription due to handler exception: $ex")
-        fatalOccurred(ex.toString)
       case Success(error) =>
         logger.warn(s"Closing resilient sequencer subscription due to error: $error")
       case Failure(exception) =>
         logger.error(s"Closing resilient sequencer subscription due to exception", exception)
-        fatalOccurred(exception.toString)
     }
     closeReasonPromise.tryComplete(reason).discard
     close()
@@ -305,7 +293,7 @@ class ResilientSequencerSubscription[HandlerError](
 
 object ResilientSequencerSubscription extends SequencerSubscriptionErrorGroup {
   def apply[E](
-      sequencerId: SequencerId,
+      domainId: DomainId,
       protocolVersion: ProtocolVersion,
       member: Member,
       getTransport: => UnlessShutdown[SequencerClientTransport],
@@ -315,13 +303,14 @@ object ResilientSequencerSubscription extends SequencerSubscriptionErrorGroup {
       warnDelay: FiniteDuration,
       maxRetryDelay: FiniteDuration,
       timeouts: ProcessingTimeout,
+      requiresAuthentication: Boolean,
       loggerFactory: NamedLoggerFactory,
   )(implicit executionContext: ExecutionContext): ResilientSequencerSubscription[E] = {
     new ResilientSequencerSubscription[E](
-      sequencerId,
+      domainId,
       startingFrom,
       handler,
-      createSubscription(member, getTransport, protocolVersion),
+      createSubscription(member, getTransport, requiresAuthentication, protocolVersion),
       SubscriptionRetryDelayRule(
         initialDelay,
         warnDelay,
@@ -336,6 +325,7 @@ object ResilientSequencerSubscription extends SequencerSubscriptionErrorGroup {
   private def createSubscription[E](
       member: Member,
       getTransport: => UnlessShutdown[SequencerClientTransport],
+      requiresAuthentication: Boolean,
       protocolVersion: ProtocolVersion,
   ): SequencerSubscriptionFactory[E] =
     new SequencerSubscriptionFactory[E] {
@@ -346,7 +336,8 @@ object ResilientSequencerSubscription extends SequencerSubscriptionErrorGroup {
         getTransport
           .map { transport =>
             val subscription =
-              transport.subscribe(request, handler)(traceContext)
+              if (requiresAuthentication) transport.subscribe(request, handler)(traceContext)
+              else transport.subscribeUnauthenticated(request, handler)(traceContext)
             (subscription, transport.subscriptionRetryPolicy)
           }
       }
@@ -356,7 +347,7 @@ object ResilientSequencerSubscription extends SequencerSubscriptionErrorGroup {
     """This warning is logged when a sequencer subscription is interrupted. The system will keep on retrying to reconnect indefinitely."""
   )
   @Resolution(
-    "Monitor the situation and contact the server operator if the issue does not resolve itself automatically."
+    "Monitor the situation and contact the server operator if the issues does not resolve itself automatically."
   )
   object LostSequencerSubscription
       extends ErrorCode(
@@ -367,7 +358,8 @@ object ResilientSequencerSubscription extends SequencerSubscriptionErrorGroup {
     final case class Warn(sequencer: SequencerId, _logOnCreation: Boolean = true)(implicit
         val loggingContext: ErrorLoggingContext
     ) extends CantonError.Impl(
-          cause = s"Lost subscription to sequencer $sequencer. Will try to recover automatically."
+          cause =
+            s"Lost subscription to sequencer ${sequencer.toString}. Will try to recover automatically."
         ) {
       override def logOnCreation: Boolean = _logOnCreation
     }

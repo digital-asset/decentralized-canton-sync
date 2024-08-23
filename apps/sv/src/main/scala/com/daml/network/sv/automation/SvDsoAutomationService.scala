@@ -4,36 +4,30 @@
 package com.daml.network.sv.automation
 
 import com.daml.network.automation.{
-  AmuletConfigReassignmentTrigger,
   AssignTrigger,
   AutomationServiceCompanion,
   SpliceAppAutomationService,
   TransferFollowTrigger,
 }
 import com.daml.network.automation.AutomationServiceCompanion.{TriggerClass, aTrigger}
-import com.daml.network.codegen.java.splice.amuletrules.AmuletRules
-import com.daml.network.codegen.java.splice.dsorules.DsoRules
-import com.daml.network.codegen.java.splice.round.{IssuingMiningRound, OpenMiningRound}
 import com.daml.network.config.UpgradesConfig
-import com.daml.network.config.SpliceInstanceNamesConfig
 import com.daml.network.environment.*
 import com.daml.network.http.HttpClient
 import com.daml.network.store.{DomainTimeSynchronization, DomainUnpausedSynchronization}
-import com.daml.network.store.MultiDomainAcsStore.ConstrainedTemplate
-import com.daml.network.sv.{ExtraSynchronizerNode, LocalSynchronizerNode}
+import com.daml.network.sv.LocalSynchronizerNode
 import com.daml.network.sv.automation.SvDsoAutomationService.{
   LocalSequencerClientConfig,
   LocalSequencerClientContext,
 }
 import com.daml.network.sv.automation.confirmation.*
 import com.daml.network.sv.automation.singlesv.*
-import com.daml.network.sv.automation.singlesv.SvNamespaceMembershipTrigger
-import com.daml.network.sv.automation.singlesv.offboarding.{
+import com.daml.network.sv.automation.singlesv.membership.SvNamespaceMembershipTrigger
+import com.daml.network.sv.automation.singlesv.membership.offboarding.{
   SvOffboardingMediatorTrigger,
   SvOffboardingPartyToParticipantProposalTrigger,
   SvOffboardingSequencerTrigger,
 }
-import com.daml.network.sv.automation.singlesv.onboarding.*
+import com.daml.network.sv.automation.singlesv.membership.onboarding.*
 import com.daml.network.sv.cometbft.CometBftNode
 import com.daml.network.sv.config.{SequencerPruningConfig, SvAppBackendConfig}
 import com.daml.network.sv.migration.DecentralizedSynchronizerMigrationTrigger
@@ -43,7 +37,6 @@ import com.digitalasset.canton.DomainAlias
 import com.digitalasset.canton.config.ClientConfig
 import com.digitalasset.canton.logging.NamedLoggerFactory
 import com.digitalasset.canton.time.{Clock, WallClock}
-import com.digitalasset.canton.tracing.TraceContext
 import io.opentelemetry.api.trace.Tracer
 import monocle.Monocle.toAppliedFocusOps
 import org.apache.pekko.stream.Materializer
@@ -63,9 +56,7 @@ class SvDsoAutomationService(
     retryProvider: RetryProvider,
     cometBft: Option[CometBftNode],
     localSynchronizerNode: Option[LocalSynchronizerNode],
-    extraSynchronizerNodes: Map[String, ExtraSynchronizerNode],
     upgradesConfig: UpgradesConfig,
-    spliceInstanceNamesConfig: SpliceInstanceNamesConfig,
     override protected val loggerFactory: NamedLoggerFactory,
 )(implicit
     ec: ExecutionContextExecutor,
@@ -132,29 +123,98 @@ class SvDsoAutomationService(
 
   // Triggers that require namespace permissions and the existence of the DsoRules and AmuletRules contracts
   def registerPostOnboardingTriggers(): Unit = {
+    registerTrigger(new SummarizingMiningRoundTrigger(triggerContext, dsoStore, connection))
     registerTrigger(
       new SvOnboardingRequestTrigger(triggerContext, dsoStore, svStore, config, connection)
     )
-    // Register optional BFT triggers
-    cometBft.foreach { node =>
-      if (triggerContext.config.enableCometbftReconciliation) {
-        registerTrigger(
-          new PublishLocalCometBftNodeConfigTrigger(
-            triggerContext,
-            dsoStore,
-            connection,
-            node,
-          )
-        )
-        registerTrigger(
-          new ReconcileCometBftNetworkConfigWithDsoRulesTrigger(
-            triggerContext,
-            dsoStore,
-            node,
-          )
-        )
-      }
+    registerTrigger(
+      new ReceiveSvRewardCouponTrigger(
+        triggerContext,
+        dsoStore,
+        connection,
+        config.extraBeneficiaries,
+      )
+    )
+    if (config.automation.enableClosedRoundArchival)
+      registerTrigger(new ArchiveClosedMiningRoundsTrigger(triggerContext, dsoStore, connection))
+
+    if (config.automation.enableDsoDelegateReplacementTrigger) {
+      registerTrigger(new ElectionRequestTrigger(triggerContext, dsoStore, connection))
     }
+
+    registerTrigger(restartDsoDelegateBasedAutomationTrigger)
+
+    registerTrigger(new DsoRulesTransferTrigger(triggerContext, dsoStore, connection))
+    registerTrigger(new AssignTrigger(triggerContext, dsoStore, connection, store.key.dsoParty))
+
+    registerTrigger(
+      new TransferFollowTrigger(
+        triggerContext,
+        dsoStore,
+        connection,
+        store.key.dsoParty,
+        implicit tc =>
+          dsoStore.listDsoRulesTransferFollowers().flatMap { dsoRulesFollowers =>
+            // don't try to schedule AmuletRules' followers if AmuletRules might move
+            // (i.e. be one of dsoRulesFollowers)
+            if (dsoRulesFollowers.nonEmpty) Future successful dsoRulesFollowers
+            else dsoStore.listAmuletRulesTransferFollowers()
+          },
+      )
+    )
+
+    registerTrigger(
+      new TransferFollowTrigger(
+        triggerContext,
+        svStore,
+        connection,
+        store.key.svParty,
+        implicit tc =>
+          dsoStore
+            .lookupDsoRules()
+            .flatMap(
+              _.map(svStore.listDsoRulesTransferFollowers(_))
+                .getOrElse(Future successful Seq.empty)
+            ),
+      )
+    )
+    registerTrigger(
+      new AnsSubscriptionInitialPaymentTrigger(triggerContext, dsoStore, connection)
+    )
+    registerTrigger(
+      new SvPackageVettingTrigger(
+        participantAdminConnection,
+        dsoStore,
+        config.prevetDuration,
+        triggerContext,
+      )
+    )
+
+    // SV status report triggers
+    registerTrigger(
+      new SubmitSvStatusReportTrigger(
+        config,
+        triggerContext,
+        dsoStore,
+        connection,
+        cometBft,
+        localSynchronizerNode.map(_.mediatorAdminConnection),
+        participantAdminConnection,
+      )
+    )
+    registerTrigger(
+      new ReportSvStatusMetricsExportTrigger(
+        triggerContext,
+        dsoStore,
+        cometBft,
+      )
+    )
+    registerTrigger(
+      new ReportValidatorLicenseMetricsExportTrigger(
+        triggerContext,
+        dsoStore,
+      )
+    )
     registerTrigger(
       new SvOffboardingPartyToParticipantProposalTrigger(
         triggerContext,
@@ -222,156 +282,26 @@ class SvDsoAutomationService(
         )
       case _ => ()
     }
-    registerTrigger(
-      new ReconcileDynamicDomainParametersTrigger(
-        triggerContext,
-        dsoStore,
-        participantAdminConnection,
-      )
-    )
-  }
-
-  def registerTrafficReconciliationTriggers(): Unit = {
-    registerTrigger(
-      new ReconcileSequencerLimitWithMemberTrafficTrigger(
-        triggerContext,
-        dsoStore,
-        localSynchronizerNode.map(_.sequencerAdminConnection),
-        extraSynchronizerNodes,
-        config.trafficBalanceReconciliationDelay,
-      )
-    )
-    registerTrigger(
-      new SvOnboardingUnlimitedTrafficTrigger(
-        onboardingTriggerContext,
-        dsoStore,
-        localSynchronizerNode.map(_.sequencerAdminConnection),
-        extraSynchronizerNodes,
-        config.trafficBalanceReconciliationDelay,
-      )
-    )
-  }
-
-  def registerPostUnlimitedTrafficTriggers(): Unit = {
-    registerTrigger(new SummarizingMiningRoundTrigger(triggerContext, dsoStore, connection))
-    registerTrigger(
-      new ReceiveSvRewardCouponTrigger(
-        triggerContext,
-        dsoStore,
-        connection,
-        config.extraBeneficiaries,
-      )
-    )
-    if (config.automation.enableClosedRoundArchival)
-      registerTrigger(new ArchiveClosedMiningRoundsTrigger(triggerContext, dsoStore, connection))
-
-    if (config.automation.enableDsoDelegateReplacementTrigger) {
-      registerTrigger(new ElectionRequestTrigger(triggerContext, dsoStore, connection))
+    // Register optional BFT triggers
+    cometBft.foreach { node =>
+      if (triggerContext.config.enableCometbftReconciliation) {
+        registerTrigger(
+          new PublishLocalCometBftNodeConfigTrigger(
+            triggerContext,
+            dsoStore,
+            connection,
+            node,
+          )
+        )
+        registerTrigger(
+          new ReconcileCometBftNetworkConfigWithDsoRulesTrigger(
+            triggerContext,
+            dsoStore,
+            node,
+          )
+        )
+      }
     }
-
-    registerTrigger(restartDsoDelegateBasedAutomationTrigger)
-
-    if (config.supportsSoftDomainMigrationPoc) {
-      registerTrigger(
-        new AmuletConfigReassignmentTrigger(
-          triggerContext,
-          dsoStore,
-          connection,
-          dsoStore.key.dsoParty,
-          Seq[ConstrainedTemplate](
-            AmuletRules.COMPANION,
-            OpenMiningRound.COMPANION,
-            IssuingMiningRound.COMPANION,
-          ),
-          (tc: TraceContext) => dsoStore.lookupAmuletRules()(tc),
-        )
-      )
-    } else {
-      registerTrigger(
-        new AmuletConfigReassignmentTrigger(
-          triggerContext,
-          dsoStore,
-          connection,
-          dsoStore.key.dsoParty,
-          Seq(DsoRules.COMPANION),
-          (tc: TraceContext) => dsoStore.lookupAmuletRules()(tc),
-        )
-      )
-      registerTrigger(
-        new TransferFollowTrigger(
-          triggerContext,
-          dsoStore,
-          connection,
-          store.key.dsoParty,
-          implicit tc =>
-            dsoStore.listDsoRulesTransferFollowers().flatMap { dsoRulesFollowers =>
-              // don't try to schedule AmuletRules' followers if AmuletRules might move
-              // (i.e. be one of dsoRulesFollowers)
-              if (dsoRulesFollowers.nonEmpty) Future successful dsoRulesFollowers
-              else dsoStore.listAmuletRulesTransferFollowers()
-            },
-        )
-      )
-
-      registerTrigger(
-        new TransferFollowTrigger(
-          triggerContext,
-          svStore,
-          connection,
-          store.key.svParty,
-          implicit tc =>
-            dsoStore
-              .lookupDsoRules()
-              .flatMap(
-                _.map(svStore.listDsoRulesTransferFollowers(_))
-                  .getOrElse(Future successful Seq.empty)
-              ),
-        )
-      )
-    }
-    registerTrigger(new AssignTrigger(triggerContext, dsoStore, connection, store.key.dsoParty))
-    registerTrigger(
-      new AnsSubscriptionInitialPaymentTrigger(
-        triggerContext,
-        dsoStore,
-        spliceInstanceNamesConfig,
-        connection,
-      )
-    )
-    registerTrigger(
-      new SvPackageVettingTrigger(
-        participantAdminConnection,
-        dsoStore,
-        config.prevetDuration,
-        triggerContext,
-      )
-    )
-
-    // SV status report triggers
-    registerTrigger(
-      new SubmitSvStatusReportTrigger(
-        config,
-        triggerContext,
-        dsoStore,
-        connection,
-        cometBft,
-        localSynchronizerNode.map(_.mediatorAdminConnection),
-        participantAdminConnection,
-      )
-    )
-    registerTrigger(
-      new ReportSvStatusMetricsExportTrigger(
-        triggerContext,
-        dsoStore,
-        cometBft,
-      )
-    )
-    registerTrigger(
-      new ReportValidatorLicenseMetricsExportTrigger(
-        triggerContext,
-        dsoStore,
-      )
-    )
 
     config.scan.foreach { scan =>
       registerTrigger(
@@ -385,6 +315,32 @@ class SvDsoAutomationService(
       )
     }
 
+    registerTrigger(
+      new ReconcileDynamicDomainParametersTrigger(
+        triggerContext,
+        dsoStore,
+        participantAdminConnection,
+      )
+    )
+  }
+
+  def registerPostSequencerInitTriggers(): Unit = {
+    registerTrigger(
+      new ReconcileSequencerLimitWithMemberTrafficTrigger(
+        triggerContext,
+        dsoStore,
+        localSynchronizerNode.map(_.sequencerAdminConnection),
+        config.trafficBalanceReconciliationDelay,
+      )
+    )
+    registerTrigger(
+      new SvOnboardingUnlimitedTrafficTrigger(
+        onboardingTriggerContext,
+        dsoStore,
+        localSynchronizerNode.map(_.sequencerAdminConnection),
+        config.trafficBalanceReconciliationDelay,
+      )
+    )
   }
 
   private val localSequencerClientContext: Option[LocalSequencerClientContext] =
@@ -478,7 +434,7 @@ object SvDsoAutomationService extends AutomationServiceCompanion {
       aTrigger[ArchiveClosedMiningRoundsTrigger],
       aTrigger[ElectionRequestTrigger],
       aTrigger[RestartDsoDelegateBasedAutomationTrigger],
-      aTrigger[AmuletConfigReassignmentTrigger],
+      aTrigger[DsoRulesTransferTrigger],
       aTrigger[AssignTrigger],
       aTrigger[TransferFollowTrigger],
       aTrigger[AnsSubscriptionInitialPaymentTrigger],

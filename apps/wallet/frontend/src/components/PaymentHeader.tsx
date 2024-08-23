@@ -7,7 +7,6 @@ import { Box, Divider, Stack, Toolbar, Typography } from '@mui/material';
 
 import { useBalance } from '../hooks';
 import useAmuletPrice from '../hooks/scan-proxy/useAmuletPrice';
-import { config } from '../utils/config';
 import CurrentUser from './CurrentUser';
 import { LogoutButton } from './LogoutButton';
 
@@ -22,7 +21,7 @@ const PaymentHeader: React.FC = () => {
     <Box bgcolor="colors.neutral.20">
       <Toolbar sx={{ padding: 2 }}>
         <Typography variant="h5" autoCapitalize="characters" flex={'1'}>
-          {config.spliceInstanceNames.amuletName} Wallet
+          Canton Coin Wallet
         </Typography>
         <Stack spacing={2} alignItems="center">
           <Stack spacing={2} direction="row">

@@ -43,7 +43,7 @@ class CompletedSvOnboardingTrigger(
       dsoRules: DsoRulesContract
   )(implicit tc: TraceContext): Future[TaskOutcome] = {
     for {
-      svOnboardings <- store.listSvOnboardingRequestsBySvs(dsoRules)
+      svOnboardings <- store.listSvOnboardingRequestsByDsoMembers(dsoRules)
       cmds = svOnboardings.map(co =>
         dsoRules.exercise(_.exerciseDsoRules_ArchiveSvOnboardingRequest(co.contractId))
       )

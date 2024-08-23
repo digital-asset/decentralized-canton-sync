@@ -8,7 +8,7 @@ import org.apache.pekko.stream.scaladsl.Source
 import cats.implicits.*
 import com.daml.ledger.javaapi.data.{CreatedEvent, ExercisedEvent, Template, TransactionTree}
 import com.daml.ledger.javaapi.data.codegen.ContractId
-import com.digitalasset.daml.lf.data.Time.Timestamp
+import com.daml.lf.data.Time.Timestamp
 import com.daml.network.automation.MultiDomainExpiredContractTrigger.ListExpiredContracts
 import com.daml.network.environment.ParticipantAdminConnection.IMPORT_ACS_WORKFLOW_ID_PREFIX
 import com.daml.network.environment.RetryProvider
@@ -32,7 +32,7 @@ import com.daml.network.util.{
   Trees,
 }
 import com.digitalasset.canton.config.CantonRequireTypes.{String255, String256M, String3}
-import com.digitalasset.canton.discard.Implicits.DiscardOps
+import com.digitalasset.canton.DiscardOps
 import com.digitalasset.canton.lifecycle.CloseContext
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.resource.DbStorage
@@ -40,6 +40,7 @@ import com.digitalasset.canton.topology.{DomainId, ParticipantId, PartyId}
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.ShowUtil.showPretty
 
+import java.time.Instant
 import java.util.concurrent.atomic.AtomicReference
 import scala.collection.immutable.{Seq, SortedMap, VectorMap}
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -53,7 +54,7 @@ import com.daml.network.store.db.AcsTables.ContractStateRowData
 import com.daml.network.store.db.DbMultiDomainAcsStore.StoreDescriptor
 import com.daml.nonempty.NonEmpty
 import com.digitalasset.canton.data.CantonTimestamp
-import com.daml.metrics.api.MetricHandle.LabeledMetricsFactory
+import com.digitalasset.canton.metrics.CantonLabeledMetricsFactory
 import io.circe.Json
 
 import scala.collection.mutable
@@ -89,11 +90,7 @@ final class DbMultiDomainAcsStore[TXE](
   import DbMultiDomainAcsStore.*
   import profile.api.jdbcActionExtensionMethods
 
-  override lazy val storeName = storeDescriptor.name
-  override lazy val storeParty = storeDescriptor.party.toString
-
-  override protected def metricsFactory: LabeledMetricsFactory = retryProvider.metricsFactory
-  override lazy val metrics = new StoreMetrics(metricsFactory)(mc)
+  override protected def metricsFactory: CantonLabeledMetricsFactory = retryProvider.metricsFactory
 
   private val state = new AtomicReference[State](State.empty())
 
@@ -246,9 +243,11 @@ final class DbMultiDomainAcsStore[TXE](
     } yield assigned
   }
 
+  // TODO (#3822) `expiresAt` is unused here, but necessary for the in-memory version to work.
+  // With an ExpiredContract interface it can be dropped from both.
   override private[network] def listExpiredFromPayloadExpiry[C, TCid <: ContractId[
     T
-  ], T <: Template](companion: C)(implicit
+  ], T <: Template](companion: C)(expiresAt: T => Instant)(implicit
       companionClass: ContractCompanion[C, TCid, T]
   ): ListExpiredContracts[TCid, T] = { (now, limit) => implicit traceContext =>
     val templateId = companionClass.typeId(companion)
@@ -733,11 +732,9 @@ final class DbMultiDomainAcsStore[TXE](
         val newAcsSize = summaryState.acsSizeDiff
         val summary = summaryState.toIngestionSummary(
           updateId = None,
-          synchronizerId = None,
           offset = offset,
           recordTime = None,
           newAcsSize = newAcsSize,
-          metrics,
         )
         state
           .getAndUpdate(
@@ -772,11 +769,9 @@ final class DbMultiDomainAcsStore[TXE](
             val summary =
               summaryState.toIngestionSummary(
                 updateId = None,
-                synchronizerId = Some(domain),
                 offset = reassignment.offset.getOffset,
                 recordTime = Some(reassignment.recordTime),
                 newAcsSize = state.get().acsSize,
-                metrics,
               )
             logger.debug(show"Ingested reassignment $summary")
             handleIngestionSummary(summary)
@@ -794,11 +789,9 @@ final class DbMultiDomainAcsStore[TXE](
             val summary =
               summaryState.toIngestionSummary(
                 updateId = Some(tree.getUpdateId),
-                synchronizerId = Some(domain),
                 offset = tree.getOffset,
                 recordTime = Some(CantonTimestamp.assertFromInstant(tree.getRecordTime)),
                 newAcsSize = state.get().acsSize,
-                metrics,
               )
             logger.debug(show"Ingested transaction $summary")
             handleIngestionSummary(summary)
@@ -1325,6 +1318,8 @@ final class DbMultiDomainAcsStore[TXE](
     storage.update(action, "deleteRolledBackTxLogEntries")
   }
 
+  override def close(): Unit = ()
+
   @SuppressWarnings(Array("org.wartremover.warts.OptionPartial"))
   private def reassignmentEventUnassignFromRow(
       row: SelectFromAcsTableWithStateResult
@@ -1339,9 +1334,6 @@ final class DbMultiDomainAcsStore[TXE](
       counter = row.stateRow.reassignmentCounter,
     )
   }
-
-  override def close(): Unit =
-    metrics.close()
 }
 
 object DbMultiDomainAcsStore {
@@ -1457,36 +1449,28 @@ object DbMultiDomainAcsStore {
 
     def toIngestionSummary(
         updateId: Option[String],
-        synchronizerId: Option[DomainId],
         offset: String,
         recordTime: Option[CantonTimestamp],
         newAcsSize: Int,
-        metrics: StoreMetrics,
-    ): IngestionSummary = {
-      // We update the metrics in here as it's the easiest way
-      // to not miss any place that might need updating.
-      metrics.acsSize.updateValue(newAcsSize.toLong)
-      IngestionSummary(
-        updateId = updateId,
-        synchronizerId = synchronizerId,
-        offset = Some(offset),
-        recordTime = recordTime,
-        newAcsSize = newAcsSize,
-        ingestedCreatedEvents = this.ingestedCreatedEvents.toVector,
-        numFilteredCreatedEvents = this.numFilteredCreatedEvents,
-        ingestedArchivedEvents = this.ingestedArchivedEvents.toVector,
-        numFilteredArchivedEvents = this.numFilteredArchivedEvents,
-        updatedContractStates = this.updatedContractStates.toVector,
-        addedAssignEvents = this.addedAssignEvents.toVector,
-        numFilteredAssignEvents = this.numFilteredAssignEvents,
-        removedAssignEvents = this.removedAssignEvents.toVector,
-        addedUnassignEvents = this.addedUnassignEvents.toVector,
-        numFilteredUnassignEvents = this.numFilteredUnassignEvents,
-        removedUnassignEvents = this.removedUnassignEvents.toVector,
-        prunedContracts = Vector.empty,
-        ingestedTxLogEntries = this.ingestedTxLogEntries.toSeq,
-      )
-    }
+    ): IngestionSummary = IngestionSummary(
+      updateId = updateId,
+      offset = Some(offset),
+      recordTime = recordTime,
+      newAcsSize = newAcsSize,
+      ingestedCreatedEvents = this.ingestedCreatedEvents.toVector,
+      numFilteredCreatedEvents = this.numFilteredCreatedEvents,
+      ingestedArchivedEvents = this.ingestedArchivedEvents.toVector,
+      numFilteredArchivedEvents = this.numFilteredArchivedEvents,
+      updatedContractStates = this.updatedContractStates.toVector,
+      addedAssignEvents = this.addedAssignEvents.toVector,
+      numFilteredAssignEvents = this.numFilteredAssignEvents,
+      removedAssignEvents = this.removedAssignEvents.toVector,
+      addedUnassignEvents = this.addedUnassignEvents.toVector,
+      numFilteredUnassignEvents = this.numFilteredUnassignEvents,
+      removedUnassignEvents = this.removedUnassignEvents.toVector,
+      prunedContracts = Vector.empty,
+      ingestedTxLogEntries = this.ingestedTxLogEntries.toSeq,
+    )
   }
 
   object MutableIngestionSummary {

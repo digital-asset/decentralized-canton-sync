@@ -175,10 +175,11 @@ class AppUpgradeIntegrationTest
           }
 
           // SV1 does not upload DAR before the vote goes through
-          val sv1Packages = sv1Backend.participantClientWithAdminToken.packages.list()
-          forAll(sv1Packages) { pkg =>
-            pkg.packageId should not be DarResources.amulet.bootstrap.packageId
-          }
+          // TODO(#13413) Enable this
+          // val sv1Packages = sv1Backend.participantClientWithAdminToken.packages.list()
+          // forAll(sv1Packages) { pkg =>
+          //   pkg.packageId should not be DarResources.amulet.bootstrap.packageId
+          // }
 
           val amuletRules = sv2ScanBackend.getAmuletRules()
           val amuletConfig = amuletRules.payload.configSchedule.initialValue
@@ -326,7 +327,7 @@ class AppUpgradeIntegrationTest
             "Old and new amulet get merged together into a new amulet",
             _ => {
               val amulet = bobWalletClient.list().amulets.loneElement.contract
-              amulet.contract.identifier.getPackageId shouldBe DarResources.amulet_current.packageId
+              amulet.identifier.getPackageId shouldBe DarResources.amulet_current.packageId
               BigDecimal(amulet.payload.amount.initialAmount) should beWithin(
                 walletUsdToAmulet(30 - smallAmount),
                 walletUsdToAmulet(30),

@@ -2,7 +2,6 @@ package com.daml.network.store.db
 
 import com.daml.ledger.javaapi.data.codegen.ContractId
 import com.daml.ledger.javaapi.data.DamlRecord
-import com.daml.metrics.api.noop.NoOpMetricsFactory
 import com.daml.network.codegen.java.splice
 import com.daml.network.codegen.java.splice.amuletrules.{
   AmuletRules_MiningRound_Archive,
@@ -68,6 +67,7 @@ import com.digitalasset.canton.{DomainAlias, HasActorSystem, HasExecutionContext
 import com.digitalasset.canton.concurrent.FutureSupervisor
 import com.digitalasset.canton.crypto.Fingerprint
 import com.digitalasset.canton.data.CantonTimestamp
+import com.digitalasset.canton.metrics.CantonLabeledMetricsFactory.NoOpMetricsFactory
 import com.digitalasset.canton.resource.DbStorage
 import com.digitalasset.canton.topology.*
 import com.digitalasset.canton.util.MonadUtil
@@ -882,7 +882,7 @@ abstract class SvDsoStoreTest extends StoreTest with HasExecutionContext {
       "return all election requests for the given dsoRules" in {
         import scala.jdk.CollectionConverters.*
         val goodDsoRules = dsoRules(
-          svs = (1 to 3)
+          members = (1 to 3)
             .map { n =>
               userParty(n).toProtoPrimitive -> svInfo(n.toString)
             }
@@ -1058,8 +1058,8 @@ abstract class SvDsoStoreTest extends StoreTest with HasExecutionContext {
 
       "list all MemberTraffic contracts of a member" in {
         val namespace = Namespace(Fingerprint.tryCreate(s"dummy"))
-        val goodMember = ParticipantId("good", namespace)
-        val badMember = MediatorId(UniqueIdentifier.tryCreate("bad", namespace))
+        val goodMember = ParticipantId(Identifier.tryCreate("good"), namespace)
+        val badMember = MediatorId(Identifier.tryCreate("bad"), namespace)
         val goodContracts = (1 to 3).map(n => memberTraffic(goodMember, n.toLong))
         val badContracts = (4 to 6).map(n => memberTraffic(badMember, n.toLong))
         for {
@@ -1083,8 +1083,8 @@ abstract class SvDsoStoreTest extends StoreTest with HasExecutionContext {
 
       "return the sum over all traffic contracts for the member" in {
         val namespace = Namespace(Fingerprint.tryCreate(s"dummy"))
-        val goodMember = ParticipantId("good", namespace)
-        val badMember = MediatorId(UniqueIdentifier.tryCreate("bad", namespace))
+        val goodMember = ParticipantId(Identifier.tryCreate("good"), namespace)
+        val badMember = MediatorId(Identifier.tryCreate("bad"), namespace)
         val goodContracts = (1 to 3).map(n => memberTraffic(goodMember, n.toLong))
         val badContracts = (4 to 6).map(n => memberTraffic(badMember, n.toLong))
         for {
@@ -1219,14 +1219,14 @@ abstract class SvDsoStoreTest extends StoreTest with HasExecutionContext {
   }
 
   def dsoRules(
-      svs: java.util.Map[String, SvInfo] = Collections.emptyMap(),
+      members: java.util.Map[String, SvInfo] = Collections.emptyMap(),
       epoch: Long = 123,
   ) = {
     val newDomainId = "new-domain-id"
     val template = new DsoRules(
       dsoParty.toProtoPrimitive,
       epoch,
-      svs,
+      members,
       Collections.emptyMap(),
       storeSvParty.toProtoPrimitive,
       new DsoRulesConfig(

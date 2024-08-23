@@ -3,12 +3,11 @@
 
 # This works around issues in simtime where in-flight requests
 # end up timing out when we concurrently advance time.
-The sequencer clock timestamp .* is already past the max sequencing time
+The sequencer time.*has exceeded the max-sequencing-time.*of the send request
 # variant of the above for aggregate submissions
 Max sequencing time.*for submission.*is already past the sequencer clock timestamp
 Submission timed out at
 Rejected transaction due to a participant determined timeout
-# This is also present in canton_log.ignore.txt, except in simtime, it happens on non-SV participants too
 Response message for request.*timed out at
 Sequencing result message timed out
 Late processing.*of batch
@@ -26,7 +25,7 @@ INTERPRETATION_TIME_EXCEEDED.*: Interpretation time exceeds limit of Ledger Effe
 INVALID_ACKNOWLEDGEMENT_TIMESTAMP.*Member.*has acknowledged the timestamp.*when only events with timestamps at most.*have been delivered
 
 # TODO(#10887) Figure out where this is coming from
-Request failed for sequencer.*GrpcClientGaveUp: .*/Authentication token refresh failed with grpc error
+Request failed for sequencer.*GrpcServiceUnavailable: UNAVAILABLE/Authentication token refresh failed with grpc error
 Request failed for sequencer.*GrpcServiceUnavailable: UNAVAILABLE/Health-check stream unexpectedly closed
 
 # This kicks in when an interval is skipped which can easily be caused in simtime mode

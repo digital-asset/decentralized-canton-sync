@@ -18,22 +18,22 @@ import com.digitalasset.canton.console.{
   CommunityCantonHealthAdministration,
   ConsoleEnvironment,
   ConsoleEnvironmentBinding,
+  ConsoleGrpcAdminCommandRunner,
   ConsoleOutput,
   Help,
   LocalInstanceReference,
   NodeReferences,
   StandardConsoleOutput,
-  ThrowWithDetailsErrorHandler,
 }
 import org.apache.pekko.actor.ActorSystem
 
 class SpliceConsoleEnvironment(
     val environment: EnvironmentImpl,
     val consoleOutput: ConsoleOutput = StandardConsoleOutput,
+    protected val createAdminCommandRunner: ConsoleEnvironment => ConsoleGrpcAdminCommandRunner =
+      new ConsoleGrpcAdminCommandRunner(_),
 ) extends ConsoleEnvironment // TODO(#736): Generalize this.
     {
-
-  override val errorHandler = ThrowWithDetailsErrorHandler
 
   val packageSignatures = ResourceTemplateDecoder.loadPackageSignaturesFromResources(
     DarResources.splitwell.all ++

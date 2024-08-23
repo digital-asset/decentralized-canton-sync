@@ -6,10 +6,7 @@ package com.daml.network.store
 import org.apache.pekko.NotUsed
 import org.apache.pekko.stream.scaladsl.Source
 import com.daml.ledger.api.v2.participant_offset.ParticipantOffset
-import com.daml.ledger.api.v2.transaction_filter.{
-  CumulativeFilter,
-  TransactionFilter as LapiTransactionFilter,
-}
+import com.daml.ledger.api.v2.transaction_filter.TransactionFilter as LapiTransactionFilter
 import com.daml.network.util.Contract.Companion.Template as TemplateCompanion
 import com.daml.ledger.javaapi.data.{CreatedEvent, Identifier, Template}
 import com.daml.ledger.javaapi.data.codegen.{ContractId, ContractCompanion as JavaContractCompanion}
@@ -39,8 +36,7 @@ import com.daml.nonempty.NonEmpty
 import com.digitalasset.canton.ProtoDeserializationError
 import com.digitalasset.canton.logging.NamedLogging
 import com.digitalasset.canton.logging.pretty.{Pretty, PrettyPrinting}
-import com.daml.metrics.api.MetricHandle.LabeledMetricsFactory
-import com.digitalasset.canton.participant.pretty.Implicits.prettyContractId
+import com.digitalasset.canton.metrics.CantonLabeledMetricsFactory
 import com.digitalasset.canton.topology.{DomainId, PartyId}
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.ShowUtil.*
@@ -53,16 +49,11 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters.*
 
 trait MultiDomainAcsStore extends HasIngestionSink with AutoCloseable with NamedLogging {
-  protected def storeName: String
-  protected def storeParty: String
-
-  protected implicit lazy val mc: MetricsContext = MetricsContext(
-    "store_name" -> storeName,
-    "store_party" -> storeParty,
+  private implicit val mc: MetricsContext = MetricsContext(
+    "store_name" -> this.getClass.getSimpleName
   )
-  protected def metricsFactory: LabeledMetricsFactory
-
-  protected def metrics: StoreMetrics
+  protected def metricsFactory: CantonLabeledMetricsFactory
+  val metrics = new StoreMetrics(metricsFactory)
 
   import MultiDomainAcsStore.*
 
@@ -185,6 +176,8 @@ trait MultiDomainAcsStore extends HasIngestionSink with AutoCloseable with Named
 
   private[network] def listExpiredFromPayloadExpiry[C, TCid <: ContractId[T], T <: Template](
       companion: C
+  )(
+      expiresAt: T => java.time.Instant
   )(implicit
       companionClass: ContractCompanion[C, TCid, T]
   ): ListExpiredContracts[TCid, T]
@@ -414,22 +407,24 @@ object MultiDomainAcsStore {
       LapiTransactionFilter(
         Map(
           primaryParty.toProtoPrimitive -> com.daml.ledger.api.v2.transaction_filter.Filters(
-            templateIds.map { templateId =>
-              CumulativeFilter(
-                CumulativeFilter.IdentifierFilter.TemplateFilter(
-                  com.daml.ledger.api.v2.transaction_filter.TemplateFilter(
-                    templateId = Some(
-                      com.daml.ledger.api.v2.value.Identifier(
-                        packageId = s"#${templateId.packageName}",
-                        moduleName = templateId.qualifiedName.moduleName,
-                        entityName = templateId.qualifiedName.entityName,
-                      )
-                    ),
-                    includeCreatedEventBlob = true,
+            inclusive = Some(
+              com.daml.ledger.api.v2.transaction_filter.InclusiveFilters(
+                templateFilters = templateIds
+                  .map(tmpl =>
+                    com.daml.ledger.api.v2.transaction_filter.TemplateFilter(
+                      templateId = Some(
+                        com.daml.ledger.api.v2.value.Identifier(
+                          packageId = s"#${tmpl.packageName}",
+                          moduleName = tmpl.qualifiedName.moduleName,
+                          entityName = tmpl.qualifiedName.entityName,
+                        )
+                      ),
+                      includeCreatedEventBlob = true,
+                    )
                   )
-                )
+                  .toSeq
               )
-            }.toSeq
+            )
           )
         )
       )

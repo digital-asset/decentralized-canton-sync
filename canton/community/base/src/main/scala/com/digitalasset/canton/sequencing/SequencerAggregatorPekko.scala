@@ -3,6 +3,7 @@
 
 package com.digitalasset.canton.sequencing
 
+import cats.syntax.either.*
 import cats.syntax.functor.*
 import com.daml.nonempty.NonEmpty
 import com.digitalasset.canton.SequencerCounter
@@ -18,7 +19,6 @@ import com.digitalasset.canton.logging.pretty.{Pretty, PrettyPrinting}
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging, TracedLogger}
 import com.digitalasset.canton.sequencing.client.{
   SequencedEventValidator,
-  SequencerClient,
   SequencerSubscriptionFactoryPekko,
 }
 import com.digitalasset.canton.sequencing.protocol.SignedContent
@@ -36,6 +36,7 @@ import com.digitalasset.canton.util.OrderedBucketMergeHub.{
 import com.digitalasset.canton.util.ShowUtil.*
 import com.digitalasset.canton.util.Thereafter.syntax.*
 import com.digitalasset.canton.util.{
+  ErrorUtil,
   OrderedBucketMergeConfig,
   OrderedBucketMergeHub,
   OrderedBucketMergeHubOps,
@@ -52,14 +53,14 @@ import scala.concurrent.{ExecutionContext, Future}
   * [[com.digitalasset.canton.sequencing.client.SequencerSubscriptionPekko]]s
   * until a configurable threshold is reached.
   *
-  * @param createEventValidator The validator used to validate the sequenced events of the
+  * @param eventValidator The validator used to validate the sequenced events of the
   *                       [[com.digitalasset.canton.sequencing.client.SequencerSubscriptionPekko]]s
   * @param bufferSize How many elements to buffer for each
   *                   [[com.digitalasset.canton.sequencing.client.SequencerSubscriptionPekko]].
   */
 class SequencerAggregatorPekko(
     domainId: DomainId,
-    createEventValidator: NamedLoggerFactory => SequencedEventValidator,
+    eventValidator: SequencedEventValidator,
     bufferSize: PositiveInt,
     hashOps: HashOps,
     override protected val loggerFactory: NamedLoggerFactory,
@@ -130,15 +131,16 @@ class SequencerAggregatorPekko(
 
     val mergedSigs = elems.flatMap { case (_, event) => event.signedEvent.signatures }.toSeq
     val mergedSignedEvent = SignedContent
-      .create(
-        content,
-        mergedSigs,
-        timestampOfSigningKey = None,
-        representativeProtocolVersion,
+      .create(content, mergedSigs, timestampOfSigningKey = None, representativeProtocolVersion)
+      .valueOr(err =>
+        ErrorUtil.invalidState(s"Failed to aggregate signatures on sequenced event: $err")
       )
+    // TODO(#13789) How should we merge the traffic state as it's currently not part of the bucketing?
+    val mergedTrafficState = someElem.trafficState
+
     // We intentionally do not use the copy method
     // so that we notice when fields are added
-    OrdinarySequencedEvent(mergedSignedEvent)(mergedTraceContext)
+    OrdinarySequencedEvent(mergedSignedEvent, mergedTrafficState)(mergedTraceContext)
   }
 
   private def logError[E: Pretty](
@@ -232,10 +234,7 @@ class SequencerAggregatorPekko(
         exclusiveStart: SequencerCounter,
         priorElement: Option[PriorElement],
     ): Source[OrdinarySerializedEvent, (KillSwitch, Future[Done], HealthComponent)] = {
-      val prior = priorElement.collect { case event @ OrdinarySequencedEvent(_) => event }
-      val eventValidator = createEventValidator(
-        SequencerClient.loggerFactoryWithSequencerConnection(loggerFactory, sequencerId)
-      )
+      val prior = priorElement.collect { case event @ OrdinarySequencedEvent(_, _) => event }
       val subscription = eventValidator
         .validatePekko(config.subscriptionFactory.create(exclusiveStart + 1L), prior, sequencerId)
       val source = subscription.source

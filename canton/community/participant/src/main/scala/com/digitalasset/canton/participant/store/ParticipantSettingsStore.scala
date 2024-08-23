@@ -33,7 +33,7 @@ trait ParticipantSettingsLookup {
   */
 trait ParticipantSettingsStore extends ParticipantSettingsLookup with AutoCloseable {
 
-  /** A cache for the max number of inflight validation requests.
+  /** A cache for the max number of dirty requests.
     * It is updated in the following situations:
     * - Before and after a write (successful or not).
     * - Through [[refreshCache]]. (Clients are requested to call [[refreshCache]] before reading any value.)
@@ -66,7 +66,6 @@ object ParticipantSettingsStore {
       storage: Storage,
       timeouts: ProcessingTimeout,
       futureSupervisor: FutureSupervisor,
-      exitOnFatalFailures: Boolean,
       loggerFactory: NamedLoggerFactory,
   )(implicit
       executionContext: ExecutionContext
@@ -74,13 +73,7 @@ object ParticipantSettingsStore {
     storage match {
       case _: MemoryStorage => new InMemoryParticipantSettingsStore(loggerFactory)
       case storage: DbStorage =>
-        new DbParticipantSettingsStore(
-          storage,
-          timeouts,
-          futureSupervisor,
-          exitOnFatalFailures = exitOnFatalFailures,
-          loggerFactory,
-        )
+        new DbParticipantSettingsStore(storage, timeouts, futureSupervisor, loggerFactory)
     }
   }
 

@@ -3,37 +3,113 @@
 
 package com.digitalasset.canton.topology.client
 
-import com.digitalasset.canton.concurrent.FutureSupervisor
-import com.digitalasset.canton.config.DefaultProcessingTimeouts
+import com.digitalasset.canton.concurrent.{DirectExecutionContext, FutureSupervisor}
 import com.digitalasset.canton.config.RequireTypes.PositiveInt
-import com.digitalasset.canton.crypto.SigningPublicKey
+import com.digitalasset.canton.config.{DefaultProcessingTimeouts, ProcessingTimeout}
+import com.digitalasset.canton.crypto.{CryptoPureApi, SigningPublicKey}
 import com.digitalasset.canton.data.CantonTimestamp
-import com.digitalasset.canton.store.db.{DbTest, H2Test, PostgresTest}
+import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
+import com.digitalasset.canton.logging.NamedLoggerFactory
+import com.digitalasset.canton.store.db.DbTest
 import com.digitalasset.canton.time.Clock
 import com.digitalasset.canton.topology.*
 import com.digitalasset.canton.topology.processing.{EffectiveTime, SequencedTime}
-import com.digitalasset.canton.topology.store.db.DbTopologyStoreHelper
-import com.digitalasset.canton.topology.store.memory.InMemoryTopologyStore
+import com.digitalasset.canton.topology.store.db.DbTopologyStoreX
+import com.digitalasset.canton.topology.store.memory.InMemoryTopologyStoreX
 import com.digitalasset.canton.topology.store.{
-  TopologyStore,
   TopologyStoreId,
-  ValidatedTopologyTransaction,
+  TopologyStoreX,
+  ValidatedTopologyTransactionX,
 }
 import com.digitalasset.canton.topology.transaction.ParticipantPermission.*
 import com.digitalasset.canton.topology.transaction.*
-import com.digitalasset.canton.{BaseTest, HasExecutionContext, SequencerCounter}
+import com.digitalasset.canton.tracing.TraceContext
+import com.digitalasset.canton.version.ProtocolVersion
+import com.digitalasset.canton.{BaseTest, BaseTestWordSpec, HasExecutionContext, SequencerCounter}
 import org.scalatest.wordspec.AsyncWordSpec
 
-import scala.concurrent.Future
+import scala.concurrent.duration.Duration
+import scala.concurrent.{ExecutionContext, Future}
+
+class BaseDomainTopologyClientTest extends BaseTestWordSpec {
+
+  private class TestClient() extends BaseDomainTopologyClientX {
+
+    override def protocolVersion: ProtocolVersion = testedProtocolVersion
+
+    override protected def futureSupervisor: FutureSupervisor = FutureSupervisor.Noop
+    override def timeouts: ProcessingTimeout = DefaultProcessingTimeouts.testing
+    override def trySnapshot(timestamp: CantonTimestamp)(implicit
+        traceContext: TraceContext
+    ): TopologySnapshotLoader =
+      ???
+    override def domainId: DomainId = ???
+
+    def advance(ts: CantonTimestamp): Unit = {
+      this
+        .observed(SequencedTime(ts), EffectiveTime(ts), SequencerCounter(0), List())
+        .failOnShutdown(s"advance to $ts")
+        .futureValue
+    }
+    override implicit val executionContext: ExecutionContext =
+      DirectExecutionContext(noTracingLogger)
+    override protected def loggerFactory: NamedLoggerFactory =
+      BaseDomainTopologyClientTest.this.loggerFactory
+    override protected def clock: Clock = ???
+    override def currentSnapshotApproximation(implicit
+        traceContext: TraceContext
+    ): TopologySnapshotLoader = ???
+    override def await(condition: TopologySnapshot => Future[Boolean], timeout: Duration)(implicit
+        traceContext: TraceContext
+    ): FutureUnlessShutdown[Boolean] = ???
+  }
+
+  "waiting for snapshots" should {
+
+    val ts1 = CantonTimestamp.Epoch
+    val ts2 = ts1.plusSeconds(60)
+
+    "announce snapshot if there is one" in {
+      val tc = new TestClient()
+      tc.advance(ts1)
+      tc.snapshotAvailable(ts1) shouldBe true
+      tc.snapshotAvailable(ts2) shouldBe false
+      tc.advance(ts2)
+      tc.snapshotAvailable(ts2) shouldBe true
+    }
+
+    "correctly get notified" in {
+      val tc = new TestClient()
+      val wt = tc.awaitTimestamp(ts2, true)
+      wt match {
+        case Some(fut) =>
+          tc.advance(ts1)
+          fut.isCompleted shouldBe false
+          tc.advance(ts2)
+          fut.isCompleted shouldBe true
+        case None => fail("expected future")
+      }
+    }
+
+    "just return a none if snapshot already exists" in {
+      val tc = new TestClient()
+      tc.advance(ts1)
+      val wt = tc.awaitTimestamp(ts1, waitForEffectiveTime = true)
+      wt shouldBe None
+    }
+
+  }
+
+}
 
 @SuppressWarnings(Array("org.wartremover.warts.Product", "org.wartremover.warts.Serializable"))
 trait StoreBasedTopologySnapshotTest extends AsyncWordSpec with BaseTest with HasExecutionContext {
 
   import EffectiveTimeTestHelpers.*
 
-  def topologySnapshot(mk: () => TopologyStore[TopologyStoreId]): Unit = {
+  def topologySnapshot(mk: () => TopologyStoreX[TopologyStoreId]): Unit = {
 
-    val factory = new TestingOwnerWithKeys(
+    val factory = new TestingOwnerWithKeysX(
       DefaultTestIdentities.participant1,
       loggerFactory,
       parallelExecutionContext,
@@ -43,7 +119,7 @@ trait StoreBasedTopologySnapshotTest extends AsyncWordSpec with BaseTest with Ha
     import factory.TestingTransactions.*
 
     lazy val party1participant1 = mkAdd(
-      PartyToParticipant.tryCreate(
+      PartyToParticipantX(
         party1,
         None,
         PositiveInt.one,
@@ -52,7 +128,7 @@ trait StoreBasedTopologySnapshotTest extends AsyncWordSpec with BaseTest with Ha
       )
     )
     lazy val party2participant1_2 = mkAdd(
-      PartyToParticipant.tryCreate(
+      PartyToParticipantX(
         party2,
         None,
         PositiveInt.one,
@@ -67,7 +143,7 @@ trait StoreBasedTopologySnapshotTest extends AsyncWordSpec with BaseTest with Ha
     class Fixture() {
       val store = mk()
       val client =
-        new StoreBasedDomainTopologyClient(
+        new StoreBasedDomainTopologyClientX(
           mock[Clock],
           domainId,
           testedProtocolVersion,
@@ -80,7 +156,7 @@ trait StoreBasedTopologySnapshotTest extends AsyncWordSpec with BaseTest with Ha
 
       def add(
           timestamp: CantonTimestamp,
-          transactions: Seq[SignedTopologyTransaction[TopologyChangeOp, TopologyMapping]],
+          transactions: Seq[SignedTopologyTransactionX[TopologyChangeOpX, TopologyMappingX]],
       ): Future[Unit] = {
 
         for {
@@ -89,60 +165,12 @@ trait StoreBasedTopologySnapshotTest extends AsyncWordSpec with BaseTest with Ha
             EffectiveTime(timestamp),
             removeMapping = transactions.map(tx => tx.mapping.uniqueKey -> tx.serial).toMap,
             removeTxs = transactions.map(_.hash).toSet,
-            additions = transactions.map(ValidatedTopologyTransaction(_)),
+            additions = transactions.map(ValidatedTopologyTransactionX(_)),
           )
           _ <- client
             .observed(timestamp, timestamp, SequencerCounter(1), transactions)
             .failOnShutdown(s"observe timestamp $timestamp")
         } yield ()
-      }
-
-      def advance(ts: CantonTimestamp): Unit = {
-        client
-          .observed(SequencedTime(ts), EffectiveTime(ts), SequencerCounter(0), List())
-          .failOnShutdown(s"advance to $ts")
-          .futureValue
-      }
-    }
-
-    "waiting for snapshots" should {
-
-      val ts1 = CantonTimestamp.Epoch
-      val ts2 = ts1.plusSeconds(60)
-
-      "announce snapshot if there is one" in {
-        val fixture = new Fixture()
-        import fixture.*
-        val tc = client
-        advance(ts1)
-        tc.snapshotAvailable(ts1) shouldBe true
-        tc.snapshotAvailable(ts2) shouldBe false
-        advance(ts2)
-        tc.snapshotAvailable(ts2) shouldBe true
-      }
-
-      "correctly get notified" in {
-        val fixture = new Fixture()
-        import fixture.*
-        val tc = client
-        val wt = tc.awaitTimestamp(ts2, true)
-        wt match {
-          case Some(fut) =>
-            advance(ts1)
-            fut.isCompleted shouldBe false
-            advance(ts2)
-            fut.isCompleted shouldBe true
-          case None => fail("expected future")
-        }
-      }
-
-      "just return a none if snapshot already exists" in {
-        val fixture = new Fixture()
-        import fixture.*
-        val tc = client
-        advance(ts1)
-        val wt = tc.awaitTimestamp(ts1, waitForEffectiveTime = true)
-        wt shouldBe None
       }
 
     }
@@ -267,10 +295,10 @@ trait StoreBasedTopologySnapshotTest extends AsyncWordSpec with BaseTest with Ha
         party2Ma <- snapshotA.activeParticipantsOf(party2.toLf)
         party2Mb <- snapshotB.activeParticipantsOf(party2.toLf)
         party2Mc <- snapshotC.activeParticipantsOf(party2.toLf)
-        keysMa <- snapshotA.signingKeys(mediatorId)
-        keysMb <- snapshotB.signingKeys(mediatorId)
-        keysSa <- snapshotA.signingKeys(sequencerId)
-        keysSb <- snapshotB.signingKeys(sequencerId)
+        keysMa <- snapshotA.signingKeys(mediatorIdX)
+        keysMb <- snapshotB.signingKeys(mediatorIdX)
+        keysSa <- snapshotA.signingKeys(sequencerIdX)
+        keysSb <- snapshotB.signingKeys(sequencerIdX)
         partPermA <- snapshotA.findParticipantState(participant1)
         partPermB <- snapshotB.findParticipantState(participant1)
         partPermC <- snapshotC.findParticipantState(participant1)
@@ -293,10 +321,10 @@ trait StoreBasedTopologySnapshotTest extends AsyncWordSpec with BaseTest with Ha
         compareKeys(keysSa, Seq(SigningKeys.key2))
         compareKeys(keysSb, Seq())
         partPermA
-          .valueOrFail("No permission for participant1 in snapshotA")
+          .valueOrFail("No permission for particiant1 in snapshotA")
           .permission shouldBe ParticipantPermission.Submission
         partPermB
-          .valueOrFail("No permission for participant1 in snapshotB")
+          .valueOrFail("No permission for particiant1 in snapshotB")
           .permission shouldBe ParticipantPermission.Observation
         partPermC shouldBe None
         compareMappings(admin1a, Map(participant1 -> ParticipantPermission.Submission))
@@ -309,7 +337,7 @@ trait StoreBasedTopologySnapshotTest extends AsyncWordSpec with BaseTest with Ha
 class StoreBasedTopologySnapshotTestInMemory extends StoreBasedTopologySnapshotTest {
   "InMemoryTopologyStore" should {
     behave like topologySnapshot(() =>
-      new InMemoryTopologyStore(
+      new InMemoryTopologyStoreX(
         TopologyStoreId.AuthorizedStore,
         loggerFactory,
         timeouts,
@@ -318,20 +346,20 @@ class StoreBasedTopologySnapshotTestInMemory extends StoreBasedTopologySnapshotT
   }
 }
 
-trait DbStoreBasedTopologySnapshotTest
-    extends StoreBasedTopologySnapshotTest
-    with DbTopologyStoreHelper {
+trait DbStoreBasedTopologySnapshotTest extends StoreBasedTopologySnapshotTest {
 
   this: AsyncWordSpec with BaseTest with HasExecutionContext with DbTest =>
 
+  protected def pureCryptoApi: CryptoPureApi
+
   "DbStoreBasedTopologySnapshot" should {
-    behave like topologySnapshot(() => createTopologyStore())
+    behave like topologySnapshot(() =>
+      new DbTopologyStoreX(
+        storage,
+        TopologyStoreId.DomainStore(DefaultTestIdentities.domainId),
+        timeouts,
+        loggerFactory,
+      )
+    )
   }
-
 }
-
-class DbStoreBasedTopologySnapshotTestPostgres
-    extends DbStoreBasedTopologySnapshotTest
-    with PostgresTest
-
-class DbStoreBasedTopologySnapshotTestH2 extends DbStoreBasedTopologySnapshotTest with H2Test

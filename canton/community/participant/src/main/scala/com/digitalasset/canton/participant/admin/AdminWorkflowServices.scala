@@ -10,9 +10,11 @@ import cats.syntax.parallel.*
 import com.daml.error.*
 import com.daml.grpc.adapter.ExecutionSequencerFactory
 import com.daml.ledger.api.v2.update_service.GetUpdatesResponse
+import com.daml.lf.data.Ref.PackageId
+import com.daml.lf.language.Ast
+import com.digitalasset.canton.DiscardOps
 import com.digitalasset.canton.concurrent.FutureSupervisor
 import com.digitalasset.canton.config.ProcessingTimeout
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.error.CantonError
 import com.digitalasset.canton.error.CantonErrorGroups.ParticipantErrorGroup.AdminWorkflowServicesErrorGroup
 import com.digitalasset.canton.ledger.api.refinements.ApiTypes as A
@@ -38,8 +40,6 @@ import com.digitalasset.canton.tracing.{NoTracing, Spanning, TraceContext, Trace
 import com.digitalasset.canton.util.FutureInstances.*
 import com.digitalasset.canton.util.ResourceUtil.withResource
 import com.digitalasset.canton.util.{DamlPackageLoader, EitherTUtil}
-import com.digitalasset.daml.lf.data.Ref.PackageId
-import com.digitalasset.daml.lf.language.Ast
 import com.google.protobuf.ByteString
 import io.opentelemetry.api.trace.Tracer
 import org.apache.pekko.actor.ActorSystem
@@ -172,7 +172,7 @@ class AdminWorkflowServices(
                   packageService
                     .vetPackages(
                       AdminWorkflowServices.AdminWorkflowPackages.keys.toSeq,
-                      synchronizeVetting = PackageVettingSynchronization.NoSync,
+                      syncVetting = false,
                     )
                 )
               )
@@ -195,12 +195,11 @@ class AdminWorkflowServices(
       withResource(AdminWorkflowServices.adminWorkflowDarInputStream())(ByteString.readFrom)
     handleDamlErrorDuringPackageLoading(
       packageService
-        .upload(
-          darBytes = bytes,
-          fileNameO = Some(AdminWorkflowServices.AdminWorkflowDarResourceName),
-          submissionIdO = None,
+        .appendDarFromByteString(
+          bytes,
+          AdminWorkflowServices.AdminWorkflowDarResourceName,
           vetAllPackages = true,
-          synchronizeVetting = PackageVettingSynchronization.NoSync,
+          synchronizeVetting = false,
         )
         .void
     )
@@ -243,7 +242,6 @@ class AdminWorkflowServices(
                 service.processTransaction(tx)
               case GetUpdatesResponse.Update.Reassignment(reassignment) =>
                 service.processReassignment(reassignment)
-              case GetUpdatesResponse.Update.OffsetCheckpoint(_) => ()
               case GetUpdatesResponse.Update.Empty => ()
             },
           subscriptionName = service.getClass.getSimpleName,

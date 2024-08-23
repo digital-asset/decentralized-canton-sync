@@ -16,7 +16,6 @@ import com.digitalasset.canton.lifecycle.{AsyncCloseable, CloseContext, Lifecycl
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.participant.event.RecordOrderPublisher
 import com.digitalasset.canton.participant.metrics.SyncDomainMetrics
-import com.digitalasset.canton.participant.protocol.*
 import com.digitalasset.canton.participant.protocol.conflictdetection.{
   ConflictDetector,
   NaiveRequestTracker,
@@ -24,13 +23,24 @@ import com.digitalasset.canton.participant.protocol.conflictdetection.{
   RequestTrackerLookup,
 }
 import com.digitalasset.canton.participant.protocol.submission.InFlightSubmissionTracker.InFlightSubmissionTrackerDomainState
-import com.digitalasset.canton.participant.protocol.submission.{WatermarkLookup, WatermarkTracker}
+import com.digitalasset.canton.participant.protocol.submission.{
+  InFlightSubmissionTracker,
+  WatermarkLookup,
+  WatermarkTracker,
+}
 import com.digitalasset.canton.participant.protocol.transfer.TransferProcessingSteps.PendingTransferSubmission
+import com.digitalasset.canton.participant.protocol.{
+  Phase37Synchronizer,
+  ProcessingStartingPoints,
+  RequestCounterAllocatorImpl,
+  RequestJournal,
+  SubmissionTracker,
+}
 import com.digitalasset.canton.participant.store.memory.TransferCache
 import com.digitalasset.canton.participant.sync.TimelyRejectNotifier
 import com.digitalasset.canton.protocol.RootHash
 import com.digitalasset.canton.store.SessionKeyStore
-import com.digitalasset.canton.time.{Clock, DomainTimeTracker}
+import com.digitalasset.canton.time.DomainTimeTracker
 import com.digitalasset.canton.topology.ParticipantId
 import com.digitalasset.canton.tracing.TraceContext
 
@@ -43,18 +53,16 @@ import scala.concurrent.ExecutionContext
   */
 class SyncDomainEphemeralState(
     participantId: ParticipantId,
-    participantNodeEphemeralState: ParticipantNodeEphemeralState,
     persistentState: SyncDomainPersistentState,
     multiDomainEventLog: Eval[MultiDomainEventLog],
+    val inFlightSubmissionTracker: InFlightSubmissionTracker,
     val startingPoints: ProcessingStartingPoints,
-    createTimeTracker: () => DomainTimeTracker,
+    createTimeTracker: NamedLoggerFactory => DomainTimeTracker,
     metrics: SyncDomainMetrics,
-    exitOnFatalFailures: Boolean,
     sessionKeyCacheConfig: SessionKeyCacheConfig,
     override val timeouts: ProcessingTimeout,
     val loggerFactory: NamedLoggerFactory,
     futureSupervisor: FutureSupervisor,
-    clock: Clock,
 )(implicit executionContext: ExecutionContext, closeContext: CloseContext)
     extends SyncDomainEphemeralStateLookup
     with NamedLogging
@@ -100,9 +108,9 @@ class SyncDomainEphemeralState(
       loggerFactory,
       persistentState.enableAdditionalConsistencyChecks,
       executionContext,
-      exitOnFatalFailures = exitOnFatalFailures,
       timeouts,
       futureSupervisor,
+      persistentState.protocolVersion,
     )
 
     new NaiveRequestTracker(
@@ -110,11 +118,9 @@ class SyncDomainEphemeralState(
       startingPoints.cleanReplay.prenextTimestamp,
       conflictDetector,
       metrics.conflictDetection,
-      exitOnFatalFailures = exitOnFatalFailures,
       timeouts,
       loggerFactory,
       futureSupervisor,
-      clock,
     )
   }
 
@@ -126,14 +132,12 @@ class SyncDomainEphemeralState(
       startingPoints.processing.prenextTimestamp,
       persistentState.eventLog,
       multiDomainEventLog,
-      participantNodeEphemeralState.inFlightSubmissionTracker,
+      inFlightSubmissionTracker,
       metrics.recordOrderPublisher,
-      exitOnFatalFailures = exitOnFatalFailures,
       timeouts,
       loggerFactory,
       futureSupervisor,
       persistentState.activeContractStore,
-      clock,
     )
   }
 
@@ -151,8 +155,8 @@ class SyncDomainEphemeralState(
   )
 
   // the time tracker, note, must be shutdown in sync domain as it is using the sequencer client to
-  // request time proofs.
-  val timeTracker: DomainTimeTracker = createTimeTracker()
+  // request time proofs
+  val timeTracker: DomainTimeTracker = createTimeTracker(loggerFactory)
 
   val submissionTracker: SubmissionTracker =
     SubmissionTracker(persistentState.protocolVersion)(
@@ -170,7 +174,7 @@ class SyncDomainEphemeralState(
     InFlightSubmissionTrackerDomainState.fromSyncDomainState(persistentState, this)
 
   val timelyRejectNotifier: TimelyRejectNotifier = TimelyRejectNotifier(
-    participantNodeEphemeralState,
+    inFlightSubmissionTracker,
     persistentState.domainId.item,
     startingPoints.rewoundSequencerCounterPrehead.map(_.timestamp),
     loggerFactory,

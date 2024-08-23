@@ -26,10 +26,12 @@ trait ContractStore extends ContractLookup {
     * [[com.digitalasset.canton.participant.protocol.SerializableContractAuthenticator]].
     * If the same contract instance has been stored before, the fields not covered by the contract id authentication will be updated.
     *
-    * @param creations      The contracts to be created together with the transaction id and the request counter
+    * @param requestCounter The request counter of the transaction '''creating''' the contracts.
+    * @param creations      The contracts to be created together with the transaction id
     */
   def storeCreatedContracts(
-      creations: Seq[(WithTransactionId[SerializableContract], RequestCounter)]
+      requestCounter: RequestCounter,
+      creations: Seq[WithTransactionId[SerializableContract]],
   )(implicit traceContext: TraceContext): Future[Unit]
 
   def storeCreatedContract(
@@ -37,7 +39,7 @@ trait ContractStore extends ContractLookup {
       transactionId: TransactionId,
       contract: SerializableContract,
   )(implicit traceContext: TraceContext): Future[Unit] =
-    storeCreatedContracts(Seq((WithTransactionId(contract, transactionId), requestCounter)))
+    storeCreatedContracts(requestCounter, Seq(WithTransactionId(contract, transactionId)))
 
   /** Store divulged contracts.
     * Assumes the contract data has been authenticated against the contract id using

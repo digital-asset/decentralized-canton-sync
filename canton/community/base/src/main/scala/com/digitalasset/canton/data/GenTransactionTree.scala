@@ -11,7 +11,6 @@ import com.digitalasset.canton.*
 import com.digitalasset.canton.crypto.*
 import com.digitalasset.canton.data.MerkleTree.*
 import com.digitalasset.canton.data.ViewPosition.MerkleSeqIndexFromRoot
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.logging.pretty.Pretty
 import com.digitalasset.canton.protocol.{v30, *}
 import com.digitalasset.canton.serialization.ProtoConverter
@@ -24,8 +23,7 @@ import monocle.macros.GenLens
 
 import scala.collection.mutable
 
-/** A DAML transaction, decomposed into views (cf. ViewDecomposition) and embedded in a Merkle tree.
-  * Merkle tree nodes may or may not be blinded.
+/** Partially blinded version of a transaction tree.
   * This class is also used to represent transaction view trees and informee trees.
   */
 // private constructor, because object invariants are checked by factory methods
@@ -172,11 +170,8 @@ final case class GenTransactionTree private (
   } yield FullTransactionViewTree.tryCreate(genTransactionTree)
 
   def allLightTransactionViewTrees(
-      protocolVersion: ProtocolVersion
   ): Seq[LightTransactionViewTree] =
-    allTransactionViewTrees.map(tvt =>
-      LightTransactionViewTree.fromTransactionViewTree(tvt, protocolVersion)
-    )
+    allTransactionViewTrees.map(LightTransactionViewTree.fromTransactionViewTree)
 
   /** All lightweight transaction trees in this [[GenTransactionTree]], accompanied by their witnesses and randomness
     * suitable for deriving encryption keys for encrypted view messages.
@@ -193,7 +188,6 @@ final case class GenTransactionTree private (
   def allLightTransactionViewTreesWithWitnessesAndSeeds(
       initSeed: SecureRandomness,
       hkdfOps: HkdfOps,
-      protocolVersion: ProtocolVersion,
   ): Either[HkdfError, Seq[(LightTransactionViewTree, Witnesses, SecureRandomness)]] = {
     val randomnessLength = initSeed.unwrap.size
     val witnessAndSeedMapE =
@@ -225,7 +219,7 @@ final case class GenTransactionTree private (
     witnessAndSeedMapE.map { witnessAndSeedMap =>
       allTransactionViewTrees.map { tvt =>
         val (witnesses, seed) = witnessAndSeedMap(tvt.viewPosition)
-        (LightTransactionViewTree.fromTransactionViewTree(tvt, protocolVersion), witnesses, seed)
+        (LightTransactionViewTree.fromTransactionViewTree(tvt), witnesses, seed)
       }
     }
   }
@@ -304,7 +298,7 @@ object GenTransactionTree {
           CommonMetadata.fromByteString(expectedProtocolVersion)(hashOps),
         )
       commonMetadataUnblinded <- commonMetadata.unwrap.leftMap(_ =>
-        InvariantViolation(field = "GenTransactionTree.commonMetadata", error = "is blinded")
+        InvariantViolation("GenTransactionTree.commonMetadata is blinded")
       )
       participantMetadata <- MerkleTree
         .fromProtoOptionV30(
@@ -315,13 +309,10 @@ object GenTransactionTree {
         .required("GenTransactionTree.rootViews", protoTransactionTree.rootViews)
       rootViews <- MerkleSeq.fromProtoV30(
         (
-          (
-            hashOps,
-            TransactionView.fromByteString(expectedProtocolVersion)(
-              (hashOps, expectedProtocolVersion)
-            ),
+          hashOps,
+          TransactionView.fromByteString(expectedProtocolVersion)(
+            (hashOps, commonMetadataUnblinded.confirmationPolicy, expectedProtocolVersion)
           ),
-          expectedProtocolVersion,
         ),
         rootViewsP,
       )

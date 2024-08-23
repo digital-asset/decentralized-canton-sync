@@ -127,8 +127,8 @@ abstract sealed case class AcsCommitment private (
   protected def toProtoV30: v30.AcsCommitment = {
     v30.AcsCommitment(
       domainId = domainId.toProtoPrimitive,
-      sendingParticipantUid = sender.uid.toProtoPrimitive,
-      counterParticipantUid = counterParticipant.uid.toProtoPrimitive,
+      sendingParticipant = sender.toProtoPrimitive,
+      counterParticipant = counterParticipant.toProtoPrimitive,
       fromExclusive = period.fromExclusive.toProtoPrimitive,
       toInclusive = period.toInclusive.toProtoPrimitive,
       commitment = AcsCommitment.commitmentTypeToProto(commitment),
@@ -159,7 +159,7 @@ object AcsCommitment extends HasMemoizedProtocolVersionedWrapperCompanion[AcsCom
   override val name: String = "AcsCommitment"
 
   val supportedProtoVersions = SupportedProtoVersions(
-    ProtoVersion(30) -> VersionedProtoConverter(ProtocolVersion.v31)(v30.AcsCommitment)(
+    ProtoVersion(30) -> VersionedProtoConverter(ProtocolVersion.v30)(v30.AcsCommitment)(
       supportedProtoVersionMemoized(_)(fromProtoV30),
       _.toProtoV30.toByteString,
     )
@@ -192,30 +192,22 @@ object AcsCommitment extends HasMemoizedProtocolVersionedWrapperCompanion[AcsCom
   ): ParsingResult[AcsCommitment] = {
     for {
       domainId <- DomainId.fromProtoPrimitive(protoMsg.domainId, "AcsCommitment.domainId")
-      sender <- UniqueIdentifier
-        .fromProtoPrimitive(
-          protoMsg.sendingParticipantUid,
-          "AcsCommitment.sending_participant_uid",
-        )
-        .map(ParticipantId(_))
-      counterParticipant <- UniqueIdentifier
-        .fromProtoPrimitive(
-          protoMsg.counterParticipantUid,
-          "AcsCommitment.counter_participant_uid",
-        )
-        .map(ParticipantId(_))
-      fromExclusive <- CantonTimestampSecond.fromProtoPrimitive(
-        "from_exclusive",
-        protoMsg.fromExclusive,
+      sender <- ParticipantId.fromProtoPrimitive(
+        protoMsg.sendingParticipant,
+        "AcsCommitment.sender",
       )
-      toInclusive <- CantonTimestampSecond.fromProtoPrimitive("to_inclusive", protoMsg.toInclusive)
+      counterParticipant <- ParticipantId.fromProtoPrimitive(
+        protoMsg.counterParticipant,
+        "AcsCommitment.counterParticipant",
+      )
+      fromExclusive <- CantonTimestampSecond.fromProtoPrimitive(protoMsg.fromExclusive)
+      toInclusive <- CantonTimestampSecond.fromProtoPrimitive(protoMsg.toInclusive)
 
       periodLength <- PositiveSeconds
         .between(fromExclusive, toInclusive)
         .leftMap { _ =>
           ProtoDeserializationError.InvariantViolation(
-            field = None,
-            error = s"Illegal commitment period length: $fromExclusive, $toInclusive",
+            s"Illegal commitment period length: $fromExclusive, $toInclusive"
           )
         }
 

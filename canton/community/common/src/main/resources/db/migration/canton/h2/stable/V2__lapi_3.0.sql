@@ -16,24 +16,48 @@ CREATE TABLE lapi_parameters (
   ledger_end VARCHAR(4000) NOT NULL,
   ledger_end_sequential_id BIGINT NOT NULL,
   ledger_end_string_interning_id INTEGER NOT NULL,
-  ledger_end_publication_time BIGINT NOT NULL,
   participant_pruned_up_to_inclusive VARCHAR(4000),
   participant_all_divulged_contracts_pruned_up_to_inclusive VARCHAR(4000)
 );
 
-CREATE TABLE lapi_post_processing_end (
-    post_processing_end VARCHAR(4000) NOT NULL
+---------------------------------------------------------------------------------------------------
+-- List of packages
+--
+-- A table for tracking DAML-LF packages.
+---------------------------------------------------------------------------------------------------
+CREATE TABLE lapi_packages (
+    package_id VARCHAR(4000) PRIMARY KEY NOT NULL,
+    upload_id VARCHAR(1000) NOT NULL,
+    source_description VARCHAR(1000),
+    package_size BIGINT NOT NULL,
+    known_since BIGINT NOT NULL,
+    ledger_offset VARCHAR(4000) NOT NULL,
+    package BINARY LARGE OBJECT NOT NULL
 );
 
+CREATE INDEX lapi_packages_ledger_offset_idx ON lapi_packages (ledger_offset);
 
-CREATE TABLE lapi_ledger_end_domain_index (
-  domain_id INTEGER PRIMARY KEY NOT NULL,
-  sequencer_counter BIGINT,
-  sequencer_timestamp BIGINT,
-  request_counter BIGINT,
-  request_timestamp BIGINT,
-  request_sequencer_counter BIGINT
+---------------------------------------------------------------------------------------------------
+-- Package entries
+--
+-- A table for tracking DAML-LF package submissions
+-- It includes id to track the package submission and status
+---------------------------------------------------------------------------------------------------
+CREATE TABLE lapi_package_entries (
+    ledger_offset VARCHAR(4000) PRIMARY KEY NOT NULL,
+    recorded_at BIGINT NOT NULL,
+    submission_id VARCHAR(1000),
+    typ VARCHAR(1000) NOT NULL,
+    rejection_reason VARCHAR(1000),
+
+    CONSTRAINT check_package_entry_type
+        CHECK (
+          (typ = 'accept' AND rejection_reason IS NULL) OR
+          (typ = 'reject' AND rejection_reason IS NOT NULL)
+        )
 );
+
+CREATE INDEX lapi_package_entries_idx ON lapi_package_entries (submission_id);
 
 ---------------------------------------------------------------------------------------------------
 -- Party entries
@@ -68,7 +92,6 @@ CREATE INDEX lapi_party_entries_party_id_and_ledger_offset_idx ON lapi_party_ent
 CREATE TABLE lapi_command_completions (
     completion_offset VARCHAR(4000) NOT NULL,
     record_time BIGINT NOT NULL,
-    publication_time BIGINT NOT NULL,
     application_id VARCHAR(1000) NOT NULL,
     submitters INTEGER ARRAY NOT NULL,
     command_id VARCHAR(1000) NOT NULL,
@@ -94,17 +117,10 @@ CREATE TABLE lapi_command_completions (
     rejection_status_message VARCHAR(4000),
     rejection_status_details BINARY LARGE OBJECT,
     domain_id INTEGER NOT NULL,
-    message_uuid VARCHAR(4000),
-    request_sequencer_counter BIGINT,
-    is_transaction BOOLEAN NOT NULL,
     trace_context BINARY LARGE OBJECT
 );
 
-CREATE INDEX lapi_command_completions_application_id_offset_idx ON lapi_command_completions USING btree (application_id, completion_offset);
-CREATE INDEX lapi_command_completions_offset_idx ON lapi_command_completions USING btree (completion_offset);
-CREATE INDEX lapi_command_completions_publication_time_idx ON lapi_command_completions USING btree (publication_time, completion_offset);
-CREATE INDEX lapi_command_completions_domain_record_time_idx ON lapi_command_completions USING btree (domain_id, record_time);
-CREATE INDEX lapi_command_completions_domain_offset_idx ON lapi_command_completions USING btree (domain_id, completion_offset);
+CREATE INDEX lapi__command_completions_application_id_offset_idx ON lapi_command_completions USING btree (application_id, completion_offset);
 
 ---------------------------------------------------------------------------------------------------
 -- Events: create
@@ -134,7 +150,6 @@ CREATE TABLE lapi_events_create (
     contract_id VARCHAR(4000) NOT NULL,
     template_id INTEGER NOT NULL,
     package_name INTEGER NOT NULL,
-    package_version INTEGER, -- Can be null for LF 2.1
     flat_event_witnesses INTEGER ARRAY NOT NULL DEFAULT ARRAY[], -- stakeholders
     tree_event_witnesses INTEGER ARRAY NOT NULL DEFAULT ARRAY[], -- informees
 
@@ -362,7 +377,6 @@ CREATE TABLE lapi_events_assign (
     contract_id VARCHAR(4000) NOT NULL,
     template_id INTEGER NOT NULL,
     package_name INTEGER NOT NULL,
-    package_version INTEGER, -- Can be null for LF 2.1
     flat_event_witnesses INTEGER ARRAY NOT NULL DEFAULT ARRAY[], -- stakeholders
 
     -- * common reassignment
@@ -408,7 +422,6 @@ CREATE TABLE lapi_pe_create_id_filter_stakeholder (
 );
 CREATE INDEX lapi_pe_create_id_filter_stakeholder_pts_idx ON lapi_pe_create_id_filter_stakeholder(party_id, template_id, event_sequential_id);
 CREATE INDEX lapi_pe_create_id_filter_stakeholder_pt_idx ON lapi_pe_create_id_filter_stakeholder(party_id, event_sequential_id);
-CREATE INDEX lapi_pe_create_id_filter_stakeholder_ts_idx ON lapi_pe_create_id_filter_stakeholder(template_id, event_sequential_id);
 CREATE INDEX lapi_pe_create_id_filter_stakeholder_s_idx ON lapi_pe_create_id_filter_stakeholder(event_sequential_id);
 
 CREATE TABLE lapi_pe_create_id_filter_non_stakeholder_informee (
@@ -425,7 +438,6 @@ CREATE TABLE lapi_pe_consuming_id_filter_stakeholder (
 );
 CREATE INDEX lapi_pe_consuming_id_filter_stakeholder_pts_idx ON lapi_pe_consuming_id_filter_stakeholder(party_id, template_id, event_sequential_id);
 CREATE INDEX lapi_pe_consuming_id_filter_stakeholder_ps_idx  ON lapi_pe_consuming_id_filter_stakeholder(party_id, event_sequential_id);
-CREATE INDEX lapi_pe_consuming_id_filter_stakeholder_ts_idx  ON lapi_pe_consuming_id_filter_stakeholder(template_id, event_sequential_id);
 CREATE INDEX lapi_pe_consuming_id_filter_stakeholder_s_idx   ON lapi_pe_consuming_id_filter_stakeholder(event_sequential_id);
 
 CREATE TABLE lapi_pe_unassign_id_filter_stakeholder (
@@ -435,7 +447,6 @@ CREATE TABLE lapi_pe_unassign_id_filter_stakeholder (
 );
 CREATE INDEX lapi_pe_unassign_id_filter_stakeholder_pts_idx ON lapi_pe_unassign_id_filter_stakeholder(party_id, template_id, event_sequential_id);
 CREATE INDEX lapi_pe_unassign_id_filter_stakeholder_ps_idx  ON lapi_pe_unassign_id_filter_stakeholder(party_id, event_sequential_id);
-CREATE INDEX lapi_pe_unassign_id_filter_stakeholder_ts_idx  ON lapi_pe_unassign_id_filter_stakeholder(template_id, event_sequential_id);
 CREATE INDEX lapi_pe_unassign_id_filter_stakeholder_s_idx   ON lapi_pe_unassign_id_filter_stakeholder(event_sequential_id);
 
 CREATE TABLE lapi_pe_assign_id_filter_stakeholder (
@@ -445,7 +456,6 @@ CREATE TABLE lapi_pe_assign_id_filter_stakeholder (
 );
 CREATE INDEX lapi_pe_assign_id_filter_stakeholder_pts_idx ON lapi_pe_assign_id_filter_stakeholder(party_id, template_id, event_sequential_id);
 CREATE INDEX lapi_pe_assign_id_filter_stakeholder_ps_idx  ON lapi_pe_assign_id_filter_stakeholder(party_id, event_sequential_id);
-CREATE INDEX lapi_pe_assign_id_filter_stakeholder_ts_idx  ON lapi_pe_assign_id_filter_stakeholder(template_id, event_sequential_id);
 CREATE INDEX lapi_pe_assign_id_filter_stakeholder_s_idx   ON lapi_pe_assign_id_filter_stakeholder(event_sequential_id);
 
 CREATE TABLE lapi_pe_consuming_id_filter_non_stakeholder_informee (
@@ -470,17 +480,11 @@ CREATE INDEX lapi_pe_non_consuming_id_filter_informee_s_idx ON lapi_pe_non_consu
 CREATE TABLE lapi_transaction_meta(
     transaction_id VARCHAR(4000) NOT NULL,
     event_offset VARCHAR(4000) NOT NULL,
-    publication_time BIGINT NOT NULL,
-    record_time BIGINT NOT NULL,
-    domain_id INTEGER NOT NULL,
     event_sequential_id_first BIGINT NOT NULL,
     event_sequential_id_last BIGINT NOT NULL
 );
 CREATE INDEX lapi_transaction_meta_tid_idx ON lapi_transaction_meta(transaction_id);
 CREATE INDEX lapi_transaction_meta_event_offset_idx ON lapi_transaction_meta(event_offset);
-CREATE INDEX lapi_transaction_meta_publication_time_idx ON lapi_transaction_meta USING btree (publication_time, event_offset);
-CREATE INDEX lapi_transaction_meta_domain_record_time_idx ON lapi_transaction_meta USING btree (domain_id, record_time);
-CREATE INDEX lapi_transaction_meta_domain_offset_idx ON lapi_transaction_meta USING btree (domain_id, event_offset);
 
 ---------------------------------------------------------------------------------------------------
 -- Metering raw entries

@@ -30,7 +30,6 @@ final class UpdateServiceAuthorization(
   ): Unit =
     authorizer.requireReadClaimsForTransactionFilterOnStream(
       request.filter.map(_.filtersByParty),
-      request.filter.flatMap(_.filtersForAnyParty).nonEmpty,
       service.getUpdates,
     )(request, responseObserver)
 
@@ -40,7 +39,6 @@ final class UpdateServiceAuthorization(
   ): Unit =
     authorizer.requireReadClaimsForTransactionFilterOnStream(
       request.filter.map(_.filtersByParty),
-      request.filter.flatMap(_.filtersForAnyParty).nonEmpty,
       service.getUpdateTrees,
     )(request, responseObserver)
 

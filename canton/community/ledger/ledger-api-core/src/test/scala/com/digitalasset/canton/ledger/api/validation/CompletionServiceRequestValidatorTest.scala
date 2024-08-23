@@ -5,8 +5,11 @@ package com.digitalasset.canton.ledger.api.validation
 
 import com.daml.error.{ContextualizedErrorLogger, NoLogging}
 import com.daml.ledger.api.v2.command_completion_service.CompletionStreamRequest as GrpcCompletionStreamRequest
+import com.daml.ledger.api.v2.participant_offset.ParticipantOffset
+import com.daml.ledger.api.v2.participant_offset.ParticipantOffset.ParticipantBoundary
+import com.daml.lf.data.Ref
+import com.digitalasset.canton.ledger.api.domain
 import com.digitalasset.canton.ledger.api.messages.command.completion.CompletionStreamRequest
-import com.digitalasset.daml.lf.data.Ref
 import io.grpc.Status.Code.*
 import org.mockito.MockitoSugar
 import org.scalatest.wordspec.AnyWordSpec
@@ -19,12 +22,12 @@ class CompletionServiceRequestValidatorTest
   private val grpcCompletionReq = GrpcCompletionStreamRequest(
     expectedApplicationId,
     List(party),
-    absoluteOffset,
+    Some(ParticipantOffset(ParticipantOffset.Value.Absolute(absoluteOffset))),
   )
   private val completionReq = CompletionStreamRequest(
     Ref.ApplicationId.assertFromString(expectedApplicationId),
     List(party).toSet,
-    absoluteOffset,
+    Some(domain.ParticipantOffset.Absolute(Ref.LedgerString.assertFromString(absoluteOffset))),
   )
 
   private val validator = new CompletionServiceRequestValidator(
@@ -58,11 +61,15 @@ class CompletionServiceRequestValidatorTest
       "return the correct error on unknown begin boundary" in {
         requestMustFailWith(
           request = validator.validateGrpcCompletionStreamRequest(
-            grpcCompletionReq.withBeginExclusive("@#!#$@")
+            grpcCompletionReq.withBeginExclusive(
+              ParticipantOffset(
+                ParticipantOffset.Value.Boundary(ParticipantBoundary.Unrecognized(7))
+              )
+            )
           ),
           code = INVALID_ARGUMENT,
           description =
-            "INVALID_ARGUMENT(8,0): The submitted request has invalid arguments: non expected character 0x40 in Daml-LF Ledger String \"@#!#$@\"",
+            "INVALID_ARGUMENT(8,0): The submitted command has invalid arguments: Unknown ledger boundary value '7' in field offset.boundary",
           metadata = Map.empty,
         )
       }
@@ -74,19 +81,6 @@ class CompletionServiceRequestValidatorTest
           req shouldBe completionReq
         }
       }
-
-      "tolerate empty offset (participant begin)" in {
-        inside(
-          validator.validateGrpcCompletionStreamRequest(
-            grpcCompletionReq.withBeginExclusive("")
-          )
-        ) { case Right(req) =>
-          req.applicationId shouldEqual expectedApplicationId
-          req.parties shouldEqual Set(party)
-          req.offset shouldEqual ""
-        }
-      }
-
     }
 
     "validate domain completion requests" should {
@@ -117,7 +111,11 @@ class CompletionServiceRequestValidatorTest
         requestMustFailWith(
           request = validator.validateCompletionStreamRequest(
             completionReq.copy(offset =
-              Ref.LedgerString.assertFromString((ledgerEnd.value.toInt + 1).toString)
+              Some(
+                domain.ParticipantOffset.Absolute(
+                  Ref.LedgerString.assertFromString((ledgerEnd.value.toInt + 1).toString)
+                )
+              )
             ),
             ledgerEnd,
           ),
@@ -128,16 +126,16 @@ class CompletionServiceRequestValidatorTest
         )
       }
 
-      "tolerate empty offset (participant begin)" in {
+      "tolerate missing end" in {
         inside(
           validator.validateCompletionStreamRequest(
-            completionReq.copy(offset = ""),
+            completionReq.copy(offset = None),
             ledgerEnd,
           )
         ) { case Right(req) =>
           req.applicationId shouldEqual expectedApplicationId
           req.parties shouldEqual Set(party)
-          req.offset shouldEqual ""
+          req.offset shouldEqual None
         }
       }
     }
@@ -158,7 +156,7 @@ class CompletionServiceRequestValidatorTest
           ),
           code = INVALID_ARGUMENT,
           description =
-            "INVALID_ARGUMENT(8,0): The submitted request has invalid arguments: Unknown parties: [Alice, Bob]",
+            "INVALID_ARGUMENT(8,0): The submitted command has invalid arguments: Unknown parties: [Alice, Bob]",
           metadata = Map.empty,
         )
       }

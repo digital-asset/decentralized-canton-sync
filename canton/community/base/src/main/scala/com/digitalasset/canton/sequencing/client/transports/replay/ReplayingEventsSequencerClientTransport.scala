@@ -4,10 +4,9 @@
 package com.digitalasset.canton.sequencing.client.transports.replay
 
 import cats.data.EitherT
+import com.digitalasset.canton.DiscardOps
 import com.digitalasset.canton.config.ProcessingTimeout
 import com.digitalasset.canton.data.CantonTimestamp
-import com.digitalasset.canton.discard.Implicits.DiscardOps
-import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.sequencing.client.SendAsyncClientError.SendAsyncClientResponseError
 import com.digitalasset.canton.sequencing.client.SequencerClient.ReplayStatistics
@@ -17,10 +16,11 @@ import com.digitalasset.canton.sequencing.client.transports.{
   SequencerClientTransport,
   SequencerClientTransportPekko,
 }
+import com.digitalasset.canton.sequencing.handshake.HandshakeRequestError
 import com.digitalasset.canton.sequencing.protocol.{
   AcknowledgeRequest,
-  GetTrafficStateForMemberRequest,
-  GetTrafficStateForMemberResponse,
+  HandshakeRequest,
+  HandshakeResponse,
   SignedContent,
   SubmissionRequest,
   SubscriptionRequest,
@@ -28,7 +28,7 @@ import com.digitalasset.canton.sequencing.protocol.{
   TopologyStateForInitResponse,
 }
 import com.digitalasset.canton.sequencing.{SequencerClientRecorder, SerializedEventHandler}
-import com.digitalasset.canton.topology.store.StoredTopologyTransactions
+import com.digitalasset.canton.topology.store.StoredTopologyTransactionsX
 import com.digitalasset.canton.tracing.{TraceContext, Traced}
 import com.digitalasset.canton.util.ShowUtil.*
 import com.digitalasset.canton.util.{ErrorUtil, FutureUtil, MonadUtil}
@@ -57,21 +57,24 @@ class ReplayingEventsSequencerClientTransport(
   override def sendAsyncSigned(
       request: SignedContent[SubmissionRequest],
       timeout: Duration,
-  )(implicit
-      traceContext: TraceContext
-  ): EitherT[FutureUnlessShutdown, SendAsyncClientResponseError, Unit] =
+  )(implicit traceContext: TraceContext): EitherT[Future, SendAsyncClientResponseError, Unit] =
     EitherT.rightT(())
+
+  /** Does nothing */
+  override def sendAsyncUnauthenticatedVersioned(request: SubmissionRequest, timeout: Duration)(
+      implicit traceContext: TraceContext
+  ): EitherT[Future, SendAsyncClientResponseError, Unit] = EitherT.rightT(())
+
+  /** Does nothing */
+  override def acknowledge(request: AcknowledgeRequest)(implicit
+      traceContext: TraceContext
+  ): Future[Unit] = Future.unit
 
   /** Does nothing */
   override def acknowledgeSigned(request: SignedContent[AcknowledgeRequest])(implicit
       traceContext: TraceContext
-  ): EitherT[FutureUnlessShutdown, String, Boolean] =
-    EitherT.rightT(true)
-
-  override def getTrafficStateForMember(request: GetTrafficStateForMemberRequest)(implicit
-      traceContext: TraceContext
-  ): EitherT[FutureUnlessShutdown, String, GetTrafficStateForMemberResponse] =
-    EitherT.pure(GetTrafficStateForMemberResponse(None, protocolVersion))
+  ): EitherT[Future, String, Unit] =
+    EitherT.rightT(())
 
   /** Replays all events in `replayPath` to the handler. */
   override def subscribe[E](request: SubscriptionRequest, handler: SerializedEventHandler[E])(
@@ -112,16 +115,27 @@ class ReplayingEventsSequencerClientTransport(
     new ReplayingSequencerSubscription(timeouts, loggerFactory)
   }
 
+  override def subscribeUnauthenticated[E](
+      request: SubscriptionRequest,
+      handler: SerializedEventHandler[E],
+  )(implicit traceContext: TraceContext): SequencerSubscription[E] = subscribe(request, handler)
+
   /** Will never request a retry. */
   override def subscriptionRetryPolicy: SubscriptionErrorRetryPolicy =
     SubscriptionErrorRetryPolicy.never
+
+  /** Will always succeed. */
+  override def handshake(request: HandshakeRequest)(implicit
+      traceContext: TraceContext
+  ): EitherT[Future, HandshakeRequestError, HandshakeResponse] =
+    EitherT.rightT(HandshakeResponse.Success(protocolVersion))
 
   override def downloadTopologyStateForInit(request: TopologyStateForInitRequest)(implicit
       traceContext: TraceContext
   ): EitherT[Future, String, TopologyStateForInitResponse] =
     EitherT.rightT[Future, String](
       TopologyStateForInitResponse(
-        topologyTransactions = Traced(StoredTopologyTransactions.empty)
+        topologyTransactions = Traced(StoredTopologyTransactionsX.empty)
       )
     )
 
@@ -134,6 +148,10 @@ class ReplayingEventsSequencerClientTransport(
     ErrorUtil.internalError(
       new UnsupportedOperationException("subscribe(SubmissionRequest) is not yet implemented")
     )
+
+  override def subscribeUnauthenticated(request: SubscriptionRequest)(implicit
+      traceContext: TraceContext
+  ): SequencerSubscriptionPekko[Nothing] = subscribe(request)
 
   override def subscriptionRetryPolicyPekko: SubscriptionErrorRetryPolicyPekko[Nothing] =
     SubscriptionErrorRetryPolicyPekko.never

@@ -33,10 +33,10 @@ object HandshakeRequest {
   ): ParsingResult[HandshakeRequest] =
     for {
       clientProtocolVersions <- requestP.clientProtocolVersions.traverse(version =>
-        ProtocolVersion.fromProtoPrimitiveHandshake(version)
+        ProtocolVersion.fromProtoPrimitiveS(version)
       )
       minimumProtocolVersion <- requestP.minimumProtocolVersion.traverse(
-        ProtocolVersion.fromProtoPrimitiveHandshake
+        ProtocolVersion.fromProtoPrimitiveS(_)
       )
     } yield HandshakeRequest(clientProtocolVersions, minimumProtocolVersion)
 }

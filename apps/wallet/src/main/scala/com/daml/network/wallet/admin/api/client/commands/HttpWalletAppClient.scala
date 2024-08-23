@@ -61,17 +61,14 @@ object HttpWalletAppClient {
   }
 
   final case class AmuletPosition(
-      contract: ContractWithState[amuletCodegen.Amulet.ContractId, amuletCodegen.Amulet],
+      contract: Contract[amuletCodegen.Amulet.ContractId, amuletCodegen.Amulet],
       round: Long,
       accruedHoldingFee: BigDecimal,
       effectiveAmount: BigDecimal,
   )
 
   final case class LockedAmuletPosition(
-      contract: ContractWithState[
-        amuletCodegen.LockedAmulet.ContractId,
-        amuletCodegen.LockedAmulet,
-      ],
+      contract: Contract[amuletCodegen.LockedAmulet.ContractId, amuletCodegen.LockedAmulet],
       round: Long,
       accruedHoldingFee: BigDecimal,
       effectiveAmount: BigDecimal,
@@ -151,7 +148,7 @@ object HttpWalletAppClient {
     ) = { case http.ListResponse.OK(response) =>
       def decodePositions(position: definitions.AmuletPosition) =
         for {
-          contract <- ContractWithState
+          contract <- Contract
             .fromHttp(amuletCodegen.Amulet.COMPANION)(position.contract)
             .leftMap(_.toString)
 
@@ -168,7 +165,7 @@ object HttpWalletAppClient {
 
       def decodeLockedPositions(lockedPosition: definitions.AmuletPosition) =
         for {
-          contract <- ContractWithState
+          contract <- Contract
             .fromHttp(amuletCodegen.LockedAmulet.COMPANION)(lockedPosition.contract)
             .leftMap(_.toString)
 
@@ -352,10 +349,7 @@ object HttpWalletAppClient {
       extends InternalBaseCommand[
         http.ListAcceptedAppPaymentsResponse,
         Seq[
-          ContractWithState[
-            walletCodegen.AcceptedAppPayment.ContractId,
-            walletCodegen.AcceptedAppPayment,
-          ]
+          Contract[walletCodegen.AcceptedAppPayment.ContractId, walletCodegen.AcceptedAppPayment]
         ],
       ] {
     def submitRequest(
@@ -368,9 +362,7 @@ object HttpWalletAppClient {
         decoder: TemplateJsonDecoder
     ) = { case http.ListAcceptedAppPaymentsResponse.OK(response) =>
       response.acceptedAppPayments
-        .traverse(req =>
-          ContractWithState.fromHttp(walletCodegen.AcceptedAppPayment.COMPANION)(req)
-        )
+        .traverse(req => Contract.fromHttp(walletCodegen.AcceptedAppPayment.COMPANION)(req))
         .leftMap(_.toString)
     }
   }

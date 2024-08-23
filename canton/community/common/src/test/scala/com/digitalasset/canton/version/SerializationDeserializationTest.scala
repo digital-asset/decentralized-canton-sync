@@ -7,31 +7,21 @@ import com.digitalasset.canton.crypto.TestHash
 import com.digitalasset.canton.data.*
 import com.digitalasset.canton.protocol.*
 import com.digitalasset.canton.protocol.messages.*
-import com.digitalasset.canton.sequencing.SequencerConnections
 import com.digitalasset.canton.sequencing.protocol.{
   AcknowledgeRequest,
   AggregationRule,
   Batch,
   ClosedEnvelope,
   GeneratorsProtocol as GeneratorsProtocolSequencing,
-  GetTrafficStateForMemberRequest,
-  GetTrafficStateForMemberResponse,
   MaxRequestSizeToDeserialize,
-  SequencedEvent,
-  SequencingSubmissionCost,
-  SignedContent,
   SubmissionRequest,
-  SubscriptionRequest,
-  TopologyStateForInitRequest,
 }
 import com.digitalasset.canton.topology.transaction.{
   GeneratorsTransaction,
-  SignedTopologyTransaction,
-  TopologyTransaction,
+  SignedTopologyTransactionX,
+  TopologyTransactionX,
 }
-import com.digitalasset.canton.version.Transfer.{SourceProtocolVersion, TargetProtocolVersion}
 import com.digitalasset.canton.{BaseTest, SerializationDeserializationTestHelpers}
-import com.google.protobuf.ByteString
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
@@ -55,12 +45,15 @@ class SerializationDeserializationTest
       generatorsProtocol,
       generatorsLocalVerdict,
       generatorsVerdict,
-      generatorsTransaction,
     )
     val generatorsProtocolSeq = new GeneratorsProtocolSequencing(
       version,
       generatorsMessages,
-      generatorsData,
+    )
+    val generatorsTransferData = new GeneratorsTransferData(
+      version,
+      generatorsProtocol,
+      generatorsProtocolSeq,
     )
     val generatorsTrafficData = new GeneratorsTrafficData(
       version
@@ -68,6 +61,7 @@ class SerializationDeserializationTest
 
     import generatorsData.*
     import generatorsMessages.*
+    import generatorsTransferData.*
     import generatorsTrafficData.*
     import generatorsVerdict.*
     import generatorsLocalVerdict.*
@@ -77,27 +71,22 @@ class SerializationDeserializationTest
 
     s"Serialization and deserialization methods using protocol version $version" should {
       "compose to the identity" in {
-        testProtocolVersioned(StaticDomainParameters, version)
-        testProtocolVersioned(DynamicDomainParameters, version)
-        testProtocolVersioned(DynamicSequencingParameters, version)
+        testProtocolVersioned(StaticDomainParameters)
+        testProtocolVersioned(DynamicDomainParameters)
 
-        testProtocolVersioned(AcsCommitment, version)
-        testProtocolVersioned(Verdict, version)
-        testProtocolVersioned(ConfirmationResponse, version)
-        testMemoizedProtocolVersionedWithCtxAndValidation(
-          TypedSignedProtocolMessageContent,
-          version,
-        )
-        testProtocolVersionedAndValidation(SignedProtocolMessage, version)
+        testProtocolVersioned(AcsCommitment)
+        testProtocolVersioned(Verdict)
+        testProtocolVersioned(ConfirmationResponse)
+        testMemoizedProtocolVersionedWithCtx(TypedSignedProtocolMessageContent, version)
+        testProtocolVersionedWithCtx(SignedProtocolMessage, version)
 
-        testProtocolVersioned(LocalVerdict, version)
-        testProtocolVersionedWithCtxAndValidation(EnvelopeContent, TestHash, version)
-        testMemoizedProtocolVersioned(ConfirmationResultMessage, version)
+        testProtocolVersioned(LocalVerdict)
+        testProtocolVersionedWithCtx(EnvelopeContent, (TestHash, version))
+        testMemoizedProtocolVersioned(ConfirmationResultMessage)
 
-        testProtocolVersioned(AcknowledgeRequest, version)
-        testProtocolVersioned(AggregationRule, version)
-        testProtocolVersioned(ClosedEnvelope, version)
-        testProtocolVersioned(SequencingSubmissionCost, version)
+        testProtocolVersioned(AcknowledgeRequest)
+        testProtocolVersioned(AggregationRule)
+        testProtocolVersioned(ClosedEnvelope)
 
         testVersioned(ContractMetadata)(
           generatorsProtocol.contractMetadataArb(canHaveEmptyKey = true)
@@ -106,97 +95,51 @@ class SerializationDeserializationTest
           generatorsProtocol.serializableContractArb(canHaveEmptyKey = true)
         )
 
-        testProtocolVersioned(ActionDescription, version)
+        testProtocolVersioned(ActionDescription)
 
         // Merkle tree leaves
         testMemoizedProtocolVersionedWithCtx(CommonMetadata, TestHash)
         testMemoizedProtocolVersionedWithCtx(ParticipantMetadata, TestHash)
         testMemoizedProtocolVersionedWithCtx(SubmitterMetadata, TestHash)
-        testMemoizedProtocolVersionedWithCtx(
-          TransferInCommonData,
-          (TestHash, TargetProtocolVersion(version)),
-        )
+        testMemoizedProtocolVersionedWithCtx(TransferInCommonData, TestHash)
         testMemoizedProtocolVersionedWithCtx(TransferInView, TestHash)
-        testMemoizedProtocolVersionedWithCtx(
-          TransferOutCommonData,
-          (TestHash, SourceProtocolVersion(version)),
-        )
+        testMemoizedProtocolVersionedWithCtx(TransferOutCommonData, TestHash)
         testMemoizedProtocolVersionedWithCtx(TransferOutView, TestHash)
 
         testMemoizedProtocolVersionedWithCtx(
           ViewCommonData,
-          TestHash,
+          (TestHash, ConfirmationPolicy.Signatory),
         )
 
-        testMemoizedProtocolVersioned(TopologyTransaction, version)
+        testMemoizedProtocolVersioned(TopologyTransactionX)
         testProtocolVersionedWithCtx(
-          SignedTopologyTransaction,
+          SignedTopologyTransactionX,
           ProtocolVersionValidation(version),
         )
 
         testMemoizedProtocolVersionedWithCtx(
-          ViewParticipantData,
+          com.digitalasset.canton.data.ViewParticipantData,
           TestHash,
         )
-        testProtocolVersioned(Batch, version)
-        testProtocolVersioned(SetTrafficPurchasedMessage, version)
+        testProtocolVersioned(Batch)
+        testProtocolVersioned(SetTrafficBalanceMessage)
         testMemoizedProtocolVersionedWithCtx(
           SubmissionRequest,
           MaxRequestSizeToDeserialize.NoLimit,
         )
-        testVersioned(SequencerConnections)
-        testProtocolVersioned(GetTrafficStateForMemberRequest, version)
-        testProtocolVersioned(GetTrafficStateForMemberResponse, version)
-        testProtocolVersioned(TopologyStateForInitRequest, version)
-        testProtocolVersioned(SubscriptionRequest, version)
-        testMemoizedProtocolVersioned2(
-          SequencedEvent,
-          version,
-        )
-        testMemoizedProtocolVersioned2(
-          SignedContent,
-          version,
-        )
-        testProtocolVersionedWithCtx(
-          TransactionView,
-          (TestHash, version),
-        )
-        testProtocolVersionedWithCtxAndValidation(
-          FullInformeeTree,
-          TestHash,
-          version,
-        )
-
-        // testing MerkleSeq structure with specific VersionedMerkleTree: SubmitterMetadata.
-        testProtocolVersionedWithCtxAndValidation(
-          MerkleSeq,
-          (
-            TestHash,
-            (bytes: ByteString) => SubmitterMetadata.fromTrustedByteString(TestHash)(bytes),
-          ),
-          version,
-        )
-
-        testProtocolVersionedWithCtxAndValidation(LightTransactionViewTree, TestHash, version)
-
-        testProtocolVersionedWithCtxAndValidationWithTargetProtocolVersion(
-          TransferInViewTree,
-          TestHash,
-          TargetProtocolVersion(version),
-        )
-        testProtocolVersionedWithCtxAndValidationWithSourceProtocolVersion(
-          TransferOutViewTree,
-          TestHash,
-          SourceProtocolVersion(version),
-        )
+        testVersioned(com.digitalasset.canton.sequencing.SequencerConnections)
       }
+
     }
   }
 
   "be exhaustive" in {
-    val requiredTests = findHasProtocolVersionedWrapperSubClasses("com.digitalasset.canton").toSet
+    val requiredTests = {
+      findHasProtocolVersionedWrapperSubClasses("com.digitalasset.canton.protocol")
+        ++ findHasProtocolVersionedWrapperSubClasses("com.digitalasset.canton.topology")
+    }
 
-    val missingTests = requiredTests.diff(testedClasses)
+    val missingTests = requiredTests.diff(testedClasses.toList)
 
     /*
         If this test fails, it means that one class inheriting from HasProtocolVersionWrapper in the

@@ -7,54 +7,52 @@ import com.daml.nonempty.NonEmpty
 import com.digitalasset.canton.config.CantonRequireTypes.String255
 import com.digitalasset.canton.config.DefaultProcessingTimeouts
 import com.digitalasset.canton.config.RequireTypes.{NonNegativeInt, PositiveInt}
-import com.digitalasset.canton.crypto.SigningPublicKey
 import com.digitalasset.canton.crypto.provider.symbolic.SymbolicPureCrypto
 import com.digitalasset.canton.data.CantonTimestamp
-import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
 import com.digitalasset.canton.protocol.DynamicDomainParameters
-import com.digitalasset.canton.protocol.messages.TopologyTransactionsBroadcast
-import com.digitalasset.canton.protocol.messages.TopologyTransactionsBroadcast.Broadcast
+import com.digitalasset.canton.protocol.messages.TopologyTransactionsBroadcastX
+import com.digitalasset.canton.protocol.messages.TopologyTransactionsBroadcastX.Broadcast
 import com.digitalasset.canton.sequencing.SubscriptionStart.FreshSubscription
 import com.digitalasset.canton.sequencing.protocol.{AllMembersOfDomain, OpenEnvelope, Recipients}
 import com.digitalasset.canton.store.db.{DbTest, PostgresTest}
 import com.digitalasset.canton.time.{DomainTimeTracker, NonNegativeFiniteDuration}
 import com.digitalasset.canton.topology.*
-import com.digitalasset.canton.topology.store.StoredTopologyTransactions.GenericStoredTopologyTransactions
-import com.digitalasset.canton.topology.store.db.DbTopologyStoreHelper
-import com.digitalasset.canton.topology.store.memory.InMemoryTopologyStore
+import com.digitalasset.canton.topology.store.StoredTopologyTransactionsX.GenericStoredTopologyTransactionsX
+import com.digitalasset.canton.topology.store.db.DbTopologyStoreXHelper
+import com.digitalasset.canton.topology.store.memory.InMemoryTopologyStoreX
 import com.digitalasset.canton.topology.store.{
-  StoredTopologyTransaction,
-  StoredTopologyTransactions,
-  TopologyStore,
+  StoredTopologyTransactionX,
+  StoredTopologyTransactionsX,
   TopologyStoreId,
+  TopologyStoreX,
 }
-import com.digitalasset.canton.topology.transaction.SignedTopologyTransaction.GenericSignedTopologyTransaction
+import com.digitalasset.canton.topology.transaction.SignedTopologyTransactionX.GenericSignedTopologyTransactionX
 import com.digitalasset.canton.topology.transaction.*
-import com.digitalasset.canton.tracing.{TraceContext, Traced}
+import com.digitalasset.canton.tracing.Traced
 import com.digitalasset.canton.{BaseTest, HasExecutionContext, SequencerCounter}
 import org.scalatest.wordspec.AnyWordSpec
 
-abstract class TopologyTransactionProcessorTest
+abstract class TopologyTransactionProcessorXTest
     extends AnyWordSpec
     with BaseTest
     with HasExecutionContext {
 
   private val crypto = new SymbolicPureCrypto()
 
-  protected def mkStore: TopologyStore[TopologyStoreId.DomainStore]
+  protected def mkStore: TopologyStoreX[TopologyStoreId.DomainStore]
 
   private def mk(
-      store: TopologyStore[TopologyStoreId.DomainStore] = mkStore
-  ): (TopologyTransactionProcessor, TopologyStore[TopologyStoreId.DomainStore]) = {
+      store: TopologyStoreX[TopologyStoreId.DomainStore] = mkStore
+  ): (TopologyTransactionProcessorX, TopologyStoreX[TopologyStoreId.DomainStore]) = {
 
-    val proc = new TopologyTransactionProcessor(
+    val proc = new TopologyTransactionProcessorX(
       DefaultTestIdentities.domainId,
       crypto,
       store,
       _ => (),
       TerminateProcessing.NoOpTerminateTopologyProcessing,
+      true,
       futureSupervisor,
-      exitOnFatalFailures = true,
       DefaultProcessingTimeouts.testing,
       loggerFactory,
     )
@@ -63,24 +61,24 @@ abstract class TopologyTransactionProcessorTest
 
   private def ts(idx: Int): CantonTimestamp = CantonTimestamp.Epoch.plusSeconds(idx.toLong)
   private def fetch(
-      store: TopologyStore[TopologyStoreId],
+      store: TopologyStoreX[TopologyStoreId],
       timestamp: CantonTimestamp,
       isProposal: Boolean = false,
-  ): List[TopologyMapping] = {
+  ): List[TopologyMappingX] = {
     fetchTx(store, timestamp, isProposal).toTopologyState
   }
 
   private def fetchTx(
-      store: TopologyStore[TopologyStoreId],
+      store: TopologyStoreX[TopologyStoreId],
       timestamp: CantonTimestamp,
       isProposal: Boolean = false,
-  ): GenericStoredTopologyTransactions = {
+  ): GenericStoredTopologyTransactionsX = {
     store
       .findPositiveTransactions(
         asOf = timestamp,
         asOfInclusive = false,
         isProposal = isProposal,
-        types = TopologyMapping.Code.all,
+        types = TopologyMappingX.Code.all.toSeq,
         None,
         None,
       )
@@ -88,10 +86,10 @@ abstract class TopologyTransactionProcessorTest
   }
 
   private def process(
-      proc: TopologyTransactionProcessor,
+      proc: TopologyTransactionProcessorX,
       ts: CantonTimestamp,
       sc: Long,
-      txs: List[SignedTopologyTransaction[TopologyChangeOp, TopologyMapping]],
+      txs: List[SignedTopologyTransactionX[TopologyChangeOpX, TopologyMappingX]],
   ): Unit =
     clue(s"block at sc $sc")(
       proc
@@ -100,7 +98,7 @@ abstract class TopologyTransactionProcessorTest
           EffectiveTime(ts),
           SequencerCounter(sc),
           List(
-            TopologyTransactionsBroadcast.create(
+            TopologyTransactionsBroadcastX.create(
               DefaultTestIdentities.domainId,
               Seq(Broadcast(String255.tryCreate("some request"), txs)),
               testedProtocolVersion,
@@ -112,13 +110,13 @@ abstract class TopologyTransactionProcessorTest
     )
 
   private def validate(
-      observed: Seq[TopologyMapping],
-      expected: Seq[SignedTopologyTransaction[TopologyChangeOp, TopologyMapping]],
+      observed: List[TopologyMappingX],
+      expected: List[SignedTopologyTransactionX[TopologyChangeOpX, TopologyMappingX]],
   ) = {
     observed.toSet shouldBe expected.map(_.mapping).toSet
   }
 
-  object Factory extends TopologyTransactionTestFactory(loggerFactory, parallelExecutionContext)
+  object Factory extends TopologyTransactionTestFactoryX(loggerFactory, parallelExecutionContext)
   import Factory.*
 
   "topology transaction processor" should {
@@ -126,7 +124,7 @@ abstract class TopologyTransactionProcessorTest
       val (proc, store) = mk()
       // topology processor assumes to be able to find domain parameters in the store for additional checks
       val block1 = List(ns1k1_k1, dmp1_k1)
-      val block2Adds = List(ns1k2_k1, okm1bk5k1E_k1, dtcp1_k1)
+      val block2Adds = List(ns1k2_k1, okm1bk5_k1, dtcp1_k1)
       val block3Replaces = List(ns1k1_k1, setSerial(dmp1_k1_bis, PositiveInt.two))
 
       process(proc, ts(0), 0, block1)
@@ -152,7 +150,7 @@ abstract class TopologyTransactionProcessorTest
       val block1Adds = List(ns1k1_k1, ns1k2_k1)
       val block1Replaces = List(dmp1_k1)
       val block1 = block1Adds ++ block1Replaces
-      val block2 = List(okm1bk5k1E_k1, dtcp1_k1, setSerial(dmp1_k1_bis, PositiveInt.two))
+      val block2 = List(okm1bk5_k1, dtcp1_k1, setSerial(dmp1_k1_bis, PositiveInt.two))
 
       process(proc, ts(0), 0, block1)
       val st0 = fetch(store, ts(0).immediateSuccessor)
@@ -180,16 +178,9 @@ abstract class TopologyTransactionProcessorTest
       val (proc, store) = mk()
       val block1 = List(ns1k1_k1, dmp1_k1, ns2k2_k2, ns3k3_k3)
       val block2 = List(ns1k2_k1, dtcp1_k1)
-      val block3 = List(okm1bk5k1E_k1)
+      val block3 = List(okm1bk5_k1)
       val block4 = List(dnd_proposal_k1)
-      // using two competing proposals in the same block with the same
-      // * serial
-      // * mapping_unique_key
-      // * operation
-      // * validFrom
-      // * signing keys
-      // to check that the unique index is not too general
-      val block5 = List(dnd_proposal_k2, dnd_proposal_k2_alternative)
+      val block5 = List(dnd_proposal_k2)
       val block6 = List(dnd_proposal_k3)
       process(proc, ts(0), 0, block1)
       process(proc, ts(1), 1, block2)
@@ -199,11 +190,8 @@ abstract class TopologyTransactionProcessorTest
       process(proc, ts(5), 5, block6)
       val storeAfterProcessing = store.dumpStoreContent().futureValue
       val DNDafterProcessing = fetch(store, ts(5).immediateSuccessor)
-        .find(_.code == TopologyMapping.Code.DecentralizedNamespaceDefinition)
+        .find(_.code == TopologyMappingX.Code.DecentralizedNamespaceDefinitionX)
         .valueOrFail("Couldn't find DND")
-
-      // check that we indeed stored 2 proposals
-      storeAfterProcessing.result.filter(_.validFrom == EffectiveTime(ts(4))) should have size (2)
 
       val proc2 = mk(store)._1
       process(proc2, ts(0), 0, block1)
@@ -222,67 +210,10 @@ abstract class TopologyTransactionProcessorTest
       DNDafterProcessing shouldBe dnd_proposal_k1.mapping
     }
 
-    "trigger topology subscribers with/without transactions" in {
-      val (proc, store) = mk()
-      var testTopoSubscriberCalledEmpty: Boolean = false
-      var testTopoSubscriberCalledWithTxs: Boolean = false
-      val testTopoSubscriber = new TopologyTransactionProcessingSubscriber {
-        override def observed(
-            sequencedTimestamp: SequencedTime,
-            effectiveTimestamp: EffectiveTime,
-            sequencerCounter: SequencerCounter,
-            transactions: Seq[GenericSignedTopologyTransaction],
-        )(implicit traceContext: TraceContext): FutureUnlessShutdown[Unit] = {
-          if (transactions.nonEmpty) {
-            testTopoSubscriberCalledWithTxs = true
-          } else {
-            testTopoSubscriberCalledEmpty = true
-          }
-          FutureUnlessShutdown.unit
-        }
-      }
-      val block1 = List(ns1k1_k1, dmp1_k1, ns2k2_k2, ns3k3_k3)
-      val block2 = List(ns1k2_k1, dtcp1_k1)
-      val block3 = List(okm1bk5k1E_k1)
-      val block4 = List(dnd_proposal_k1)
-      val block5 = List(dnd_proposal_k2)
-      val block6 = List(dnd_proposal_k3)
-      val block7 = List(ns1k1_k1)
-      process(proc, ts(0), 0, block1)
-      process(proc, ts(1), 1, block2)
-      process(proc, ts(2), 2, block3)
-      proc.subscribe(testTopoSubscriber)
-      process(proc, ts(3), 3, block4)
-      clue("incomplete proposals should trigger subscriber with empty transactions") {
-        testTopoSubscriberCalledWithTxs shouldBe false
-        testTopoSubscriberCalledEmpty shouldBe true
-      }
-      testTopoSubscriberCalledEmpty = false
-      process(proc, ts(4), 4, block5)
-      clue("incomplete proposals should trigger subscriber with empty transactions") {
-        testTopoSubscriberCalledWithTxs shouldBe false
-        testTopoSubscriberCalledEmpty shouldBe true
-      }
-      process(proc, ts(5), 5, block6)
-      clue("complete proposals should trigger subscriber with non-empty transactions") {
-        testTopoSubscriberCalledWithTxs shouldBe true
-      }
-      testTopoSubscriberCalledEmpty = false
-      process(proc, ts(6), 6, block7)
-      clue("rejections should trigger subscriber with empty transactions") {
-        testTopoSubscriberCalledEmpty shouldBe true
-      }
-
-      val DNDafterProcessing = fetch(store, ts(5).immediateSuccessor)
-        .find(_.code == TopologyMapping.Code.DecentralizedNamespaceDefinition)
-        .valueOrFail("Couldn't find DND")
-      DNDafterProcessing shouldBe dnd_proposal_k1.mapping
-    }
-
     // TODO(#12390) enable test after support for cascading updates
     "cascading update" ignore {
       val (proc, store) = mk()
-      val block1 = List(ns1k1_k1, ns1k2_k1, id1ak4_k2, okm1bk5k1E_k4)
+      val block1 = List(ns1k1_k1, ns1k2_k1, id1ak4_k2, okm1bk5_k4)
       process(proc, ts(0), 0, block1)
       val st1 = fetch(store, ts(0).immediateSuccessor)
       process(proc, ts(1), 1, List(Factory.mkRemoveTx(ns1k2_k1)))
@@ -295,9 +226,9 @@ abstract class TopologyTransactionProcessorTest
       val st5 = fetch(store, ts(4).immediateSuccessor)
       validate(st1, block1)
       validate(st2, List(ns1k1_k1))
-      validate(st3, List(ns1k1_k1, ns1k2_k1p, id1ak4_k2, okm1bk5k1E_k4))
+      validate(st3, List(ns1k1_k1, ns1k2_k1p, id1ak4_k2, okm1bk5_k4))
       validate(st4, List(ns1k1_k1, ns1k2_k1p))
-      validate(st5, List(ns1k1_k1, ns1k2_k1p, id1ak4_k2p, okm1bk5k1E_k4))
+      validate(st5, List(ns1k1_k1, ns1k2_k1p, id1ak4_k2p, okm1bk5_k4))
     }
 
     "cascading update and domain parameters change" in {
@@ -323,7 +254,7 @@ abstract class TopologyTransactionProcessorTest
       // after a restart, we need to fetch pre-existing authorizations from our store
       // simulate this one by one
       val store = mkStore
-      val block1 = List(ns1k1_k1, ns1k2_k1, id1ak4_k2, okm1bk5k1E_k4)
+      val block1 = List(ns1k1_k1, ns1k2_k1, id1ak4_k2, okm1bk5_k4)
       block1.zipWithIndex.foreach { case (elem, idx) =>
         val proc = mk(store)._1
         process(proc, ts(idx), idx.toLong, List(elem))
@@ -336,11 +267,11 @@ abstract class TopologyTransactionProcessorTest
     "correctly handle duplicate transactions within the same batch" in {
       import SigningKeys.{ec as _, *}
       val dnsNamespace =
-        DecentralizedNamespaceDefinition.computeNamespace(Set(ns1, ns7, ns8, ns9))
-      val domainId = DomainId(UniqueIdentifier.tryCreate("test-domain", dnsNamespace))
+        DecentralizedNamespaceDefinitionX.computeNamespace(Set(ns1, ns7, ns8, ns9))
+      val domainId = DomainId(UniqueIdentifier(Identifier.tryCreate("test-domain"), dnsNamespace))
 
       val dns = mkAddMultiKey(
-        DecentralizedNamespaceDefinition
+        DecentralizedNamespaceDefinitionX
           .create(
             dnsNamespace,
             PositiveInt.three,
@@ -350,155 +281,81 @@ abstract class TopologyTransactionProcessorTest
         NonEmpty(Set, key1, key7, key8, key9),
       )
 
-      val dopMapping = DomainParametersState(
-        domainId,
-        DynamicDomainParameters.defaultValues(testedProtocolVersion),
-      )
-      val dop = mkAddMultiKey(
-        dopMapping,
+      val mdsMapping = MediatorDomainStateX
+        .create(
+          domainId,
+          NonNegativeInt.zero,
+          PositiveInt.one,
+          active = Seq(DefaultTestIdentities.mediatorIdX),
+          observers = Seq.empty,
+        )
+        .value
+      val mds = mkAddMultiKey(
+        mdsMapping,
         NonEmpty(Set, key1, key7, key8),
       )
 
       val (proc, store) = mk()
 
-      def checkDop(
+      def checkMds(
           ts: CantonTimestamp,
           expectedSignatures: Int,
           expectedValidFrom: CantonTimestamp,
       ) = {
-        val dopInStore = store
-          .findStored(ts, dop, includeRejected = false)
+        val mdsInStore = store
+          .findStored(ts, mds, includeRejected = false)
           .futureValue
           .value
 
-        dopInStore.mapping shouldBe dopMapping
-        dopInStore.transaction.signatures.forgetNE.toSeq should have size (expectedSignatures.toLong)
-        dopInStore.validUntil shouldBe None
-        dopInStore.validFrom shouldBe EffectiveTime(expectedValidFrom)
+        mdsInStore.mapping shouldBe mdsMapping
+        mdsInStore.transaction.signatures.forgetNE.toSeq should have size (expectedSignatures.toLong)
+        mdsInStore.validUntil shouldBe None
+        mdsInStore.validFrom shouldBe EffectiveTime(expectedValidFrom)
       }
 
       // setup
-      val block0 = List[GenericSignedTopologyTransaction](
+      val block0 = List[GenericSignedTopologyTransactionX](
         ns1k1_k1,
         ns7k7_k7,
         ns8k8_k8,
         ns9k9_k9,
         dns,
-        dop,
+        mds,
       )
 
       process(proc, ts(0), 0L, block0)
       validate(fetch(store, ts(0).immediateSuccessor), block0)
       // check that the most recently stored version after ts(0) is the one with 3 signatures
-      checkDop(ts(0).immediateSuccessor, expectedSignatures = 3, expectedValidFrom = ts(0))
+      checkMds(ts(0).immediateSuccessor, expectedSignatures = 3, expectedValidFrom = ts(0))
 
-      val extraDop = mkAdd(dopMapping, signingKey = key9, isProposal = true)
+      val extraMds = mkAdd(mdsMapping, signingKey = key9, isProposal = true)
 
       // processing multiple of the same transaction in the same batch works correctly
-      val block1 = List[GenericSignedTopologyTransaction](extraDop, extraDop)
+      val block1 = List[GenericSignedTopologyTransactionX](extraMds, extraMds)
       process(proc, ts(1), 1L, block1)
       validate(fetch(store, ts(1).immediateSuccessor), block0)
       // check that the most recently stored version after ts(1) is the merge of the previous one with the additional signature
       // for a total of 4 signatures
-      checkDop(ts(1).immediateSuccessor, expectedSignatures = 4, expectedValidFrom = ts(1))
+      checkMds(ts(1).immediateSuccessor, expectedSignatures = 4, expectedValidFrom = ts(1))
 
       // processing yet another instance of the same transaction out of batch will result in a rejected
       // transaction
-      val block2 = List(extraDop)
+      val block2 = List(extraMds)
       process(proc, ts(2), 2L, block2)
       validate(fetch(store, ts(2).immediateSuccessor), block0)
 
-      // look up the most recently stored dop transaction (including rejected ones). since we just processed a duplicate,
+      // look up the most recently stored mds transaction (including rejected ones). since we just processed a duplicate,
       // we expect to get back that duplicate. We cannot check for rejection reasons directly (they are pretty much write-only),
       // but we can check that it was immediately invalidated (validFrom == validUntil) which happens for rejected transactions.
-      val rejectedDopInStoreAtTs2 = store
-        .findStored(ts(2).immediateSuccessor, extraDop, includeRejected = true)
+      val rejectedMdsInStoreAtTs2 = store
+        .findStored(ts(2).immediateSuccessor, extraMds, includeRejected = true)
         .futureValue
         .value
-      rejectedDopInStoreAtTs2.validFrom shouldBe rejectedDopInStoreAtTs2.validUntil.value
-      rejectedDopInStoreAtTs2.validFrom shouldBe EffectiveTime(ts(2))
+      rejectedMdsInStoreAtTs2.validFrom shouldBe rejectedMdsInStoreAtTs2.validUntil.value
+      rejectedMdsInStoreAtTs2.validFrom shouldBe EffectiveTime(ts(2))
 
       // the latest non-rejected transaction should still be the one
-      checkDop(ts(2).immediateSuccessor, expectedSignatures = 4, expectedValidFrom = ts(1))
-    }
-
-    "correctly handle competing proposals getting enough signatures in the same block" in {
-      import SigningKeys.{ec as _, *}
-      val dndNamespace = DecentralizedNamespaceDefinition.computeNamespace(Set(ns1))
-
-      def createDnd(
-          owners: Namespace*
-      )(key: SigningPublicKey, serial: PositiveInt, isProposal: Boolean) = {
-        mkAddMultiKey(
-          DecentralizedNamespaceDefinition
-            .create(
-              dndNamespace,
-              PositiveInt.one,
-              NonEmpty.from(owners).value.toSet,
-            )
-            .value,
-          NonEmpty(Set, key),
-          serial = serial,
-          isProposal = isProposal,
-        )
-      }
-
-      val dnd = createDnd(ns1)(key1, serial = PositiveInt.one, isProposal = false)
-      val dnd_add_ns2_k2 = createDnd(ns1, ns2)(key2, serial = PositiveInt.two, isProposal = true)
-      val dnd_add_ns2_k1 = createDnd(ns1, ns2)(key1, serial = PositiveInt.two, isProposal = true)
-      val dnd_add_ns3_k3 = createDnd(ns1, ns3)(key3, serial = PositiveInt.two, isProposal = true)
-      val dnd_add_ns3_k1 = createDnd(ns1, ns3)(key1, serial = PositiveInt.two, isProposal = true)
-      val (proc, store) = mk()
-
-      val rootCertificates = Seq[GenericSignedTopologyTransaction](ns1k1_k1, ns2k2_k2, ns3k3_k3)
-      store
-        .bootstrap(
-          StoredTopologyTransactions(
-            (rootCertificates :+ dnd).map(
-              StoredTopologyTransaction(
-                SequencedTime(CantonTimestamp.MinValue.immediateSuccessor),
-                EffectiveTime(CantonTimestamp.MinValue.immediateSuccessor),
-                None,
-                _,
-              )
-            )
-          )
-        )
-        .futureValue
-
-      // add proposal to add ns2 to dnd signed by k2
-      val block1 = List[GenericSignedTopologyTransaction](dnd_add_ns2_k2)
-      process(proc, ts(1), 1L, block1)
-      validate(fetch(store, ts(1).immediateSuccessor, isProposal = true), block1)
-
-      // add proposal to add ns3 to dnd signed by k3
-      val block2 = List[GenericSignedTopologyTransaction](dnd_add_ns3_k3)
-      process(proc, ts(2), 2L, block2)
-      // now we'll find both proposals
-      validate(fetch(store, ts(2).immediateSuccessor, isProposal = true), block1 ++ block2)
-
-      // k1 signs both proposals and processes in the same block
-      val block3 = List[GenericSignedTopologyTransaction](dnd_add_ns2_k1, dnd_add_ns3_k1)
-      process(proc, ts(3), 3L, block3)
-      // now there should be no more proposals active
-      validate(fetch(store, ts(3).immediateSuccessor, isProposal = true), Seq.empty)
-      // and if we query fully authorized mappings, we should find all root certs
-      // and the updated DND with ns2 as additional owner.
-      // validate only looks at the mapping of dnd_add_ns2_k1 for the comparison,
-      // therefore we don't have to manually merge signatures here first.
-      validate(fetch(store, ts(3).immediateSuccessor), rootCertificates :+ dnd_add_ns2_k1)
-
-      // additionally when we look up dnd_add_ns3_k1 by tx_hash,
-      // we should find that it has been stored without merged signatures
-      // and validFrom == validUntil.
-      val rejected_dnd_add_ns3_k1 =
-        store
-          .findStored(CantonTimestamp.MaxValue, dnd_add_ns3_k1, includeRejected = true)
-          .futureValue
-          .value
-      rejected_dnd_add_ns3_k1.transaction shouldBe dnd_add_ns3_k1
-      rejected_dnd_add_ns3_k1.validUntil shouldBe Some(EffectiveTime(ts(3)))
-      rejected_dnd_add_ns3_k1.validFrom shouldBe EffectiveTime(ts(3))
+      checkMds(ts(2).immediateSuccessor, expectedSignatures = 4, expectedValidFrom = ts(1))
     }
 
     /* This tests the following scenario for transactions with
@@ -517,11 +374,11 @@ abstract class TopologyTransactionProcessorTest
     "correctly handle additional signatures after new proposals have arrived" in {
       import SigningKeys.{ec as _, *}
       val dnsNamespace =
-        DecentralizedNamespaceDefinition.computeNamespace(Set(ns1, ns7, ns8))
-      val domainId = DomainId(UniqueIdentifier.tryCreate("test-domain", dnsNamespace))
+        DecentralizedNamespaceDefinitionX.computeNamespace(Set(ns1, ns7, ns8))
+      val domainId = DomainId(UniqueIdentifier(Identifier.tryCreate("test-domain"), dnsNamespace))
 
       val dns = mkAddMultiKey(
-        DecentralizedNamespaceDefinition
+        DecentralizedNamespaceDefinitionX
           .create(
             dnsNamespace,
             PositiveInt.two,
@@ -532,130 +389,136 @@ abstract class TopologyTransactionProcessorTest
       )
 
       // mapping and transactions for serial=1
-      val dopMapping1 = DomainParametersState(
-        domainId,
-        DynamicDomainParameters.defaultValues(testedProtocolVersion),
-      )
-      val dop1_k1k7 = mkAddMultiKey(
-        dopMapping1,
+      val mdsMapping1 = MediatorDomainStateX
+        .create(
+          domainId,
+          NonNegativeInt.zero,
+          PositiveInt.one,
+          active = Seq(DefaultTestIdentities.mediatorIdX),
+          observers = Seq.empty,
+        )
+        .value
+      val mds1_k1k7 = mkAddMultiKey(
+        mdsMapping1,
         NonEmpty(Set, key1, key7),
         serial = PositiveInt.one,
       )
-      val dop1_k8_late_signature =
-        mkAdd(dopMapping1, key8, isProposal = true, serial = PositiveInt.one)
+      val mds1_k8_late_signature =
+        mkAdd(mdsMapping1, key8, isProposal = true, serial = PositiveInt.one)
 
       // mapping and transactions for serial=2
-      val dopMapping2 = DomainParametersState(
-        domainId,
-        DynamicDomainParameters
-          .defaultValues(testedProtocolVersion)
-          .update(
-            confirmationRequestsMaxRate =
-              DynamicDomainParameters.defaultConfirmationRequestsMaxRate + NonNegativeInt.one
-          ),
-      )
-      val dop2_k1_proposal =
-        mkAdd(dopMapping2, signingKey = key1, serial = PositiveInt.two, isProposal = true)
+      val mdsMapping2 = MediatorDomainStateX
+        .create(
+          domainId,
+          NonNegativeInt.zero,
+          PositiveInt.two,
+          active =
+            Seq(DefaultTestIdentities.mediatorIdX, MediatorId(Identifier.tryCreate("med2"), ns7)),
+          observers = Seq.empty,
+        )
+        .value
+      val mds2_k1_proposal =
+        mkAdd(mdsMapping2, signingKey = key1, serial = PositiveInt.two, isProposal = true)
       // this transaction is marked as proposal, but the merging of the signatures k1 and k7 will result
       // in a fully authorized transaction
-      val dop2_k7_proposal =
-        mkAdd(dopMapping2, signingKey = key7, serial = PositiveInt.two, isProposal = true)
+      val mds2_k7_proposal =
+        mkAdd(mdsMapping2, signingKey = key7, serial = PositiveInt.two, isProposal = true)
 
       val (proc, store) = mk()
 
-      def checkDop(
+      def checkMds(
           ts: CantonTimestamp,
-          transactionToLookUp: GenericSignedTopologyTransaction,
+          transactionToLookUp: GenericSignedTopologyTransactionX,
           expectedSignatures: Int,
           expectedValidFrom: CantonTimestamp,
       ) = {
-        val dopInStore = store
+        val mdsInStore = store
           .findStored(ts, transactionToLookUp, includeRejected = false)
           .futureValue
           .value
 
-        dopInStore.mapping shouldBe transactionToLookUp.mapping
-        dopInStore.transaction.signatures.forgetNE.toSeq should have size (expectedSignatures.toLong)
-        dopInStore.validUntil shouldBe None
-        dopInStore.validFrom shouldBe EffectiveTime(expectedValidFrom)
+        mdsInStore.mapping shouldBe transactionToLookUp.mapping
+        mdsInStore.transaction.signatures.forgetNE.toSeq should have size (expectedSignatures.toLong)
+        mdsInStore.validUntil shouldBe None
+        mdsInStore.validFrom shouldBe EffectiveTime(expectedValidFrom)
       }
 
       // setup: namespaces and initial mediator state
-      val block0 = List[GenericSignedTopologyTransaction](
+      val block0 = List[GenericSignedTopologyTransactionX](
         ns1k1_k1,
         ns7k7_k7,
         ns8k8_k8,
         dns,
-        dop1_k1k7,
+        mds1_k1k7,
       )
       process(proc, ts(0), 0L, block0)
       validate(fetch(store, ts(0).immediateSuccessor), block0)
-      checkDop(
+      checkMds(
         ts(0).immediateSuccessor,
-        transactionToLookUp = dop1_k1k7,
+        transactionToLookUp = mds1_k1k7,
         expectedSignatures = 2,
         expectedValidFrom = ts(0),
       )
 
       // process the first proposal
-      val block1 = List(dop2_k1_proposal)
+      val block1 = List(mds2_k1_proposal)
       process(proc, ts(1), 1L, block1)
       validate(fetch(store, ts(1).immediateSuccessor), block0)
-      // there's only the DOP proposal in the entire topology store
+      // there's only the MDS proposal in the entire topology store
       validate(fetch(store, ts(1).immediateSuccessor, isProposal = true), block1)
       // we find the fully authorized transaction with 2 signatures
-      checkDop(
+      checkMds(
         ts(1).immediateSuccessor,
-        transactionToLookUp = dop1_k1k7,
+        transactionToLookUp = mds1_k1k7,
         expectedSignatures = 2,
         expectedValidFrom = ts(0),
       )
       // we find the proposal with serial=2
-      checkDop(
+      checkMds(
         ts(1).immediateSuccessor,
-        transactionToLookUp = dop2_k1_proposal,
+        transactionToLookUp = mds2_k1_proposal,
         expectedSignatures = 1,
         expectedValidFrom = ts(1),
       )
 
       // process the late additional signature for serial=1
-      val block2 = List(dop1_k8_late_signature)
+      val block2 = List(mds1_k8_late_signature)
       process(proc, ts(2), 2L, block2)
-      // the fully authorized mappings haven't changed since block0, only the DOP signatures
+      // the fully authorized mappings haven't changed since block0, only the MDS signatures
       validate(fetch(store, ts(2).immediateSuccessor), block0)
       validate(fetch(store, ts(2).immediateSuccessor, isProposal = true), block1)
       // we find the fully authorized transaction with 3 signatures
-      checkDop(
+      checkMds(
         ts(2).immediateSuccessor,
-        transactionToLookUp = dop1_k8_late_signature,
+        transactionToLookUp = mds1_k8_late_signature,
         expectedSignatures = 3,
         // since serial=1 got signatures updated, the updated transaction is valid as of ts(2)
         expectedValidFrom = ts(2),
       )
       // we still find the proposal. This was failing in CN-10532
-      checkDop(
+      checkMds(
         ts(2).immediateSuccessor,
-        transactionToLookUp = dop2_k1_proposal,
+        transactionToLookUp = mds2_k1_proposal,
         expectedSignatures = 1,
         expectedValidFrom = ts(1),
       )
 
       // process another signature for serial=2 to fully authorize it
-      val block3 = List(dop2_k7_proposal)
+      val block3 = List(mds2_k7_proposal)
       process(proc, ts(3), 3L, block3)
-      // the initial DOP mapping has now been overridden by the fully authorized serial=2 in block3
+      // the initial MDS mapping has now been overridden by the fully authorized serial=2 in block3
       validate(fetch(store, ts(3).immediateSuccessor), block0.init ++ block3)
       // there are no more proposals
       validate(fetch(store, ts(3).immediateSuccessor, isProposal = true), List.empty)
       // find the serial=2 mapping with 2 signatures
-      checkDop(
+      checkMds(
         ts(3).immediateSuccessor,
-        transactionToLookUp = dop2_k7_proposal,
+        transactionToLookUp = mds2_k7_proposal,
         expectedSignatures = 2,
         expectedValidFrom = ts(3),
       )
       store
-        .findStored(asOfExclusive = ts(3).immediateSuccessor, dop1_k1k7)
+        .findStored(asOfExclusive = ts(3).immediateSuccessor, mds1_k1k7)
         .futureValue
         .value
         .validUntil
@@ -677,11 +540,11 @@ abstract class TopologyTransactionProcessorTest
     "only track fully authorized domain parameter state changes" in {
       import SigningKeys.{ec as _, *}
       val dnsNamespace =
-        DecentralizedNamespaceDefinition.computeNamespace(Set(ns1, ns2))
-      val domainId = DomainId(UniqueIdentifier.tryCreate("test-domain", dnsNamespace))
+        DecentralizedNamespaceDefinitionX.computeNamespace(Set(ns1, ns2))
+      val domainId = DomainId(UniqueIdentifier(Identifier.tryCreate("test-domain"), dnsNamespace))
 
       val dns = mkAddMultiKey(
-        DecentralizedNamespaceDefinition
+        DecentralizedNamespaceDefinitionX
           .create(
             dnsNamespace,
             PositiveInt.two,
@@ -691,9 +554,9 @@ abstract class TopologyTransactionProcessorTest
         signingKeys = NonEmpty(Set, key1, key2),
       )
       val initialDomainParameters = mkAddMultiKey(
-        DomainParametersState(
+        DomainParametersStateX(
           domainId,
-          DynamicDomainParameters.defaultValues(testedProtocolVersion),
+          DynamicDomainParameters.defaultXValues(testedProtocolVersion),
         ),
         signingKeys = NonEmpty(Set, key1, key2),
       )
@@ -702,7 +565,7 @@ abstract class TopologyTransactionProcessorTest
         initialDomainParameters.mapping.parameters.topologyChangeDelay.duration
       val updatedTopologyChangeDelay = initialTopologyChangeDelay.plusMillis(50)
 
-      val updatedDomainParams = DomainParametersState(
+      val updatedDomainParams = DomainParametersStateX(
         domainId,
         DynamicDomainParameters.initialValues(
           topologyChangeDelay = NonNegativeFiniteDuration.tryCreate(updatedTopologyChangeDelay),
@@ -722,9 +585,9 @@ abstract class TopologyTransactionProcessorTest
         isProposal = true,
       )
 
-      val initialTopologyState = StoredTopologyTransactions(
+      val initialTopologyState = StoredTopologyTransactionsX(
         List(ns1k1_k1, ns2k2_k2, dns, initialDomainParameters).map(transaction =>
-          StoredTopologyTransaction(
+          StoredTopologyTransactionX(
             sequenced = SequencedTime(CantonTimestamp.MinValue.immediateSuccessor),
             validFrom = EffectiveTime(CantonTimestamp.MinValue.immediateSuccessor),
             validUntil = None,
@@ -733,11 +596,11 @@ abstract class TopologyTransactionProcessorTest
         )
       )
 
-      def mkEnvelope(transactions: GenericSignedTopologyTransaction) =
+      def mkEnvelope(transactions: GenericSignedTopologyTransactionX) =
         Traced(
           List(
             OpenEnvelope(
-              TopologyTransactionsBroadcast.create(
+              TopologyTransactionsBroadcastX.create(
                 domainId,
                 Seq(Broadcast(String255("topology request id")(), List(transactions))),
                 testedProtocolVersion,
@@ -772,19 +635,19 @@ abstract class TopologyTransactionProcessorTest
       // block1: first proposal to update topology change delay
       // use proc.processEnvelopes directly so that the effective time is properly computed from topology change delays
       proc
-        .processEnvelopes(SequencerCounter(0), SequencedTime(ts(0)), None, block1)
+        .processEnvelopes(SequencerCounter(0), SequencedTime(ts(0)), block1)
         .flatMap(_.unwrap)
         .futureValueUS
 
       // block2: second proposal to update the topology change delay, making it fully authorized
       proc
-        .processEnvelopes(SequencerCounter(1), SequencedTime(ts(1)), None, block2)
+        .processEnvelopes(SequencerCounter(1), SequencedTime(ts(1)), block2)
         .flatMap(_.unwrap)
         .futureValueUS
 
       // block3: any topology transaction is now processed with the updated topology change delay
       proc
-        .processEnvelopes(SequencerCounter(2), SequencedTime(ts(2)), None, block3)
+        .processEnvelopes(SequencerCounter(2), SequencedTime(ts(2)), block3)
         .flatMap(_.unwrap)
         .futureValueUS
 
@@ -793,7 +656,7 @@ abstract class TopologyTransactionProcessorTest
 
       // 1. fetch the proposal from block1 at a time when it has become effective
       val storedDomainParametersProposal = fetchTx(store, ts(0).plusSeconds(1), isProposal = true)
-        .collectOfMapping[DomainParametersState]
+        .collectOfMapping[DomainParametersStateX]
         .result
         .loneElement
       // the proposal itself should be processed with the default topology change delay
@@ -801,7 +664,7 @@ abstract class TopologyTransactionProcessorTest
 
       // 2. fetch the latest fully authorized domain parameters transaction from block2 at a time when it has become effective
       val storedDomainParametersUpdate = fetchTx(store, ts(1).plusSeconds(1))
-        .collectOfMapping[DomainParametersState]
+        .collectOfMapping[DomainParametersStateX]
         .result
         .loneElement
       // the transaction to change the topology change delay itself should still be processed with the default topology change delay
@@ -809,7 +672,7 @@ abstract class TopologyTransactionProcessorTest
 
       // 3. fetch the topology transaction from block3 at a time when it has become effective
       val storedNSD3 = fetchTx(store, ts(2).plusSeconds(1))
-        .collectOfMapping[NamespaceDelegation]
+        .collectOfMapping[NamespaceDelegationX]
         .filter(_.mapping.namespace == ns3)
         .result
         .loneElement
@@ -820,20 +683,20 @@ abstract class TopologyTransactionProcessorTest
 
 }
 
-class TopologyTransactionProcessorTestInMemory extends TopologyTransactionProcessorTest {
-  protected def mkStore: TopologyStore[TopologyStoreId.DomainStore] =
-    new InMemoryTopologyStore(
+class TopologyTransactionProcessorXTestInMemory extends TopologyTransactionProcessorXTest {
+  protected def mkStore: TopologyStoreX[TopologyStoreId.DomainStore] =
+    new InMemoryTopologyStoreX(
       TopologyStoreId.DomainStore(DefaultTestIdentities.domainId),
       loggerFactory,
       timeouts,
     )
 
 }
-class TopologyTransactionProcessorTestPostgres
-    extends TopologyTransactionProcessorTest
+class TopologyTransactionProcessorXTestPostgres
+    extends TopologyTransactionProcessorXTest
     with DbTest
-    with DbTopologyStoreHelper
+    with DbTopologyStoreXHelper
     with PostgresTest {
-  override protected def mkStore: TopologyStore[TopologyStoreId.DomainStore] =
+  override protected def mkStore: TopologyStoreX[TopologyStoreId.DomainStore] =
     createTopologyStore()
 }

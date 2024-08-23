@@ -130,7 +130,7 @@ class TransferService(
             .toRight(s"Unknown domain alias `$alias`")
             .map(id => Some(SourceDomainId(id)))
       })
-      result <- EitherT.right(
+      result <- EitherT.liftF(
         transferLookup.find(filterDomain, filterTimestamp, filterSubmitter, limit)
       )
     } yield result

@@ -7,13 +7,12 @@ import cats.data.EitherT
 import cats.syntax.bifunctor.*
 import cats.syntax.either.*
 import cats.syntax.functor.*
+import cats.syntax.traverse.*
 import com.digitalasset.canton.ProtoDeserializationError
 import com.digitalasset.canton.ProtoDeserializationError.FieldNotSet
 import com.digitalasset.canton.data.CantonTimestamp
-import com.digitalasset.canton.domain.sequencing.sequencer.traffic.TimestampSelector
 import com.digitalasset.canton.domain.sequencing.sequencer.{OnboardingStateForSequencer, Sequencer}
-import com.digitalasset.canton.error.{BaseCantonError, CantonError}
-import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
+import com.digitalasset.canton.error.CantonError
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.networking.grpc.CantonGrpcUtil
 import com.digitalasset.canton.networking.grpc.CantonGrpcUtil.*
@@ -21,35 +20,36 @@ import com.digitalasset.canton.protocol.StaticDomainParameters
 import com.digitalasset.canton.sequencer.admin.v30
 import com.digitalasset.canton.sequencer.admin.v30.OnboardingStateRequest.Request
 import com.digitalasset.canton.sequencer.admin.v30.{
-  OnboardingStateResponse,
-  SetTrafficPurchasedRequest,
-  SetTrafficPurchasedResponse,
+  SetTrafficBalanceRequest,
+  SetTrafficBalanceResponse,
 }
-import com.digitalasset.canton.sequencing.client.SequencerClientSend
+import com.digitalasset.canton.sequencing.client.SequencerClient
 import com.digitalasset.canton.serialization.ProtoConverter
 import com.digitalasset.canton.time.DomainTimeTracker
 import com.digitalasset.canton.topology.client.DomainTopologyClient
 import com.digitalasset.canton.topology.processing.{EffectiveTime, SequencedTime}
-import com.digitalasset.canton.topology.store.TopologyStore
 import com.digitalasset.canton.topology.store.TopologyStoreId.DomainStore
-import com.digitalasset.canton.topology.{
-  Member,
-  SequencerId,
-  TopologyManagerError,
-  UniqueIdentifier,
+import com.digitalasset.canton.topology.store.{
+  StoredTopologyTransactionX,
+  StoredTopologyTransactionsX,
+  TopologyStoreX,
 }
+import com.digitalasset.canton.topology.transaction.{
+  SignedTopologyTransactionX,
+  TopologyChangeOpX,
+  TopologyMappingX,
+}
+import com.digitalasset.canton.topology.{Member, SequencerId}
 import com.digitalasset.canton.tracing.{TraceContext, TraceContextGrpc}
-import com.digitalasset.canton.util.{EitherTUtil, GrpcStreamingUtils}
-import io.grpc.stub.StreamObserver
+import com.digitalasset.canton.util.EitherTUtil
 import io.grpc.{Status, StatusRuntimeException}
 
-import java.io.OutputStream
 import scala.concurrent.{ExecutionContext, Future}
 
 class GrpcSequencerAdministrationService(
     sequencer: Sequencer,
-    sequencerClient: SequencerClientSend,
-    topologyStore: TopologyStore[DomainStore],
+    sequencerClient: SequencerClient,
+    topologyStore: TopologyStoreX[DomainStore],
     topologyClient: DomainTopologyClient,
     domainTimeTracker: DomainTimeTracker,
     staticDomainParameters: StaticDomainParameters,
@@ -79,57 +79,33 @@ class GrpcSequencerAdministrationService(
 
     val members = request.members.flatMap(deserializeMember)
 
-    TimestampSelector.fromProtoV30(request.timestampSelector) match {
-      case Left(err) =>
-        Future.failed(
-          new StatusRuntimeException(Status.INVALID_ARGUMENT.withDescription(err.toString))
-        )
-      case Right(selector) =>
-        val response = sequencer
-          .trafficStatus(members, selector)
-          .flatMap { states =>
-            val (errors, trafficStates) = states.trafficStatesOrErrors.partitionMap {
-              case (member, trafficStateE) =>
-                trafficStateE
-                  .map(member -> _)
-                  .leftMap(member -> _)
-            }
-            if (errors.nonEmpty) {
-              val errorMessage = errors.mkShow().toString
-              FutureUnlessShutdown.failed(
-                io.grpc.Status.INTERNAL
-                  .withDescription(
-                    s"Failed to retrieve traffic state for some members: $errorMessage"
-                  )
-                  .asRuntimeException()
-              )
-            } else {
-              FutureUnlessShutdown.pure(
-                trafficStates.map { case (member, state) =>
-                  member.toProtoPrimitive -> state.toProtoV30
-                }.toMap
-              )
-            }
-          }
-          .map(v30.TrafficControlStateResponse(_))
+    val response = sequencer
+      .trafficStatus(members)
+      .map {
+        _.members.map(_.toProtoV30)
+      }
+      .map(
+        v30.TrafficControlStateResponse(_)
+      )
 
-        CantonGrpcUtil.mapErrNewEUS(EitherT.right(response))
-    }
+    CantonGrpcUtil.mapErrNewEUS(EitherT.liftF(response))
   }
 
   override def snapshot(request: v30.SnapshotRequest): Future[v30.SnapshotResponse] = {
     implicit val traceContext: TraceContext = TraceContextGrpc.fromGrpcContext
     (for {
-      timestamp <- wrapErr(
-        ProtoConverter
-          .parseRequired(CantonTimestamp.fromProtoTimestamp, "timestamp", request.timestamp)
-      )
-      result <- sequencer.snapshot(timestamp).leftWiden[BaseCantonError]
+      timestamp <- EitherT
+        .fromEither[Future](
+          ProtoConverter
+            .parseRequired(CantonTimestamp.fromProtoTimestamp, "timestamp", request.timestamp)
+        )
+        .leftMap(_.toString)
+      result <- sequencer.snapshot(timestamp)
     } yield result)
       .fold[v30.SnapshotResponse](
         error =>
           v30.SnapshotResponse(
-            v30.SnapshotResponse.Value.Failure(v30.SnapshotResponse.Failure(error.cause))
+            v30.SnapshotResponse.Value.Failure(v30.SnapshotResponse.Failure(error))
           ),
         result =>
           v30.SnapshotResponse(
@@ -141,33 +117,21 @@ class GrpcSequencerAdministrationService(
   }
 
   override def onboardingState(
-      request: v30.OnboardingStateRequest,
-      responseObserver: StreamObserver[OnboardingStateResponse],
-  ): Unit =
-    GrpcStreamingUtils.streamToClient(
-      (out: OutputStream) => onboardingState(request, out),
-      responseObserver,
-      byteString => OnboardingStateResponse(byteString),
-    )
-
-  private def onboardingState(
-      request: v30.OnboardingStateRequest,
-      out: OutputStream,
-  ): Future[Unit] = {
+      request: v30.OnboardingStateRequest
+  ): Future[v30.OnboardingStateResponse] = {
     implicit val traceContext: TraceContext = TraceContextGrpc.fromGrpcContext
     val parseMemberOrTimestamp = request.request match {
       case Request.Empty => Left(FieldNotSet("sequencer_id"): ProtoDeserializationError)
-      case Request.SequencerUid(sequencerUid) =>
-        UniqueIdentifier
-          .fromProtoPrimitive(sequencerUid, "sequencer_id")
-          .map(SequencerId(_))
+      case Request.SequencerId(sequencerId) =>
+        SequencerId
+          .fromProtoPrimitive(sequencerId, "sequencer_id")
           .map(Left(_))
 
       case Request.Timestamp(referenceEffectiveTime) =>
         CantonTimestamp.fromProtoTimestamp(referenceEffectiveTime).map(Right(_))
     }
-    val res = for {
-      memberOrTimestamp <- wrapErr(parseMemberOrTimestamp)
+    (for {
+      memberOrTimestamp <- EitherT.fromEither[Future](parseMemberOrTimestamp).leftMap(_.toString)
       referenceEffective <- memberOrTimestamp match {
         case Left(sequencerId) =>
           EitherT(
@@ -176,20 +140,17 @@ class GrpcSequencerAdministrationService(
               .map(txOpt =>
                 txOpt
                   .map(stored => stored.validFrom)
-                  .toRight(
-                    TopologyManagerError.InternalError
-                      .Other(s"Did not find onboarding topology transaction for $sequencerId")
-                  )
+                  .toRight(s"Did not find onboarding topology transaction for $sequencerId")
               )
           )
         case Right(timestamp) =>
-          EitherT.rightT[Future, BaseCantonError](EffectiveTime(timestamp))
+          EitherT.rightT[Future, String](EffectiveTime(timestamp))
       }
 
       _ <- domainTimeTracker
         .awaitTick(referenceEffective.value)
-        .map(EitherT.right[CantonError](_).void)
-        .getOrElse(EitherTUtil.unit[BaseCantonError])
+        .map(EitherT.right[String](_).void)
+        .getOrElse(EitherTUtil.unit[String])
 
       /* find the sequencer snapshot that contains a sequenced timestamp that is >= to the reference/onboarding effective time
        if we take the sequencing time here, we might miss out topology transactions between sequencerSnapshot.lastTs and effectiveTime
@@ -210,17 +171,91 @@ class GrpcSequencerAdministrationService(
 
       sequencerSnapshot <- sequencer.snapshot(referenceEffective.value)
 
-      topologySnapshot <- EitherT.right[BaseCantonError](
+      topologySnapshot <- EitherT.right[String](
         topologyStore.findEssentialStateAtSequencedTime(SequencedTime(sequencerSnapshot.lastTs))
       )
-    } yield OnboardingStateForSequencer(
-      topologySnapshot,
-      staticDomainParameters,
-      sequencerSnapshot,
-      staticDomainParameters.protocolVersion,
-    ).toByteString.writeTo(out)
+    } yield (topologySnapshot, sequencerSnapshot))
+      .fold[v30.OnboardingStateResponse](
+        error =>
+          v30.OnboardingStateResponse(
+            v30.OnboardingStateResponse.Value.Failure(
+              v30.OnboardingStateResponse.Failure(error)
+            )
+          ),
+        { case (topologySnapshot, sequencerSnapshot) =>
+          v30.OnboardingStateResponse(
+            v30.OnboardingStateResponse.Value.Success(
+              v30.OnboardingStateResponse.Success(
+                OnboardingStateForSequencer(
+                  topologySnapshot,
+                  staticDomainParameters,
+                  sequencerSnapshot,
+                  staticDomainParameters.protocolVersion,
+                ).toByteString
+              )
+            )
+          )
+        },
+      )
+  }
 
-    mapErrNew(res)
+  override def genesisState(request: v30.GenesisStateRequest): Future[v30.GenesisStateResponse] = {
+    implicit val traceContext: TraceContext = TraceContextGrpc.fromGrpcContext
+    val result = for {
+      timestampO <- EitherT
+        .fromEither[Future](
+          request.timestamp.traverse(CantonTimestamp.fromProtoTimestamp)
+        )
+        .leftMap(_.toString)
+
+      sequencedTimestamp <- timestampO match {
+        case Some(value) => EitherT.rightT[Future, String](value)
+        case None =>
+          val sequencedTimeF = topologyStore
+            .maxTimestamp()
+            .collect {
+              case Some((sequencedTime, _)) =>
+                Right(sequencedTime.value)
+
+              case None => Left("No sequenced time found")
+            }
+
+          EitherT(sequencedTimeF)
+      }
+
+      topologySnapshot <- EitherT.right[String](
+        topologyStore.findEssentialStateAtSequencedTime(SequencedTime(sequencedTimestamp))
+      )
+      // reset effective time and sequenced time if we are initializing the sequencer from the beginning
+      genesisState: StoredTopologyTransactionsX[TopologyChangeOpX, TopologyMappingX] =
+        StoredTopologyTransactionsX[TopologyChangeOpX, TopologyMappingX](
+          topologySnapshot.result.map(stored =>
+            StoredTopologyTransactionX(
+              SequencedTime(SignedTopologyTransactionX.InitialTopologySequencingTime),
+              EffectiveTime(SignedTopologyTransactionX.InitialTopologySequencingTime),
+              stored.validUntil.map(_ =>
+                EffectiveTime(SignedTopologyTransactionX.InitialTopologySequencingTime)
+              ),
+              stored.transaction,
+            )
+          )
+        )
+
+    } yield genesisState.toByteString(staticDomainParameters.protocolVersion)
+
+    result
+      .fold[v30.GenesisStateResponse](
+        error =>
+          v30.GenesisStateResponse(
+            v30.GenesisStateResponse.Value.Failure(v30.GenesisStateResponse.Failure(error))
+          ),
+        result =>
+          v30.GenesisStateResponse(
+            v30.GenesisStateResponse.Value.Success(
+              v30.GenesisStateResponse.Success(result)
+            )
+          ),
+      )
   }
 
   override def disableMember(
@@ -241,36 +276,27 @@ class GrpcSequencerAdministrationService(
     }
   }
 
-  /** Update the traffic purchased entry of a member
+  /** Update the traffic balance of a member
     * The top up will only become valid once authorized by all sequencers of the domain
     */
-  override def setTrafficPurchased(
-      requestP: SetTrafficPurchasedRequest
+  override def setTrafficBalance(
+      requestP: SetTrafficBalanceRequest
   ): Future[
-    SetTrafficPurchasedResponse
+    SetTrafficBalanceResponse
   ] = {
     implicit val traceContext: TraceContext = TraceContextGrpc.fromGrpcContext
 
     val result = {
       for {
         member <- wrapErrUS(Member.fromProtoPrimitive(requestP.member, "member"))
-        serial <- wrapErrUS(ProtoConverter.parsePositiveInt("serial", requestP.serial))
-        totalTrafficPurchased <- wrapErrUS(
-          ProtoConverter.parseNonNegativeLong(
-            "total_traffic_purchased",
-            requestP.totalTrafficPurchased,
-          )
+        serial <- wrapErrUS(ProtoConverter.parsePositiveInt(requestP.serial))
+        totalTrafficBalance <- wrapErrUS(
+          ProtoConverter.parseNonNegativeLong(requestP.totalTrafficBalance)
         )
         highestMaxSequencingTimestamp <- sequencer
-          .setTrafficPurchased(
-            member,
-            serial,
-            totalTrafficPurchased,
-            sequencerClient,
-            domainTimeTracker,
-          )
+          .setTrafficBalance(member, serial, totalTrafficBalance, sequencerClient)
           .leftWiden[CantonError]
-      } yield SetTrafficPurchasedResponse(
+      } yield SetTrafficBalanceResponse(
         maxSequencingTimestamp = Some(highestMaxSequencingTimestamp.toProtoTimestamp)
       )
     }

@@ -3,23 +3,20 @@
 
 package com.digitalasset.canton.daml.lf.value.json
 
-import com.digitalasset.daml.lf.data.{FrontStack, ImmArray, Ref, SortedLookupList, Time, Numeric as LfNumeric}
-import com.digitalasset.daml.lf.data.ImmArray.ImmArraySeq
-import com.digitalasset.daml.lf.data.ScalazEqual.*
-import com.digitalasset.daml.lf.typesig
-import com.digitalasset.daml.lf.value.{Value as V}
-import com.digitalasset.daml.lf.value.Value.ContractId
+import com.daml.lf.data.{FrontStack, ImmArray, Ref, SortedLookupList, Time, Numeric as LfNumeric}
+import com.daml.lf.data.ImmArray.ImmArraySeq
+import com.daml.lf.data.ScalazEqual.*
+import com.daml.lf.typesig
+import com.daml.lf.value.{Value as V}
+import com.daml.lf.value.Value.ContractId
 import NavigatorModelAliases.{DamlLfIdentifier, DamlLfType, DamlLfTypeLookup}
 import ApiValueImplicits.*
 import com.digitalasset.canton.daml.lf.value.json.NavigatorModelAliases as Model
 import spray.json.*
-import scala.util.Try
 import scalaz.{@@, Equal, Order, Tag}
 
 import scalaz.syntax.equal.*
 import scalaz.syntax.std.string.*
-
-import java.time.Instant
 
 /** A compressed encoding of API values.
   *
@@ -138,11 +135,7 @@ class ApiCodecCompressed(val encodeDecimalAsString: Boolean, val encodeInt64AsSt
       }
       case Model.DamlLfPrimType.Unit => { case JsObject(_) => V.ValueUnit }
       case Model.DamlLfPrimType.Timestamp => { case JsString(v) =>
-        val optTimestamp = for {
-          instant <- Try(Instant.parse(v)).toEither.left.map(_.getMessage)
-          timestamp <- Time.Timestamp.fromInstant(instant)
-        } yield timestamp
-        V.ValueTimestamp(assertDE(optTimestamp))
+        V.ValueTimestamp(assertDE(Time.Timestamp fromString v))
       }
       case Model.DamlLfPrimType.Date => { case JsString(v) =>
         try {

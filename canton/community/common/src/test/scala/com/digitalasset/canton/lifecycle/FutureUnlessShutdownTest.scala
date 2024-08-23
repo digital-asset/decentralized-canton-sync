@@ -5,14 +5,11 @@ package com.digitalasset.canton.lifecycle
 
 import cats.data.EitherT
 import cats.syntax.either.*
-import com.digitalasset.canton.lifecycle.UnlessShutdown.AbortedDueToShutdown
 import com.digitalasset.canton.{BaseTest, DiscardedFuture, DiscardedFutureTest, HasExecutionContext}
-import org.scalatest.wordspec.AsyncWordSpec
+import org.scalatest.wordspec.AnyWordSpec
 import org.wartremover.test.WartTestTraverser
 
-import scala.concurrent.Future
-
-class FutureUnlessShutdownTest extends AsyncWordSpec with BaseTest with HasExecutionContext {
+class FutureUnlessShutdownTest extends AnyWordSpec with BaseTest with HasExecutionContext {
   "DiscardedFuture" should {
     "detect discarded FutureUnlessShutdown" in {
       val result = WartTestTraverser(DiscardedFuture) {
@@ -51,28 +48,6 @@ class FutureUnlessShutdownTest extends AsyncWordSpec with BaseTest with HasExecu
 
       fus.futureValue
       wasEvaluated shouldBe false
-    }
-  }
-
-  "transformAbortedF" should {
-    "restore aborted FutureUnlessShutdown" in {
-      val f =
-        FutureUnlessShutdown(Future(AbortedDueToShutdown)).failOnShutdownToAbortException("test")
-      FutureUnlessShutdown
-        .transformAbortedF(f)
-        .unwrap
-        .map(_ shouldBe UnlessShutdown.AbortedDueToShutdown)
-    }
-    "restore successful FutureUnlessShutdown" in {
-      val expected = UnlessShutdown.Outcome("expected")
-      val f =
-        FutureUnlessShutdown(Future.successful(expected)).failOnShutdownToAbortException("test")
-      FutureUnlessShutdown.transformAbortedF(f).unwrap.map(_ shouldBe expected)
-    }
-    "restore failed FutureUnlessShutdown" in {
-      val expected = new IllegalArgumentException("test")
-      val f = FutureUnlessShutdown(Future.failed(expected)).failOnShutdownToAbortException("test")
-      FutureUnlessShutdown.transformAbortedF(f).unwrap.failed.map(_ shouldBe expected)
     }
   }
 }

@@ -8,7 +8,6 @@ import com.daml.ledger.javaapi
 import com.digitalasset.canton.logging.pretty.{Pretty, PrettyPrinting}
 import com.digitalasset.canton.logging.pretty.PrettyUtil.*
 import com.digitalasset.canton.util.ShowUtil.*
-import com.digitalasset.canton.LfPartyId
 import org.apache.pekko.NotUsed
 import pprint.Tree
 
@@ -35,6 +34,8 @@ trait PrettyInstances extends com.digitalasset.canton.logging.pretty.PrettyInsta
   }
 
   implicit val prettyNotUsed: Pretty[NotUsed] = _ => Tree.Literal("NotUsed")
+  implicit def prettyCodegenContractId: Pretty[javaapi.data.codegen.ContractId[?]] =
+    coid => prettyContractIdString.treeOf(coid.contractId)
 
   implicit def prettyIdentifier: Pretty[javaapi.data.Identifier] = prettyOfString(id =>
     show"${id.getPackageId.readableHash}:${id.getModuleName.unquoted}:${id.getEntityName.unquoted}"
@@ -47,7 +48,7 @@ trait PrettyInstances extends com.digitalasset.canton.logging.pretty.PrettyInsta
     r => prettyDamlVariant.treeOf(r.toValue)
 
   implicit def prettyDamlParty: Pretty[javaapi.data.Party] =
-    prettyNode("PartyId", v => Some(prettyLfPartyId.treeOf(LfPartyId.assertFromString(v.getValue))))
+    prettyNode("PartyId", v => Some(prettyPrimitiveParty.treeOf(v)))
 
   implicit def prettyDamlContractId: Pretty[javaapi.data.ContractId] =
     prettyNode("ContractId", v => Some(prettyContractIdString.treeOf(v.getValue)))
@@ -63,6 +64,9 @@ trait PrettyInstances extends com.digitalasset.canton.logging.pretty.PrettyInsta
       "Numeric",
       unnamedParam(prettyOfString[javaapi.data.Numeric](_.getValue.toString).treeOf),
     )
+
+  implicit def prettyBigDecimal: Pretty[BigDecimal] =
+    prettyOfString[BigDecimal](_.toString)
 
   implicit def prettyDamlBool: Pretty[javaapi.data.Bool] =
     prettyOfString[javaapi.data.Bool](_.getValue.toString)

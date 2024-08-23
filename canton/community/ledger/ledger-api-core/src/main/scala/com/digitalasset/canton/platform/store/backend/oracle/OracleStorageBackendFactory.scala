@@ -9,7 +9,7 @@ import com.digitalasset.canton.platform.store.backend.common.{
   CompletionStorageBackendTemplate,
   ContractStorageBackendTemplate,
   IngestionStorageBackendTemplate,
-  ParameterStorageBackendImpl,
+  PackageStorageBackendTemplate,
   PartyStorageBackendTemplate,
 }
 import com.digitalasset.canton.platform.store.backend.{
@@ -19,7 +19,7 @@ import com.digitalasset.canton.platform.store.backend.{
   DataSourceStorageBackend,
   EventStorageBackend,
   IngestionStorageBackend,
-  ParameterStorageBackend,
+  PackageStorageBackend,
   PartyStorageBackend,
   ResetStorageBackend,
   StorageBackendFactory,
@@ -32,10 +32,8 @@ object OracleStorageBackendFactory extends StorageBackendFactory with CommonStor
   override val createIngestionStorageBackend: IngestionStorageBackend[_] =
     new IngestionStorageBackendTemplate(OracleQueryStrategy, OracleSchema.schema)
 
-  override def createParameterStorageBackend(
-      stringInterning: StringInterning
-  ): ParameterStorageBackend =
-    new ParameterStorageBackendImpl(OracleQueryStrategy, stringInterning)
+  override def createPackageStorageBackend(ledgerEndCache: LedgerEndCache): PackageStorageBackend =
+    new PackageStorageBackendTemplate(OracleQueryStrategy, ledgerEndCache)
 
   override def createPartyStorageBackend(ledgerEndCache: LedgerEndCache): PartyStorageBackend =
     new PartyStorageBackendTemplate(OracleQueryStrategy, ledgerEndCache)
@@ -60,7 +58,6 @@ object OracleStorageBackendFactory extends StorageBackendFactory with CommonStor
     new OracleEventStorageBackend(
       ledgerEndCache = ledgerEndCache,
       stringInterning = stringInterning,
-      parameterStorageBackend = createParameterStorageBackend(stringInterning),
       loggerFactory = loggerFactory,
     )
 

@@ -12,7 +12,6 @@ import com.digitalasset.canton.logging.NamedLoggerFactory
 import com.digitalasset.canton.protocol.*
 import com.digitalasset.canton.protocol.messages.*
 import com.digitalasset.canton.sequencing.protocol.*
-import com.digitalasset.canton.sequencing.traffic.TrafficReceipt
 import com.digitalasset.canton.topology.*
 import com.digitalasset.canton.tracing.TraceContext
 
@@ -43,12 +42,10 @@ object TransferResultHelpers {
         protocolVersion,
       )
     val signedResult: SignedProtocolMessage[ConfirmationResultMessage] =
-      Await
-        .result(
-          SignedProtocolMessage.trySignAndCreate(result, cryptoSnapshot, protocolVersion),
-          10.seconds,
-        )
-        .onShutdown(sys.error("aborted due to shutdown"))
+      Await.result(
+        SignedProtocolMessage.trySignAndCreate(result, cryptoSnapshot, protocolVersion),
+        10.seconds,
+      )
     val batch: Batch[OpenEnvelope[SignedProtocolMessage[ConfirmationResultMessage]]] =
       Batch.of(protocolVersion, (signedResult, Recipients.cc(participantId)))
     val deliver: Deliver[OpenEnvelope[SignedProtocolMessage[ConfirmationResultMessage]]] =
@@ -60,12 +57,10 @@ object TransferResultHelpers {
         batch,
         None,
         protocolVersion,
-        Option.empty[TrafficReceipt],
       )
     val signature =
       Await
         .result(cryptoSnapshot.sign(TestHash.digest("dummySignature")).value, 10.seconds)
-        .onShutdown(sys.error("aborted due to shutdown"))
         .valueOr(err => throw new RuntimeException(err.toString))
     val signedContent = SignedContent(
       deliver,

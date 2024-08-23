@@ -8,12 +8,15 @@ import com.digitalasset.canton.LfPartyId
 import com.digitalasset.canton.ProtoDeserializationError.FieldNotSet
 import com.digitalasset.canton.logging.pretty.{Pretty, PrettyPrinting}
 import com.digitalasset.canton.protocol.ContractIdSyntax.*
-import com.digitalasset.canton.protocol.{LfContractId, v30}
+import com.digitalasset.canton.protocol.{LfContractId, LfTransactionVersion, v30}
 import com.digitalasset.canton.serialization.ProtoConverter
 import com.digitalasset.canton.serialization.ProtoConverter.ParsingResult
 
 sealed trait KeyResolution extends Product with Serializable with PrettyPrinting {
   def resolution: Option[LfContractId]
+
+  /** lf version of the key */
+  def version: LfTransactionVersion
 }
 
 sealed trait KeyResolutionWithMaintainers extends KeyResolution {
@@ -28,24 +31,27 @@ sealed trait SerializableKeyResolution extends KeyResolution {
 
 object SerializableKeyResolution {
   def fromProtoOneOfV30(
-      resolutionP: v30.ViewParticipantData.ResolvedKey.Resolution
+      resolutionP: v30.ViewParticipantData.ResolvedKey.Resolution,
+      version: LfTransactionVersion,
   ): ParsingResult[SerializableKeyResolution] =
     resolutionP match {
       case v30.ViewParticipantData.ResolvedKey.Resolution.ContractId(contractIdP) =>
         ProtoConverter
           .parseLfContractId(contractIdP)
-          .map(AssignedKey)
+          .map(AssignedKey(_)(version))
       case v30.ViewParticipantData.ResolvedKey.Resolution
             .Free(v30.ViewParticipantData.FreeKey(maintainersP)) =>
         maintainersP
           .traverse(ProtoConverter.parseLfPartyId)
-          .map(maintainers => FreeKey(maintainers.toSet))
+          .map(maintainers => FreeKey(maintainers.toSet)(version))
       case v30.ViewParticipantData.ResolvedKey.Resolution.Empty =>
         Left(FieldNotSet("ViewParticipantData.ResolvedKey.resolution"))
     }
 }
 
-final case class AssignedKey(contractId: LfContractId) extends SerializableKeyResolution {
+final case class AssignedKey(contractId: LfContractId)(
+    override val version: LfTransactionVersion
+) extends SerializableKeyResolution {
   override def pretty: Pretty[AssignedKey] =
     prettyNode("Assigned", unnamedParam(_.contractId))
 
@@ -55,8 +61,9 @@ final case class AssignedKey(contractId: LfContractId) extends SerializableKeyRe
     v30.ViewParticipantData.ResolvedKey.Resolution.ContractId(value = contractId.toProtoPrimitive)
 }
 
-final case class FreeKey(override val maintainers: Set[LfPartyId])
-    extends SerializableKeyResolution
+final case class FreeKey(override val maintainers: Set[LfPartyId])(
+    override val version: LfTransactionVersion
+) extends SerializableKeyResolution
     with KeyResolutionWithMaintainers {
   override def pretty: Pretty[FreeKey] = prettyNode("Free", param("maintainers", _.maintainers))
 
@@ -73,7 +80,8 @@ final case class FreeKey(override val maintainers: Set[LfPartyId])
 final case class AssignedKeyWithMaintainers(
     contractId: LfContractId,
     override val maintainers: Set[LfPartyId],
-) extends KeyResolutionWithMaintainers {
+)(override val version: LfTransactionVersion)
+    extends KeyResolutionWithMaintainers {
   override def resolution: Option[LfContractId] = Some(contractId)
 
   override def pretty: Pretty[AssignedKeyWithMaintainers] = prettyOfClass(
@@ -82,5 +90,5 @@ final case class AssignedKeyWithMaintainers(
   )
 
   override def asSerializable: SerializableKeyResolution =
-    AssignedKey(contractId)
+    AssignedKey(contractId)(version)
 }

@@ -3,11 +3,30 @@
 
 package com.daml.network.environment.ledger.api
 
+import org.apache.pekko.NotUsed
+import org.apache.pekko.stream.scaladsl.Source
 import com.daml.grpc.adapter.ExecutionSequencerFactory
 import com.daml.grpc.adapter.client.pekko.ClientAdapter
-import com.daml.ledger.api.v2 as lapi
+import com.daml.ledger.api.v2.admin.*
 import com.daml.ledger.api.v2.*
-import com.daml.ledger.api.v2.admin.{user_management_service as v1User, *}
+import com.daml.ledger.javaapi.data.{
+  Command,
+  CreateUserResponse,
+  ListUserRightsResponse,
+  ParticipantOffset,
+  User,
+}
+import com.daml.ledger.javaapi.data.codegen.ContractId
+import com.daml.network.auth.AuthToken
+import com.daml.network.environment.ledger.api.LedgerClient.GetTreeUpdatesResponse
+import com.daml.network.store.MultiDomainAcsStore.IngestionFilter
+import com.daml.network.util.DisclosedContracts
+import com.daml.network.util.PrettyInstances.*
+import com.digitalasset.canton.DomainAlias
+import com.digitalasset.canton.admin.api.client.data.PartyDetails
+import com.digitalasset.canton.ledger.client.{GrpcChannel, LedgerCallCredentials}
+import com.digitalasset.canton.logging.{ErrorLoggingContext, NamedLoggerFactory, NamedLogging}
+import com.digitalasset.canton.logging.pretty.Pretty
 import com.daml.ledger.api.v2.admin.package_management_service.{
   PackageManagementServiceGrpc,
   UploadDarFileRequest,
@@ -16,22 +35,11 @@ import com.daml.ledger.api.v2.admin.party_management_service.{
   GetPartiesRequest,
   PartyManagementServiceGrpc,
 }
+import com.daml.ledger.api.v2.admin.user_management_service as v1User
 import com.daml.ledger.api.v2.command_service.CommandServiceGrpc
 import com.daml.ledger.api.v2.package_service.{ListPackagesRequest, PackageServiceGrpc}
-import com.daml.ledger.javaapi.data.{Command, CreateUserResponse, ListUserRightsResponse, User}
-import com.daml.ledger.javaapi.data.codegen.ContractId
+import com.daml.ledger.api.v2 as lapi
 import com.daml.ledger.javaapi.data.User.Right
-import com.daml.network.auth.AuthToken
-import com.daml.network.environment.ledger.api.LedgerClient.GetTreeUpdatesResponse
-import com.daml.network.store.MultiDomainAcsStore.IngestionFilter
-import com.daml.network.util.DisclosedContracts
-import com.digitalasset.canton.DomainAlias
-import com.digitalasset.canton.admin.api.client.data.PartyDetails
-import com.digitalasset.canton.config.NonNegativeFiniteDuration
-import com.digitalasset.canton.ledger.client.{GrpcChannel, LedgerCallCredentials}
-import com.digitalasset.canton.logging.{ErrorLoggingContext, NamedLoggerFactory, NamedLogging}
-import com.digitalasset.canton.logging.pretty.Pretty
-import com.digitalasset.canton.participant.pretty.Implicits.prettyContractId
 import com.digitalasset.canton.topology.{DomainId, PartyId}
 import com.digitalasset.canton.tracing.{TraceContext, TraceContextGrpc}
 import com.digitalasset.canton.util.ErrorUtil
@@ -39,13 +47,12 @@ import com.google.protobuf.{ByteString, Duration}
 import com.google.protobuf.field_mask.FieldMask
 import io.grpc.{Channel, StatusRuntimeException, Status as GrpcStatus}
 import io.grpc.stub.{AbstractStub, StreamObserver}
-import org.apache.pekko.NotUsed
-import org.apache.pekko.stream.scaladsl.Source
 
 import java.io.Closeable
-import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.jdk.CollectionConverters.*
+import com.digitalasset.canton.config.NonNegativeFiniteDuration
+import java.util.concurrent.TimeUnit
 
 sealed abstract class DedupConfig
 
@@ -89,6 +96,20 @@ private[environment] class LedgerClient(
     })
   }
 
+  private def withCredentials[T <: AbstractStub[T]](
+      stub: T
+  ): Future[T] = {
+    getToken().map { token =>
+      token.fold(stub) { token =>
+        checkTokenUser(token)(TraceContext.empty)
+        stub.withCallCredentials(new LedgerCallCredentials(token.accessToken))
+      }
+    }
+  }
+
+  // TODO(#9754): make all our methods use this call instead of just withCredentials to improve trace-id propagation
+  // This is non-trivial though due to he lack of TraceContext support/management within the 'RetryProvider' methods,
+  // which often wrap up the calls to the UserManagement and PackageManagement calls that are missing trace contexts.
   private def withCredentialsAndTraceContext[T <: AbstractStub[T]](
       stub: T
   )(implicit tc: TraceContext): Future[T] = {
@@ -153,10 +174,10 @@ private[environment] class LedgerClient(
 
   def activeContracts(
       request: lapi.state_service.GetActiveContractsRequest
-  )(implicit tc: TraceContext): Source[lapi.state_service.GetActiveContractsResponse, NotUsed] =
+  ): Source[lapi.state_service.GetActiveContractsResponse, NotUsed] =
     toSource(
       for {
-        stub <- withCredentialsAndTraceContext(stateServiceStub)
+        stub <- withCredentials(stateServiceStub)
       } yield ClientAdapter
         .serverStreaming(request, stub.getActiveContracts)
     )
@@ -175,15 +196,13 @@ private[environment] class LedgerClient(
     } yield res
   }
 
-  def updates(
-      request: GetUpdatesRequest
-  )(implicit tc: TraceContext): Source[LedgerClient.GetTreeUpdatesResponse, NotUsed] = {
+  def updates(request: GetUpdatesRequest): Source[LedgerClient.GetTreeUpdatesResponse, NotUsed] = {
     toSource(
       for {
-        stub <- withCredentialsAndTraceContext(updateServiceStub)
+        stub <- withCredentials(updateServiceStub)
       } yield ClientAdapter
         .serverStreaming(request.toProto, stub.getUpdateTrees)
-        .mapConcat(GetTreeUpdatesResponse.fromProto)
+        .map(GetTreeUpdatesResponse.fromProto)
     )
   }
 
@@ -235,22 +254,20 @@ private[environment] class LedgerClient(
     } yield res
   }
 
-  def listPackages()(implicit ec: ExecutionContext, tc: TraceContext): Future[Seq[String]] = {
+  def listPackages()(implicit ec: ExecutionContext): Future[Seq[String]] = {
     val request = ListPackagesRequest()
     for {
-      stub <- withCredentialsAndTraceContext(packageServiceStub)
+      stub <- withCredentials(packageServiceStub)
       res <- stub
         .listPackages(request)
         .map(_.packageIds)
     } yield res
   }
 
-  def uploadDarFile(
-      darFile: ByteString
-  )(implicit ec: ExecutionContext, tc: TraceContext): Future[Unit] = {
+  def uploadDarFile(darFile: ByteString)(implicit ec: ExecutionContext): Future[Unit] = {
     val request = UploadDarFileRequest(darFile)
     for {
-      stub <- withCredentialsAndTraceContext(packageManagementServiceStub)
+      stub <- withCredentials(packageManagementServiceStub)
       res <- stub.uploadDarFile(request).map(_ => ())
     } yield res
   }
@@ -260,8 +277,7 @@ private[environment] class LedgerClient(
       pageSize: Int,
       identityProviderId: Option[String] = None,
   )(implicit
-      ec: ExecutionContext,
-      tc: TraceContext,
+      ec: ExecutionContext
   ): Future[(Seq[UserManagementServiceOuterClass.User], Option[String])] = {
     val requestBuilder =
       new v1User.ListUsersRequest(
@@ -270,7 +286,7 @@ private[environment] class LedgerClient(
         identityProviderId.getOrElse(""),
       )
     for {
-      stub <- withCredentialsAndTraceContext(userManagementServiceStub)
+      stub <- withCredentials(userManagementServiceStub)
       res <- stub.listUsers(requestBuilder)
     } yield (
       res.users.map(v1User.User.toJavaProto),
@@ -279,8 +295,7 @@ private[environment] class LedgerClient(
   }
 
   def listUsers(pageToken: Option[String], pageSize: Int = 100)(implicit
-      ec: ExecutionContext,
-      tc: TraceContext,
+      ec: ExecutionContext
   ): Future[(Seq[User], Option[String])] =
     listUsersProto(pageToken, pageSize).map { case (users, nextPage) =>
       (users.map(User.fromProto), nextPage)
@@ -289,20 +304,16 @@ private[environment] class LedgerClient(
   def getUserProto(
       userId: String,
       identityProviderId: Option[String],
-  )(implicit
-      ec: ExecutionContext,
-      tc: TraceContext,
-  ): Future[UserManagementServiceOuterClass.User] = {
+  )(implicit ec: ExecutionContext): Future[UserManagementServiceOuterClass.User] = {
     val requestBuilder = v1User.GetUserRequest(userId, identityProviderId.getOrElse(""))
     for {
-      stub <- withCredentialsAndTraceContext(userManagementServiceStub)
+      stub <- withCredentials(userManagementServiceStub)
       res <- stub.getUser(requestBuilder).map(u => v1User.User.toJavaProto(u.getUser))
     } yield res
   }
 
   def getUser(userId: String, identityProviderId: Option[String])(implicit
-      ec: ExecutionContext,
-      tc: TraceContext,
+      ec: ExecutionContext
   ): Future[User] =
     getUserProto(userId, identityProviderId).map(User.fromProto(_))
 
@@ -311,8 +322,7 @@ private[environment] class LedgerClient(
       initialRights: Seq[User.Right],
       identityProviderId: Option[String],
   )(implicit
-      ec: ExecutionContext,
-      tc: TraceContext,
+      ec: ExecutionContext
   ): Future[User] = {
     getUser(user.getId(), identityProviderId).recoverWith {
       case e: StatusRuntimeException if e.getStatus.getCode == io.grpc.Status.Code.NOT_FOUND =>
@@ -322,10 +332,10 @@ private[environment] class LedgerClient(
 
   def getParties(
       parties: Seq[PartyId]
-  )(implicit ec: ExecutionContext, tc: TraceContext): Future[Seq[PartyDetails]] = {
+  )(implicit ec: ExecutionContext): Future[Seq[PartyDetails]] = {
     val request = GetPartiesRequest(parties.map(_.toProtoPrimitive))
     for {
-      stub <- withCredentialsAndTraceContext(partyManagementServiceStub)
+      stub <- withCredentials(partyManagementServiceStub)
       res <- stub
         .getParties(request)
         .map(r => r.partyDetails.map(details => PartyDetails.fromProtoPartyDetails(details)))
@@ -337,8 +347,7 @@ private[environment] class LedgerClient(
       initialRights: Seq[User.Right],
       identityProviderId: Option[String],
   )(implicit
-      ec: ExecutionContext,
-      tc: TraceContext,
+      ec: ExecutionContext
   ): Future[User] = {
     if (initialRights.isEmpty) {
       throw new IllegalArgumentException("createUser requires at least one right")
@@ -352,7 +361,7 @@ private[environment] class LedgerClient(
         initialRights.map(javaRightToV1Right),
       )
       for {
-        stub <- withCredentialsAndTraceContext(userManagementServiceStub)
+        stub <- withCredentials(userManagementServiceStub)
         res <- stub
           .createUser(request)
           .map(r => CreateUserResponse.fromProto(v1User.CreateUserResponse.toJavaProto(r)).getUser)
@@ -380,8 +389,7 @@ private[environment] class LedgerClient(
       primaryParty: PartyId,
       identityProviderId: Option[String],
   )(implicit
-      ec: ExecutionContext,
-      tc: TraceContext,
+      ec: ExecutionContext
   ): Future[Unit] = {
     for {
       user <- getUserProto(userId, identityProviderId)
@@ -390,26 +398,23 @@ private[environment] class LedgerClient(
     } yield ()
   }
 
-  def updateUser(user: UserManagementServiceOuterClass.User, mask: FieldMask)(implicit
-      tc: TraceContext
-  ): Future[Unit] = {
+  def updateUser(user: UserManagementServiceOuterClass.User, mask: FieldMask): Future[Unit] = {
     val request = v1User.UpdateUserRequest(
       Some(v1User.User.fromJavaProto(user)),
       Some(mask),
     )
     for {
-      stub <- withCredentialsAndTraceContext(userManagementServiceStub)
+      stub <- withCredentials(userManagementServiceStub)
       res <- stub.updateUser(request)
     } yield res
   }.map(_ => ())
 
   def listUserRights(userId: String)(implicit
-      ec: ExecutionContext,
-      tc: TraceContext,
+      ec: ExecutionContext
   ): Future[Seq[User.Right]] = {
     val request = v1User.ListUserRightsRequest(userId)
     for {
-      stub <- withCredentialsAndTraceContext(userManagementServiceStub)
+      stub <- withCredentials(userManagementServiceStub)
       res <- stub
         .listUserRights(request)
         .map(r =>
@@ -423,8 +428,7 @@ private[environment] class LedgerClient(
   }
 
   def grantUserRights(userId: String, rights: Seq[User.Right])(implicit
-      ec: ExecutionContext,
-      tc: TraceContext,
+      ec: ExecutionContext
   ): Future[Unit] = {
     if (rights.isEmpty) {
       throw new IllegalArgumentException("grantUserRights requires at least one right")
@@ -435,15 +439,14 @@ private[environment] class LedgerClient(
       )
 
       for {
-        stub <- withCredentialsAndTraceContext(userManagementServiceStub)
+        stub <- withCredentials(userManagementServiceStub)
         res <- stub.grantUserRights(request).map(_ => ())
       } yield res
     }
   }
 
   def revokeUserRights(userId: String, rights: Seq[User.Right])(implicit
-      ec: ExecutionContext,
-      tc: TraceContext,
+      ec: ExecutionContext
   ): Future[Unit] = {
     if (rights.isEmpty) {
       throw new IllegalArgumentException("revokeUserRights requires at least one right")
@@ -453,7 +456,7 @@ private[environment] class LedgerClient(
         rights.map(javaRightToV1Right),
       )
       for {
-        stub <- withCredentialsAndTraceContext(userManagementServiceStub)
+        stub <- withCredentials(userManagementServiceStub)
         res <- stub.revokeUserRights(request).map(_ => ())
       } yield res
     }
@@ -486,18 +489,16 @@ private[environment] class LedgerClient(
   def completions(
       applicationId: String,
       parties: Seq[PartyId],
-      begin: lapi.participant_offset.ParticipantOffset.Value.Absolute,
-  )(implicit tc: TraceContext): Source[CompletionStreamResponse, NotUsed] =
+      begin: Option[lapi.participant_offset.ParticipantOffset],
+  ): Source[CompletionStreamResponse, NotUsed] =
     toSource(
       for {
-        stub <- withCredentialsAndTraceContext(multidomainCompletionServiceStub)
+        stub <- withCredentials(multidomainCompletionServiceStub)
       } yield ClientAdapter.serverStreaming(
         lapi.command_completion_service.CompletionStreamRequest(
           applicationId = applicationId,
           parties = parties.map(_.toProtoPrimitive),
-          // empty string does work but it now starts from ledger begin instead of ledger end
-          // which we never want.
-          beginExclusive = begin.value,
+          beginExclusive = begin,
         ),
         stub.completionStream,
       ) map CompletionStreamResponse.fromProto
@@ -505,12 +506,12 @@ private[environment] class LedgerClient(
 
   def getConnectedDomains(
       party: PartyId
-  )(implicit tc: TraceContext): Future[Map[DomainAlias, DomainId]] = {
+  ): Future[Map[DomainAlias, DomainId]] = {
     val req = lapi.state_service.GetConnectedDomainsRequest(
       party = party.toProtoPrimitive
     )
     for {
-      stub <- withCredentialsAndTraceContext(stateServiceStub)
+      stub <- withCredentials(stateServiceStub)
       res <- stub.getConnectedDomains(req).map { resp =>
         resp.connectedDomains.map { cd =>
           DomainAlias.tryCreate(cd.domainAlias) -> DomainId.tryFromString(cd.domainId)
@@ -524,9 +525,9 @@ private[environment] class LedgerClient(
       issuer: String,
       jwksUrl: String,
       audience: String,
-  )(implicit tc: TraceContext): Future[Unit] = {
+  ): Future[Unit] = {
     for {
-      stub <- withCredentialsAndTraceContext(identityProviderConfigServiceStub)
+      stub <- withCredentials(identityProviderConfigServiceStub)
       _ <- stub.createIdentityProviderConfig(
         identity_provider_config_service.CreateIdentityProviderConfigRequest(
           Some(
@@ -655,12 +656,12 @@ object LedgerClient {
 
     private[network] def fromProto(
         proto: lapi.update_service.GetUpdateTreesResponse
-    ): Option[GetTreeUpdatesResponse] = {
+    ): GetTreeUpdatesResponse = {
       proto.update match {
         case TU.TransactionTree(tree) =>
           val javaTree = lapiTreeToJavaTree(tree)
           val update = TransactionTreeUpdate(javaTree)
-          Some(GetTreeUpdatesResponse(update, DomainId.tryFromString(tree.domainId)))
+          GetTreeUpdatesResponse(update, DomainId.tryFromString(tree.domainId))
 
         case TU.Reassignment(x) =>
           val domainIdP = x.event match {
@@ -669,14 +670,10 @@ object LedgerClient {
             case lapi.reassignment.Reassignment.Event.UnassignedEvent(unassign) => unassign.source
             case lapi.reassignment.Reassignment.Event.AssignedEvent(assign) => assign.target
           }
-          Some(
-            GetTreeUpdatesResponse(
-              ReassignmentUpdate(Reassignment.fromProto(x)),
-              DomainId.tryFromString(domainIdP),
-            )
+          GetTreeUpdatesResponse(
+            ReassignmentUpdate(Reassignment.fromProto(x)),
+            DomainId.tryFromString(domainIdP),
           )
-
-        case TU.OffsetCheckpoint(_) => None
 
         case TU.Empty => sys.error("uninitialized update service result (update)")
       }
@@ -750,18 +747,20 @@ object LedgerClient {
     }
   }
 
-  final case class CompletionStreamResponse(laterOffset: String, completion: Completion)
+  final case class CompletionStreamResponse(laterOffset: ParticipantOffset, completion: Completion)
 
   object CompletionStreamResponse {
     def fromProto(
         spb: lapi.command_completion_service.CompletionStreamResponse
     ): CompletionStreamResponse = {
-      val offset = spb.checkpoint
-        .map(_.offset)
+      val offset = (for {
+        checkpoint <- spb.checkpoint
+        offset <- checkpoint.offset
+      } yield offset)
         .getOrElse(throw new IllegalArgumentException("missing offset in CompletionStreamResponse"))
       // ignoring checkpoint.record_time
       CompletionStreamResponse(
-        offset,
+        ParticipantOffset.fromProto(scalapbToJava(offset)(_.companion)),
         Completion.fromProto(spb.getCompletion),
       )
     }

@@ -7,8 +7,6 @@ import { useGetTopValidatorsByPurchasedTraffic } from 'common-frontend/scan-api'
 
 import { Stack, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
 
-import { config } from '../utils';
-
 export const SynchronizerFeesLeaderboardTable: React.FC = () => {
   const topValidatorsQuery = useGetTopValidatorsByPurchasedTraffic();
 
@@ -39,9 +37,7 @@ export const SynchronizerFeesLeaderboardTable: React.FC = () => {
               <TableCell>Name</TableCell>
               <TableCell align="right">Number of Purchases</TableCell>
               <TableCell align="right">Total Traffic Purchased</TableCell>
-              <TableCell align="right">
-                Total {config.spliceInstanceNames.amuletNameAcronym.toUpperCase()} Spent
-              </TableCell>
+              <TableCell align="right">Total CC Spent</TableCell>
               <TableCell align="right">Last Purchased In Round</TableCell>
             </TableRow>
           </TableHead>

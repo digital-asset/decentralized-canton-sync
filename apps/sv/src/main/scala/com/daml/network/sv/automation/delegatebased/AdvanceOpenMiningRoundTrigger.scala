@@ -49,7 +49,7 @@ class AdvanceOpenMiningRoundTrigger(
       _ = logger.debug(
         s"Starting work as delegate ${dsoRules.payload.dsoDelegate} for ${task.work}"
       )
-      amuletPriceVotes <- store.listSvAmuletPriceVotes()
+      amuletPriceVotes <- store.listMemberAmuletPriceVotes()
       cmd = dsoRules.exercise(
         _.exerciseDsoRules_AdvanceOpenMiningRounds(
           task.work.amuletRulesId,
@@ -110,7 +110,6 @@ object AdvanceOpenMiningRoundTrigger {
   ) extends PrettyPrinting {
 
     import com.daml.network.util.PrettyInstances.*
-    import com.digitalasset.canton.participant.pretty.Implicits.prettyContractId
 
     override def pretty: Pretty[this.type] =
       prettyOfClass(param("amuletRulesId", _.amuletRulesId), param("openRounds", _.openRounds))

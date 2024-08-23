@@ -6,13 +6,11 @@ package com.digitalasset.canton.crypto.provider.symbolic
 import cats.data.EitherT
 import com.digitalasset.canton.crypto.*
 import com.digitalasset.canton.crypto.store.CryptoPrivateStoreExtended
-import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
 import com.digitalasset.canton.tracing.TraceContext
-import com.google.common.annotations.VisibleForTesting
 import com.google.protobuf.ByteString
 
-import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
-import scala.concurrent.ExecutionContext
+import java.util.concurrent.atomic.AtomicInteger
+import scala.concurrent.{ExecutionContext, Future}
 
 class SymbolicPrivateCrypto(
     pureCrypto: SymbolicPureCrypto,
@@ -23,46 +21,37 @@ class SymbolicPrivateCrypto(
 
   private val keyCounter = new AtomicInteger
 
-  private val randomKeys = new AtomicBoolean(false)
-
   override protected val signingOps: SigningOps = pureCrypto
   override protected val encryptionOps: EncryptionOps = pureCrypto
 
   // NOTE: These schemes are not really used by Symbolic crypto
   override val defaultSigningKeyScheme: SigningKeyScheme = SigningKeyScheme.Ed25519
-  override val defaultEncryptionKeySpec: EncryptionKeySpec = EncryptionKeySpec.EcP256
+  override val defaultEncryptionKeyScheme: EncryptionKeyScheme =
+    EncryptionKeyScheme.EciesP256HkdfHmacSha256Aes128Gcm
 
-  @VisibleForTesting
-  def setRandomKeysFlag(newValue: Boolean): Unit = {
-    randomKeys.set(newValue)
-  }
-
-  private def genKeyPair[K](keypair: (ByteString, ByteString) => K): K = {
-    val key = if (randomKeys.get()) {
-      PseudoRandom.randomAlphaNumericString(8)
-    } else {
-      s"key-${keyCounter.incrementAndGet()}"
-    }
+  private def genKeyPair[K](keypair: (Fingerprint, ByteString, ByteString) => K): K = {
+    val key = s"key-${keyCounter.incrementAndGet()}"
+    val id = Fingerprint.create(ByteString.copyFromUtf8(key))
     val publicKey = ByteString.copyFromUtf8(s"pub-$key")
     val privateKey = ByteString.copyFromUtf8(s"priv-$key")
-    keypair(publicKey, privateKey)
+    keypair(id, publicKey, privateKey)
   }
 
   override protected[crypto] def generateSigningKeypair(scheme: SigningKeyScheme)(implicit
       traceContext: TraceContext
-  ): EitherT[FutureUnlessShutdown, SigningKeyGenerationError, SigningKeyPair] =
+  ): EitherT[Future, SigningKeyGenerationError, SigningKeyPair] =
     EitherT.rightT(
-      genKeyPair((pubKey, privKey) =>
-        SigningKeyPair.create(CryptoKeyFormat.Symbolic, pubKey, privKey, scheme)
+      genKeyPair((id, pubKey, privKey) =>
+        SigningKeyPair.create(id, CryptoKeyFormat.Symbolic, pubKey, privKey, scheme)
       )
     )
 
-  override protected[crypto] def generateEncryptionKeypair(keySpec: EncryptionKeySpec)(implicit
+  override protected[crypto] def generateEncryptionKeypair(scheme: EncryptionKeyScheme)(implicit
       traceContext: TraceContext
-  ): EitherT[FutureUnlessShutdown, EncryptionKeyGenerationError, EncryptionKeyPair] =
+  ): EitherT[Future, EncryptionKeyGenerationError, EncryptionKeyPair] =
     EitherT.rightT(
-      genKeyPair((pubKey, privKey) =>
-        EncryptionKeyPair.create(CryptoKeyFormat.Symbolic, pubKey, privKey, keySpec)
+      genKeyPair((id, pubKey, privKey) =>
+        EncryptionKeyPair.create(id, CryptoKeyFormat.Symbolic, pubKey, privKey, scheme)
       )
     )
 

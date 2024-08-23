@@ -4,14 +4,15 @@
 package com.digitalasset.canton.participant.protocol.submission
 
 import com.digitalasset.canton.BaseTest
-import com.digitalasset.canton.crypto.provider.symbolic.SymbolicPureCrypto
+import com.digitalasset.canton.topology.{DefaultTestIdentities, TestingIdentityFactoryX}
 import org.scalatest.wordspec.AsyncWordSpec
 
 class SeedGeneratorTest extends AsyncWordSpec with BaseTest {
   "SeedGenerator" should {
     "generate fresh salts" in {
-      val pureCrypto = new SymbolicPureCrypto
-      val seedGenerator = new SeedGenerator(pureCrypto)
+      val crypto =
+        TestingIdentityFactoryX.newCrypto(loggerFactory)(DefaultTestIdentities.mediator)
+      val seedGenerator = new SeedGenerator(crypto.pureCrypto)
 
       val salt1 = seedGenerator.generateSaltSeed()
       val salt2 = seedGenerator.generateSaltSeed()

@@ -6,11 +6,8 @@ package com.digitalasset.canton.participant.protocol.validation
 import com.daml.nonempty.NonEmpty
 import com.digitalasset.canton.crypto.TestHash
 import com.digitalasset.canton.data.ViewPosition.MerkleSeqIndex
-import com.digitalasset.canton.data.{CantonTimestamp, ViewPosition}
-import com.digitalasset.canton.participant.protocol.ProtocolProcessor.{
-  WrongRecipients,
-  WrongRecipientsDueToTopologyChange,
-}
+import com.digitalasset.canton.data.{CantonTimestamp, Informee, PlainInformee, ViewPosition}
+import com.digitalasset.canton.participant.protocol.ProtocolProcessor.WrongRecipients
 import com.digitalasset.canton.participant.protocol.TestProcessingSteps.TestViewTree
 import com.digitalasset.canton.participant.sync.SyncServiceError.SyncServiceAlarm
 import com.digitalasset.canton.protocol.{RequestId, RootHash, ViewHash}
@@ -22,7 +19,7 @@ import com.digitalasset.canton.sequencing.protocol.{
 }
 import com.digitalasset.canton.topology.client.TopologySnapshot
 import com.digitalasset.canton.topology.transaction.ParticipantPermission
-import com.digitalasset.canton.topology.{Member, ParticipantId, TestingTopology}
+import com.digitalasset.canton.topology.{Member, ParticipantId, TestingTopologyX}
 import com.digitalasset.canton.{BaseTestWordSpec, HasExecutionContext, LfPartyId}
 
 import scala.annotation.tailrec
@@ -44,7 +41,7 @@ class RecipientsValidatorTest extends BaseTestWordSpec with HasExecutionContext 
   lazy val participant2: ParticipantId = ParticipantId("participant2")
 
   lazy val snapshot: TopologySnapshot =
-    TestingTopology(topology =
+    TestingTopologyX(topology =
       Map(
         inactive -> Map.empty,
         party1 -> Map(participant1 -> ParticipantPermission.Submission),
@@ -55,6 +52,8 @@ class RecipientsValidatorTest extends BaseTestWordSpec with HasExecutionContext 
   def viewHash(i: Int): ViewHash = ViewHash(TestHash.digest(i))
 
   def mkRootHash(i: Int): RootHash = RootHash(TestHash.digest(i))
+
+  def informeeOf(parties: LfPartyId*): Set[Informee] = parties.map(PlainInformee).toSet
 
   @tailrec
   final def mkViewPosition(depth: Int, acc: ViewPosition = ViewPosition.root): ViewPosition =
@@ -82,7 +81,7 @@ class RecipientsValidatorTest extends BaseTestWordSpec with HasExecutionContext 
     val viewTree = TestViewTree(
       viewHash(1),
       mkRootHash(rootHash),
-      informees.toSet,
+      informeeOf(informees*),
       viewPosition = mkViewPosition(viewDepth),
     )
     val recipients = Recipients.cc(members.head1, members.tail1*)
@@ -98,7 +97,7 @@ class RecipientsValidatorTest extends BaseTestWordSpec with HasExecutionContext 
     val viewTree = TestViewTree(
       viewHash(1),
       mkRootHash(rootHash),
-      informees.toSet,
+      informeeOf(informees*),
       viewPosition = mkViewPosition(viewDepth),
     )
     TestInput(viewTree, recipients)
@@ -110,7 +109,7 @@ class RecipientsValidatorTest extends BaseTestWordSpec with HasExecutionContext 
         val input = mkInput1(Seq(party1, party2), NonEmpty(Seq, participant1, participant2))
 
         val (wrongRecipients, goodInputs) = validator
-          .retainInputsWithValidRecipients(requestId, Seq(input), snapshot, None)
+          .retainInputsWithValidRecipients(requestId, Seq(input), snapshot)
           .futureValue
 
         goodInputs shouldBe Seq(input)
@@ -132,7 +131,6 @@ class RecipientsValidatorTest extends BaseTestWordSpec with HasExecutionContext 
             requestId,
             Seq(parentInput, childInput),
             snapshot,
-            None,
           )
           .futureValue
 
@@ -147,7 +145,7 @@ class RecipientsValidatorTest extends BaseTestWordSpec with HasExecutionContext 
 
         val (wrongRecipients, goodInputs) = loggerFactory.assertLogs(
           validator
-            .retainInputsWithValidRecipients(requestId, Seq(input), snapshot, None)
+            .retainInputsWithValidRecipients(requestId, Seq(input), snapshot)
             .futureValue,
           _.shouldBeCantonError(
             SyncServiceAlarm,
@@ -157,34 +155,6 @@ class RecipientsValidatorTest extends BaseTestWordSpec with HasExecutionContext 
 
         goodInputs shouldBe empty
         wrongRecipients.loneElement shouldBe WrongRecipients(input.viewTree)
-      }
-
-      "not warn if that is due to a topology change" in {
-        val input = mkInput1(Seq(inactive, party1), NonEmpty(Seq, participant1))
-
-        val submissionSnapshot: TopologySnapshot =
-          TestingTopology(topology =
-            Map(
-              inactive -> Map(participant1 -> ParticipantPermission.Submission),
-              party1 -> Map(participant1 -> ParticipantPermission.Submission),
-              party2 -> Map(participant2 -> ParticipantPermission.Submission),
-            )
-          ).build(loggerFactory).topologySnapshot()
-
-        val (wrongRecipients, goodInputs) = loggerFactory.assertLogs(
-          validator
-            .retainInputsWithValidRecipients(
-              requestId,
-              Seq(input),
-              snapshot,
-              Some(submissionSnapshot),
-            )
-            .futureValue
-            // No assertion to explicitly check that no warning is emitted
-        )
-
-        goodInputs shouldBe empty
-        wrongRecipients.loneElement shouldBe WrongRecipientsDueToTopologyChange(input.viewTree)
       }
     }
 
@@ -198,7 +168,6 @@ class RecipientsValidatorTest extends BaseTestWordSpec with HasExecutionContext 
             requestId,
             Seq(input1, input2),
             snapshot,
-            None,
           ),
           _.getMessage should startWith("Views with different root hashes are not supported:"),
         )
@@ -220,7 +189,6 @@ class RecipientsValidatorTest extends BaseTestWordSpec with HasExecutionContext 
               requestId,
               Seq(parentInput, childInput),
               snapshot,
-              None,
             )
             .futureValue,
           _.shouldBeCantonError(
@@ -235,42 +203,6 @@ class RecipientsValidatorTest extends BaseTestWordSpec with HasExecutionContext 
           WrongRecipients(childInput.viewTree),
         )
       }
-
-      "not warn if that is due to a topology change" in {
-        val parentInput = mkInput1(Seq(party1), NonEmpty(Seq, participant1), viewDepth = 1)
-        val childInput = mkInput2(
-          Seq(party1, inactive),
-          mkRecipients(Seq(NonEmpty(Set, participant1), NonEmpty(Set, participant1))),
-          viewDepth = 2,
-        )
-
-        val submissionSnapshot: TopologySnapshot =
-          TestingTopology(topology =
-            Map(
-              inactive -> Map(participant1 -> ParticipantPermission.Submission),
-              party1 -> Map(participant1 -> ParticipantPermission.Submission),
-              party2 -> Map(participant2 -> ParticipantPermission.Submission),
-            )
-          ).build(loggerFactory).topologySnapshot()
-
-        val (wrongRecipients, goodInputs) = loggerFactory.assertLogs(
-          validator
-            .retainInputsWithValidRecipients(
-              requestId,
-              Seq(parentInput, childInput),
-              snapshot,
-              Some(submissionSnapshot),
-            )
-            .futureValue
-            // No assertion to explicitly check that no warning is emitted
-        )
-
-        goodInputs shouldBe empty
-        wrongRecipients shouldBe Seq(
-          WrongRecipientsDueToTopologyChange(parentInput.viewTree),
-          WrongRecipientsDueToTopologyChange(childInput.viewTree),
-        )
-      }
     }
 
     "a view has a missing recipient" must {
@@ -279,7 +211,7 @@ class RecipientsValidatorTest extends BaseTestWordSpec with HasExecutionContext 
 
         val (wrongRecipients, goodInputs) = loggerFactory.assertLogs(
           validator
-            .retainInputsWithValidRecipients(requestId, Seq(input), snapshot, None)
+            .retainInputsWithValidRecipients(requestId, Seq(input), snapshot)
             .futureValue,
           _.shouldBeCantonError(
             SyncServiceAlarm,
@@ -289,34 +221,6 @@ class RecipientsValidatorTest extends BaseTestWordSpec with HasExecutionContext 
 
         goodInputs shouldBe empty
         wrongRecipients.loneElement shouldBe WrongRecipients(input.viewTree)
-      }
-
-      "not warn if that is due to a topology change" in {
-        val input = mkInput1(Seq(party1, party2), NonEmpty(Seq, participant1))
-
-        val submissionSnapshot: TopologySnapshot =
-          TestingTopology(topology =
-            Map(
-              inactive -> Map.empty,
-              party1 -> Map(participant1 -> ParticipantPermission.Submission),
-              party2 -> Map(participant1 -> ParticipantPermission.Submission),
-            )
-          ).build(loggerFactory).topologySnapshot()
-
-        val (wrongRecipients, goodInputs) = loggerFactory.assertLogs(
-          validator
-            .retainInputsWithValidRecipients(
-              requestId,
-              Seq(input),
-              snapshot,
-              Some(submissionSnapshot),
-            )
-            .futureValue
-            // No assertion to explicitly check that no warning is emitted
-        )
-
-        goodInputs shouldBe empty
-        wrongRecipients.loneElement shouldBe WrongRecipientsDueToTopologyChange(input.viewTree)
       }
     }
 
@@ -337,7 +241,6 @@ class RecipientsValidatorTest extends BaseTestWordSpec with HasExecutionContext 
               requestId,
               Seq(parentInput, childInput),
               snapshot,
-              None,
             )
             .futureValue,
           _.shouldBeCantonError(
@@ -349,8 +252,6 @@ class RecipientsValidatorTest extends BaseTestWordSpec with HasExecutionContext 
         goodInputs.loneElement shouldBe childInput
         wrongRecipients.loneElement shouldBe WrongRecipients(parentInput.viewTree)
       }
-
-      // This cannot be due to a topology change, because it would affect all views
     }
 
     "a view has an extra recipient" must {
@@ -359,43 +260,12 @@ class RecipientsValidatorTest extends BaseTestWordSpec with HasExecutionContext 
 
         val (wrongRecipients, goodInputs) = loggerFactory.assertLogs(
           validator
-            .retainInputsWithValidRecipients(requestId, Seq(input), snapshot, None)
+            .retainInputsWithValidRecipients(requestId, Seq(input), snapshot)
             .futureValue,
           _.shouldBeCantonError(
             SyncServiceAlarm,
             _ shouldBe s"""Received a request with id $requestId where the view at List("") has extra recipients Set(MemberRecipient(PAR::participant2::default)) for the view at List(""). Continue processing...""",
           ),
-        )
-
-        goodInputs.loneElement shouldBe input
-        wrongRecipients shouldBe empty
-      }
-
-      "not warn if that is due to a topology change" in {
-        val input = mkInput1(Seq(party1), NonEmpty(Seq, participant1, participant2))
-
-        val submissionSnapshot: TopologySnapshot =
-          TestingTopology(topology =
-            Map(
-              inactive -> Map.empty,
-              party1 -> Map(
-                participant1 -> ParticipantPermission.Submission,
-                participant2 -> ParticipantPermission.Submission,
-              ),
-              party2 -> Map(participant2 -> ParticipantPermission.Submission),
-            )
-          ).build(loggerFactory).topologySnapshot()
-
-        val (wrongRecipients, goodInputs) = loggerFactory.assertLogs(
-          validator
-            .retainInputsWithValidRecipients(
-              requestId,
-              Seq(input),
-              snapshot,
-              Some(submissionSnapshot),
-            )
-            .futureValue
-            // No assertion to explicitly check that no warning is emitted
         )
 
         goodInputs.loneElement shouldBe input
@@ -418,7 +288,6 @@ class RecipientsValidatorTest extends BaseTestWordSpec with HasExecutionContext 
               requestId,
               Seq(parentInput, childInput),
               snapshot,
-              None,
             )
             .futureValue,
           _.shouldBeCantonError(
@@ -430,8 +299,6 @@ class RecipientsValidatorTest extends BaseTestWordSpec with HasExecutionContext 
         goodInputs shouldBe Seq(parentInput, childInput)
         wrongRecipients shouldBe empty
       }
-
-      // This cannot be due to a topology change, because it would affect all views
     }
 
     "the recipients have an extra group" must {
@@ -445,7 +312,7 @@ class RecipientsValidatorTest extends BaseTestWordSpec with HasExecutionContext 
 
         val (wrongRecipients, goodInputs) = loggerFactory.assertLogs(
           validator
-            .retainInputsWithValidRecipients(requestId, Seq(input), snapshot, None)
+            .retainInputsWithValidRecipients(requestId, Seq(input), snapshot)
             .futureValue,
           _.shouldBeCantonError(
             SyncServiceAlarm,
@@ -470,7 +337,6 @@ class RecipientsValidatorTest extends BaseTestWordSpec with HasExecutionContext 
               requestId,
               Seq(parentInput, childInput),
               snapshot,
-              None,
             )
             .futureValue,
           _.shouldBeCantonError(
@@ -505,7 +371,6 @@ class RecipientsValidatorTest extends BaseTestWordSpec with HasExecutionContext 
               requestId,
               Seq(parentInput, childInput),
               snapshot,
-              None,
             )
             .futureValue,
           _.shouldBeCantonError(
@@ -549,7 +414,6 @@ class RecipientsValidatorTest extends BaseTestWordSpec with HasExecutionContext 
                 requestId,
                 Seq(parentInput, childInput),
                 snapshot,
-                None,
               )
               .futureValue,
             _.shouldBeCantonError(
@@ -599,7 +463,6 @@ class RecipientsValidatorTest extends BaseTestWordSpec with HasExecutionContext 
                 requestId,
                 Seq(parentInput, childInput),
                 snapshot,
-                None,
               )
               .futureValue,
             _.shouldBeCantonError(

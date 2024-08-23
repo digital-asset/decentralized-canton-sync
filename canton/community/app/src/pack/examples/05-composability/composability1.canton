@@ -11,8 +11,7 @@ val iouId = bootstrap.domain(
   iouAlias,
   sequencers = Seq(iou_sequencer),
   mediators = Seq(iou_mediator),
-  domainOwners = Seq(iouDomainOwner),
-  staticDomainParameters = StaticDomainParameters.defaultsWithoutKMS(ProtocolVersion.latest),
+  domainOwners = Seq(iouDomainOwner)
 )
 
 val paintDomainOwner = paint_sequencer
@@ -20,8 +19,7 @@ val paintId = bootstrap.domain(
   "paint",
   sequencers = Seq(paint_sequencer),
   mediators = Seq(paint_mediator),
-  domainOwners = Seq(paintDomainOwner),
-  staticDomainParameters = StaticDomainParameters.defaultsWithoutKMS(ProtocolVersion.latest),
+  domainOwners = Seq(paintDomainOwner)
 )
 
 // update parameters
@@ -58,7 +56,7 @@ import com.digitalasset.canton.BigDecimalImplicits._
 import com.digitalasset.canton.examples.java.iou.{Amount, Iou}
 import com.digitalasset.canton.examples.java.paint.{OfferToPaintHouseByOwner, PaintHouse}
 import com.digitalasset.canton.participant.ledger.api.client.JavaDecodeUtil.decodeAllCreated
-import com.digitalasset.canton.participant.util.JavaCodegenUtil.ContractIdSyntax
+import com.digitalasset.canton.protocol.ContractIdSyntax._
 
 import scala.jdk.CollectionConverters._
 // architecture-handbook-entry-end: imports

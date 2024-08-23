@@ -6,12 +6,7 @@ package com.digitalasset.canton.domain.mediator
 import cats.data.EitherT
 import com.digitalasset.canton.config.ProcessingTimeout
 import com.digitalasset.canton.health.admin.data.TopologyQueueStatus
-import com.digitalasset.canton.lifecycle.{
-  AsyncOrSyncCloseable,
-  FlagCloseableAsync,
-  FutureUnlessShutdown,
-  SyncCloseable,
-}
+import com.digitalasset.canton.lifecycle.{AsyncOrSyncCloseable, FlagCloseableAsync, SyncCloseable}
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.mediator.admin.v30.MediatorAdministrationServiceGrpc
 import com.digitalasset.canton.networking.grpc.{CantonMutableHandlerRegistry, GrpcDynamicService}
@@ -20,16 +15,15 @@ import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.{EitherTUtil, SingleUseCell}
 
 import java.util.concurrent.atomic.AtomicReference
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 trait MediatorReplicaManager extends NamedLogging with FlagCloseableAsync {
 
   protected val mediatorRuntimeFactoryRef
-      : SingleUseCell[() => EitherT[FutureUnlessShutdown, String, MediatorRuntime]] =
+      : SingleUseCell[() => EitherT[Future, String, MediatorRuntime]] =
     new SingleUseCell
 
-  protected def getMediatorRuntimeFactory
-      : Option[() => EitherT[FutureUnlessShutdown, String, MediatorRuntime]] =
+  protected def getMediatorRuntimeFactory: Option[() => EitherT[Future, String, MediatorRuntime]] =
     mediatorRuntimeFactoryRef.get
 
   protected val mediatorRuntimeRef = new AtomicReference[Option[MediatorRuntime]](None)
@@ -47,15 +41,15 @@ trait MediatorReplicaManager extends NamedLogging with FlagCloseableAsync {
 
   def setup(
       adminServiceRegistry: CantonMutableHandlerRegistry,
-      factory: () => EitherT[FutureUnlessShutdown, String, MediatorRuntime],
+      factory: () => EitherT[Future, String, MediatorRuntime],
       isActive: Boolean,
-  )(implicit traceContext: TraceContext): FutureUnlessShutdown[Unit]
+  )(implicit traceContext: TraceContext): Future[Unit]
 
   def isActive: Boolean
 
   def getTopologyQueueStatus: TopologyQueueStatus = TopologyQueueStatus(
     manager = mediatorRuntime.map(_.mediator.topologyManagerStatus.queueSize).getOrElse(0),
-    dispatcher = mediatorRuntime.map(_.mediator.domainOutboxHandle.queueSize).getOrElse(0),
+    dispatcher = mediatorRuntime.map(_.mediator.domainOutboxStatus.queueSize).getOrElse(0),
     clients = mediatorRuntime.map(x => x.mediator.topologyClient.numPendingChanges).getOrElse(0),
   )
 
@@ -83,9 +77,9 @@ class CommunityMediatorReplicaManager(
 
   override def setup(
       adminServiceRegistry: CantonMutableHandlerRegistry,
-      factory: () => EitherT[FutureUnlessShutdown, String, MediatorRuntime],
+      factory: () => EitherT[Future, String, MediatorRuntime],
       isActive: Boolean,
-  )(implicit traceContext: TraceContext): FutureUnlessShutdown[Unit] = {
+  )(implicit traceContext: TraceContext): Future[Unit] = {
     logger.debug("Setting up replica manager")
 
     mediatorRuntimeFactoryRef.putIfAbsent(factory).foreach { prev =>
@@ -107,7 +101,7 @@ class CommunityMediatorReplicaManager(
       enterpriseAdminService.setInstance(mediatorRuntime.enterpriseAdministrationService)
     }
 
-    EitherTUtil.toFutureUnlessShutdown(result.leftMap(new MediatorReplicaManagerException(_)))
+    EitherTUtil.toFuture(result.leftMap(new MediatorReplicaManagerException(_)))
   }
 
   override def isActive: Boolean = true

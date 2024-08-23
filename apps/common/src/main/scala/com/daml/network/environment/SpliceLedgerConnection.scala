@@ -16,6 +16,7 @@ import com.daml.ledger.javaapi.data.{
   Command,
   CreatedEvent,
   ExercisedEvent,
+  ParticipantOffset,
   Transaction,
   TransactionTree,
   User,
@@ -31,7 +32,7 @@ import com.daml.network.environment.ledger.api.{
   NoDedup,
 }
 import com.daml.network.store.MultiDomainAcsStore.IngestionFilter
-import com.daml.network.util.{AssignedContract, Contract, ContractWithState, DisclosedContracts}
+import com.daml.network.util.{AssignedContract, Contract, DisclosedContracts}
 import com.digitalasset.canton.DomainAlias
 import com.digitalasset.canton.lifecycle.{
   AsyncCloseable,
@@ -44,7 +45,7 @@ import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.protocol.LocalRejectError.ConsistencyRejections.InactiveContracts
 import com.daml.ledger.api.v2 as lapi
 import com.daml.network.environment.BaseLedgerConnection.PARTICIPANT_BEGIN_OFFSET
-import com.digitalasset.canton.topology.{DomainId, Namespace, PartyId, UniqueIdentifier}
+import com.digitalasset.canton.topology.{DomainId, Identifier, Namespace, PartyId, UniqueIdentifier}
 import com.digitalasset.canton.topology.store.TopologyStoreId
 import com.digitalasset.canton.topology.store.TopologyStoreId.AuthorizedStore
 import com.digitalasset.canton.tracing.TraceContext
@@ -64,7 +65,6 @@ import scala.util.{Failure, Success, Try}
 import shapeless.<:!<
 import com.digitalasset.canton.config.NonNegativeFiniteDuration
 import com.digitalasset.canton.logging.pretty.{Pretty, PrettyPrinting}
-import com.digitalasset.daml.lf.data.Ref
 
 /** BaseLedgerConnection is a read-only ledger connection, typically used during initialization when we don't
   * want to allow command submissions yet.
@@ -91,7 +91,7 @@ class BaseLedgerConnection(
   def activeContracts(
       filter: IngestionFilter,
       offset: lapi.participant_offset.ParticipantOffset.Value.Absolute,
-  )(implicit tc: TraceContext): Future[
+  ): Future[
     (
         Seq[ActiveContract],
         Seq[IncompleteReassignmentEvent.Unassign],
@@ -125,22 +125,26 @@ class BaseLedgerConnection(
     } yield (active, incompleteOut, incompleteIn)
   }
 
-  def getConnectedDomains(party: PartyId)(implicit
-      tc: TraceContext
-  ): Future[Map[DomainAlias, DomainId]] =
+  def getConnectedDomains(party: PartyId): Future[Map[DomainAlias, DomainId]] =
     client.getConnectedDomains(party)
 
   def updates(
       beginOffset: lapi.participant_offset.ParticipantOffset,
       filter: IngestionFilter,
-  )(implicit tc: TraceContext): Source[LedgerClient.GetTreeUpdatesResponse, NotUsed] =
+  ): Source[LedgerClient.GetTreeUpdatesResponse, NotUsed] =
     client
       .updates(LedgerClient.GetUpdatesRequest(beginOffset, None, filter))
+
+  def tryGetTransactionTreeByEventId(
+      parties: Seq[PartyId],
+      id: String,
+  )(implicit traceContext: TraceContext): Future[TransactionTree] =
+    client.tryGetTransactionTreeByEventId(parties.map(_.toProtoPrimitive), id)
 
   def getOptionalPrimaryParty(
       user: String,
       identityProviderId: Option[String] = None,
-  )(implicit tc: TraceContext): Future[Option[PartyId]] = {
+  ): Future[Option[PartyId]] = {
     for {
       user <- client
         .getUser(user, identityProviderId)
@@ -149,7 +153,7 @@ class BaseLedgerConnection(
     } yield partyId
   }
 
-  def getPrimaryParty(user: String)(implicit tc: TraceContext): Future[PartyId] = {
+  def getPrimaryParty(user: String): Future[PartyId] = {
     for {
       partyIdO <- getOptionalPrimaryParty(user)
       partyId = partyIdO.getOrElse(
@@ -169,7 +173,19 @@ class BaseLedgerConnection(
       RetryFor.WaitingOnInitDependency,
       "primary_party_allocated",
       s"User $userId has primary party",
-      check = getOptionalPrimaryParty(userId),
+      check = getOptionalPrimaryParty(userId).map(
+        _.map { partyId =>
+          {
+            val partyHint = partyId.uid.id.toProtoPrimitive
+            if (partyHint != hint) {
+              logger.warn(
+                s"PartyId hint $partyHint does not match configured hint $hint. The configured hint will be ignored."
+              )
+            }
+            partyId
+          }
+        }
+      ),
       establish = for {
         party <- ensurePartyAllocated(AuthorizedStore, hint, None, participantAdminConnection)
         _ <- setUserPrimaryParty(userId, party)
@@ -204,8 +220,8 @@ class BaseLedgerConnection(
       participantId <- participantAdminConnection.getParticipantId()
       namespace = namespaceO.getOrElse(participantId.uid.namespace)
       partyId = PartyId(
-        UniqueIdentifier.tryCreate(
-          hint,
+        UniqueIdentifier(
+          Identifier.tryCreate(hint),
           namespace,
         )
       )
@@ -235,9 +251,7 @@ class BaseLedgerConnection(
       logger,
     )
 
-  def getUser(user: String, identityProviderId: Option[String] = None)(implicit
-      tc: TraceContext
-  ): Future[User] =
+  def getUser(user: String, identityProviderId: Option[String] = None): Future[User] =
     client.getUser(user, identityProviderId)
 
   private def createPartyAndUser(
@@ -260,8 +274,8 @@ class BaseLedgerConnection(
       party: PartyId,
       userRights: Seq[User.Right],
       identityProviderId: Option[String] = None,
-  )(implicit tc: TraceContext): Future[PartyId] = {
-    val userId = Ref.UserId.assertFromString(user)
+  ): Future[PartyId] = {
+    val userId = com.daml.lf.data.Ref.UserId.assertFromString(user)
     val userLf = new User(userId, party.toLf)
     for {
       user <- client
@@ -282,7 +296,7 @@ class BaseLedgerConnection(
       user: String,
       party: PartyId,
       identityProviderId: Option[String] = None,
-  )(implicit tc: TraceContext): Future[Unit] =
+  ): Future[Unit] =
     client.setUserPrimaryParty(user, party, identityProviderId)
 
   def ensureUserMetadataAnnotation(userId: String, key: String, value: String, retryFor: RetryFor)(
@@ -360,7 +374,7 @@ class BaseLedgerConnection(
       userId: String,
       key: String,
       identityProviderId: Option[String] = None,
-  )(implicit tc: TraceContext): Future[Option[String]] =
+  ): Future[Option[String]] =
     client.getUserProto(userId, identityProviderId).map { user =>
       if (user.hasMetadata) {
         user.getMetadata.getAnnotationsMap.asScala.get(key)
@@ -390,8 +404,8 @@ class BaseLedgerConnection(
 
   def getUserActAs(
       username: String
-  )(implicit tc: TraceContext): Future[Set[PartyId]] = {
-    val userId = Ref.UserId.assertFromString(username)
+  ): Future[Set[PartyId]] = {
+    val userId = com.daml.lf.data.Ref.UserId.assertFromString(username)
     for {
       userRights <- client.listUserRights(userId)
     } yield userRights.collect { case actAs: User.Right.CanActAs =>
@@ -399,11 +413,22 @@ class BaseLedgerConnection(
     }.toSet
   }
 
+  def getUserReadAs(
+      username: String
+  ): Future[Set[PartyId]] = {
+    val userId = com.daml.lf.data.Ref.UserId.assertFromString(username)
+    for {
+      userRights <- client.listUserRights(userId)
+    } yield userRights.collect { case readAs: User.Right.CanReadAs =>
+      PartyId.tryFromProtoPrimitive(readAs.party)
+    }.toSet
+  }
+
   def grantUserRights(
       user: String,
       actAsParties: Seq[PartyId],
       readAsParties: Seq[PartyId],
-  )(implicit tc: TraceContext): Future[Unit] = {
+  ): Future[Unit] = {
     val grants =
       actAsParties.map(p => new User.Right.CanActAs(p.toLf)) ++ readAsParties.map(p =>
         new User.Right.CanReadAs(p.toLf)
@@ -415,7 +440,7 @@ class BaseLedgerConnection(
       user: String,
       actAsParties: Seq[PartyId],
       readAsParties: Seq[PartyId],
-  )(implicit tc: TraceContext): Future[Unit] = {
+  ): Future[Unit] = {
     val revokes =
       actAsParties.map(p => new User.Right.CanActAs(p.toLf)) ++ readAsParties.map(p =>
         new User.Right.CanReadAs(p.toLf)
@@ -423,7 +448,7 @@ class BaseLedgerConnection(
     client.revokeUserRights(user, revokes)
   }
 
-  def listPackages()(implicit tc: TraceContext): Future[Set[String]] =
+  def listPackages(): Future[Set[String]] =
     client.listPackages().map(_.toSet)
 
   def waitForPackages(
@@ -462,9 +487,7 @@ class BaseLedgerConnection(
     )
 
   // Note that this will only work for apps that run as the SV user, i.e., the sv app, directory and scan.
-  def lookupDsoPartyFromUserMetadata(userId: String)(implicit
-      tc: TraceContext
-  ): Future[Option[PartyId]] =
+  def lookupDsoPartyFromUserMetadata(userId: String): Future[Option[PartyId]] =
     lookupUserMetadata(userId, DSO_PARTY_USER_METADATA_KEY).map(
       _.map(PartyId.tryFromProtoPrimitive(_))
     )
@@ -596,13 +619,6 @@ class SpliceLedgerConnection(
 
   private[this] def timeouts = retryProvider.timeouts
 
-  def disclosedContracts(
-      arg: ContractWithState[?, ?],
-      args: ContractWithState[?, ?]*
-  ): DisclosedContracts.NE = {
-    DisclosedContracts(inactiveContractCallbacks.get(), arg, args*)
-  }
-
   def trafficBalanceService: Option[TrafficBalanceService] = trafficBalanceServiceO.get()
 
   private def callCallbacksOnCompletion[T, U](
@@ -665,9 +681,7 @@ class SpliceLedgerConnection(
             trafficBalanceService.lookupAvailableTraffic(domainId).flatMap {
               case None => Future.unit
               case Some(availableTraffic) =>
-                if (
-                  availableTraffic <= reservedTraffic.unwrap && commandPriority == CommandPriority.Low
-                )
+                if (availableTraffic <= reservedTraffic && commandPriority == CommandPriority.Low)
                   throw Status.ABORTED
                     .withDescription(
                       s"Traffic balance below reserved traffic amount ($availableTraffic < $reservedTraffic)"
@@ -848,14 +862,14 @@ class SpliceLedgerConnection(
           def clientSubmit[W, U](waitFor: WF[W])(getOffsetAndResult: W => (String, U)): Future[U] =
             callCallbacksOnCompletionAndWaitForOffset(
               client.submitAndWait(
-                domainId = disclosedContracts.overwriteDomain(domainId).toProtoPrimitive,
+                domainId = domainId.toProtoPrimitive,
                 applicationId = applicationId,
                 commandId = commandId,
                 deduplicationConfig = deduplicationConfig,
                 actAs = actAs.map(_.toProtoPrimitive),
                 readAs = readAs.map(_.toProtoPrimitive),
                 commands = commands,
-                disclosedContracts = disclosedContracts,
+                disclosedContracts = disclosedContracts assertOnDomain domainId,
                 waitFor = waitFor,
                 deadline = deadline,
               )
@@ -891,46 +905,48 @@ class SpliceLedgerConnection(
     val commandId = UUID.randomUUID().toString()
     logger.debug(s"reassignment $commandId is for $command")
 
-    ledgerEnd().flatMap { ledgerEnd =>
-      val (ks, completion) = cancelIfFailed(
+    val (ks, completion) = cancelIfFailed(
+      client
+        .completions(applicationId, Seq(submitter), begin = None)
+        .wireTap(csr => logger.trace(s"completions while awaiting reassignment $commandId: $csr"))
+    )(awaitCompletion(applicationId = applicationId, commandId = commandId))(
+      // We call the callbacks for handling stale contract errors here, but wait for the offset
+      // ingestion at which the completion is reported.
+      callCallbacksOnCompletionNoWaitForOffset(
         client
-          .completions(applicationId, Seq(submitter), begin = ledgerEnd)
-          .wireTap(csr => logger.trace(s"completions while awaiting reassignment $commandId: $csr"))
-      )(awaitCompletion(applicationId = applicationId, commandId = commandId))(
-        // We call the callbacks for handling stale contract errors here, but wait for the offset
-        // ingestion at which the completion is reported.
-        callCallbacksOnCompletionNoWaitForOffset(
-          client
-            .submitReassignment(
-              applicationId,
-              commandId,
-              submissionId = commandId,
-              submitter,
-              command,
+          .submitReassignment(
+            applicationId,
+            commandId,
+            submissionId = commandId,
+            submitter,
+            command,
+          )
+          .andThen { _ =>
+            logger.info(
+              s"Submitted reassignment to ledger, waiting for completion: commandId: $commandId"
             )
-            .andThen { _ =>
-              logger.info(
-                s"Submitted reassignment to ledger, waiting for completion: commandId: $commandId"
-              )
-            }
-        )
+          }
       )
+    )
 
-      retryProvider
-        .waitUnlessShutdown(completion)
-        .flatMap { case ((offset, _), ()) =>
-          FutureUnlessShutdown.outcomeF(
-            completionOffsetCallback(offset).map(_ => ())
-          )
-        }
-        .onShutdown {
-          logger.debug(
-            s"shutting down while awaiting completion of reassignment $commandId; pretending a completion arrived"
-          )
-          ks.shutdown()
-          ()
-        }
-    }
+    retryProvider
+      .waitUnlessShutdown(completion)
+      .flatMap { case ((offset, _), ()) =>
+        FutureUnlessShutdown.outcomeF(offset match {
+          case absolute: ParticipantOffset.Absolute =>
+            completionOffsetCallback(absolute.getOffset).map(_ => ())
+          case other =>
+            logger.warn(s"Encountered unexpected non-absolute ledger offset $other")
+            Future.unit
+        })
+      }
+      .onShutdown {
+        logger.debug(
+          s"shutting down while awaiting completion of reassignment $commandId; pretending a completion arrived"
+        )
+        ks.shutdown()
+        ()
+      }
   }
 
   // simulate the completion check of command service; future only yields
@@ -941,7 +957,7 @@ class SpliceLedgerConnection(
   )(implicit
       traceContext: TraceContext
   ): Sink[LedgerClient.CompletionStreamResponse, Future[
-    (String, LedgerClient.Completion)
+    (ParticipantOffset, LedgerClient.Completion)
   ]] = {
     import io.grpc.Status.{DEADLINE_EXCEEDED, UNAVAILABLE}
     val howLongToWait = timeouts.network.asFiniteApproximation
@@ -962,7 +978,7 @@ class SpliceLedgerConnection(
       .wireTap(cpl => logger.debug(s"selected completion for $commandId: $cpl"))
       .toMat(
         Sink
-          .headOption[(String, LedgerClient.Completion)]
+          .headOption[(ParticipantOffset, LedgerClient.Completion)]
           .mapMaterializedValue(_ map (_ map { case result @ (_, completion) =>
             if (completion.status.isOk) result
             else throw completion.status.asRuntimeException()

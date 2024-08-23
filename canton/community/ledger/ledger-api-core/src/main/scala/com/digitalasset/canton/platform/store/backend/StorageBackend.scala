@@ -4,20 +4,22 @@
 package com.digitalasset.canton.platform.store.backend
 
 import com.daml.ledger.api.v2.command_completion_service.CompletionStreamResponse
-import com.digitalasset.canton.data.{CantonTimestamp, Offset}
+import com.daml.lf.crypto.Hash
+import com.daml.lf.data.Time.Timestamp
 import com.digitalasset.canton.ledger.api.domain.ParticipantId
-import com.digitalasset.canton.ledger.participant.state.DomainIndex
-import com.digitalasset.canton.ledger.participant.state.index.IndexerPartyDetails
-import com.digitalasset.canton.ledger.participant.state.index.MeteringStore.{
+import com.digitalasset.canton.ledger.offset.Offset
+import com.digitalasset.canton.ledger.participant.state.index.v2.MeteringStore.{
   ParticipantMetering,
   ReportData,
 }
+import com.digitalasset.canton.ledger.participant.state.index.v2.{
+  IndexerPartyDetails,
+  PackageDetails,
+}
 import com.digitalasset.canton.logging.NamedLoggerFactory
 import com.digitalasset.canton.platform.*
-import com.digitalasset.canton.platform.indexer.parallel.PostPublishData
 import com.digitalasset.canton.platform.store.EventSequentialId
 import com.digitalasset.canton.platform.store.backend.EventStorageBackend.{
-  DomainOffset,
   RawActiveContract,
   RawAssignEvent,
   RawUnassignEvent,
@@ -30,14 +32,10 @@ import com.digitalasset.canton.platform.store.backend.common.{
   TransactionStreamingQueries,
 }
 import com.digitalasset.canton.platform.store.backend.postgresql.PostgresDataSourceConfig
-import com.digitalasset.canton.platform.store.entries.PartyLedgerEntry
+import com.digitalasset.canton.platform.store.entries.{PackageLedgerEntry, PartyLedgerEntry}
 import com.digitalasset.canton.platform.store.interfaces.LedgerDaoContractsReader.KeyState
 import com.digitalasset.canton.platform.store.interning.StringInterning
-import com.digitalasset.canton.topology.DomainId
 import com.digitalasset.canton.tracing.TraceContext
-import com.digitalasset.daml.lf.crypto.Hash
-import com.digitalasset.daml.lf.data.Ref.PackageVersion
-import com.digitalasset.daml.lf.data.Time.Timestamp
 
 import java.sql.Connection
 import javax.sql.DataSource
@@ -95,10 +93,7 @@ trait ParameterStorageBackend {
     *
     * @param connection to be used when updating the parameters table
     */
-  def updateLedgerEnd(
-      ledgerEnd: ParameterStorageBackend.LedgerEnd,
-      lastDomainIndex: Map[DomainId, DomainIndex] = Map.empty,
-  )(connection: Connection): Unit
+  def updateLedgerEnd(ledgerEnd: ParameterStorageBackend.LedgerEnd)(connection: Connection): Unit
 
   /** Query the current ledger end, read from the parameters table.
     * No significant CPU load, mostly blocking JDBC communication with the database backend.
@@ -107,8 +102,6 @@ trait ParameterStorageBackend {
     * @return the current LedgerEnd
     */
   def ledgerEnd(connection: Connection): ParameterStorageBackend.LedgerEnd
-
-  def domainLedgerEnd(domainId: DomainId)(connection: Connection): DomainIndex
 
   /** Part of pruning process, this needs to be in the same transaction as the other pruning related database operations
     */
@@ -123,14 +116,6 @@ trait ParameterStorageBackend {
   )(connection: Connection): Unit
 
   def participantAllDivulgedContractsPrunedUpToInclusive(
-      connection: Connection
-  ): Option[Offset]
-
-  def updatePostProcessingEnd(
-      postProcessingEnd: Offset
-  )(connection: Connection): Unit
-
-  def postProcessingEnd(
       connection: Connection
   ): Option[Offset]
 
@@ -176,23 +161,13 @@ trait MeteringParameterStorageBackend {
 }
 
 object ParameterStorageBackend {
-  final case class LedgerEnd(
-      lastOffset: Offset,
-      lastEventSeqId: Long,
-      lastStringInterningId: Int,
-      lastPublicationTime: CantonTimestamp,
-  ) {
+  final case class LedgerEnd(lastOffset: Offset, lastEventSeqId: Long, lastStringInterningId: Int) {
     def lastOffsetOption: Option[Offset] =
       if (lastOffset == Offset.beforeBegin) None else Some(lastOffset)
   }
   object LedgerEnd {
     val beforeBegin: ParameterStorageBackend.LedgerEnd =
-      ParameterStorageBackend.LedgerEnd(
-        Offset.beforeBegin,
-        EventSequentialId.beforeBegin,
-        0,
-        CantonTimestamp.MinValue,
-      )
+      ParameterStorageBackend.LedgerEnd(Offset.beforeBegin, EventSequentialId.beforeBegin, 0)
   }
   final case class IdentityParams(participantId: ParticipantId)
 
@@ -210,9 +185,20 @@ trait PartyStorageBackend {
       queryOffset: Long,
   )(connection: Connection): Vector[(Offset, PartyLedgerEntry)]
   def parties(parties: Seq[Party])(connection: Connection): List[IndexerPartyDetails]
-  def knownParties(fromExcl: Option[Party], maxResults: Int)(
-      connection: Connection
-  ): List[IndexerPartyDetails]
+  def knownParties(connection: Connection): List[IndexerPartyDetails]
+}
+
+trait PackageStorageBackend {
+  def lfPackages(connection: Connection): Map[PackageId, PackageDetails]
+
+  def lfArchive(packageId: PackageId)(connection: Connection): Option[Array[Byte]]
+
+  def packageEntries(
+      startExclusive: Offset,
+      endInclusive: Offset,
+      pageSize: Int,
+      queryOffset: Long,
+  )(connection: Connection): Vector[(Offset, PackageLedgerEntry)]
 }
 
 trait CompletionStorageBackend {
@@ -223,11 +209,6 @@ trait CompletionStorageBackend {
       parties: Set[Party],
       limit: Int,
   )(connection: Connection): Vector[CompletionStreamResponse]
-
-  def commandCompletionsForRecovery(
-      startExclusive: Offset,
-      endInclusive: Offset,
-  )(connection: Connection): Vector[PostPublishData]
 
   /** Part of pruning process, this needs to be in the same transaction as the other pruning related database operations
     */
@@ -255,7 +236,6 @@ object ContractStorageBackend {
   final case class RawCreatedContract(
       templateId: String,
       packageName: String,
-      packageVersion: Option[String],
       flatEventWitnesses: Set[Party],
       createArgument: Array[Byte],
       createArgumentCompression: Option[Int],
@@ -270,6 +250,13 @@ object ContractStorageBackend {
   final case class RawArchivedContract(
       flatEventWitnesses: Set[Party]
   ) extends RawContractState
+
+  class RawContract(
+      val templateId: String,
+      val packageName: String,
+      val createArgument: Array[Byte],
+      val createArgumentCompression: Option[Int],
+  )
 }
 
 trait EventStorageBackend {
@@ -289,20 +276,20 @@ trait EventStorageBackend {
       traceContext: TraceContext,
   ): Unit
 
-  def activeContractCreateEventBatch(
+  def activeContractCreateEventBatchV2(
       eventSequentialIds: Iterable[Long],
-      allFilterParties: Option[Set[Party]],
+      allFilterParties: Set[Party],
       endInclusive: Long,
   )(connection: Connection): Vector[RawActiveContract]
 
   def activeContractAssignEventBatch(
       eventSequentialIds: Iterable[Long],
-      allFilterParties: Option[Set[Party]],
+      allFilterParties: Set[Party],
       endInclusive: Long,
   )(connection: Connection): Vector[RawActiveContract]
 
   def fetchAssignEventIdsForStakeholder(
-      stakeholderO: Option[Party],
+      stakeholder: Party,
       templateId: Option[Identifier],
       startExclusive: Long,
       endInclusive: Long,
@@ -310,7 +297,7 @@ trait EventStorageBackend {
   )(connection: Connection): Vector[Long]
 
   def fetchUnassignEventIdsForStakeholder(
-      stakeholderO: Option[Party],
+      stakeholder: Party,
       templateId: Option[Identifier],
       startExclusive: Long,
       endInclusive: Long,
@@ -319,12 +306,12 @@ trait EventStorageBackend {
 
   def assignEventBatch(
       eventSequentialIds: Iterable[Long],
-      allFilterParties: Option[Set[Party]],
+      allFilterParties: Set[Party],
   )(connection: Connection): Vector[RawAssignEvent]
 
   def unassignEventBatch(
       eventSequentialIds: Iterable[Long],
-      allFilterParties: Option[Set[Party]],
+      allFilterParties: Set[Party],
   )(connection: Connection): Vector[RawUnassignEvent]
 
   def lookupAssignSequentialIdByOffset(
@@ -346,30 +333,6 @@ trait EventStorageBackend {
   def maxEventSequentialId(untilInclusiveOffset: Offset)(
       connection: Connection
   ): Long
-
-  def firstDomainOffsetAfterOrAt(
-      domainId: DomainId,
-      afterOrAtRecordTimeInclusive: Timestamp,
-  )(connection: Connection): Option[DomainOffset]
-
-  def lastDomainOffsetBeforeOrAt(
-      domainIdO: Option[DomainId],
-      beforeOrAtOffsetInclusive: Offset,
-  )(connection: Connection): Option[DomainOffset]
-
-  def domainOffset(offset: Offset)(connection: Connection): Option[DomainOffset]
-
-  def firstDomainOffsetAfterOrAtPublicationTime(
-      afterOrAtPublicationTimeInclusive: Timestamp
-  )(connection: Connection): Option[DomainOffset]
-
-  def lastDomainOffsetBeforerOrAtPublicationTime(
-      beforeOrAtPublicationTimeInclusive: Timestamp
-  )(connection: Connection): Option[DomainOffset]
-
-  def archivals(fromExclusive: Option[Offset], toInclusive: Offset)(
-      connection: Connection
-  ): Set[ContractId]
 }
 
 object EventStorageBackend {
@@ -392,7 +355,6 @@ object EventStorageBackend {
       contractId: String,
       templateId: Identifier,
       packageName: PackageName,
-      packageVersion: Option[PackageVersion],
       witnessParties: Set[String],
       signatories: Set[String],
       observers: Set[String],
@@ -445,13 +407,6 @@ object EventStorageBackend {
       rawCreatedEvent: RawCreatedEvent,
       traceContext: Option[Array[Byte]],
       recordTime: Timestamp,
-  )
-
-  final case class DomainOffset(
-      offset: Offset,
-      domainId: DomainId,
-      recordTime: Timestamp,
-      publicationTime: Timestamp,
   )
 }
 
@@ -511,11 +466,7 @@ trait IntegrityStorageBackend {
     * This operation is allowed to take some time to finish.
     * It is not expected that it is used during regular index/indexer operation.
     */
-  def onlyForTestingVerifyIntegrity(failForEmptyDB: Boolean = true)(connection: Connection): Unit
-
-  def onlyForTestingNumberOfAcceptedTransactionsFor(domainId: DomainId)(connection: Connection): Int
-
-  def onlyForTestingMoveLedgerEndBackToScratch()(connection: Connection): Unit
+  def verifyIntegrity()(connection: Connection): Unit
 }
 
 trait StringInterningStorageBackend {

@@ -6,25 +6,25 @@ package com.digitalasset.canton.topology.store
 import cats.syntax.option.*
 import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.topology.processing.{EffectiveTime, SequencedTime}
-import com.digitalasset.canton.topology.store.StoredTopologyTransactions.GenericStoredTopologyTransactions
+import com.digitalasset.canton.topology.store.StoredTopologyTransactionsX.GenericStoredTopologyTransactionsX
 import com.digitalasset.canton.topology.store.TopologyStoreId.DomainStore
-import com.digitalasset.canton.topology.transaction.SignedTopologyTransaction.GenericSignedTopologyTransaction
+import com.digitalasset.canton.topology.transaction.SignedTopologyTransactionX.GenericSignedTopologyTransactionX
 import org.scalatest.wordspec.AsyncWordSpec
 
 import scala.concurrent.Future
 
 trait DownloadTopologyStateForInitializationServiceTest
     extends AsyncWordSpec
-    with TopologyStoreTestBase {
+    with TopologyStoreXTestBase {
 
-  protected def createTopologyStore(): TopologyStore[DomainStore]
+  protected def createTopologyStore(): TopologyStoreX[DomainStore]
 
-  val testData = new TopologyStoreTestData(loggerFactory, executionContext)
+  val testData = new TopologyStoreXTestData(loggerFactory, executionContext)
   import testData.*
 
-  val bootstrapTransactions = StoredTopologyTransactions(
+  val bootstrapTransactions = StoredTopologyTransactionsX(
     Seq[
-      (CantonTimestamp, (GenericSignedTopologyTransaction, Option[CantonTimestamp]))
+      (CantonTimestamp, (GenericSignedTopologyTransactionX, Option[CantonTimestamp]))
     ](
       ts4 -> (tx4_DND, None),
       ts5 -> (tx5_PTP, None),
@@ -32,7 +32,7 @@ trait DownloadTopologyStateForInitializationServiceTest
       ts6 -> (tx6_MDS, None),
       ts8 -> (tx8_SDS, None),
     ).map { case (from, (tx, until)) =>
-      StoredTopologyTransaction(
+      StoredTopologyTransactionX(
         SequencedTime(from),
         EffectiveTime(from),
         until.map(EffectiveTime(_)),
@@ -41,9 +41,9 @@ trait DownloadTopologyStateForInitializationServiceTest
     }
   )
 
-  val bootstrapTransactionsWithUpdates = StoredTopologyTransactions(
+  val bootstrapTransactionsWithUpdates = StoredTopologyTransactionsX(
     Seq[
-      (CantonTimestamp, (GenericSignedTopologyTransaction, Option[CantonTimestamp]))
+      (CantonTimestamp, (GenericSignedTopologyTransactionX, Option[CantonTimestamp]))
     ](
       ts4 -> (tx4_DND, None),
       ts5 -> (tx5_PTP, None),
@@ -53,7 +53,7 @@ trait DownloadTopologyStateForInitializationServiceTest
       ts7 -> (tx7_MDS_Update, None),
       ts8 -> (tx8_SDS, None),
     ).map { case (from, (tx, until)) =>
-      StoredTopologyTransaction(
+      StoredTopologyTransactionX(
         SequencedTime(from),
         EffectiveTime(from),
         until.map(EffectiveTime(_)),
@@ -63,15 +63,17 @@ trait DownloadTopologyStateForInitializationServiceTest
   )
 
   private def initializeStore(
-      storedTransactions: GenericStoredTopologyTransactions
-  ): Future[TopologyStore[DomainStore]] = {
+      storedTransactions: GenericStoredTopologyTransactionsX
+  ): Future[TopologyStoreX[DomainStore]] = {
     val store = createTopologyStore()
-    store.bootstrap(storedTransactions).map(_ => store)
+    store
+      .bootstrap(storedTransactions)
+      .map(_ => store)
   }
 
   "DownloadTopologyStateForInitializationService" should {
     "return a valid topology state" when {
-      "there's only one DomainTrustCertificate" in {
+      "there's only one DomainTrustCertificateX" in {
         for {
           store <- initializeStore(bootstrapTransactions)
           service = new StoreBasedTopologyStateForInitializationService(store, loggerFactory)
@@ -84,7 +86,7 @@ trait DownloadTopologyStateForInitializationServiceTest
         }
       }
     }
-    "the first DomainTrustCertificate is superseded by another one" in {
+    "the first DomainTrustCertificateX is superseded by another one" in {
       for {
         store <- initializeStore(bootstrapTransactionsWithUpdates)
         service = new StoreBasedTopologyStateForInitializationService(store, loggerFactory)
@@ -98,7 +100,7 @@ trait DownloadTopologyStateForInitializationServiceTest
       }
     }
 
-    "there's only one MediatorDomainState" in {
+    "there's only one MediatorDomainStateX" in {
       for {
         store <- initializeStore(bootstrapTransactions)
         service = new StoreBasedTopologyStateForInitializationService(store, loggerFactory)
@@ -111,7 +113,7 @@ trait DownloadTopologyStateForInitializationServiceTest
       }
     }
 
-    "the first MediatorDomainState is superseded by another one" in {
+    "the first MediatorDomainStateX is superseded by another one" in {
       for {
         store <- initializeStore(bootstrapTransactionsWithUpdates)
         service = new StoreBasedTopologyStateForInitializationService(store, loggerFactory)

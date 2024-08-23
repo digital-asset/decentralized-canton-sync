@@ -58,7 +58,7 @@ trait HealthDumpGenerator[Status <: CantonStatus] {
   def generateHealthDump(
       outputFile: File,
       extraFilesToZip: Seq[File] = Seq.empty,
-  ): Unit = {
+  ): File = {
     import io.circe.generic.auto.*
     import CantonHealthAdministrationEncoders.*
 
@@ -120,5 +120,7 @@ trait HealthDumpGenerator[Status <: CantonStatus] {
       val files = Iterator(logFile, logLastErrorsFile, tmpFile).filter(_.nonEmpty)
       outputFile.zipIn(files ++ extraFilesToZip.iterator ++ rollingLogs)
     }
+
+    outputFile
   }
 }

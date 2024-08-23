@@ -6,6 +6,7 @@ package com.digitalasset.canton.participant.protocol.submission.routing
 import cats.data.EitherT
 import cats.syntax.alternative.*
 import cats.syntax.parallel.*
+import com.daml.lf.transaction.TransactionVersion
 import com.daml.nonempty.NonEmpty
 import com.daml.nonempty.NonEmptyColl.*
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
@@ -17,7 +18,6 @@ import com.digitalasset.canton.topology.DomainId
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.EitherTUtil
 import com.digitalasset.canton.util.FutureInstances.*
-import com.digitalasset.daml.lf.transaction.TransactionVersion
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -166,7 +166,7 @@ private[routing] class DomainSelector(
     )
 
     for {
-      domains <- EitherT.right(domainsFilter.split)
+      domains <- EitherT.liftF(domainsFilter.split)
 
       (unusableDomains, usableDomains) = domains
       allUnusableDomains =

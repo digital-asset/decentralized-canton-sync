@@ -20,7 +20,7 @@ import com.digitalasset.canton.version.{
   ProtoVersion,
   ProtocolVersion,
 }
-import com.digitalasset.canton.{ProtoDeserializationError, SequencerAlias}
+import com.digitalasset.canton.{ProtoDeserializationError, SequencerAlias, config}
 import com.google.protobuf.ByteString
 
 import java.net.URI
@@ -110,7 +110,8 @@ final case class SequencerConnections private (
     new v30.SequencerConnections(
       connections.map(_.toProtoV30),
       sequencerTrustThreshold.unwrap,
-      Some(submissionRequestAmplification.toProtoV30),
+      legacySubmissionRequestAmplification = submissionRequestAmplification.factor.unwrap,
+      submissionRequestAmplification = Some(submissionRequestAmplification.toProtoV30),
     )
 
   @transient override protected lazy val companionObj
@@ -172,18 +173,19 @@ object SequencerConnections
     val v30.SequencerConnections(
       sequencerConnectionsP,
       sequencerTrustThresholdP,
+      legacySubmissionRequestAmplification,
       submissionRequestAmplificationP,
     ) = sequencerConnectionsProto
     for {
-      sequencerTrustThreshold <- ProtoConverter.parsePositiveInt(
-        "sequencer_trust_threshold",
-        sequencerTrustThresholdP,
-      )
-      submissionRequestAmplification <- ProtoConverter.parseRequired(
-        SubmissionRequestAmplification.fromProtoV30,
-        "submission_request_amplification",
-        submissionRequestAmplificationP,
-      )
+      sequencerTrustThreshold <- ProtoConverter.parsePositiveInt(sequencerTrustThresholdP)
+      submissionRequestAmplification <- submissionRequestAmplificationP match {
+        case None =>
+          ProtoConverter.parsePositiveInt(legacySubmissionRequestAmplification).map { factor =>
+            SubmissionRequestAmplification(factor, config.NonNegativeFiniteDuration.Zero)
+          }
+        case Some(amplificationP) =>
+          SubmissionRequestAmplification.fromProtoV30(amplificationP)
+      }
       sequencerConnectionsNes <- ProtoConverter.parseRequiredNonEmpty(
         SequencerConnection.fromProtoV30,
         "sequencer_connections",
@@ -201,7 +203,7 @@ object SequencerConnections
         sequencerConnectionsNes,
         sequencerTrustThreshold,
         submissionRequestAmplification,
-      ).leftMap(ProtoDeserializationError.InvariantViolation(field = None, _))
+      ).leftMap(ProtoDeserializationError.InvariantViolation(_))
     } yield sequencerConnections
   }
 
@@ -209,7 +211,7 @@ object SequencerConnections
 
   val supportedProtoVersions: SupportedProtoVersions = SupportedProtoVersions(
     ProtoVersion(30) -> ProtoCodec(
-      ProtocolVersion.v31,
+      ProtocolVersion.v30,
       supportedProtoVersion(v30.SequencerConnections)(fromProtoV30),
       _.toProtoV30.toByteString,
     )

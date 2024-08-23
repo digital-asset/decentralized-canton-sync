@@ -4,9 +4,9 @@
 package com.digitalasset.canton.participant.protocol
 
 import cats.syntax.parallel.*
+import com.daml.nonempty.NonEmpty
 import com.digitalasset.canton.crypto.{DomainSnapshotSyncCryptoApi, Signature}
 import com.digitalasset.canton.data.{FullTransactionViewTree, SubmitterMetadata, ViewPosition}
-import com.digitalasset.canton.participant.protocol.TransactionProcessingSteps.ParsedTransactionRequest
 import com.digitalasset.canton.protocol.RequestId
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.FutureInstances.*
@@ -19,16 +19,8 @@ class AuthenticationValidator()(implicit
 ) {
 
   def verifyViewSignatures(
-      parsedRequest: ParsedTransactionRequest
-  )(implicit traceContext: TraceContext): Future[Map[ViewPosition, String]] = verifyViewSignatures(
-    parsedRequest.requestId,
-    parsedRequest.rootViewTreesWithSignatures.forgetNE,
-    parsedRequest.snapshot,
-  )
-
-  private def verifyViewSignatures(
       requestId: RequestId,
-      rootViews: Seq[(FullTransactionViewTree, Option[Signature])],
+      rootViews: NonEmpty[Seq[(FullTransactionViewTree, Option[Signature])]],
       snapshot: DomainSnapshotSyncCryptoApi,
   )(implicit traceContext: TraceContext): Future[Map[ViewPosition, String]] = {
 
@@ -81,7 +73,7 @@ class AuthenticationValidator()(implicit
     }
 
     for {
-      signatureCheckErrors <- rootViews.parTraverseFilter(verifySignature)
+      signatureCheckErrors <- rootViews.forgetNE.parTraverseFilter(verifySignature)
     } yield signatureCheckErrors.toMap
   }
 }

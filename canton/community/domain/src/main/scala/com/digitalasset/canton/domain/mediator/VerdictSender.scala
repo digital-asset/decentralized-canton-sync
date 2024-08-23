@@ -16,17 +16,23 @@ import com.digitalasset.canton.lifecycle.{FutureUnlessShutdown, UnlessShutdown}
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.protocol.RequestId
 import com.digitalasset.canton.protocol.messages.*
-import com.digitalasset.canton.sequencing.client.{SendCallback, SendResult, SequencerClientSend}
+import com.digitalasset.canton.sequencing.client.{
+  SendCallback,
+  SendResult,
+  SendType,
+  SequencerClientSend,
+}
 import com.digitalasset.canton.sequencing.protocol.*
 import com.digitalasset.canton.topology.client.TopologySnapshot
 import com.digitalasset.canton.topology.{MediatorId, ParticipantId, PartyId}
 import com.digitalasset.canton.tracing.TraceContext
+import com.digitalasset.canton.util.FutureInstances.*
 import com.digitalasset.canton.util.{EitherTUtil, ErrorUtil}
 import com.digitalasset.canton.version.ProtocolVersion
 
 import scala.concurrent.{ExecutionContext, Future}
 
-/** Sends confirmation result messages to the informee participants of a request.
+/** Sends result messages to the informee participants of a request.
   * The result message contains only one envelope addressed to a given informee participant.
   * If the underlying request has several root hashes and is therefore rejected,
   * the VerdictSender will send several batches (one per root hash).
@@ -58,7 +64,7 @@ private[mediator] trait VerdictSender {
       rootHashMessages: Seq[OpenEnvelope[RootHashMessage[SerializedRootHashMessagePayload]]],
       rejectionReason: Verdict.MediatorReject,
       decisionTime: CantonTimestamp,
-  )(implicit traceContext: TraceContext): FutureUnlessShutdown[Unit]
+  )(implicit traceContext: TraceContext): Future[Unit]
 }
 
 private[mediator] object VerdictSender {
@@ -106,7 +112,7 @@ private[mediator] class DefaultVerdictSender(
       sendVerdict <- EitherT
         .right(shouldSendVerdict(request.mediator, snapshot))
         .mapK(FutureUnlessShutdown.outcomeK)
-      batch <- createResults(requestId, request, verdict)
+      batch <- createResults(requestId, request, verdict).mapK(FutureUnlessShutdown.outcomeK)
       _ <- EitherT.right[SyncCryptoError](
         sendResultBatch(requestId, batch, decisionTime, aggregationRule, sendVerdict)
       )
@@ -159,6 +165,7 @@ private[mediator] class DefaultVerdictSender(
       // that point.
       sequencerSend.sendAsync(
         batch,
+        SendType.Other,
         Some(requestId.unwrap),
         callback = callback,
         maxSequencingTime = decisionTime,
@@ -184,17 +191,15 @@ private[mediator] class DefaultVerdictSender(
       verdict: Verdict,
   )(implicit
       traceContext: TraceContext
-  ): EitherT[FutureUnlessShutdown, SyncCryptoError, Batch[DefaultOpenEnvelope]] =
+  ): EitherT[Future, SyncCryptoError, Batch[DefaultOpenEnvelope]] =
     for {
-      snapshot <- EitherT.right(crypto.awaitSnapshotUS(requestId.unwrap))
-      result <- EitherT
-        .right(
-          informeesByParticipantAndWithGroupAddressing(
-            request.allInformees.toList,
-            snapshot.ipsSnapshot,
-          )
+      snapshot <- EitherT.right(crypto.awaitSnapshot(requestId.unwrap))
+      result <- EitherT.right(
+        informeesByParticipantAndWithGroupAddressing(
+          request.allInformees.toList,
+          snapshot.ipsSnapshot,
         )
-        .mapK(FutureUnlessShutdown.outcomeK)
+      )
       (informeesMap, informeesWithGroupAddressing) = result
       envelopes <- {
         val result = ConfirmationResultMessage.create(
@@ -215,7 +220,7 @@ private[mediator] class DefaultVerdictSender(
             .map(Recipients.recipientGroups)
             .getOrElse(
               // Should never happen as the topology (same snapshot) is checked in
-              // `ConfirmationRequestAndResponseProcessor.validateRequest`
+              // `ConfirmationResponseProcessor.validateRequest`
               ErrorUtil.invalidState("No active participants for informees")
             )
 
@@ -250,7 +255,7 @@ private[mediator] class DefaultVerdictSender(
     }
 
   private def shouldSendVerdict(
-      mediatorGroup: MediatorGroupRecipient,
+      mediatorGroup: MediatorsOfDomain,
       topologySnapshot: TopologySnapshot,
   )(implicit traceContext: TraceContext): Future[Boolean] = {
     val mediatorGroupIndex = mediatorGroup.group
@@ -269,7 +274,7 @@ private[mediator] class DefaultVerdictSender(
 
   private def groupAggregationRule(
       topologySnapshot: TopologySnapshot,
-      mediatorGroup: MediatorGroupRecipient,
+      mediatorGroup: MediatorsOfDomain,
       protocolVersion: ProtocolVersion,
   )(implicit
       traceContext: TraceContext
@@ -306,7 +311,7 @@ private[mediator] class DefaultVerdictSender(
       rootHashMessages: Seq[OpenEnvelope[RootHashMessage[SerializedRootHashMessagePayload]]],
       rejectionReason: Verdict.MediatorReject,
       decisionTime: CantonTimestamp,
-  )(implicit traceContext: TraceContext): FutureUnlessShutdown[Unit] = {
+  )(implicit traceContext: TraceContext): Future[Unit] = {
     // For each view type among the root hash messages,
     // we send one rejection message to all participants, where each participant is in its own recipient group.
     // This ensures that participants do not learn from the list of recipients who else is involved in the transaction.
@@ -326,7 +331,7 @@ private[mediator] class DefaultVerdictSender(
         }
     if (recipientsByViewTypeAndRootHash.nonEmpty) {
       for {
-        snapshot <- crypto.awaitSnapshotUS(requestId.unwrap)
+        snapshot <- crypto.awaitSnapshot(requestId.unwrap)
         envs <- recipientsByViewTypeAndRootHash.toSeq
           .parTraverse { case ((viewType, rootHash), flatRecipients) =>
             val rejection = ConfirmationResultMessage.create(
@@ -346,12 +351,13 @@ private[mediator] class DefaultVerdictSender(
               .map(_ -> recipients)
           }
         batches = envs.map(Batch.of(protocolVersion, _))
+        // TODO(i13849): Review the case below: the check in sequencer has to be made stricter (not to allow rhms with inconsistent mediators from other than participant domain nodes)
         mediatorGroupO = // we always use RHMs to figure out the mediator group, to address rejections from a correct mediator that participants that received the RHMs expect
           rootHashMessages.headOption // one RHM is enough because sequencer checks that all RHMs specify the same mediator recipient
             .map { rhm =>
               rhm.recipients.allRecipients
-                .collectFirst { case mediatorGroupRecipient: MediatorGroupRecipient =>
-                  mediatorGroupRecipient
+                .collectFirst { case mediatorsOfDomain: MediatorsOfDomain =>
+                  mediatorsOfDomain
                 }
                 .getOrElse {
                   ErrorUtil.invalidState(
@@ -368,15 +374,13 @@ private[mediator] class DefaultVerdictSender(
                   snapshot.ipsSnapshot,
                   mediatorGroup,
                   protocolVersion,
-                ).mapK(FutureUnlessShutdown.outcomeK)
+                )
                   .valueOr(reason =>
                     ErrorUtil.invalidState(
                       s"MediatorReject not sent. Failed to determine group aggregation rule for mediator $mediatorGroup due to: $reason"
                     )
                   )
-                sendVerdict <- FutureUnlessShutdown.outcomeF(
-                  shouldSendVerdict(mediatorGroup, snapshot.ipsSnapshot)
-                )
+                sendVerdict <- shouldSendVerdict(mediatorGroup, snapshot.ipsSnapshot)
               } yield {
                 sendResultBatch(
                   requestId,
@@ -389,6 +393,6 @@ private[mediator] class DefaultVerdictSender(
           }
         }
       } yield ()
-    } else FutureUnlessShutdown.unit
+    } else Future.unit
   }
 }

@@ -45,7 +45,6 @@ class UserWalletService(
     validatorTopupConfigO: Option[ValidatorTopupConfig],
     walletSweep: Option[WalletSweepConfig],
     autoAcceptTransfers: Option[AutoAcceptTransfersConfig],
-    supportsSoftDomainMigrationPoc: Boolean,
 )(implicit
     ec: ExecutionContext,
     mat: Materializer,
@@ -75,7 +74,6 @@ class UserWalletService(
       PackageIdResolver.inferFromAmuletRules(clock, scanConnection, loggerFactory),
     ),
     treasuryConfig,
-    supportsSoftDomainMigrationPoc,
     clock,
     store,
     walletManager,
@@ -90,7 +88,6 @@ class UserWalletService(
     ledgerClient,
     scanConnection.getAmuletRulesDomain,
     automationConfig,
-    supportsSoftDomainMigrationPoc,
     clock,
     domainTimeSync,
     domainUnpausedSync,

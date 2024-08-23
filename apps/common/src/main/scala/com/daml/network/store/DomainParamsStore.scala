@@ -3,18 +3,19 @@
 
 package com.daml.network.store
 
-import com.daml.metrics.api.{MetricInfo, MetricName, MetricsContext}
-import com.daml.metrics.api.MetricHandle.{Gauge, LabeledMetricsFactory}
-import com.daml.metrics.api.MetricQualification.Traffic
+import com.daml.metrics.api.{MetricDoc, MetricName, MetricsContext}
+import com.daml.metrics.api.MetricDoc.MetricQualification.Traffic
+import com.daml.metrics.api.MetricHandle.Gauge
 import com.daml.network.environment.{SpliceMetrics, RetryProvider, TopologyAdminConnection}
-import com.digitalasset.canton.config.RequireTypes.NonNegativeInt
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
-import com.digitalasset.canton.topology.transaction.DomainParametersState
-import com.digitalasset.canton.tracing.TraceContext
+import com.digitalasset.canton.config.RequireTypes.NonNegativeInt
+import com.digitalasset.canton.metrics.CantonLabeledMetricsFactory
 import com.digitalasset.canton.util.ShowUtil.*
+import com.digitalasset.canton.topology.transaction.DomainParametersStateX
+import com.digitalasset.canton.tracing.TraceContext
 import io.grpc.Status
 
-import scala.concurrent.{blocking, ExecutionContext, Future, Promise}
+import scala.concurrent.{ExecutionContext, Future, Promise, blocking}
 
 abstract class DomainUnpausedSynchronization {
 
@@ -95,7 +96,7 @@ final class DomainParamsStore(
 
   def ingestDomainParams(
       params: TopologyAdminConnection.TopologyResult[
-        DomainParametersState
+        DomainParametersStateX
       ]
   )(implicit tc: TraceContext): Future[Unit] = Future {
     val unpaused = isDomainUnpaused(params)
@@ -123,7 +124,7 @@ final class DomainParamsStore(
   }
 
   private def isDomainUnpaused(
-      params: TopologyAdminConnection.TopologyResult[DomainParametersState]
+      params: TopologyAdminConnection.TopologyResult[DomainParametersStateX]
   ) = params.mapping.parameters.confirmationRequestsMaxRate > NonNegativeInt.zero
 
   override def close(): Unit = {
@@ -134,27 +135,24 @@ final class DomainParamsStore(
 object DomainParamsStore {
 
   private final case class State(
-      lastParams: Option[TopologyAdminConnection.TopologyResult[DomainParametersState]],
+      lastParams: Option[TopologyAdminConnection.TopologyResult[DomainParametersStateX]],
       domainUnpausedPromise: Option[Promise[Unit]],
   )
 
-  private class Metrics(metricsFactory: LabeledMetricsFactory) extends AutoCloseable {
+  class Metrics(metricsFactory: CantonLabeledMetricsFactory) extends AutoCloseable {
 
-    private val prefix: MetricName = SpliceMetrics.MetricsPrefix :+ "domain_params_store"
+    val prefix: MetricName = SpliceMetrics.MetricsPrefix :+ "domain_params_store"
 
+    @MetricDoc.Tag(
+      summary = "DynamicDomainParameters.confirmationRequestsMaxRate",
+      description =
+        "Last known value of DynamicDomainParameters.confirmationRequestsMaxRate on the configured global domain.",
+      qualification = Traffic,
+    )
     val confirmationRequestsMaxRate: Gauge[Int] =
-      metricsFactory.gauge(
-        MetricInfo(
-          name = prefix :+ "confirmation-requests-max-rate",
-          summary = "DynamicDomainParameters.confirmationRequestsMaxRate",
-          description =
-            "Last known value of DynamicDomainParameters.confirmationRequestsMaxRate on the configured global domain.",
-          qualification = Traffic,
-        ),
-        -1,
-      )(MetricsContext.Empty)
+      metricsFactory.gauge(prefix :+ "confirmation-requests-max-rate", -1)(MetricsContext.Empty)
 
-    override def close(): Unit = {
+    override def close() = {
       confirmationRequestsMaxRate.close()
     }
   }

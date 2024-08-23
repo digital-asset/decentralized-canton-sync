@@ -27,7 +27,7 @@ import com.digitalasset.canton.sequencing.{
   SequencerConnections,
 }
 import com.digitalasset.canton.serialization.ProtoConverter
-import com.digitalasset.canton.topology.{DomainId, Member}
+import com.digitalasset.canton.topology.Member
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.retry.RetryUtil.NoExnRetryable
 import com.digitalasset.canton.util.{EitherTUtil, retry}
@@ -139,7 +139,6 @@ object GrpcSequencerConnectionService {
       transportFactory: SequencerClientTransportFactory,
       sequencerInfoLoader: SequencerInfoLoader,
       domainAlias: DomainAlias,
-      domainId: DomainId,
   )(implicit
       executionContext: ExecutionContextExecutor,
       executionServiceFactory: ExecutionSequencerFactory,
@@ -167,13 +166,12 @@ object GrpcSequencerConnectionService {
               newEndpointsInfo <- sequencerInfoLoader
                 .loadAndAggregateSequencerEndpoints(
                   domainAlias,
-                  Some(domainId),
                   newSequencerConnection,
                   sequencerConnectionValidation,
                 )
                 .leftMap(_.cause)
 
-              sequencerTransportsMap = transportFactory
+              sequencerTransportsMap <- transportFactory
                 .makeTransport(
                   newEndpointsInfo.sequencerConnections,
                   member,
@@ -237,10 +235,9 @@ object GrpcSequencerConnectionService {
           case Some(settings) =>
             sequencerInfoLoader
               .loadAndAggregateSequencerEndpoints(
-                domainAlias = alias,
-                expectedDomainId = None,
-                sequencerConnections = settings,
-                sequencerConnectionValidation = SequencerConnectionValidation.Active,
+                alias,
+                settings,
+                SequencerConnectionValidation.Active,
               )
               .leftMap { e =>
                 errorLoggingContext.logger.warn(s"Waiting for valid sequencer connection ${e}")

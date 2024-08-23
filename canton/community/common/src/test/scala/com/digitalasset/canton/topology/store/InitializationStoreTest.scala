@@ -6,7 +6,7 @@ package com.digitalasset.canton.topology.store
 import com.digitalasset.canton.BaseTest
 import com.digitalasset.canton.resource.DbStorage
 import com.digitalasset.canton.store.db.{DbTest, H2Test, MigrationMode, PostgresTest}
-import com.digitalasset.canton.topology.UniqueIdentifier
+import com.digitalasset.canton.topology.{NodeId, UniqueIdentifier}
 import org.scalatest.wordspec.AsyncWordSpec
 
 import scala.concurrent.Future
@@ -15,6 +15,8 @@ trait InitializationStoreTest extends AsyncWordSpec with BaseTest {
 
   val uid = UniqueIdentifier.tryFromProtoPrimitive("da::default")
   val uid2 = UniqueIdentifier.tryFromProtoPrimitive("two::default")
+  val nodeId = NodeId(uid)
+  val nodeId2 = NodeId(uid2)
 
   def myMigrationMode: MigrationMode
 
@@ -23,19 +25,19 @@ trait InitializationStoreTest extends AsyncWordSpec with BaseTest {
       "be able to set the value of the id" in {
         val store = mk()
         for {
-          emptyId <- store.uid
+          emptyId <- store.id
           _ = emptyId shouldBe None
-          _ <- store.setUid(uid)
-          id <- store.uid
-        } yield id shouldBe Some(uid)
+          _ <- store.setId(nodeId)
+          id <- store.id
+        } yield id shouldBe Some(nodeId)
       }
       "fail when trying to set two different ids" in {
         val store = mk()
         for {
-          _ <- store.setUid(uid)
+          _ <- store.setId(nodeId)
           _ <- loggerFactory.assertInternalErrorAsync[IllegalArgumentException](
-            store.setUid(uid2),
-            _.getMessage shouldBe s"Unique id of node is already defined as $uid and can't be changed to $uid2!",
+            store.setId(nodeId2),
+            _.getMessage shouldBe s"Unique id of node is already defined as $nodeId and can't be changed to $nodeId2!",
           )
         } yield succeed
       }

@@ -10,7 +10,7 @@ import com.daml.network.splitwell.config.{
   SplitwellAppClientConfig,
   SplitwellDomains,
 }
-import com.daml.network.sv.automation.singlesv.offboarding.{
+import com.daml.network.sv.automation.singlesv.membership.offboarding.{
   SvOffboardingMediatorTrigger,
   SvOffboardingPartyToParticipantProposalTrigger,
   SvOffboardingSequencerTrigger,
@@ -102,8 +102,7 @@ object ConfigTransforms {
       updateAllValidatorConfigs_(c =>
         c.copy(
           ledgerApiUser = s"${c.ledgerApiUser}-$suffix",
-          validatorPartyHint =
-            c.validatorPartyHint.map(h => h.replaceAll("-(.*)-", s"-$$1$suffix-")),
+          validatorPartyHint = c.validatorPartyHint.map(h => s"$h-$suffix"),
           validatorWalletUser = c.validatorWalletUser.map(u => s"$u-$suffix"),
           appInstances = c.appInstances.view
             .mapValues(i =>
@@ -277,7 +276,7 @@ object ConfigTransforms {
       )
     )
 
-  def updateAllValidatorAppConfigs(
+  private def updateAllValidatorAppConfigs(
       update: (String, ValidatorAppBackendConfig) => ValidatorAppBackendConfig
   ): ConfigTransform =
     cantonConfig =>

@@ -3,9 +3,9 @@
 
 package com.digitalasset.canton.platform.store.backend
 
+import com.daml.lf.data.{Ref, Time}
 import com.digitalasset.canton.platform.store.backend.EventStorageBackend.RawCreatedEvent
 import com.digitalasset.canton.tracing.{SerializableTraceContext, TraceContext}
-import com.digitalasset.daml.lf.data.{Ref, Time}
 import org.scalatest.OptionValues
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -37,7 +37,7 @@ private[backend] trait StorageBackendTestsReassignmentEvents
 
     executeSql(
       backend.event.fetchAssignEventIdsForStakeholder(
-        stakeholderO = Some(someParty),
+        stakeholder = someParty,
         templateId = None,
         startExclusive = 0,
         endInclusive = 2,
@@ -47,7 +47,7 @@ private[backend] trait StorageBackendTestsReassignmentEvents
 
     executeSql(
       backend.event.fetchAssignEventIdsForStakeholder(
-        stakeholderO = Some(someParty2),
+        stakeholder = someParty2,
         templateId = None,
         startExclusive = 0,
         endInclusive = 2,
@@ -57,17 +57,7 @@ private[backend] trait StorageBackendTestsReassignmentEvents
 
     executeSql(
       backend.event.fetchAssignEventIdsForStakeholder(
-        stakeholderO = None,
-        templateId = None,
-        startExclusive = 0,
-        endInclusive = 2,
-        limit = 10,
-      )
-    ) shouldBe Vector(1, 1, 2)
-
-    executeSql(
-      backend.event.fetchAssignEventIdsForStakeholder(
-        stakeholderO = Some(someParty),
+        stakeholder = someParty,
         templateId = None,
         startExclusive = 0,
         endInclusive = 2,
@@ -77,7 +67,7 @@ private[backend] trait StorageBackendTestsReassignmentEvents
 
     executeSql(
       backend.event.fetchAssignEventIdsForStakeholder(
-        stakeholderO = Some(someParty),
+        stakeholder = someParty,
         templateId = Some(someTemplateId),
         startExclusive = 0,
         endInclusive = 2,
@@ -87,7 +77,7 @@ private[backend] trait StorageBackendTestsReassignmentEvents
 
     executeSql(
       backend.event.fetchAssignEventIdsForStakeholder(
-        stakeholderO = Some(someParty),
+        stakeholder = someParty,
         templateId = Some(someTemplateId2),
         startExclusive = 0,
         endInclusive = 2,
@@ -97,34 +87,13 @@ private[backend] trait StorageBackendTestsReassignmentEvents
 
     executeSql(
       backend.event.fetchAssignEventIdsForStakeholder(
-        stakeholderO = Some(someParty),
+        stakeholder = someParty,
         templateId = Some(someTemplateId),
         startExclusive = 0,
         endInclusive = 1,
         limit = 10,
       )
     ) shouldBe Vector(1)
-
-    executeSql(
-      backend.event.fetchAssignEventIdsForStakeholder(
-        stakeholderO = None,
-        templateId = Some(someTemplateId),
-        startExclusive = 0,
-        endInclusive = 1,
-        limit = 10,
-      )
-    ) shouldBe Vector(1, 1)
-
-    executeSql(
-      backend.event.fetchAssignEventIdsForStakeholder(
-        stakeholderO = None,
-        templateId = Some(someTemplateId2),
-        startExclusive = 0,
-        endInclusive = 2,
-        limit = 10,
-      )
-    ) shouldBe Vector(2)
-
   }
 
   it should "return the correct event ids for unassign event stakeholder" in {
@@ -140,7 +109,7 @@ private[backend] trait StorageBackendTestsReassignmentEvents
 
     executeSql(
       backend.event.fetchUnassignEventIdsForStakeholder(
-        stakeholderO = Some(someParty),
+        stakeholder = someParty,
         templateId = None,
         startExclusive = 0,
         endInclusive = 2,
@@ -150,7 +119,7 @@ private[backend] trait StorageBackendTestsReassignmentEvents
 
     executeSql(
       backend.event.fetchUnassignEventIdsForStakeholder(
-        stakeholderO = Some(someParty2),
+        stakeholder = someParty2,
         templateId = None,
         startExclusive = 0,
         endInclusive = 2,
@@ -160,17 +129,7 @@ private[backend] trait StorageBackendTestsReassignmentEvents
 
     executeSql(
       backend.event.fetchUnassignEventIdsForStakeholder(
-        stakeholderO = None,
-        templateId = None,
-        startExclusive = 0,
-        endInclusive = 2,
-        limit = 10,
-      )
-    ) shouldBe Vector(1, 1, 2)
-
-    executeSql(
-      backend.event.fetchUnassignEventIdsForStakeholder(
-        stakeholderO = Some(someParty),
+        stakeholder = someParty,
         templateId = None,
         startExclusive = 0,
         endInclusive = 2,
@@ -180,7 +139,7 @@ private[backend] trait StorageBackendTestsReassignmentEvents
 
     executeSql(
       backend.event.fetchUnassignEventIdsForStakeholder(
-        stakeholderO = Some(someParty),
+        stakeholder = someParty,
         templateId = Some(someTemplateId),
         startExclusive = 0,
         endInclusive = 2,
@@ -190,17 +149,7 @@ private[backend] trait StorageBackendTestsReassignmentEvents
 
     executeSql(
       backend.event.fetchUnassignEventIdsForStakeholder(
-        stakeholderO = Some(someParty),
-        templateId = None,
-        startExclusive = 0,
-        endInclusive = 2,
-        limit = 10,
-      )
-    ) shouldBe Vector(1, 2)
-
-    executeSql(
-      backend.event.fetchUnassignEventIdsForStakeholder(
-        stakeholderO = Some(someParty),
+        stakeholder = someParty,
         templateId = Some(someTemplateId2),
         startExclusive = 0,
         endInclusive = 2,
@@ -210,41 +159,11 @@ private[backend] trait StorageBackendTestsReassignmentEvents
 
     executeSql(
       backend.event.fetchUnassignEventIdsForStakeholder(
-        stakeholderO = None,
-        templateId = Some(someTemplateId2),
-        startExclusive = 0,
-        endInclusive = 2,
-        limit = 10,
-      )
-    ) shouldBe Vector(2)
-
-    executeSql(
-      backend.event.fetchUnassignEventIdsForStakeholder(
-        stakeholderO = Some(someParty),
+        stakeholder = someParty,
         templateId = Some(someTemplateId),
         startExclusive = 0,
         endInclusive = 1,
         limit = 10,
-      )
-    ) shouldBe Vector(1)
-
-    executeSql(
-      backend.event.fetchUnassignEventIdsForStakeholder(
-        stakeholderO = None,
-        templateId = Some(someTemplateId),
-        startExclusive = 0,
-        endInclusive = 1,
-        limit = 10,
-      )
-    ) shouldBe Vector(1, 1)
-
-    executeSql(
-      backend.event.fetchUnassignEventIdsForStakeholder(
-        stakeholderO = None,
-        templateId = Some(someTemplateId),
-        startExclusive = 0,
-        endInclusive = 1,
-        limit = 1,
       )
     ) shouldBe Vector(1)
   }
@@ -274,7 +193,7 @@ private[backend] trait StorageBackendTestsReassignmentEvents
     val result = executeSql(
       backend.event.assignEventBatch(
         eventSequentialIds = List(1L, 2L),
-        allFilterParties = Some(Set(Ref.Party.assertFromString("signatory"), someParty)),
+        allFilterParties = Set(Ref.Party.assertFromString("signatory"), someParty),
       )
     )
 
@@ -304,7 +223,6 @@ private[backend] trait StorageBackendTestsReassignmentEvents
             contractId = hashCid("#1").coid,
             templateId = someTemplateId,
             packageName = somePackageName,
-            packageVersion = Some(somePackageVersion),
             witnessParties = Set("signatory"),
             signatories = Set("signatory"),
             observers = Set("observer"),
@@ -334,7 +252,6 @@ private[backend] trait StorageBackendTestsReassignmentEvents
             contractId = hashCid("#2").coid,
             templateId = someTemplateId,
             packageName = somePackageName,
-            packageVersion = Some(somePackageVersion),
             witnessParties = Set("signatory"),
             signatories = Set("signatory"),
             observers = Set("observer"),
@@ -377,7 +294,7 @@ private[backend] trait StorageBackendTestsReassignmentEvents
     executeSql(
       backend.event.unassignEventBatch(
         eventSequentialIds = List(1L, 2L),
-        allFilterParties = Some(Set(Ref.Party.assertFromString("signatory"), someParty)),
+        allFilterParties = Set(Ref.Party.assertFromString("signatory"), someParty),
       )
     ).map(original =>
       original.copy(traceContext =
@@ -450,7 +367,7 @@ private[backend] trait StorageBackendTestsReassignmentEvents
       val assignments = executeSql(
         backend.event.assignEventBatch(
           eventSequentialIds = List(1L, 2L),
-          allFilterParties = Some(Set(Ref.Party.assertFromString("signatory"), someParty)),
+          allFilterParties = Set(Ref.Party.assertFromString("signatory"), someParty),
         )
       )
       assignments.head.traceContext should equal(None)
@@ -485,7 +402,7 @@ private[backend] trait StorageBackendTestsReassignmentEvents
       val unassignments = executeSql(
         backend.event.unassignEventBatch(
           eventSequentialIds = List(1L, 2L),
-          allFilterParties = Some(Set(Ref.Party.assertFromString("signatory"), someParty)),
+          allFilterParties = Set(Ref.Party.assertFromString("signatory"), someParty),
         )
       )
       unassignments.head.traceContext should equal(None)
@@ -546,9 +463,9 @@ private[backend] trait StorageBackendTestsReassignmentEvents
     executeSql(updateLedgerEnd(offset(11), 11L))
 
     executeSql(
-      backend.event.activeContractCreateEventBatch(
+      backend.event.activeContractCreateEventBatchV2(
         eventSequentialIds = List(1, 2),
-        allFilterParties = Some(Set(Ref.Party.assertFromString("observer"))),
+        allFilterParties = Set(Ref.Party.assertFromString("observer")),
         endInclusive = 6,
       )
     ).map(activeContract =>
@@ -569,7 +486,6 @@ private[backend] trait StorageBackendTestsReassignmentEvents
           contractId = hashCid("#1").coid,
           templateId = someTemplateId,
           packageName = somePackageName,
-          packageVersion = Some(somePackageVersion),
           witnessParties = Set("observer"),
           signatories = Set("signatory"),
           observers = Set("observer"),
@@ -593,7 +509,6 @@ private[backend] trait StorageBackendTestsReassignmentEvents
           contractId = hashCid("#2").coid,
           templateId = someTemplateId,
           packageName = somePackageName,
-          packageVersion = Some(somePackageVersion),
           witnessParties = Set("observer"),
           signatories = Set("signatory"),
           observers = Set("observer"),
@@ -612,27 +527,27 @@ private[backend] trait StorageBackendTestsReassignmentEvents
 
     // same query as first to double check equality predicate
     executeSql(
-      backend.event.activeContractCreateEventBatch(
+      backend.event.activeContractCreateEventBatchV2(
         eventSequentialIds = List(1, 2),
-        allFilterParties = Some(Set(Ref.Party.assertFromString("observer"))),
+        allFilterParties = Set(Ref.Party.assertFromString("observer")),
         endInclusive = 6,
       )
     ).map(_.rawCreatedEvent.updateId) shouldBe List(1L, 2L).map(x => offset(x).toHexString)
 
     // archive in the same domain renders it inactive
     executeSql(
-      backend.event.activeContractCreateEventBatch(
+      backend.event.activeContractCreateEventBatchV2(
         eventSequentialIds = List(1, 2),
-        allFilterParties = Some(Set(Ref.Party.assertFromString("observer"))),
+        allFilterParties = Set(Ref.Party.assertFromString("observer")),
         endInclusive = 10,
       )
     ).map(_.rawCreatedEvent.updateId) shouldBe List(1L).map(x => offset(x).toHexString)
 
     // unassignment in the same domain renders it inactive
     executeSql(
-      backend.event.activeContractCreateEventBatch(
+      backend.event.activeContractCreateEventBatchV2(
         eventSequentialIds = List(1, 2),
-        allFilterParties = Some(Set(Ref.Party.assertFromString("observer"))),
+        allFilterParties = Set(Ref.Party.assertFromString("observer")),
         endInclusive = 11,
       )
     ).map(_.rawCreatedEvent.updateId) shouldBe Nil
@@ -695,7 +610,7 @@ private[backend] trait StorageBackendTestsReassignmentEvents
     executeSql(
       backend.event.activeContractAssignEventBatch(
         eventSequentialIds = List(2, 3),
-        allFilterParties = Some(Set(Ref.Party.assertFromString("observer"))),
+        allFilterParties = Set(Ref.Party.assertFromString("observer")),
         endInclusive = 6,
       )
     ).map(activeContract =>
@@ -716,7 +631,6 @@ private[backend] trait StorageBackendTestsReassignmentEvents
           contractId = hashCid("#1").coid,
           templateId = someTemplateId,
           packageName = somePackageName,
-          packageVersion = Some(somePackageVersion),
           witnessParties = Set("observer"),
           signatories = Set("signatory"),
           observers = Set("observer"),
@@ -740,7 +654,6 @@ private[backend] trait StorageBackendTestsReassignmentEvents
           contractId = hashCid("#2").coid,
           templateId = someTemplateId,
           packageName = somePackageName,
-          packageVersion = Some(somePackageVersion),
           witnessParties = Set("observer"),
           signatories = Set("signatory"),
           observers = Set("observer"),
@@ -761,7 +674,7 @@ private[backend] trait StorageBackendTestsReassignmentEvents
     executeSql(
       backend.event.activeContractAssignEventBatch(
         eventSequentialIds = List(2, 3),
-        allFilterParties = Some(Set(Ref.Party.assertFromString("observer"))),
+        allFilterParties = Set(Ref.Party.assertFromString("observer")),
         endInclusive = 6,
       )
     ).map(_.rawCreatedEvent.updateId) shouldBe List(2L, 3L).map(x => offset(x).toHexString)
@@ -770,7 +683,7 @@ private[backend] trait StorageBackendTestsReassignmentEvents
     executeSql(
       backend.event.activeContractAssignEventBatch(
         eventSequentialIds = List(2, 3),
-        allFilterParties = Some(Set(Ref.Party.assertFromString("observer"))),
+        allFilterParties = Set(Ref.Party.assertFromString("observer")),
         endInclusive = 10,
       )
     ).map(_.rawCreatedEvent.updateId) shouldBe List(2L).map(x => offset(x).toHexString)
@@ -779,7 +692,7 @@ private[backend] trait StorageBackendTestsReassignmentEvents
     executeSql(
       backend.event.activeContractAssignEventBatch(
         eventSequentialIds = List(2, 3),
-        allFilterParties = Some(Set(Ref.Party.assertFromString("observer"))),
+        allFilterParties = Set(Ref.Party.assertFromString("observer")),
         endInclusive = 11,
       )
     ).map(_.rawCreatedEvent.updateId) shouldBe Nil

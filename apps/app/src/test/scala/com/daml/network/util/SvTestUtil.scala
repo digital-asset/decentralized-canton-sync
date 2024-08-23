@@ -33,7 +33,6 @@ import scala.concurrent.duration.*
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
-import scala.util.control.NonFatal
 
 trait SvTestUtil extends TestCommon {
   this: CommonAppInstanceReferences =>
@@ -60,7 +59,7 @@ trait SvTestUtil extends TestCommon {
     }
   }
 
-  def confirmActionByAllSvs(
+  def confirmActionByAllMembers(
       confirmingSvs: Seq[ConfirmingSv],
       action: ActionRequiringConfirmation,
   )(implicit env: SpliceTestConsoleEnvironment): Seq[TransactionTree] = {
@@ -135,33 +134,26 @@ trait SvTestUtil extends TestCommon {
           _ => onlySetConfigVoteRequests(svToCreateVoteRequest.listVoteRequests()).loneElement,
         )
 
-        // Concurrent uses of log suppression don't work so we suppress here instead of within eventually succeeds
-        loggerFactory.suppressErrors {
-          svsToCastVotes.parTraverse { sv =>
-            Future {
-              clue(s"${svsToCastVotes.map(_.name)} see the vote request") {
-                val svVoteRequest = eventually() {
-                  onlySetConfigVoteRequests(sv.listVoteRequests()).loneElement
-                }
-                getTrackingId(svVoteRequest) shouldBe voteRequest.contractId
+        svsToCastVotes.parTraverse { sv =>
+          Future {
+            clue(s"${svsToCastVotes.map(_.name)} see the vote request") {
+              val svVoteRequest = eventually() {
+                onlySetConfigVoteRequests(sv.listVoteRequests()).loneElement
               }
-              clue(s"${sv.name} accepts vote") {
-                eventually() {
-                  try {
-                    sv.castVote(
-                      voteRequest.contractId,
-                      true,
-                      "url",
-                      "description",
-                    )
-                  } catch {
-                    case NonFatal(e) => fail(e)
-                  }
-                }
+              getTrackingId(svVoteRequest) shouldBe voteRequest.contractId
+            }
+            clue(s"${sv.name} accepts vote") {
+              eventuallySucceeds() {
+                sv.castVote(
+                  voteRequest.contractId,
+                  true,
+                  "url",
+                  "description",
+                )
               }
             }
-          }.futureValue
-        }
+          }
+        }.futureValue
       },
     )(
       "observing DsoRules with changed config",

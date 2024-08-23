@@ -6,7 +6,7 @@ package com.daml.network.scan.admin.http
 import com.digitalasset.canton.data.CantonTimestamp
 import cats.data.OptionT
 import cats.syntax.either.*
-import com.digitalasset.daml.lf.data.Time.Timestamp
+import com.daml.lf.data.Time.Timestamp
 import com.daml.network.admin.http.HttpErrorHandler
 import com.daml.network.codegen.java.splice.amulet
 import com.daml.network.codegen.java.splice.amuletrules.AmuletRules
@@ -48,10 +48,10 @@ import io.opentelemetry.api.trace.Tracer
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
-import scala.util.{Try, Using}
+import scala.util.Using
 import java.util.Base64
 import java.util.zip.GZIPOutputStream
-import java.time.{Instant, OffsetDateTime, ZoneOffset}
+import java.time.{OffsetDateTime, ZoneOffset}
 import com.daml.network.http.v0.definitions.TransactionHistoryResponseItem.TransactionType.members.{
   DevnetTap,
   Mint,
@@ -99,7 +99,7 @@ class HttpScanHandler(
       for {
         latestOpenMiningRound <- store.getLatestActiveOpenMiningRound()
         amuletRules <- store.getAmuletRules()
-        rulesAndStates <- store.getDsoRulesWithSvNodeStates()
+        rulesAndStates <- store.getDsoRulesWithMemberNodeStates()
         dsoRules = rulesAndStates.dsoRules
       } yield definitions.GetDsoInfoResponse(
         svUser = svUserName,
@@ -614,7 +614,7 @@ class HttpScanHandler(
           definitions.ListDsoScansResponse(list.map { case (domainId, scans) =>
             definitions.DomainScans(
               domainId,
-              scans.map(s => definitions.ScanInfo(s.publicUrl, s.svName)).toVector,
+              scans.map(s => definitions.ScanInfo(s.publicUrl, s.memberName)).toVector,
             )
           })
         )
@@ -655,19 +655,9 @@ class HttpScanHandler(
     withSpan(s"$workflowId.getUpdateHistory") { _ => _ =>
       val updateHistory = store.updateHistory
       val afterO = request.after.map { after =>
-        val afterRecordTime = {
-          for {
-            instant <- Try(Instant.parse(after.afterRecordTime)).toEither.left.map(_.getMessage)
-            ts <- Timestamp.fromInstant(instant)
-          } yield CantonTimestamp(ts)
-        }
-        afterRecordTime.fold(
-          error => throw new IllegalArgumentException(s"Invalid timestamp: $error"),
-          afterRecordTime =>
-            (
-              after.afterMigrationId,
-              afterRecordTime,
-            ),
+        (
+          after.afterMigrationId,
+          CantonTimestamp(Timestamp.assertFromString(after.afterRecordTime)),
         )
       }
       updateHistory
@@ -967,18 +957,52 @@ class HttpScanHandler(
           )
         )
       } else {
-        val now = clock.now
         for {
-          lastSnapshot <- snapshotStore.lookupSnapshotBefore(snapshotStore.migrationId, now)
+          domainId <- store
+            .lookupAmuletRules()
+            .map(
+              _.getOrElse(
+                throw io.grpc.Status.FAILED_PRECONDITION
+                  .withDescription("No amulet rules.")
+                  .asRuntimeException()
+              ).state.fold(
+                identity,
+                throw io.grpc.Status.FAILED_PRECONDITION
+                  .withDescription("Amulet rules are in flight.")
+                  .asRuntimeException(),
+              )
+            )
+          snapshotTime <- snapshotStore.updateHistory
+            .getUpdatesBefore(
+              snapshotStore.migrationId,
+              domainId,
+              CantonTimestamp.MaxValue,
+              PageLimit.tryCreate(1),
+            )
+            .map(
+              _.headOption
+                .getOrElse(
+                  throw io.grpc.Status.FAILED_PRECONDITION
+                    .withDescription("No updates ever happened for a snapshot.")
+                    .asRuntimeException()
+                )
+                ._1
+                .update
+                .recordTime
+            )
+          lastSnapshot <- snapshotStore.lookupSnapshotBefore(
+            snapshotStore.migrationId,
+            snapshotTime,
+          )
           // note that this will make it so that the next snapshot is taken N hours after THIS snapshot.
           // this is, in principle, not a problem:
           // - this will only be used in tests
           // - wall clock tests must take manual snapshots anyway, because they can't wait
           // - simtime tests will advanceTime(N.hours)
-          _ <- snapshotStore.insertNewSnapshot(lastSnapshot, now)
+          _ <- snapshotStore.insertNewSnapshot(lastSnapshot, snapshotTime)
         } yield ScanResource.ForceAcsSnapshotNowResponse.OK(
           definitions.ForceAcsSnapshotResponse(
-            now.toInstant.atOffset(ZoneOffset.UTC),
+            snapshotTime.toInstant.atOffset(ZoneOffset.UTC),
             snapshotStore.migrationId,
           )
         )

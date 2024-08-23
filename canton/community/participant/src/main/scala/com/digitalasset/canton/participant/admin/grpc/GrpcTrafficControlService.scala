@@ -6,15 +6,16 @@ package com.digitalasset.canton.participant.admin.grpc
 import cats.data.EitherT
 import cats.implicits.*
 import com.digitalasset.canton.ProtoDeserializationError.ProtoDeserializationFailure
-import com.digitalasset.canton.admin.participant.v30
+import com.digitalasset.canton.admin.participant.v30.*
 import com.digitalasset.canton.error.{BaseCantonError, CantonError}
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.networking.grpc.CantonGrpcUtil
-import com.digitalasset.canton.participant.admin.traffic.TrafficStateAdmin
 import com.digitalasset.canton.participant.sync.CantonSyncService
-import com.digitalasset.canton.participant.sync.SyncServiceInjectionError.NotConnectedToDomain
+import com.digitalasset.canton.participant.sync.TransactionRoutingError.MalformedInputErrors.InvalidDomainId
 import com.digitalasset.canton.topology.DomainId
 import com.digitalasset.canton.tracing.NoTracing
+import com.digitalasset.canton.traffic.MemberTrafficStatus
+import com.digitalasset.canton.traffic.TrafficControlErrors.TrafficStateNotFound
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -23,12 +24,12 @@ class GrpcTrafficControlService(
     override val loggerFactory: NamedLoggerFactory,
 )(implicit
     ec: ExecutionContext
-) extends v30.TrafficControlServiceGrpc.TrafficControlService
+) extends TrafficControlServiceGrpc.TrafficControlService
     with NamedLogging
     with NoTracing {
   override def trafficControlState(
-      request: v30.TrafficControlStateRequest
-  ): Future[v30.TrafficControlStateResponse] = {
+      request: TrafficControlStateRequest
+  ): Future[TrafficControlStateResponse] = {
     val result = for {
       domainId <- EitherT
         .fromEither[Future]
@@ -41,14 +42,19 @@ class GrpcTrafficControlService(
         .fromEither[Future](
           service
             .readySyncDomainById(domainId)
-            .toRight(NotConnectedToDomain.Error(request.domainId))
+            .toRight(InvalidDomainId.Error(request.domainId))
         )
         .leftWiden[BaseCantonError]
-      trafficState <- EitherT.right[BaseCantonError](
+      trafficStateOpt <- EitherT.liftF[Future, BaseCantonError, Option[MemberTrafficStatus]](
         syncDomain.getTrafficControlState
       )
+      trafficState <- EitherT
+        .fromEither[Future](
+          trafficStateOpt.toRight(TrafficStateNotFound.Error())
+        )
+        .leftWiden[BaseCantonError]
     } yield {
-      v30.TrafficControlStateResponse(Some(TrafficStateAdmin.toProto(trafficState)))
+      TrafficControlStateResponse(Some(trafficState.toProtoV30))
     }
 
     CantonGrpcUtil.mapErrNew(result)

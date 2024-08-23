@@ -9,13 +9,12 @@ import com.digitalasset.canton.crypto.DomainSyncCryptoClient
 import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.domain.metrics.SequencerMetrics
 import com.digitalasset.canton.domain.sequencing.sequencer.Sequencer as CantonSequencer
-import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
+import com.digitalasset.canton.logging.NamedLoggerFactory
 import com.digitalasset.canton.protocol.DynamicDomainParameters
 import com.digitalasset.canton.resource.MemoryStorage
+import com.digitalasset.canton.sequencing.protocol.RecipientsTest.{p11, p12, p13, p14, p15}
 import com.digitalasset.canton.sequencing.protocol.{Recipients, SubmissionRequest}
-import com.digitalasset.canton.sequencing.traffic.TrafficReceipt
-import com.digitalasset.canton.time.SimClock
-import com.digitalasset.canton.topology.{MediatorId, TestingIdentityFactory, TestingTopology}
+import com.digitalasset.canton.topology.{MediatorId, TestingIdentityFactoryX, TestingTopologyX}
 import org.apache.pekko.stream.Materializer
 
 import java.time.Duration
@@ -29,12 +28,12 @@ class DatabaseSequencerSnapshottingTest extends SequencerApiTest {
 
   def createSequencerWithSnapshot(
       crypto: DomainSyncCryptoClient,
-      initialState: Option[SequencerInitialState],
-  )(implicit materializer: Materializer): DatabaseSequencer = {
+      initialSnapshot: Option[SequencerSnapshot],
+  )(implicit materializer: Materializer): CantonSequencer = {
     if (clock == null)
       clock = createClock()
-    val crypto = TestingIdentityFactory(
-      TestingTopology(),
+    val crypto = TestingIdentityFactoryX(
+      TestingTopologyX(),
       loggerFactory,
       DynamicDomainParameters.initialValues(clock, testedProtocolVersion),
     ).forOwnerAndDomain(owner = mediatorId, domainId)
@@ -42,7 +41,7 @@ class DatabaseSequencerSnapshottingTest extends SequencerApiTest {
 
     DatabaseSequencer.single(
       TestDatabaseSequencerConfig(),
-      initialState,
+      initialSnapshot,
       DefaultProcessingTimeouts.testing,
       new MemoryStorage(loggerFactory, timeouts),
       clock,
@@ -53,13 +52,25 @@ class DatabaseSequencerSnapshottingTest extends SequencerApiTest {
       metrics,
       loggerFactory,
       unifiedSequencer = testedUseUnifiedSequencer,
-      runtimeReady = FutureUnlessShutdown.unit,
     )(executorService, tracer, materializer)
   }
 
-  override protected def supportAggregation: Boolean = false
+  final class SingleDbEnv extends Env {
 
-  override protected def defaultExpectedTrafficReceipt: Option[TrafficReceipt] = None
+    override protected val loggerFactory: NamedLoggerFactory =
+      DatabaseSequencerSnapshottingTest.this.loggerFactory
+
+    override lazy val topologyFactory =
+      new TestingIdentityFactoryX(
+        topology = TestingTopologyX().withSimpleParticipants(p11, p12, p13, p14, p15),
+        loggerFactory,
+        List.empty,
+      )
+  }
+
+  override protected final type FixtureParam = SingleDbEnv
+  override protected final def createEnv(): FixtureParam = new SingleDbEnv
+  override protected def supportAggregation: Boolean = false
 
   "Database snapshotting" should {
 
@@ -74,67 +85,31 @@ class DatabaseSequencerSnapshottingTest extends SequencerApiTest {
       val request: SubmissionRequest = createSendRequest(sender, messageContent, recipients)
       val request2: SubmissionRequest = createSendRequest(sender, messageContent2, recipients)
 
-      val testSequencerWrapper =
-        TestDatabaseSequencerWrapper(sequencer.asInstanceOf[DatabaseSequencer])
-
       for {
-        _ <- valueOrFail(
-          testSequencerWrapper.registerMemberInternal(sender, CantonTimestamp.Epoch)
-        )(
-          "Register mediator"
-        )
-        _ <- valueOrFail(
-          testSequencerWrapper.registerMemberInternal(sequencerId, CantonTimestamp.Epoch)
-        )(
-          "Register sequencer"
-        )
+        _ <- valueOrFail(sequencer.registerMember(sender))("Register mediator")
+        _ <- valueOrFail(sequencer.registerMember(sequencerId))("Register sequencer")
 
-        _ <- sequencer.sendAsync(request).valueOrFailShutdown("Sent async")
+        _ <- valueOrFail(sequencer.sendAsync(request))("Sent async")
         messages <- readForMembers(List(sender), sequencer)
         _ = {
           val details = EventDetails(
             SequencerCounter(0),
             sender,
             Some(request.messageId),
-            None,
             EnvelopeDetails(messageContent, recipients),
           )
           checkMessages(List(details), messages)
         }
-
-        error <- sequencer
-          .snapshot(CantonTimestamp.MaxValue)
-          .leftOrFail("snapshotting after the watermark is expected to fail")
-        _ <- error.cause should include(" is after the safe watermark")
-
-        // Note: below we use the timestamp that is currently the safe watermark in the sequencer
-        snapshot <- valueOrFail(sequencer.snapshot(CantonTimestamp.Epoch.immediateSuccessor))(
-          "get snapshot"
-        )
-
-        _ = {
-          // This makes DBS start with the clock.now timestamp being set to watermark
-          // and allow taking snapshot2 without triggering the check of the watermark
-          clock.asInstanceOf[SimClock].advanceTo(CantonTimestamp.Epoch.immediateSuccessor)
-        }
+        snapshot <- valueOrFail(sequencer.snapshot(CantonTimestamp.MaxValue))("get snapshot")
 
         // create a second separate sequencer from the snapshot
         secondSequencer = createSequencerWithSnapshot(
           topologyFactory.forOwnerAndDomain(owner = mediatorId, domainId),
-          Some(
-            SequencerInitialState(
-              domainId,
-              snapshot,
-              latestSequencerEventTimestamp = None,
-              initialTopologyEffectiveTimestamp = None,
-            )
-          ),
+          Some(snapshot),
         )
 
         // the snapshot from the second sequencer should look the same except that the lastTs will become the lower bound
-        snapshot2 <- valueOrFail(
-          secondSequencer.snapshot(CantonTimestamp.Epoch.immediateSuccessor)
-        )("get snapshot")
+        snapshot2 <- valueOrFail(secondSequencer.snapshot(CantonTimestamp.MaxValue))("get snapshot")
         _ = {
           snapshot2 shouldBe (snapshot.copy(status =
             snapshot.status.copy(lowerBound = snapshot.lastTs)
@@ -145,7 +120,7 @@ class DatabaseSequencerSnapshottingTest extends SequencerApiTest {
           // need to advance clock so that the new event doesn't get the same timestamp as the previous one,
           // which would then cause it to be ignored on the read path
           simClockOrFail(clock).advance(Duration.ofSeconds(1))
-          secondSequencer.sendAsync(request2).valueOrFailShutdown("Sent async")
+          valueOrFail(secondSequencer.sendAsync(request2))("Sent async")
         }
 
         messages2 <- readForMembers(
@@ -160,7 +135,6 @@ class DatabaseSequencerSnapshottingTest extends SequencerApiTest {
           SequencerCounter(1),
           sender,
           Some(request2.messageId),
-          None,
           EnvelopeDetails(messageContent2, recipients),
         )
         checkMessages(List(details2), messages2)

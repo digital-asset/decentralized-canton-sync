@@ -13,19 +13,19 @@ public final class Checkpoint {
 
   private final Instant recordTime;
 
-  private final String offset;
+  private final ParticipantOffset offset;
 
-  public Checkpoint(@NonNull Instant recordTime, @NonNull String offset) {
+  public Checkpoint(@NonNull Instant recordTime, @NonNull ParticipantOffset offset) {
     this.recordTime = recordTime;
     this.offset = offset;
   }
 
   public static Checkpoint fromProto(CheckpointOuterClass.Checkpoint checkpoint) {
-
+    ParticipantOffset offset = ParticipantOffset.fromProto(checkpoint.getOffset());
     return new Checkpoint(
         Instant.ofEpochSecond(
             checkpoint.getRecordTime().getSeconds(), checkpoint.getRecordTime().getNanos()),
-        checkpoint.getOffset());
+        offset);
   }
 
   public CheckpointOuterClass.Checkpoint toProto() {
@@ -35,7 +35,7 @@ public final class Checkpoint {
                 .setSeconds(this.recordTime.getEpochSecond())
                 .setNanos(this.recordTime.getNano())
                 .build())
-        .setOffset(this.offset)
+        .setOffset(this.offset.toProto())
         .build();
   }
 
@@ -44,7 +44,7 @@ public final class Checkpoint {
   }
 
   @NonNull
-  public String getOffset() {
+  public ParticipantOffset getOffset() {
     return offset;
   }
 

@@ -9,11 +9,10 @@ import com.digitalasset.canton.crypto.Signature
 import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.domain.block.UninitializedBlockHeight
 import com.digitalasset.canton.domain.sequencing.sequencer.InFlightAggregation.AggregationBySender
-import com.digitalasset.canton.health.admin.data.SequencerHealthStatus.implicitPrettyString
-import com.digitalasset.canton.logging.pretty.{Pretty, PrettyPrinting}
+import com.digitalasset.canton.domain.sequencing.sequencer.traffic.MemberTrafficSnapshot
+import com.digitalasset.canton.domain.sequencing.traffic.TrafficBalance
 import com.digitalasset.canton.sequencer.admin.v30
 import com.digitalasset.canton.sequencing.protocol.{AggregationId, AggregationRule}
-import com.digitalasset.canton.sequencing.traffic.{TrafficConsumed, TrafficPurchased}
 import com.digitalasset.canton.serialization.ProtoConverter
 import com.digitalasset.canton.serialization.ProtoConverter.ParsingResult
 import com.digitalasset.canton.topology.{DomainId, Member}
@@ -30,11 +29,10 @@ final case class SequencerSnapshot(
     status: SequencerPruningStatus,
     inFlightAggregations: InFlightAggregations,
     additional: Option[SequencerSnapshot.ImplementationSpecificInfo],
-    trafficPurchased: Seq[TrafficPurchased],
-    trafficConsumed: Seq[TrafficConsumed],
+    trafficSnapshots: Map[Member, MemberTrafficSnapshot],
+    trafficBalances: Seq[TrafficBalance],
 )(override val representativeProtocolVersion: RepresentativeProtocolVersion[SequencerSnapshot.type])
-    extends HasProtocolVersionedWrapper[SequencerSnapshot]
-    with PrettyPrinting {
+    extends HasProtocolVersionedWrapper[SequencerSnapshot] {
 
   @transient override protected lazy val companionObj: SequencerSnapshot.type = SequencerSnapshot
 
@@ -73,28 +71,17 @@ final case class SequencerSnapshot(
       inFlightAggregations = inFlightAggregations.toSeq.map(serializeInFlightAggregation),
       additional =
         additional.map(a => v30.ImplementationSpecificInfo(a.implementationName, a.info)),
-      trafficPurchased = trafficPurchased.map(_.toProtoV30),
-      trafficConsumed = trafficConsumed.map(_.toProtoV30),
+      trafficSnapshots = trafficSnapshots.toList.map { case (_member, snapshot) =>
+        snapshot.toProtoV30
+      },
+      trafficBalances = trafficBalances.map(_.toProtoV30),
     )
   }
-
-  /** Indicates how to pretty print this instance.
-    * See `PrettyPrintingTest` for examples on how to implement this method.
-    */
-  override def pretty: Pretty[SequencerSnapshot.this.type] = prettyOfClass(
-    param("lastTs", _.lastTs),
-    param("heads", _.heads),
-    param("status", _.status),
-    param("inFlightAggregations", _.inFlightAggregations),
-    param("additional", _.additional),
-    param("trafficPurchased", _.trafficPurchased),
-    param("trafficConsumed", _.trafficConsumed),
-  )
 }
 
 object SequencerSnapshot extends HasProtocolVersionedCompanion[SequencerSnapshot] {
   val supportedProtoVersions = SupportedProtoVersions(
-    ProtoVersion(30) -> VersionedProtoConverter(ProtocolVersion.v31)(v30.SequencerSnapshot)(
+    ProtoVersion(30) -> VersionedProtoConverter(ProtocolVersion.v30)(v30.SequencerSnapshot)(
       supportedProtoVersion(_)(fromProtoV30),
       _.toProtoV30.toByteString,
     )
@@ -110,8 +97,8 @@ object SequencerSnapshot extends HasProtocolVersionedCompanion[SequencerSnapshot
       inFlightAggregations: InFlightAggregations,
       additional: Option[SequencerSnapshot.ImplementationSpecificInfo],
       protocolVersion: ProtocolVersion,
-      trafficPurchased: Seq[TrafficPurchased],
-      trafficConsumed: Seq[TrafficConsumed],
+      trafficState: Map[Member, MemberTrafficSnapshot],
+      trafficBalances: Seq[TrafficBalance],
   ): SequencerSnapshot =
     SequencerSnapshot(
       lastTs,
@@ -120,8 +107,8 @@ object SequencerSnapshot extends HasProtocolVersionedCompanion[SequencerSnapshot
       status,
       inFlightAggregations,
       additional,
-      trafficPurchased,
-      trafficConsumed,
+      trafficState,
+      trafficBalances,
     )(protocolVersionRepresentativeFor(protocolVersion))
 
   def unimplemented(protocolVersion: ProtocolVersion): SequencerSnapshot = SequencerSnapshot(
@@ -131,17 +118,11 @@ object SequencerSnapshot extends HasProtocolVersionedCompanion[SequencerSnapshot
     SequencerPruningStatus.Unimplemented,
     Map.empty,
     None,
-    Seq.empty,
+    Map.empty,
     Seq.empty,
   )(protocolVersionRepresentativeFor(protocolVersion))
 
   final case class ImplementationSpecificInfo(implementationName: String, info: ByteString)
-      extends PrettyPrinting {
-    override def pretty: Pretty[ImplementationSpecificInfo.this.type] = prettyOfClass(
-      param("implementationName", _.implementationName),
-      param("info", _.info),
-    )
-  }
 
   def fromProtoV30(
       request: v30.SequencerSnapshot
@@ -189,7 +170,7 @@ object SequencerSnapshot extends HasProtocolVersionedCompanion[SequencerSnapshot
             maxSequencingTime,
             aggregationRule,
           )
-          .leftMap(err => ProtoDeserializationError.InvariantViolation(field = None, err))
+          .leftMap(err => ProtoDeserializationError.InvariantViolation(err))
       } yield aggregationId -> inFlightAggregation
     }
 
@@ -210,8 +191,8 @@ object SequencerSnapshot extends HasProtocolVersionedCompanion[SequencerSnapshot
       inFlightAggregations <- request.inFlightAggregations
         .traverse(parseInFlightAggregationWithId)
         .map(_.toMap)
-      trafficPurchased <- request.trafficPurchased.traverse(TrafficPurchased.fromProtoV30)
-      trafficConsumed <- request.trafficConsumed.traverse(TrafficConsumed.fromProtoV30)
+      trafficSnapshots <- request.trafficSnapshots.traverse(MemberTrafficSnapshot.fromProtoV30)
+      trafficBalances <- request.trafficBalances.traverse(TrafficBalance.fromProtoV30)
       rpv <- protocolVersionRepresentativeFor(ProtoVersion(30))
     } yield SequencerSnapshot(
       lastTs,
@@ -220,8 +201,8 @@ object SequencerSnapshot extends HasProtocolVersionedCompanion[SequencerSnapshot
       status,
       inFlightAggregations,
       request.additional.map(a => ImplementationSpecificInfo(a.implementationName, a.info)),
-      trafficPurchased = trafficPurchased,
-      trafficConsumed = trafficConsumed,
+      trafficSnapshots = trafficSnapshots.map(s => s.member -> s).toMap,
+      trafficBalances = trafficBalances,
     )(rpv)
   }
 }

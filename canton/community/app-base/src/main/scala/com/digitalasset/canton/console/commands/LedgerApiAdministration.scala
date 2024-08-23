@@ -8,14 +8,13 @@ import cats.syntax.functorFilter.*
 import cats.syntax.traverse.*
 import com.daml.jwt.JwtDecoder
 import com.daml.jwt.domain.Jwt
-import com.daml.ledger.api.v2.admin.command_inspection_service.CommandState
 import com.daml.ledger.api.v2.admin.package_management_service.PackageDetails
 import com.daml.ledger.api.v2.admin.party_management_service.PartyDetails as ProtoPartyDetails
 import com.daml.ledger.api.v2.checkpoint.Checkpoint
 import com.daml.ledger.api.v2.commands.{Command, DisclosedContract}
 import com.daml.ledger.api.v2.completion.Completion
 import com.daml.ledger.api.v2.event.CreatedEvent
-import com.daml.ledger.api.v2.event_query_service.GetEventsByContractIdResponse
+import com.daml.ledger.api.v2.event_query_service.GetEventsByContractIdResponse as GetEventsByContractIdResponse
 import com.daml.ledger.api.v2.participant_offset.ParticipantOffset
 import com.daml.ledger.api.v2.reassignment.Reassignment as ReassignmentProto
 import com.daml.ledger.api.v2.state_service.{
@@ -40,15 +39,20 @@ import com.daml.ledger.javaapi.data.{
   TransactionTree,
 }
 import com.daml.ledger.javaapi as javab
-import com.daml.metrics.api.MetricsContext
+import com.daml.lf.data.Ref
+import com.daml.metrics.api.MetricHandle.{Histogram, Meter}
+import com.daml.metrics.api.{MetricName, MetricsContext}
 import com.daml.scalautil.Statement.discard
-import com.digitalasset.canton.admin.api.client.commands.LedgerApiCommands
 import com.digitalasset.canton.admin.api.client.commands.LedgerApiCommands.CompletionWrapper
 import com.digitalasset.canton.admin.api.client.commands.LedgerApiCommands.UpdateService.*
 import com.digitalasset.canton.admin.api.client.commands.LedgerApiTypeWrappers.{
   WrappedContractEntry,
   WrappedIncompleteAssigned,
   WrappedIncompleteUnassigned,
+}
+import com.digitalasset.canton.admin.api.client.commands.{
+  LedgerApiCommands,
+  ParticipantAdminCommands,
 }
 import com.digitalasset.canton.admin.api.client.data.*
 import com.digitalasset.canton.config.ConsoleCommandTimeout
@@ -68,25 +72,23 @@ import com.digitalasset.canton.console.{
   ParticipantReference,
   RemoteParticipantReference,
 }
-import com.digitalasset.canton.data.{CantonTimestamp, DeduplicationPeriod}
+import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.ledger.api.auth.{AuthServiceJWTCodec, StandardJWTPayload}
-import com.digitalasset.canton.ledger.api.domain
 import com.digitalasset.canton.ledger.api.domain.{
   IdentityProviderConfig,
   IdentityProviderId,
   JwksUrl,
 }
+import com.digitalasset.canton.ledger.api.{DeduplicationPeriod, domain}
 import com.digitalasset.canton.ledger.client.services.admin.IdentityProviderConfigClient
 import com.digitalasset.canton.logging.NamedLogging
 import com.digitalasset.canton.networking.grpc.{GrpcError, RecordingStreamObserver}
 import com.digitalasset.canton.participant.ledger.api.client.JavaDecodeUtil
-import com.digitalasset.canton.platform.apiserver.execution.CommandStatus
 import com.digitalasset.canton.protocol.LfContractId
 import com.digitalasset.canton.topology.{DomainId, ParticipantId, PartyId}
 import com.digitalasset.canton.tracing.NoTracing
 import com.digitalasset.canton.util.ResourceUtil
-import com.digitalasset.canton.{LfPackageId, LfPartyId, config}
-import com.digitalasset.daml.lf.data.Ref
+import com.digitalasset.canton.{LedgerTransactionId, LfPackageId, LfPartyId, config}
 import com.google.protobuf.field_mask.FieldMask
 import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
@@ -117,10 +119,10 @@ trait BaseLedgerApiAdministration extends NoTracing {
     }
     .getOrElse(LedgerApiCommands.defaultApplicationId)
 
+  protected def domainOfTransaction(transactionId: String): DomainId
   def optionallyAwait[Tx](
       tx: Tx,
       txId: String,
-      txDomainId: String,
       optTimeout: Option[config.NonNegativeDuration],
   ): Tx
   def timeouts: ConsoleCommandTimeout = consoleEnvironment.commandTimeouts
@@ -338,14 +340,19 @@ trait BaseLedgerApiAdministration extends NoTracing {
       )(implicit consoleEnvironment: ConsoleEnvironment): AutoCloseable =
         check(FeatureFlag.Testing) {
 
+          val wrappedMetricName = MetricName(metricName)
+
           val observer: StreamObserver[UpdateTreeWrapper] = new StreamObserver[UpdateTreeWrapper] {
 
-            implicit val metricsContext: MetricsContext =
-              MetricsContext("measurement" -> metricName)
-
-            val consoleMetrics = consoleEnvironment.environment.metricsRegistry
+            val metricsFactory = consoleEnvironment.environment.metricsRegistry
               .forParticipant(name)
-              .consoleThroughput
+              .openTelemetryMetricsFactory
+
+            val metric: Meter = metricsFactory.meter(wrappedMetricName)
+            val nodeCount: Histogram =
+              metricsFactory.histogram(wrappedMetricName :+ "tx-node-count")
+            val transactionSize: Histogram =
+              metricsFactory.histogram(wrappedMetricName :+ "tx-size")
 
             override def onNext(tree: UpdateTreeWrapper): Unit = {
               val (s, serializedSize) = tree match {
@@ -354,9 +361,9 @@ trait BaseLedgerApiAdministration extends NoTracing {
                 case reassignmentWrapper: ReassignmentWrapper =>
                   1L -> reassignmentWrapper.reassignment.serializedSize
               }
-              consoleMetrics.metric.mark(s)
-              consoleMetrics.nodeCount.update(s)
-              consoleMetrics.transactionSize.update(serializedSize)
+              metric.mark(s)(MetricsContext.Empty)
+              nodeCount.update(s)
+              transactionSize.update(serializedSize)(MetricsContext.Empty)
               onUpdate(tree)
             }
 
@@ -401,6 +408,13 @@ trait BaseLedgerApiAdministration extends NoTracing {
             )
           )
         })
+
+      @Help.Summary("Get the domain that a transaction was committed over.")
+      @Help.Description(
+        """Get the domain that a transaction was committed over. Throws an error if the transaction is not (yet) known
+          |to the participant or if the transaction has been pruned via `pruning.prune`."""
+      )
+      def domain_of(transactionId: String): DomainId = domainOfTransaction(transactionId)
     }
 
     @Help.Summary("Submit commands", FeatureFlag.Testing)
@@ -454,7 +468,7 @@ trait BaseLedgerApiAdministration extends NoTracing {
             )
           )
         }
-        optionallyAwait(tx, tx.updateId, tx.domainId, optTimeout)
+        optionallyAwait(tx, tx.updateId, optTimeout)
       }
 
       @Help.Summary(
@@ -504,7 +518,7 @@ trait BaseLedgerApiAdministration extends NoTracing {
             )
           )
         }
-        optionallyAwait(tx, tx.updateId, tx.domainId, optTimeout)
+        optionallyAwait(tx, tx.updateId, optTimeout)
       }
 
       @Help.Summary("Submit command asynchronously", FeatureFlag.Testing)
@@ -544,36 +558,6 @@ trait BaseLedgerApiAdministration extends NoTracing {
             )
           )
         }
-      }
-
-      @Help.Summary("Investigate successful and failed commands", FeatureFlag.Testing)
-      @Help.Description(
-        """Find the status of commands. Note that only recent commands which are kept in memory will be returned."""
-      )
-      def status(
-          commandIdPrefix: String = "",
-          state: CommandState = CommandState.COMMAND_STATE_UNSPECIFIED,
-          limit: PositiveInt = PositiveInt.tryCreate(10),
-      ): Seq[CommandStatus] = check(FeatureFlag.Preview) {
-        consoleEnvironment.run {
-          ledgerApiCommand(
-            LedgerApiCommands.CommandInspectionService.GetCommandStatus(
-              commandIdPrefix = commandIdPrefix,
-              state = state,
-              limit = limit.unwrap,
-            )
-          )
-        }
-      }
-
-      @Help.Summary("Investigate failed commands", FeatureFlag.Testing)
-      @Help.Description(
-        """Same as status(..., state = CommandState.Failed)."""
-      )
-      def failed(commandId: String = "", limit: PositiveInt = PositiveInt.tryCreate(10)): Seq[
-        CommandStatus
-      ] = check(FeatureFlag.Preview) {
-        status(commandId, CommandState.COMMAND_STATE_FAILED, limit)
       }
 
       @Help.Summary(
@@ -715,7 +699,7 @@ trait BaseLedgerApiAdministration extends NoTracing {
           .list(
             partyId = submitter,
             atLeastNumCompletions = 1,
-            beginOffset = ledgerEndBefore.getAbsolute,
+            beginOffset = ledgerEndBefore,
             filter = _.completion.commandId == commandId,
           )(0)
           .completion
@@ -817,36 +801,6 @@ trait BaseLedgerApiAdministration extends NoTracing {
             LedgerApiCommands.StateService.GetConnectedDomains(partyId.toLf)
           )
         })
-
-      @Help.Summary("Investigate successful and failed commands", FeatureFlag.Testing)
-      @Help.Description(
-        """Find the status of commands. Note that only recent commands which are kept in memory will be returned."""
-      )
-      def status(
-          commandIdPrefix: String = "",
-          state: CommandState = CommandState.COMMAND_STATE_UNSPECIFIED,
-          limit: PositiveInt = PositiveInt.tryCreate(10),
-      ): Seq[CommandStatus] = check(FeatureFlag.Preview) {
-        consoleEnvironment.run {
-          ledgerApiCommand(
-            LedgerApiCommands.CommandInspectionService.GetCommandStatus(
-              commandIdPrefix = commandIdPrefix,
-              state = state,
-              limit = limit.unwrap,
-            )
-          )
-        }
-      }
-
-      @Help.Summary("Investigate failed commands", FeatureFlag.Testing)
-      @Help.Description(
-        """Same as status(..., state = CommandState.Failed)."""
-      )
-      def failed(commandId: String = "", limit: PositiveInt = PositiveInt.tryCreate(10)): Seq[
-        CommandStatus
-      ] = check(FeatureFlag.Preview) {
-        status(commandId, CommandState.COMMAND_STATE_FAILED, limit)
-      }
 
       @Help.Summary("Read active contracts", FeatureFlag.Testing)
       @Help.Group("Active Contracts")
@@ -1259,17 +1213,6 @@ trait BaseLedgerApiAdministration extends NoTracing {
           ledgerApiCommand(LedgerApiCommands.PackageService.ListKnownPackages(limit))
         })
 
-      @Help.Summary("Validate a DAR against the current participants' state", FeatureFlag.Testing)
-      @Help.Description(
-        """Performs the same DAR and Daml package validation checks that the upload call performs,
-         but with no effects on the target participants: the DAR is not persisted or vetted."""
-      )
-      def validate_dar(darPath: String): Unit = check(FeatureFlag.Testing) {
-        consoleEnvironment.run {
-          ledgerApiCommand(LedgerApiCommands.PackageService.ValidateDarFile(darPath))
-        }
-      }
-
     }
 
     @Help.Summary("Monitor progress of commands", FeatureFlag.Testing)
@@ -1279,13 +1222,12 @@ trait BaseLedgerApiAdministration extends NoTracing {
       @Help.Summary("Lists command completions following the specified offset", FeatureFlag.Testing)
       @Help.Description(
         """If the participant has been pruned via `pruning.prune` and if `beginOffset` is lower than
-          |the pruning offset, this command fails with a `NOT_FOUND` error.
-          |An empty offset denotes the beginning of the participant's offsets."""
+          |the pruning offset, this command fails with a `NOT_FOUND` error."""
       )
       def list(
           partyId: PartyId,
           atLeastNumCompletions: Int,
-          beginOffset: String,
+          beginOffset: ParticipantOffset,
           applicationId: String = applicationId,
           timeout: config.NonNegativeDuration = timeouts.ledgerCommand,
           filter: CompletionWrapper => Boolean = _ => true,
@@ -1313,7 +1255,7 @@ trait BaseLedgerApiAdministration extends NoTracing {
       def list_with_checkpoint(
           partyId: PartyId,
           atLeastNumCompletions: Int,
-          beginExclusive: String,
+          beginExclusive: ParticipantOffset,
           applicationId: String = applicationId,
           timeout: config.NonNegativeDuration = timeouts.ledgerCommand,
           filter: Completion => Boolean = _ => true,
@@ -1335,14 +1277,16 @@ trait BaseLedgerApiAdministration extends NoTracing {
         """This function connects to the command completion stream and passes command completions to `observer` until
           |the stream is completed.
           |Only completions for parties in `parties` will be returned.
-          |The returned completions start at `beginOffset` (default: the empty string denoting the participant begin).
+          |The returned completions start at `beginOffset` (default: `PARTICIPANT_BOUNDARY_BEGIN`).
           |If the participant has been pruned via `pruning.prune` and if `beginOffset` is lower than the pruning offset,
           |this command fails with a `NOT_FOUND` error."""
       )
       def subscribe(
           observer: StreamObserver[CompletionWrapper],
           parties: Seq[PartyId],
-          beginOffset: String = "",
+          beginOffset: ParticipantOffset = new ParticipantOffset().withBoundary(
+            ParticipantOffset.ParticipantBoundary.PARTICIPANT_BOUNDARY_BEGIN
+          ),
           applicationId: String = applicationId,
       ): AutoCloseable = {
         check(FeatureFlag.Testing)(
@@ -1351,7 +1295,7 @@ trait BaseLedgerApiAdministration extends NoTracing {
               LedgerApiCommands.CommandCompletionService.Subscribe(
                 observer,
                 parties.map(_.toLf),
-                beginOffset,
+                Some(beginOffset),
                 applicationId,
               )
             )
@@ -1469,7 +1413,6 @@ trait BaseLedgerApiAdministration extends NoTracing {
           isActive: flag (default true) indicating if the user is active
           annotations: the set of key-value pairs linked to this user
           identityProviderId: identity provider id
-          readAsAnyParty: flag (default false) indicating if the user is allowed to read as any party
           """
       )
       def create(
@@ -1481,7 +1424,6 @@ trait BaseLedgerApiAdministration extends NoTracing {
           isActive: Boolean = true,
           annotations: Map[String, String] = Map.empty,
           identityProviderId: String = "",
-          readAsAnyParty: Boolean = false,
       ): User = {
         val lapiUser = check(FeatureFlag.Testing)(consoleEnvironment.run {
           ledgerApiCommand(
@@ -1494,7 +1436,6 @@ trait BaseLedgerApiAdministration extends NoTracing {
               isDeactivated = !isActive,
               annotations = annotations,
               identityProviderId = identityProviderId,
-              readAsAnyParty = readAsAnyParty,
             )
           )
         })
@@ -1656,7 +1597,6 @@ trait BaseLedgerApiAdministration extends NoTracing {
           readAs: the set of parties this user is allowed to read as
           participantAdmin: flag (default false) indicating if the user is allowed to use the admin commands of the Ledger Api
           identityProviderId: identity provider id
-          readAsAnyParty: flag (default false) indicating if the user is allowed to read as any party
           """)
         def grant(
             id: String,
@@ -1664,7 +1604,6 @@ trait BaseLedgerApiAdministration extends NoTracing {
             readAs: Set[PartyId] = Set(),
             participantAdmin: Boolean = false,
             identityProviderId: String = "",
-            readAsAnyParty: Boolean = false,
         ): UserRights =
           check(FeatureFlag.Testing)(consoleEnvironment.run {
             ledgerApiCommand(
@@ -1674,7 +1613,6 @@ trait BaseLedgerApiAdministration extends NoTracing {
                 readAs = readAs.map(_.toLf),
                 participantAdmin = participantAdmin,
                 identityProviderId = identityProviderId,
-                readAsAnyParty = readAsAnyParty,
               )
             )
           })
@@ -1686,7 +1624,6 @@ trait BaseLedgerApiAdministration extends NoTracing {
           readAs: the set of parties this user should not be allowed to read as
           participantAdmin: if set to true, the participant admin rights will be removed
           identityProviderId: identity provider id
-          readAsAnyParty: flag (default false) indicating if the user is allowed to read as any party
           """)
         def revoke(
             id: String,
@@ -1694,7 +1631,6 @@ trait BaseLedgerApiAdministration extends NoTracing {
             readAs: Set[PartyId] = Set(),
             participantAdmin: Boolean = false,
             identityProviderId: String = "",
-            readAsAnyParty: Boolean = false,
         ): UserRights =
           check(FeatureFlag.Testing)(consoleEnvironment.run {
             ledgerApiCommand(
@@ -1704,7 +1640,6 @@ trait BaseLedgerApiAdministration extends NoTracing {
                 readAs = readAs.map(_.toLf),
                 participantAdmin = participantAdmin,
                 identityProviderId = identityProviderId,
-                readAsAnyParty = readAsAnyParty,
               )
             )
           })
@@ -1850,9 +1785,7 @@ trait BaseLedgerApiAdministration extends NoTracing {
             )
           }
           javab.data.TransactionTree.fromProto(
-            TransactionTreeProto.toJavaProto(
-              optionallyAwait(tx, tx.updateId, tx.domainId, optTimeout)
-            )
+            TransactionTreeProto.toJavaProto(optionallyAwait(tx, tx.updateId, optTimeout))
           )
         }
 
@@ -1905,7 +1838,7 @@ trait BaseLedgerApiAdministration extends NoTracing {
             )
           }
           javab.data.Transaction.fromProto(
-            TransactionV2.toJavaProto(optionallyAwait(tx, tx.updateId, tx.domainId, optTimeout))
+            TransactionV2.toJavaProto(optionallyAwait(tx, tx.updateId, optTimeout))
           )
         }
 
@@ -2164,7 +2097,7 @@ trait BaseLedgerApiAdministration extends NoTracing {
             FeatureFlag.Testing,
           )
           @Help.Description(
-            """This function can be used for contracts with a code-generated Java model.
+            """This function can be used for contracts with a code-generated Scala model.
               |You can refine your search using the `filter` function argument.
               |The command will wait until the contract appears or throw an exception once it times out."""
           )
@@ -2312,6 +2245,13 @@ trait LedgerApiAdministration extends BaseLedgerApiAdministration {
   implicit val consoleEnvironment: ConsoleEnvironment
   protected val name: String
 
+  override protected def domainOfTransaction(transactionId: String): DomainId = {
+    val txId = LedgerTransactionId.assertFromString(transactionId)
+    consoleEnvironment.run {
+      adminCommand(ParticipantAdminCommands.Inspection.LookupTransactionDomain(txId))
+    }
+  }
+
   import com.digitalasset.canton.util.ShowUtil.*
 
   private def awaitTransaction(
@@ -2340,10 +2280,9 @@ trait LedgerApiAdministration extends BaseLedgerApiAdministration {
   }
 
   private[console] def involvedParticipants(
-      transactionId: String,
-      txDomainId: String,
+      transactionId: String
   ): Map[ParticipantReference, PartyId] = {
-    val txDomain = DomainId.tryFromString(txDomainId)
+    val txDomain = ledger_api.updates.domain_of(transactionId)
     // TODO(#6317)
     // There's a race condition here, in the unlikely circumstance that the party->participant mapping on the domain
     // changes during the command's execution. We'll have to live with it for the moment, as there's no convenient
@@ -2406,13 +2345,12 @@ trait LedgerApiAdministration extends BaseLedgerApiAdministration {
   def optionallyAwait[Tx](
       tx: Tx,
       txId: String,
-      txDomainId: String,
       optTimeout: Option[config.NonNegativeDuration],
   ): Tx = {
     optTimeout match {
       case None => tx
       case Some(timeout) =>
-        val involved = involvedParticipants(txId, txDomainId)
+        val involved = involvedParticipants(txId)
         logger.debug(show"Awaiting transaction ${txId.unquoted} at ${involved.keys.mkShow()}")
         awaitTransaction(txId, involved, timeout)
         tx

@@ -27,7 +27,7 @@ import com.daml.network.http.v0.wallet.WalletResource as r0
 import com.daml.network.http.v0.{definitions as d0, wallet as v0}
 import com.daml.network.scan.admin.api.client.BftScanConnection
 import com.daml.network.store.{Limit, PageLimit}
-import com.daml.network.util.{SpliceUtil, Codec, ContractWithState}
+import com.daml.network.util.{SpliceUtil, Codec, Contract, DisclosedContracts}
 import com.daml.network.wallet.UserWalletManager
 import com.daml.network.wallet.store.{TxLogEntry, UserWalletStore}
 import com.daml.network.wallet.treasury.TreasuryService
@@ -35,10 +35,7 @@ import com.daml.network.wallet.util.{TopupUtil, ValidatorTopupConfig}
 import com.digitalasset.canton.error.MediatorError.Timeout
 import com.digitalasset.canton.logging.{ErrorLoggingContext, NamedLoggerFactory, TracedLogger}
 import com.digitalasset.canton.participant.protocol.TransactionProcessor.SubmissionErrors.UnknownContractDomain
-import com.digitalasset.canton.participant.sync.SyncServiceInjectionError.{
-  NotConnectedToDomain,
-  NotConnectedToAnyDomain,
-}
+import com.digitalasset.canton.participant.sync.SyncServiceInjectionError.NotConnectedToAnyDomain
 import com.digitalasset.canton.participant.sync.TransactionRoutingError.MalformedInputErrors.InvalidDomainId
 import com.digitalasset.canton.participant.sync.TransactionRoutingError.ConfigurationErrors.SubmissionDomainNotReady
 import com.digitalasset.canton.participant.sync.TransactionRoutingError.TopologyErrors.{
@@ -94,8 +91,8 @@ class HttpWalletHandler(
         )
       } yield r0.ListResponseOK(
         d0.ListResponse(
-          amulets.map(c => amuletToAmuletPosition(c, currentRound)).toVector,
-          lockedAmulets.map(c => lockedAmuletToAmuletPosition(c, currentRound)).toVector,
+          amulets.map(c => amuletToAmuletPosition(c.contract, currentRound)).toVector,
+          lockedAmulets.map(c => lockedAmuletToAmuletPosition(c.contract, currentRound)).toVector,
         )
       )
     }
@@ -105,7 +102,7 @@ class HttpWalletHandler(
       respond: v0.WalletResource.ListAcceptedAppPaymentsResponse.type
   )()(tuser: TracedUser): Future[v0.WalletResource.ListAcceptedAppPaymentsResponse] = {
     implicit val TracedUser(user, traceContext) = tuser
-    listContractsWithState(
+    listContracts(
       walletCodegen.AcceptedAppPayment.COMPANION,
       user,
       d0.ListAcceptedAppPaymentsResponse(_),
@@ -295,7 +292,7 @@ class HttpWalletHandler(
               )
               .map(_.exerciseResult.featuredAppRight)
           )
-        )(user, dislosedContracts = _.disclosedContracts(amuletRules))
+        )(user, dislosedContracts = DisclosedContracts(amuletRules))
       } yield d0.SelfGrantFeaturedAppRightResponse(Codec.encodeContractId(result))
     }
   }
@@ -651,7 +648,7 @@ class HttpWalletHandler(
   }
 
   private def amuletToAmuletPosition(
-      amulet: ContractWithState[Amulet.ContractId, Amulet],
+      amulet: Contract[Amulet.ContractId, Amulet],
       round: Long,
   )(implicit errorLoggingContext: ErrorLoggingContext): d0.AmuletPosition = {
     d0.AmuletPosition(
@@ -663,7 +660,7 @@ class HttpWalletHandler(
   }
 
   private def lockedAmuletToAmuletPosition(
-      lockedAmulet: ContractWithState[LockedAmulet.ContractId, LockedAmulet],
+      lockedAmulet: Contract[LockedAmulet.ContractId, LockedAmulet],
       round: Long,
   )(implicit errorLoggingContext: ErrorLoggingContext): d0.AmuletPosition =
     d0.AmuletPosition(
@@ -794,7 +791,6 @@ object HttpWalletHandler {
     ErrorDetails.from(StatusProto.fromThrowable(ex)).exists {
       case ErrorInfoDetail(InvalidDomainId.id, _) => true
       case ErrorInfoDetail(NotConnectedToAnyDomain.id, _) => true
-      case ErrorInfoDetail(NotConnectedToDomain.id, _) => true
       case ErrorInfoDetail(UnknownContractDomain.id, _) => true
       case ErrorInfoDetail(UnknownSubmitters.id, _) => true
       case ErrorInfoDetail(SubmissionDomainNotReady.id, _) => true

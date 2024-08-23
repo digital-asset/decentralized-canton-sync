@@ -4,12 +4,14 @@
 package com.digitalasset.canton.platform.store.dao.events
 
 import com.daml.ledger.api.v2.reassignment.Reassignment
+import com.daml.lf.data.Ref
+import com.daml.lf.data.Ref.Party
 import com.daml.metrics.{DatabaseMetrics, Timed}
-import com.digitalasset.canton.data.Offset
 import com.digitalasset.canton.ledger.api.util.TimestampConversion
+import com.digitalasset.canton.ledger.offset.Offset
 import com.digitalasset.canton.logging.LoggingContextWithTrace.implicitExtractTraceContext
 import com.digitalasset.canton.logging.{LoggingContextWithTrace, NamedLoggerFactory, NamedLogging}
-import com.digitalasset.canton.metrics.LedgerApiServerMetrics
+import com.digitalasset.canton.metrics.Metrics
 import com.digitalasset.canton.platform.store.backend.EventStorageBackend
 import com.digitalasset.canton.platform.store.backend.EventStorageBackend.{
   RawAssignEvent,
@@ -32,8 +34,6 @@ import com.digitalasset.canton.platform.store.utils.{
 }
 import com.digitalasset.canton.platform.{ApiOffset, TemplatePartiesFilter}
 import com.digitalasset.canton.util.PekkoUtil.syntax.*
-import com.digitalasset.daml.lf.data.Ref
-import com.digitalasset.daml.lf.data.Ref.Party
 import io.opentelemetry.api.trace.Tracer
 import org.apache.pekko.NotUsed
 import org.apache.pekko.stream.Attributes
@@ -50,7 +50,7 @@ class ReassignmentStreamReader(
     queryValidRange: QueryValidRange,
     eventStorageBackend: EventStorageBackend,
     lfValueTranslation: LfValueTranslation,
-    metrics: LedgerApiServerMetrics,
+    metrics: Metrics,
     tracer: Tracer,
     val loggerFactory: NamedLoggerFactory,
 )(implicit executionContext: ExecutionContext)
@@ -162,7 +162,7 @@ class ReassignmentStreamReader(
         maxParallelIdQueriesLimiter = unassignedEventIdQueriesLimiter,
         maxOutputBatchCount = maxParallelPayloadUnassignQueries + 1,
         metric = dbMetrics.reassignmentStream.fetchEventUnassignIdsStakeholder,
-        idDbQuery = eventStorageBackend.fetchUnassignEventIdsForStakeholder,
+        idDbQuery = eventStorageBackend.fetchAssignEventIdsForStakeholder,
       )
     val payloadsAssign =
       fetchPayloads(
@@ -256,7 +256,7 @@ object ReassignmentStreamReader {
   @FunctionalInterface
   trait IdDbQuery {
     def fetchIds(
-        stakeholder: Option[Party],
+        stakeholder: Party,
         templateIdO: Option[Ref.Identifier],
         startExclusive: Long,
         endInclusive: Long,
@@ -268,7 +268,7 @@ object ReassignmentStreamReader {
   trait PayloadDbQuery[T] {
     def fetchPayloads(
         eventSequentialIds: Iterable[Long],
-        allFilterParties: Option[Set[Ref.Party]],
+        allFilterParties: Set[Ref.Party],
     ): Connection => Vector[T]
   }
 }

@@ -10,20 +10,32 @@ import com.digitalasset.canton.crypto.Signature
 import com.digitalasset.canton.crypto.provider.symbolic.SymbolicCrypto
 import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.logging.LogEntry
-import com.digitalasset.canton.protocol.messages.TopologyTransactionsBroadcast.Broadcast
+import com.digitalasset.canton.protocol.messages.TopologyTransactionsBroadcastX.Broadcast
 import com.digitalasset.canton.protocol.messages.{
   DefaultOpenEnvelope,
-  SetTrafficPurchasedMessage,
+  SetTrafficBalanceMessage,
   SignedProtocolMessage,
-  TopologyTransactionsBroadcast,
+  TopologyTransactionsBroadcastX,
 }
-import com.digitalasset.canton.sequencing.protocol.*
-import com.digitalasset.canton.sequencing.traffic.TrafficControlErrors.InvalidTrafficPurchasedMessage
-import com.digitalasset.canton.sequencing.traffic.TrafficControlProcessor.TrafficControlSubscriber
-import com.digitalasset.canton.sequencing.traffic.{TrafficControlProcessor, TrafficReceipt}
-import com.digitalasset.canton.topology.processing.TopologyTransactionTestFactory
-import com.digitalasset.canton.topology.{DefaultTestIdentities, TestingTopology}
+import com.digitalasset.canton.sequencing.protocol.{
+  Batch,
+  Deliver,
+  DeliverError,
+  MessageId,
+  Recipients,
+  SequencerErrors,
+  SequencersOfDomain,
+}
+import com.digitalasset.canton.topology.processing.TopologyTransactionTestFactoryX
+import com.digitalasset.canton.topology.{
+  DefaultTestIdentities,
+  TestingIdentityFactoryX,
+  TestingTopologyX,
+}
 import com.digitalasset.canton.tracing.{TraceContext, Traced}
+import com.digitalasset.canton.traffic.TrafficControlErrors.InvalidTrafficControlBalanceMessage
+import com.digitalasset.canton.traffic.TrafficControlProcessor
+import com.digitalasset.canton.traffic.TrafficControlProcessor.TrafficControlSubscriber
 import com.digitalasset.canton.{BaseTest, HasExecutionContext, SequencerCounter}
 import org.scalatest.wordspec.AnyWordSpec
 
@@ -44,30 +56,33 @@ class TrafficControlProcessorTest extends AnyWordSpec with BaseTest with HasExec
   private val sc2 = SequencerCounter(2)
   private val sc3 = SequencerCounter(3)
 
-  private val domainCrypto = TestingTopology(domainParameters = List.empty)
-    .build(loggerFactory)
-    .forOwnerAndDomain(DefaultTestIdentities.sequencerId, domainId)
+  private val domainCrypto = new TestingIdentityFactoryX(
+    TestingTopologyX(),
+    loggerFactory,
+    dynamicDomainParameters = List.empty,
+  )
+    .forOwnerAndDomain(DefaultTestIdentities.sequencerIdX, domainId)
 
   private val dummySignature = SymbolicCrypto.emptySignature
 
-  private val factory =
-    new TopologyTransactionTestFactory(loggerFactory, initEc = parallelExecutionContext)
+  private val factoryX =
+    new TopologyTransactionTestFactoryX(loggerFactory, initEc = parallelExecutionContext)
 
-  private def mkTopoTx(): TopologyTransactionsBroadcast = TopologyTransactionsBroadcast.create(
+  private def mkTopoTx(): TopologyTransactionsBroadcastX = TopologyTransactionsBroadcastX.create(
     domainId,
     Seq(
       Broadcast(
         String255.tryCreate("some request"),
-        List(factory.ns1k1_k1),
+        List(factoryX.ns1k1_k1),
       )
     ),
     testedProtocolVersion,
   )
 
-  private def mkSetTrafficPurchased(
+  private def mkSetBalance(
       signatureO: Option[Signature] = None
-  ): SignedProtocolMessage[SetTrafficPurchasedMessage] = {
-    val setTrafficPurchased = SetTrafficPurchasedMessage(
+  ): SignedProtocolMessage[SetTrafficBalanceMessage] = {
+    val setBalance = SetTrafficBalanceMessage(
       participantId,
       PositiveInt.one,
       NonNegativeLong.tryCreate(100),
@@ -78,7 +93,7 @@ class TrafficControlProcessorTest extends AnyWordSpec with BaseTest with HasExec
     signatureO match {
       case Some(signature) =>
         SignedProtocolMessage.from(
-          setTrafficPurchased,
+          setBalance,
           testedProtocolVersion,
           signature,
         )
@@ -86,11 +101,10 @@ class TrafficControlProcessorTest extends AnyWordSpec with BaseTest with HasExec
       case None =>
         SignedProtocolMessage
           .trySignAndCreate(
-            setTrafficPurchased,
+            setBalance,
             domainCrypto.currentSnapshotApproximation,
             testedProtocolVersion,
           )
-          .failOnShutdown
           .futureValue
     }
   }
@@ -99,7 +113,7 @@ class TrafficControlProcessorTest extends AnyWordSpec with BaseTest with HasExec
       TrafficControlProcessor,
       AtomicReference[mutable.Builder[CantonTimestamp, Seq[CantonTimestamp]]],
       AtomicReference[
-        mutable.Builder[SetTrafficPurchasedMessage, Seq[SetTrafficPurchasedMessage]]
+        mutable.Builder[SetTrafficBalanceMessage, Seq[SetTrafficBalanceMessage]]
       ],
   ) = {
     val tcp = new TrafficControlProcessor(
@@ -109,15 +123,15 @@ class TrafficControlProcessorTest extends AnyWordSpec with BaseTest with HasExec
       loggerFactory,
     )
     val observedTs = new AtomicReference(Seq.newBuilder[CantonTimestamp])
-    val updates = new AtomicReference(Seq.newBuilder[SetTrafficPurchasedMessage])
+    val updates = new AtomicReference(Seq.newBuilder[SetTrafficBalanceMessage])
 
     tcp.subscribe(new TrafficControlSubscriber {
       override def observedTimestamp(timestamp: CantonTimestamp)(implicit
           traceContext: TraceContext
       ): Unit = observedTs.updateAndGet(_ += timestamp)
 
-      override def trafficPurchasedUpdate(
-          update: SetTrafficPurchasedMessage,
+      override def balanceUpdate(
+          update: SetTrafficBalanceMessage,
           sequencingTimestamp: CantonTimestamp,
       )(implicit
           traceContext: TraceContext
@@ -132,16 +146,7 @@ class TrafficControlProcessorTest extends AnyWordSpec with BaseTest with HasExec
       ts: CantonTimestamp,
       batch: Batch[DefaultOpenEnvelope],
   ): Deliver[DefaultOpenEnvelope] =
-    Deliver.create(
-      sc,
-      ts,
-      domainId,
-      None,
-      batch,
-      None,
-      testedProtocolVersion,
-      Option.empty[TrafficReceipt],
-    )
+    Deliver.create(sc, ts, domainId, None, batch, None, testedProtocolVersion)
 
   private def mkDeliverError(
       sc: SequencerCounter,
@@ -152,9 +157,8 @@ class TrafficControlProcessorTest extends AnyWordSpec with BaseTest with HasExec
       ts,
       domainId,
       MessageId.fromUuid(new UUID(0, 1)),
-      SequencerErrors.SubmissionRequestRefused("Some error"),
+      SequencerErrors.SubmissionRequestMalformed("Some error"),
       testedProtocolVersion,
-      Option.empty[TrafficReceipt],
     )
 
   "the traffic control processor" should {
@@ -176,32 +180,32 @@ class TrafficControlProcessorTest extends AnyWordSpec with BaseTest with HasExec
     }
 
     "notify subscribers of updates" in {
-      val update = mkSetTrafficPurchased()
+      val update = mkSetBalance()
       val batch =
         Batch.of(testedProtocolVersion, update -> Recipients.cc(SequencersOfDomain))
 
       val (tcp, observedTs, updates) = mkTrafficProcessor()
 
-      tcp.processSetTrafficPurchasedEnvelopes(ts1, None, batch.envelopes).futureValueUS
+      tcp.processSetTrafficBalanceEnvelopes(ts1, None, batch.envelopes).futureValueUS
 
       observedTs.get().result() shouldBe Seq.empty
       updates.get().result() shouldBe Seq(update.message)
     }
 
     "drop updates that do not target all sequencers" in {
-      val update = mkSetTrafficPurchased()
+      val update = mkSetBalance()
       val batch =
         Batch.of(testedProtocolVersion, update -> Recipients.cc(participantId))
 
       val (tcp, observedTs, updates) = mkTrafficProcessor()
 
       loggerFactory.assertLoggedWarningsAndErrorsSeq(
-        tcp.processSetTrafficPurchasedEnvelopes(ts1, None, batch.envelopes).futureValueUS,
+        tcp.processSetTrafficBalanceEnvelopes(ts1, None, batch.envelopes).futureValueUS,
         LogEntry.assertLogSeq(
           Seq(
             (
               _.shouldBeCantonError(
-                InvalidTrafficPurchasedMessage,
+                InvalidTrafficControlBalanceMessage,
                 _ should include("should be addressed to all the sequencers of a domain"),
               ),
               "invalid recipients",
@@ -215,19 +219,19 @@ class TrafficControlProcessorTest extends AnyWordSpec with BaseTest with HasExec
     }
 
     "drop updates with invalid signatures" in {
-      val update = mkSetTrafficPurchased(Some(dummySignature))
+      val update = mkSetBalance(Some(dummySignature))
       val batch =
         Batch.of(testedProtocolVersion, update -> Recipients.cc(SequencersOfDomain))
 
       val (tcp, observedTs, updates) = mkTrafficProcessor()
 
       loggerFactory.assertLoggedWarningsAndErrorsSeq(
-        tcp.processSetTrafficPurchasedEnvelopes(ts1, None, batch.envelopes).futureValueUS,
+        tcp.processSetTrafficBalanceEnvelopes(ts1, None, batch.envelopes).futureValueUS,
         LogEntry.assertLogSeq(
           Seq(
             (
               _.shouldBeCantonError(
-                InvalidTrafficPurchasedMessage,
+                InvalidTrafficControlBalanceMessage,
                 _ should (include(
                   "signature threshold not reached"
                 ) and include regex raw"Key \S+ used to generate signature is not a valid key for SequencerGroup"),
@@ -243,19 +247,19 @@ class TrafficControlProcessorTest extends AnyWordSpec with BaseTest with HasExec
     }
 
     "drop updates with invalid timestamp of signing key" in {
-      val update = mkSetTrafficPurchased()
+      val update = mkSetBalance()
       val batch =
         Batch.of(testedProtocolVersion, update -> Recipients.cc(SequencersOfDomain))
 
       val (tcp, observedTs, updates) = mkTrafficProcessor()
 
       loggerFactory.assertLoggedWarningsAndErrorsSeq(
-        tcp.processSetTrafficPurchasedEnvelopes(ts1, Some(ts2), batch.envelopes).futureValueUS,
+        tcp.processSetTrafficBalanceEnvelopes(ts1, Some(ts2), batch.envelopes).futureValueUS,
         LogEntry.assertLogSeq(
           Seq(
             (
               _.shouldBeCantonError(
-                InvalidTrafficPurchasedMessage,
+                InvalidTrafficControlBalanceMessage,
                 _ should include(
                   s"the timestamp of the topology (Some($ts2)) is not set to the event timestamp ($ts1)"
                 ),

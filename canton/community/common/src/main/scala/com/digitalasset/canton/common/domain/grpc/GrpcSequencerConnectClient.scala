@@ -22,14 +22,7 @@ import com.digitalasset.canton.protocol.StaticDomainParameters
 import com.digitalasset.canton.sequencing.GrpcSequencerConnection
 import com.digitalasset.canton.sequencing.protocol.{HandshakeRequest, HandshakeResponse}
 import com.digitalasset.canton.serialization.ProtoConverter.ParsingResult
-import com.digitalasset.canton.topology.transaction.SignedTopologyTransaction.GenericSignedTopologyTransaction
-import com.digitalasset.canton.topology.{
-  DomainId,
-  Member,
-  ParticipantId,
-  SequencerId,
-  UniqueIdentifier,
-}
+import com.digitalasset.canton.topology.{DomainId, ParticipantId, SequencerId}
 import com.digitalasset.canton.tracing.{TraceContext, TracingConfig}
 import com.digitalasset.canton.util.retry.RetryUtil.AllExnRetryable
 import com.digitalasset.canton.util.retry.Success
@@ -57,17 +50,8 @@ class GrpcSequencerConnectClient(
 
   override def getDomainClientBootstrapInfo(
       domainAlias: DomainAlias
-  )(implicit traceContext: TraceContext): EitherT[Future, Error, DomainClientBootstrapInfo] = {
+  )(implicit traceContext: TraceContext): EitherT[Future, Error, DomainClientBootstrapInfo] =
     for {
-      _ <- CantonGrpcUtil
-        .checkCantonApiInfo(
-          domainAlias.unwrap,
-          CantonGrpcUtil.ApiName.SequencerPublicApi,
-          builder.build(),
-          logger,
-          timeouts.network,
-        )
-        .leftMap(err => Error.Transport(err))
       response <- CantonGrpcUtil
         .sendSingleGrpcRequest(
           serverName = domainAlias.unwrap,
@@ -87,14 +71,15 @@ class GrpcSequencerConnectClient(
 
       domainId <- EitherT.fromEither[Future](domainId)
 
-      sequencerId = UniqueIdentifier
-        .fromProtoPrimitive(response.sequencerUid, "sequencerUid")
-        .leftMap[Error](err => Error.DeserializationFailure(err.toString))
-        .map(SequencerId(_))
+      sequencerId =
+        if (response.sequencerId.isEmpty) Right(SequencerId(domainId.unwrap))
+        else
+          SequencerId
+            .fromProtoPrimitive(response.sequencerId, "sequencerId")
+            .leftMap[Error](err => Error.DeserializationFailure(err.toString))
 
       sequencerId <- EitherT.fromEither[Future](sequencerId)
     } yield DomainClientBootstrapInfo(domainId, sequencerId)
-  }
 
   override def getDomainParameters(
       domainIdentifier: String
@@ -207,34 +192,6 @@ class GrpcSequencerConnectClient(
         .Pause(logger, this, maxRetries, interval, "verify active")
         .apply(verifyActive(), AllExnRetryable)
     ).thereafter(_ => closeableChannel.close())
-  }
-
-  override def registerOnboardingTopologyTransactions(
-      domainAlias: DomainAlias,
-      member: Member,
-      topologyTransactions: Seq[GenericSignedTopologyTransaction],
-  )(implicit traceContext: TraceContext): EitherT[Future, Error, Unit] = {
-    val interceptor = new SequencerConnectClientInterceptor(member, loggerFactory)
-    CantonGrpcUtil
-      .sendSingleGrpcRequest(
-        serverName = domainAlias.unwrap,
-        requestDescription = "register-onboarding-topology-transactions",
-        channel = builder.build(),
-        stubFactory = channel =>
-          v30.SequencerConnectServiceGrpc.stub(ClientInterceptors.intercept(channel, interceptor)),
-        timeout = timeouts.network.unwrap,
-        logger = logger,
-        logPolicy = CantonGrpcUtil.silentLogPolicy,
-        retryPolicy = CantonGrpcUtil.RetryPolicy.noRetry,
-      )(
-        _.registerOnboardingTopologyTransactions(
-          SequencerConnect.RegisterOnboardingTopologyTransactionsRequest(
-            topologyTransactions.map(_.toProtoV30)
-          )
-        )
-      )
-      .bimap(err => Error.Transport(err.toString), _ => ())
-
   }
 }
 

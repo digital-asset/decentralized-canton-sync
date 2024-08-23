@@ -11,12 +11,12 @@ import com.daml.ledger.javaapi.data.codegen.{
   ContractId,
   DamlRecord,
   InterfaceCompanion,
-  Update,
   Contract as CodegenContract,
+  Update,
 }
-import com.digitalasset.daml.lf.value as lf
-import com.digitalasset.daml.lf.data.Ref.Identifier as LfIdentifier
-import com.digitalasset.daml.lf.data.Time.Timestamp
+import com.daml.lf.value as lf
+import com.daml.lf.data.Ref.Identifier as LfIdentifier
+import com.daml.lf.data.Time.Timestamp
 import com.digitalasset.canton.daml.lf.value.json.ApiCodecCompressed
 import com.daml.network.http.v0.definitions as http
 import com.daml.network.http.v0.definitions.MaybeCachedContract
@@ -25,7 +25,6 @@ import com.digitalasset.canton.ProtoDeserializationError
 import com.digitalasset.canton.ledger.api.validation.NoLoggingValueValidator
 import com.digitalasset.canton.logging.ErrorLoggingContext
 import com.digitalasset.canton.logging.pretty.{Pretty, PrettyPrinting}
-import com.digitalasset.canton.participant.pretty.Implicits.prettyContractId
 import com.digitalasset.canton.util.ErrorUtil
 import com.google.protobuf.ByteString
 import io.circe.{Json, parser as circe}
@@ -161,14 +160,8 @@ object Contract {
         templateId.qualifiedName.module.dottedName,
         templateId.qualifiedName.name.dottedName,
       )
-      instant <- Try(Instant.parse(contract.createdAt)).toEither.leftMap(ex =>
-        ProtoDeserializationError.ValueConversionError(
-          "createdAt",
-          s"Cannot parse instant: ${ex.getMessage}",
-        )
-      )
       createdAt <- Timestamp
-        .fromInstant(instant)
+        .fromString(contract.createdAt)
         .left
         .map(ProtoDeserializationError.ValueConversionError("createdAt", _))
       result <- fromHttp(companionTemplateId, contractId, decodePayload)(

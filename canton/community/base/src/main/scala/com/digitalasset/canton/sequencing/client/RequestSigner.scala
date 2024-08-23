@@ -4,44 +4,37 @@
 package com.digitalasset.canton.sequencing.client
 
 import cats.data.EitherT
-import com.digitalasset.canton.crypto.{DomainSyncCryptoClient, HashPurpose, SyncCryptoApi}
-import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
-import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
+import com.digitalasset.canton.crypto.{DomainSyncCryptoClient, HashPurpose}
 import com.digitalasset.canton.sequencing.protocol.SignedContent
 import com.digitalasset.canton.serialization.HasCryptographicEvidence
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.version.ProtocolVersion
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 trait RequestSigner {
   def signRequest[A <: HasCryptographicEvidence](
       request: A,
       hashPurpose: HashPurpose,
-      snapshotO: Option[SyncCryptoApi] = None,
   )(implicit
       ec: ExecutionContext,
       traceContext: TraceContext,
-  ): EitherT[FutureUnlessShutdown, String, SignedContent[A]]
+  ): EitherT[Future, String, SignedContent[A]]
 }
 
 object RequestSigner {
   def apply(
       topologyClient: DomainSyncCryptoClient,
       protocolVersion: ProtocolVersion,
-      loggerFactoryP: NamedLoggerFactory,
-  ): RequestSigner = new RequestSigner with NamedLogging {
-    override val loggerFactory: NamedLoggerFactory = loggerFactoryP
+  ): RequestSigner = new RequestSigner {
     override def signRequest[A <: HasCryptographicEvidence](
         request: A,
         hashPurpose: HashPurpose,
-        snapshotO: Option[SyncCryptoApi],
     )(implicit
         ec: ExecutionContext,
         traceContext: TraceContext,
-    ): EitherT[FutureUnlessShutdown, String, SignedContent[A]] = {
-      val snapshot = snapshotO.getOrElse(topologyClient.headSnapshot)
-      logger.trace(s"Signing request with snapshot at ${snapshot.ipsSnapshot.timestamp}")
+    ): EitherT[Future, String, SignedContent[A]] = {
+      val snapshot = topologyClient.headSnapshot
       SignedContent
         .create(
           topologyClient.pureCrypto,
@@ -53,5 +46,15 @@ object RequestSigner {
         )
         .leftMap(_.toString)
     }
+  }
+
+  /** Request signer for unauthenticated members: never signs anything */
+  object UnauthenticatedRequestSigner extends RequestSigner {
+    override def signRequest[A <: HasCryptographicEvidence](request: A, hashPurpose: HashPurpose)(
+        implicit
+        ec: ExecutionContext,
+        traceContext: TraceContext,
+    ): EitherT[Future, String, SignedContent[A]] =
+      EitherT.leftT("Unauthenticated members do not sign submission requests")
   }
 }

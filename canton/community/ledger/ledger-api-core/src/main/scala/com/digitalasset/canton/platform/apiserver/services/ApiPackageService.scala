@@ -3,6 +3,7 @@
 
 package com.digitalasset.canton.platform.apiserver.services
 
+import com.daml.daml_lf_dev.DamlLf.{Archive, HashFunction}
 import com.daml.error.ContextualizedErrorLogger
 import com.daml.ledger.api.v2.package_service.PackageServiceGrpc.PackageService
 import com.daml.ledger.api.v2.package_service.{
@@ -16,6 +17,7 @@ import com.daml.ledger.api.v2.package_service.{
   PackageServiceGrpc,
   PackageStatus,
 }
+import com.daml.lf.data.Ref
 import com.daml.logging.LoggingContext
 import com.daml.tracing.Telemetry
 import com.digitalasset.canton.ledger.api.ValidationLogger
@@ -23,7 +25,7 @@ import com.digitalasset.canton.ledger.api.grpc.GrpcApiService
 import com.digitalasset.canton.ledger.api.grpc.Logging.traceId
 import com.digitalasset.canton.ledger.api.validation.ValidationErrors
 import com.digitalasset.canton.ledger.error.groups.RequestValidationErrors
-import com.digitalasset.canton.ledger.participant.state.WriteService
+import com.digitalasset.canton.ledger.participant.state.index.v2.IndexPackagesService
 import com.digitalasset.canton.logging.LoggingContextUtil.createLoggingContext
 import com.digitalasset.canton.logging.LoggingContextWithTrace.{
   implicitExtractTraceContext,
@@ -36,14 +38,12 @@ import com.digitalasset.canton.logging.{
   NamedLoggerFactory,
   NamedLogging,
 }
-import com.digitalasset.daml.lf.archive.DamlLf.{Archive, HashFunction}
-import com.digitalasset.daml.lf.data.Ref
 import io.grpc.ServerServiceDefinition
 
 import scala.concurrent.{ExecutionContext, Future}
 
 private[apiserver] final class ApiPackageService(
-    writeService: WriteService,
+    backend: IndexPackagesService,
     telemetry: Telemetry,
     val loggerFactory: NamedLoggerFactory,
 )(implicit executionContext: ExecutionContext)
@@ -59,12 +59,11 @@ private[apiserver] final class ApiPackageService(
   override def close(): Unit = ()
 
   override def listPackages(request: ListPackagesRequest): Future[ListPackagesResponse] = {
-    implicit val loggingContextWithTrace: LoggingContextWithTrace =
-      LoggingContextWithTrace(loggerFactory, telemetry)
+    implicit val loggingContextWithTrace = LoggingContextWithTrace(loggerFactory, telemetry)
     logger.info(s"Received request to list packages: $request")
-    writeService
+    backend
       .listLfPackages()
-      .map(p => ListPackagesResponse(p.map(_.packageId.toString)))
+      .map(p => ListPackagesResponse(p.keys.toSeq))
       .andThen(logger.logErrorsOnCall[ListPackagesResponse])
   }
 
@@ -75,7 +74,7 @@ private[apiserver] final class ApiPackageService(
     ) { implicit loggingContext =>
       logger.info(s"Received request for a package: $request")
       withValidatedPackageId(request.packageId, request) { packageId =>
-        writeService
+        backend
           .getLfArchive(packageId)
           .flatMap {
             case None =>
@@ -100,17 +99,16 @@ private[apiserver] final class ApiPackageService(
     ) { implicit loggingContext =>
       logger.info(s"Received request for a package status: $request")
       withValidatedPackageId(request.packageId, request) { packageId =>
-        Future {
-          val result =
-            if (
-              writeService.getPackageMetadataSnapshot.packageIdVersionMap.keySet.contains(packageId)
-            ) {
+        backend
+          .listLfPackages()
+          .map { packages =>
+            val result = if (packages.contains(packageId)) {
               PackageStatus.PACKAGE_STATUS_REGISTERED
             } else {
               PackageStatus.PACKAGE_STATUS_UNSPECIFIED
             }
-          GetPackageStatusResponse(result)
-        }
+            GetPackageStatusResponse(result)
+          }
           .andThen(logger.logErrorsOnCall[GetPackageStatusResponse])
       }
     }

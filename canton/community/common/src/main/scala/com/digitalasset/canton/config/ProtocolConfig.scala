@@ -3,8 +3,10 @@
 
 package com.digitalasset.canton.config
 
+import com.digitalasset.canton.version.ProtocolVersion
+
 trait ProtocolConfig {
-  def alphaVersionSupport: Boolean
-  def betaVersionSupport: Boolean
+  def devVersionSupport: Boolean
   def dontWarnOnDeprecatedPV: Boolean
+  def initialProtocolVersion: ProtocolVersion
 }

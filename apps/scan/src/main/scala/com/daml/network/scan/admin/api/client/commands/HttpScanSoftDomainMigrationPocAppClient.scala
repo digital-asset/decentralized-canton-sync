@@ -13,8 +13,8 @@ import com.daml.network.http.v0.{definitions, scan_soft_domain_migration_poc as 
 import com.daml.network.http.v0.external.scan as externalHttp
 import com.daml.network.util.{Codec, TemplateJsonDecoder}
 import com.digitalasset.canton.topology.{MediatorId, SequencerId}
-import com.digitalasset.canton.topology.transaction.SignedTopologyTransaction
-import com.digitalasset.canton.topology.transaction.SignedTopologyTransaction.GenericSignedTopologyTransaction
+import com.digitalasset.canton.topology.transaction.SignedTopologyTransactionX
+import com.digitalasset.canton.topology.transaction.SignedTopologyTransactionX.GenericSignedTopologyTransactionX
 import com.digitalasset.canton.tracing.TraceContext
 import com.google.protobuf.ByteString
 
@@ -52,9 +52,9 @@ object HttpScanSoftDomainMigrationPocAppClient {
 
   final case class SynchronizerIdentities(
       sequencerId: SequencerId,
-      sequencerIdentityTransactions: Seq[GenericSignedTopologyTransaction],
+      sequencerIdentityTransactions: Seq[GenericSignedTopologyTransactionX],
       mediatorId: MediatorId,
-      mediatorIdentityTransactions: Seq[GenericSignedTopologyTransaction],
+      mediatorIdentityTransactions: Seq[GenericSignedTopologyTransactionX],
   )
 
   object SynchronizerIdentities {
@@ -66,7 +66,7 @@ object HttpScanSoftDomainMigrationPocAppClient {
         sequencerIdentityTransactions <- identities.sequencerIdentityTransactions
           .traverse(tx =>
             // TODO(#13301) switch to safe version
-            SignedTopologyTransaction.fromTrustedByteString(
+            SignedTopologyTransactionX.fromByteStringUnsafe(
               ByteString.copyFrom(Base64.getDecoder.decode(tx))
             )
           )
@@ -76,7 +76,7 @@ object HttpScanSoftDomainMigrationPocAppClient {
         mediatorIdentityTransactions <- identities.mediatorIdentityTransactions
           .traverse(tx =>
             // TODO(#13301) switch to safe version
-            SignedTopologyTransaction.fromTrustedByteString(
+            SignedTopologyTransactionX.fromByteStringUnsafe(
               ByteString.copyFrom(Base64.getDecoder.decode(tx))
             )
           )
@@ -107,9 +107,9 @@ object HttpScanSoftDomainMigrationPocAppClient {
   }
 
   final case class SynchronizerBootstrappingTransactions(
-      domainParameters: GenericSignedTopologyTransaction,
-      sequencerDomainState: GenericSignedTopologyTransaction,
-      mediatorDomainState: GenericSignedTopologyTransaction,
+      domainParameters: GenericSignedTopologyTransactionX,
+      sequencerDomainState: GenericSignedTopologyTransactionX,
+      mediatorDomainState: GenericSignedTopologyTransactionX,
   )
 
   object SynchronizerBootstrappingTransactions {
@@ -118,15 +118,15 @@ object HttpScanSoftDomainMigrationPocAppClient {
     ): Either[String, SynchronizerBootstrappingTransactions] =
       (for {
         // TODO(#13301) switch to safe version
-        domainParameters <- SignedTopologyTransaction.fromTrustedByteString(
+        domainParameters <- SignedTopologyTransactionX.fromByteStringUnsafe(
           ByteString.copyFrom(Base64.getDecoder.decode(state.domainParameters))
         )
         // TODO(#13301) switch to safe version
-        sequencerDomainState <- SignedTopologyTransaction.fromTrustedByteString(
+        sequencerDomainState <- SignedTopologyTransactionX.fromByteStringUnsafe(
           ByteString.copyFrom(Base64.getDecoder.decode(state.sequencerDomainState))
         )
         // TODO(#13301) switch to safe version
-        mediatorDomainState <- SignedTopologyTransaction.fromTrustedByteString(
+        mediatorDomainState <- SignedTopologyTransactionX.fromByteStringUnsafe(
           ByteString.copyFrom(Base64.getDecoder.decode(state.mediatorDomainState))
         )
       } yield SynchronizerBootstrappingTransactions(

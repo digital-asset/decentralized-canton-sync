@@ -15,12 +15,12 @@ import com.daml.network.identities.NodeIdentitiesDump
 import com.digitalasset.canton.DomainAlias
 import com.digitalasset.canton.config.RequireTypes.PositiveInt
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
-import com.digitalasset.canton.topology.{ParticipantId, PartyId, UniqueIdentifier}
+import com.digitalasset.canton.topology.{Identifier, ParticipantId, PartyId, UniqueIdentifier}
 import com.digitalasset.canton.topology.store.TopologyStoreId
 import com.digitalasset.canton.topology.transaction.{
   HostingParticipant,
   ParticipantPermission,
-  PartyToParticipant,
+  PartyToParticipantX,
 }
 import com.digitalasset.canton.tracing.TraceContext
 import com.google.protobuf.ByteString
@@ -48,7 +48,7 @@ class ParticipantPartyMigrator(
       requiredDars: Seq[DarResource] = Seq.empty,
       overridePartiesToMigrate: Option[Seq[PartyId]],
   ): Future[Unit] = {
-    val oldParticipantId = nodeIdentitiesDump.id
+
     for {
       participantId <- participantAdminConnection.getParticipantId()
       validatorPartyId = toPartyId(validatorPartyHint, participantId)
@@ -56,7 +56,7 @@ class ParticipantPartyMigrator(
       allPartyToParticipants <- participantAdminConnection
         .listPartyToParticipant(
           domainId.filterString,
-          filterParticipant = oldParticipantId.uid.toProtoPrimitive,
+          filterParticipant = nodeIdentitiesDump.id.uid.toProtoPrimitive,
         )
       partyToParticipants =
         overridePartiesToMigrate.fold(allPartyToParticipants) { overrideParties =>
@@ -97,31 +97,12 @@ class ParticipantPartyMigrator(
           logger.info("Party ids already migrated")
           Future.unit
         } else {
-          logger.info(s"Unhosting $partyIdsToMigrate on $participantId")
-          for {
-            // This is a prerequisite for removing the domain trust certificate
-            _ <- ensurePartiesUnhosted(
-              domainAlias,
-              partyIdsToMigrate.toSeq,
-              participantId,
-            )
-            // Remove the domain trust certificate of the old participant.
-            // This is required to migrate the admin party of that node.
-            // We just always do it even if the admin party is not migrated
-            // to have fewer special cases
-            _ <- participantAdminConnection.ensureDomainTrustCertificateRemoved(
-              RetryFor.WaitingOnInitDependency,
-              domainId,
-              oldParticipantId.member,
-              participantId.uid.namespace.fingerprint,
-            )
-            _ = logger.info(s"Hosting $partyIdsToMigrate on $participantId")
-            _ <- ensurePartiesMigrated(
-              domainAlias,
-              partyIdsToMigrate.toSeq,
-              participantId,
-            )
-          } yield ()
+          logger.info(s"Migrating parties $partyIdsToMigrate to new participant")
+          ensurePartiesMigrated(
+            domainAlias,
+            partyIdsToMigrate.toSeq,
+            participantId,
+          )
         }
       // There isn't a great way to check if we already imported the ACS so instead we check if the user already has a primary party
       // which is set afterwards. If things really go wrong during this step, we can always start over on a fresh participant.
@@ -141,7 +122,7 @@ class ParticipantPartyMigrator(
   }
 
   private def toPartyId(partyHint: String, participantId: ParticipantId) = PartyId(
-    UniqueIdentifier.tryCreate(partyHint, participantId.uid.namespace)
+    UniqueIdentifier(Identifier.tryCreate(partyHint), participantId.uid.namespace)
   )
 
   private def ensurePartiesMigrated(
@@ -153,7 +134,7 @@ class ParticipantPartyMigrator(
       .traverse(partyIds) { partyId =>
         for {
           domainId <- participantAdminConnection.getDomainId(domainAlias)
-          _ <- participantAdminConnection.ensureTopologyMapping[PartyToParticipant](
+          _ <- participantAdminConnection.ensureTopologyMapping[PartyToParticipantX](
             store = TopologyStoreId.DomainStore(domainId),
             s"Party $partyId is hosted on participant $participantId",
             EitherT {
@@ -177,7 +158,7 @@ class ParticipantPartyMigrator(
             },
             _ =>
               Right(
-                PartyToParticipant.tryCreate(
+                PartyToParticipantX(
                   partyId = partyId,
                   domainId = None,
                   threshold = PositiveInt.one,
@@ -192,27 +173,6 @@ class ParticipantPartyMigrator(
         } yield ()
       }
       .map(_ => ())
-  }
-
-  private def ensurePartiesUnhosted(
-      domainAlias: DomainAlias,
-      partyIds: Seq[PartyId],
-      participantId: ParticipantId,
-  ): Future[Unit] = {
-    participantAdminConnection.getDomainId(domainAlias).flatMap { domainId =>
-      Future
-        .traverse(partyIds) { partyId =>
-          for {
-            _ <- participantAdminConnection.ensurePartyToParticipantRemoved(
-              RetryFor.WaitingOnInitDependency,
-              domainId,
-              partyId,
-              participantId.uid.namespace.fingerprint,
-            )
-          } yield ()
-        }
-        .map(_ => ())
-    }
   }
 
   private def importAcs(

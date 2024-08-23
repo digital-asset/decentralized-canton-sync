@@ -12,20 +12,14 @@ import com.digitalasset.canton.config.{
   DefaultProcessingTimeouts,
   LoggingConfig,
 }
-import com.digitalasset.canton.environment.{
-  CantonNodeParameters,
-  DefaultNodeParameters,
-  HasGeneralCantonNodeParameters,
-}
+import com.digitalasset.canton.environment.{CantonNodeParameters, HasGeneralCantonNodeParameters}
 import com.digitalasset.canton.participant.admin.AdminWorkflowConfig
 import com.digitalasset.canton.participant.config.{
-  CantonEngineConfig,
   LedgerApiServerParametersConfig,
   ParticipantProtocolConfig,
   ParticipantStoreConfig,
   PartyNotificationConfig,
 }
-import com.digitalasset.canton.participant.sync.CommandProgressTrackerConfig
 import com.digitalasset.canton.sequencing.client.SequencerClientConfig
 import com.digitalasset.canton.time.NonNegativeFiniteDuration
 import com.digitalasset.canton.tracing.TracingConfig
@@ -41,16 +35,16 @@ final case class ParticipantNodeParameters(
     protocolConfig: ParticipantProtocolConfig,
     ledgerApiServerParameters: LedgerApiServerParametersConfig,
     excludeInfrastructureTransactions: Boolean,
-    engine: CantonEngineConfig,
+    enableEngineStackTrace: Boolean,
+    iterationsBetweenInterruptions: Long,
     journalGarbageCollectionDelay: NonNegativeFiniteDuration,
     disableUpgradeValidation: Boolean,
-    allowForUnauthenticatedContractIds: Boolean,
-    commandProgressTracking: CommandProgressTrackerConfig,
 ) extends CantonNodeParameters
     with HasGeneralCantonNodeParameters {
   override def dontWarnOnDeprecatedPV: Boolean = protocolConfig.dontWarnOnDeprecatedPV
-  override def alphaVersionSupport: Boolean = protocolConfig.alphaVersionSupport
-  override def betaVersionSupport: Boolean = protocolConfig.betaVersionSupport
+  override def devVersionSupport: Boolean = protocolConfig.devVersionSupport
+  override def initialProtocolVersion: ProtocolVersion = protocolConfig.initialProtocolVersion
+
 }
 
 object ParticipantNodeParameters {
@@ -71,9 +65,9 @@ object ParticipantNodeParameters {
       ),
       sequencerClient = SequencerClientConfig(),
       dbMigrateAndStart = false,
+      useNewTrafficControl = false,
       exitOnFatalFailures = true,
-      useUnifiedSequencer = DefaultNodeParameters.UseUnifiedSequencer,
-      watchdog = None,
+      useUnifiedSequencer = false,
     ),
     partyChangeNotification = PartyNotificationConfig.Eager,
     adminWorkflow = AdminWorkflowConfig(
@@ -84,16 +78,16 @@ object ParticipantNodeParameters {
     transferTimeProofFreshnessProportion = NonNegativeInt.tryCreate(3),
     protocolConfig = ParticipantProtocolConfig(
       Some(testedProtocolVersion),
-      alphaVersionSupport = false,
-      betaVersionSupport = true,
+      devVersionSupport = false,
       dontWarnOnDeprecatedPV = false,
+      initialProtocolVersion = testedProtocolVersion,
     ),
     ledgerApiServerParameters = LedgerApiServerParametersConfig(),
     excludeInfrastructureTransactions = true,
-    engine = CantonEngineConfig(),
+    enableEngineStackTrace = false,
+    iterationsBetweenInterruptions =
+      10000, // 10000 is the default value in the engine configuration
     journalGarbageCollectionDelay = NonNegativeFiniteDuration.Zero,
-    disableUpgradeValidation = false,
-    allowForUnauthenticatedContractIds = false,
-    commandProgressTracking = CommandProgressTrackerConfig(),
+    disableUpgradeValidation = true,
   )
 }

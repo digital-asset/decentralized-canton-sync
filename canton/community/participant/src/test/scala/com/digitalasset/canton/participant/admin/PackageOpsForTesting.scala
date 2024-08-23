@@ -4,6 +4,7 @@
 package com.digitalasset.canton.participant.admin
 
 import cats.data.EitherT
+import com.daml.lf.data.Ref.PackageId
 import com.digitalasset.canton.LfPackageId
 import com.digitalasset.canton.error.CantonError
 import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
@@ -12,7 +13,6 @@ import com.digitalasset.canton.participant.admin.CantonPackageServiceError.Packa
 import com.digitalasset.canton.participant.topology.ParticipantTopologyManagerError
 import com.digitalasset.canton.topology.ParticipantId
 import com.digitalasset.canton.tracing.TraceContext
-import com.digitalasset.daml.lf.data.Ref.PackageId
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -25,7 +25,7 @@ class PackageOpsForTesting(
 
   override def isPackageVetted(packageId: PackageId)(implicit
       tc: TraceContext
-  ): EitherT[FutureUnlessShutdown, CantonError, Boolean] =
+  ): EitherT[Future, CantonError, Boolean] =
     EitherT.rightT(false)
 
   override def checkPackageUnused(packageId: PackageId)(implicit
@@ -40,10 +40,7 @@ class PackageOpsForTesting(
   )(implicit tc: TraceContext): EitherT[FutureUnlessShutdown, CantonError, Unit] =
     EitherT.rightT(())
 
-  override def vetPackages(
-      packages: Seq[PackageId],
-      synchronizeVetting: PackageVettingSynchronization,
-  )(implicit
+  override def vetPackages(packages: Seq[PackageId], synchronize: Boolean)(implicit
       traceContext: TraceContext
   ): EitherT[FutureUnlessShutdown, ParticipantTopologyManagerError, Unit] =
     EitherT.rightT(())

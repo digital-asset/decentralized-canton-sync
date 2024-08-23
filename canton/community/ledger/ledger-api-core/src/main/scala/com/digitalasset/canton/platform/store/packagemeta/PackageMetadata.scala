@@ -5,17 +5,15 @@ package com.digitalasset.canton.platform.store.packagemeta
 
 import cats.kernel.Semigroup
 import cats.syntax.semigroup.*
+import com.daml.daml_lf_dev.DamlLf
+import com.daml.lf.archive.Decode
+import com.daml.lf.data.Ref
 import com.daml.nonempty.NonEmpty
 import com.digitalasset.canton.platform.store.packagemeta.PackageMetadata.{
   InterfacesImplementedBy,
   PackageResolution,
 }
-import com.digitalasset.daml.lf.archive.{DamlLf, Decode}
-import com.digitalasset.daml.lf.data.Ref
-import com.digitalasset.daml.lf.language.Ast
-import com.digitalasset.daml.lf.language.util.PackageInfo
 
-// TODO(#17635): Move to [[com.digitalasset.canton.participant.store.memory.PackageMetadataView]]
 final case class PackageMetadata(
     interfaces: Set[Ref.Identifier] = Set.empty,
     templates: Set[Ref.Identifier] = Set.empty,
@@ -37,13 +35,11 @@ object PackageMetadata {
       allPackageIdsForName: NonEmpty[Set[Ref.PackageId]],
   )
 
-  def from(
-      packageId: Ref.PackageId,
-      packageAst: Ast.Package,
-  ): PackageMetadata = {
-    val packageMetadata = packageAst.metadata
-    val packageName = packageMetadata.name
-    val packageVersion = packageMetadata.version
+  def from(archive: DamlLf.Archive): PackageMetadata = {
+    val ((packageId, pkg), packageInfo) = Decode.assertDecodeInfoPackage(archive)
+
+    val packageName = pkg.metadata.name
+    val packageVersion = pkg.metadata.version
     val packageNameMap = Map(
       packageName -> PackageResolution(
         preference = LocalPackagePreference(packageVersion, packageId),
@@ -51,7 +47,6 @@ object PackageMetadata {
       )
     )
 
-    val packageInfo = new PackageInfo(Map(packageId -> packageAst))
     PackageMetadata(
       packageNameMap = packageNameMap,
       interfaces = packageInfo.definedInterfaces,
@@ -59,11 +54,6 @@ object PackageMetadata {
       interfacesImplementedBy = packageInfo.interfaceInstances,
       packageIdVersionMap = Map(packageId -> (packageName, packageVersion)),
     )
-  }
-
-  def from(archive: DamlLf.Archive): PackageMetadata = {
-    val (pkgId, pkgAst) = Decode.assertDecodeArchive(archive, onlySerializableDataDefs = true)
-    from(pkgId, pkgAst)
   }
 
   object Implicits {

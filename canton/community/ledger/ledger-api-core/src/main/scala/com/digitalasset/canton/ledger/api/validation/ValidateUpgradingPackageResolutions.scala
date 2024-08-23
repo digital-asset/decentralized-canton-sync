@@ -5,18 +5,16 @@ package com.digitalasset.canton.ledger.api.validation
 
 import cats.syntax.traverse.*
 import com.daml.error.ContextualizedErrorLogger
+import com.daml.lf.data.Ref
+import com.daml.lf.data.Ref.{PackageId, PackageName, PackageVersion}
 import com.digitalasset.canton.ledger.api.validation.ValidateUpgradingPackageResolutions.ValidatedCommandPackageResolutionsSnapshot
 import com.digitalasset.canton.ledger.api.validation.ValidationErrors.invalidArgument
-import com.digitalasset.canton.platform.store.packagemeta.PackageMetadata
-import com.digitalasset.canton.platform.store.packagemeta.PackageMetadata.PackageResolution
-import com.digitalasset.daml.lf.data.Ref
-import com.digitalasset.daml.lf.data.Ref.{PackageId, PackageName, PackageVersion}
-import com.google.common.annotations.VisibleForTesting
+import com.digitalasset.canton.platform.store.packagemeta.PackageMetadataStore
 import io.grpc.StatusRuntimeException
 
 trait ValidateUpgradingPackageResolutions {
   def apply(
-      rawUserPackageIdPreferences: Seq[String]
+      userPackageIdPreferences: Seq[String]
   )(implicit
       contextualizedErrorLogger: ContextualizedErrorLogger
   ): Either[
@@ -25,9 +23,8 @@ trait ValidateUpgradingPackageResolutions {
   ]
 }
 
-class ValidateUpgradingPackageResolutionsImpl(
-    getPackageMetadataSnapshot: ContextualizedErrorLogger => PackageMetadata
-) extends ValidateUpgradingPackageResolutions {
+class ValidateUpgradingPackageResolutionsImpl(packageMetadataStore: PackageMetadataStore)
+    extends ValidateUpgradingPackageResolutions {
   def apply(
       rawUserPackageIdPreferences: Seq[String]
   )(implicit
@@ -36,12 +33,10 @@ class ValidateUpgradingPackageResolutionsImpl(
     StatusRuntimeException,
     ValidatedCommandPackageResolutionsSnapshot,
   ] = {
-    val packageMetadataSnapshot = getPackageMetadataSnapshot(contextualizedErrorLogger)
-    val packageResolutionMapSnapshot = packageMetadataSnapshot.packageIdVersionMap
+    val packageMetadataSnapshot = packageMetadataStore.getSnapshot
+    val packageResolutionMapSnapshot = packageMetadataSnapshot.getUpgradablePackageMap
     val participantPackagePreferenceMapSnapshot =
-      packageMetadataSnapshot.packageNameMap.view.mapValues {
-        case PackageResolution(preference, _) => preference.packageId
-      }.toMap
+      packageMetadataSnapshot.getUpgradablePackagePreferenceMap
 
     for {
       userPackageIdPreferences <- rawUserPackageIdPreferences
@@ -94,17 +89,25 @@ object ValidateUpgradingPackageResolutions {
       packagePreferenceSet: Set[PackageId],
   )
 
-  @VisibleForTesting
-  val Empty: ValidateUpgradingPackageResolutions =
+  def apply(packageMetadataStore: PackageMetadataStore): ValidateUpgradingPackageResolutions =
+    new ValidateUpgradingPackageResolutionsImpl(packageMetadataStore)
+
+  val UpgradingDisabled: ValidateUpgradingPackageResolutions =
     new ValidateUpgradingPackageResolutions {
-      override def apply(userPackageIdPreferences: Seq[String])(implicit
+      override def apply(
+          userPackageIdPreferences: Seq[String]
+      )(implicit
           contextualizedErrorLogger: ContextualizedErrorLogger
       ): Either[StatusRuntimeException, ValidatedCommandPackageResolutionsSnapshot] =
-        Right(
+        Either.cond(
+          userPackageIdPreferences.isEmpty,
           ValidatedCommandPackageResolutionsSnapshot(
             Map.empty,
             Set.empty,
-          )
+          ),
+          invalidArgument(
+            "package_id_selection_preference can only be set with smart contract upgrading feature enabled"
+          ),
         )
     }
 }

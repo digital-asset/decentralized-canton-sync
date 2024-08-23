@@ -152,7 +152,7 @@ class DbContractStore(
   )(implicit traceContext: TraceContext): OptionT[Future, StoredContract] =
     OptionT(cache.getFuture(id, _ => batchAggregatorLookup.run(id)))
 
-  override def lookupManyExistingUncached(
+  override def lookupManyUncached(
       ids: Seq[LfContractId]
   )(implicit traceContext: TraceContext): EitherT[Future, LfContractId, List[StoredContract]] =
     NonEmpty
@@ -214,9 +214,10 @@ class DbContractStore(
   }
 
   override def storeCreatedContracts(
-      creations: Seq[(WithTransactionId[SerializableContract], RequestCounter)]
+      requestCounter: RequestCounter,
+      creations: Seq[WithTransactionId[SerializableContract]],
   )(implicit traceContext: TraceContext): Future[Unit] = {
-    creations.parTraverse_ { case (WithTransactionId(creation, transactionId), requestCounter) =>
+    creations.parTraverse_ { case WithTransactionId(creation, transactionId) =>
       storeContract(StoredContract.fromCreatedContract(creation, requestCounter, transactionId))
     }
   }

@@ -47,15 +47,13 @@ object DomainParameters {
   final case class WithValidity[+P](
       validFrom: CantonTimestamp,
       validUntil: Option[CantonTimestamp],
+      serial: PositiveInt,
       parameter: P,
   ) {
     def map[T](f: P => T): WithValidity[T] =
-      WithValidity(validFrom, validUntil, f(parameter))
+      WithValidity(validFrom, validUntil, serial, f(parameter))
     def isValidAt(ts: CantonTimestamp) = validFrom < ts && validUntil.forall(ts <= _)
-
-    def emptyInterval: Boolean = validUntil.contains(validFrom)
   }
-
   final case class MaxRequestSize(value: NonNegativeInt) extends AnyVal {
     def unwrap = value.unwrap
   }
@@ -69,9 +67,9 @@ object DomainParameters {
   *                              participant skips in catch-up mode, and the number of catch-up intervals
   *                              intervals a participant should lag behind in order to enter catch-up mode.
   */
-final case class StaticDomainParameters(
+final case class StaticDomainParameters private (
     requiredSigningKeySchemes: NonEmpty[Set[SigningKeyScheme]],
-    requiredEncryptionSpecs: RequiredEncryptionSpecs,
+    requiredEncryptionKeySchemes: NonEmpty[Set[EncryptionKeyScheme]],
     requiredSymmetricKeySchemes: NonEmpty[Set[SymmetricKeyScheme]],
     requiredHashAlgorithms: NonEmpty[Set[HashAlgorithm]],
     requiredCryptoKeyFormats: NonEmpty[Set[CryptoKeyFormat]],
@@ -82,13 +80,16 @@ final case class StaticDomainParameters(
     StaticDomainParameters.type
   ] = StaticDomainParameters.protocolVersionRepresentativeFor(protocolVersion)
 
+  // Ensures the invariants related to default values hold
+  validateInstance().valueOr(err => throw new IllegalArgumentException(err))
+
   @transient override protected lazy val companionObj: StaticDomainParameters.type =
     StaticDomainParameters
 
   def toProtoV30: v30.StaticDomainParameters =
     v30.StaticDomainParameters(
       requiredSigningKeySchemes = requiredSigningKeySchemes.toSeq.map(_.toProtoEnum),
-      requiredEncryptionSpecs = Some(requiredEncryptionSpecs.toProtoV30),
+      requiredEncryptionKeySchemes = requiredEncryptionKeySchemes.toSeq.map(_.toProtoEnum),
       requiredSymmetricKeySchemes = requiredSymmetricKeySchemes.toSeq.map(_.toProtoEnum),
       requiredHashAlgorithms = requiredHashAlgorithms.toSeq.map(_.toProtoEnum),
       requiredCryptoKeyFormats = requiredCryptoKeyFormats.toSeq.map(_.toProtoEnum),
@@ -103,7 +104,7 @@ object StaticDomainParameters
 
   val supportedProtoVersions: protocol.StaticDomainParameters.SupportedProtoVersions =
     SupportedProtoVersions(
-      ProtoVersion(30) -> VersionedProtoConverter(ProtocolVersion.v31)(
+      ProtoVersion(30) -> VersionedProtoConverter(ProtocolVersion.v30)(
         v30.StaticDomainParameters
       )(
         supportedProtoVersion(_)(fromProtoV30),
@@ -112,6 +113,22 @@ object StaticDomainParameters
     )
 
   override def name: String = "static domain parameters"
+
+  def create(
+      requiredSigningKeySchemes: NonEmpty[Set[SigningKeyScheme]],
+      requiredEncryptionKeySchemes: NonEmpty[Set[EncryptionKeyScheme]],
+      requiredSymmetricKeySchemes: NonEmpty[Set[SymmetricKeyScheme]],
+      requiredHashAlgorithms: NonEmpty[Set[HashAlgorithm]],
+      requiredCryptoKeyFormats: NonEmpty[Set[CryptoKeyFormat]],
+      protocolVersion: ProtocolVersion,
+  ): StaticDomainParameters = StaticDomainParameters(
+    requiredSigningKeySchemes = requiredSigningKeySchemes,
+    requiredEncryptionKeySchemes = requiredEncryptionKeySchemes,
+    requiredSymmetricKeySchemes = requiredSymmetricKeySchemes,
+    requiredHashAlgorithms = requiredHashAlgorithms,
+    requiredCryptoKeyFormats = requiredCryptoKeyFormats,
+    protocolVersion = protocolVersion,
+  )
 
   private def requiredKeySchemes[P, A](
       field: String,
@@ -125,7 +142,7 @@ object StaticDomainParameters
   ): ParsingResult[StaticDomainParameters] = {
     val v30.StaticDomainParameters(
       requiredSigningKeySchemesP,
-      requiredEncryptionSpecsOP,
+      requiredEncryptionKeySchemesP,
       requiredSymmetricKeySchemesP,
       requiredHashAlgorithmsP,
       requiredCryptoKeyFormatsP,
@@ -138,12 +155,11 @@ object StaticDomainParameters
         requiredSigningKeySchemesP,
         SigningKeyScheme.fromProtoEnum,
       )
-      requiredEncryptionSpecsP <- requiredEncryptionSpecsOP.toRight(
-        ProtoDeserializationError.FieldNotSet(
-          "requiredEncryptionSpecs"
-        )
+      requiredEncryptionKeySchemes <- requiredKeySchemes(
+        "requiredEncryptionKeySchemes",
+        requiredEncryptionKeySchemesP,
+        EncryptionKeyScheme.fromProtoEnum,
       )
-      requiredEncryptionSpecs <- RequiredEncryptionSpecs.fromProtoV30(requiredEncryptionSpecsP)
       requiredSymmetricKeySchemes <- requiredKeySchemes(
         "requiredSymmetricKeySchemes",
         requiredSymmetricKeySchemesP,
@@ -162,7 +178,7 @@ object StaticDomainParameters
       protocolVersion <- ProtocolVersion.fromProtoPrimitive(protocolVersionP)
     } yield StaticDomainParameters(
       requiredSigningKeySchemes,
-      requiredEncryptionSpecs,
+      requiredEncryptionKeySchemes,
       requiredSymmetricKeySchemes,
       requiredHashAlgorithms,
       requiredCryptoKeyFormats,
@@ -178,10 +194,6 @@ object StaticDomainParameters
   */
 sealed trait OnboardingRestriction extends Product with Serializable {
   def toProtoV30: v30.OnboardingRestriction
-  def isLocked: Boolean
-  def isRestricted: Boolean
-  final def isOpen: Boolean = !isLocked
-  final def isUnrestricted: Boolean = !isRestricted
 }
 object OnboardingRestriction {
   def fromProtoV30(
@@ -204,18 +216,12 @@ object OnboardingRestriction {
   final case object UnrestrictedOpen extends OnboardingRestriction {
     override def toProtoV30: v30.OnboardingRestriction =
       v30.OnboardingRestriction.ONBOARDING_RESTRICTION_UNRESTRICTED_OPEN
-
-    override def isLocked: Boolean = false
-    override def isRestricted: Boolean = false
   }
 
   /** In theory, anyone can join, except now, the registration procedure is closed */
   final case object UnrestrictedLocked extends OnboardingRestriction {
     override def toProtoV30: v30.OnboardingRestriction =
       v30.OnboardingRestriction.ONBOARDING_RESTRICTION_UNRESTRICTED_LOCKED
-
-    override def isLocked: Boolean = true
-    override def isRestricted: Boolean = false
   }
 
   /** Only participants on the allowlist can join
@@ -225,18 +231,12 @@ object OnboardingRestriction {
   final case object RestrictedOpen extends OnboardingRestriction {
     override def toProtoV30: v30.OnboardingRestriction =
       v30.OnboardingRestriction.ONBOARDING_RESTRICTION_RESTRICTED_OPEN
-
-    override def isLocked: Boolean = false
-    override def isRestricted: Boolean = true
   }
 
   /** Only participants on the allowlist can join in theory, except now, the registration procedure is closed */
   final case object RestrictedLocked extends OnboardingRestriction {
     override def toProtoV30: v30.OnboardingRestriction =
       v30.OnboardingRestriction.ONBOARDING_RESTRICTION_RESTRICTED_LOCKED
-
-    override def isLocked: Boolean = true
-    override def isRestricted: Boolean = true
   }
 
 }
@@ -294,13 +294,13 @@ object OnboardingRestriction {
   *                                            Must be greater than `maxSequencingTime` specified by a participant,
   *                                            practically also requires extra slack to allow clock skew between participant and sequencer.
   * @param onboardingRestriction current onboarding restrictions for participants
-  * @param acsCommitmentsCatchUpConfig   Optional parameters of type [[com.digitalasset.canton.protocol.AcsCommitmentsCatchUpConfig]].
-  *                                      Defined starting with protobuf version v2 and protocol version v30.
-  *                                      If None, the catch-up mode is disabled: the participant does not trigger the
-  *                                      catch-up mode when lagging behind.
-  *                                      If not None, it specifies the number of reconciliation intervals that the
-  *                                      participant skips in catch-up mode, and the number of catch-up intervals
-  *                                      intervals a participant should lag behind in order to enter catch-up mode.
+  *  @param catchUpParameters   Optional parameters of type [[com.digitalasset.canton.protocol.AcsCommitmentsCatchUpConfig]].
+  *                            Defined starting with protobuf version v2 and protocol version v30.
+  *                            If None, the catch-up mode is disabled: the participant does not trigger the
+  *                            catch-up mode when lagging behind.
+  *                            If not None, it specifies the number of reconciliation intervals that the
+  *                            participant skips in catch-up mode, and the number of catch-up intervals
+  *                           intervals a participant should lag behind in order to enter catch-up mode.
   *
   * @throws DynamicDomainParameters$.InvalidDynamicDomainParameters
   *   if `mediatorDeduplicationTimeout` is less than twice of `ledgerTimeRecordTimeTolerance`.
@@ -346,26 +346,6 @@ final case class DynamicDomainParameters private (
     */
   def sequencerTopologyTimestampTolerance: NonNegativeFiniteDuration =
     (confirmationResponseTimeout + mediatorReactionTimeout) * NonNegativeInt.tryCreate(2)
-
-  /** Submitters compute the submission cost of their request before sending it, using the same topology used to sign
-    * the SubmissionRequest. This is to provide an upper bound to the domain on how much they commit to spend
-    * for the sequencing and delivery of the submission.
-    * Concurrent topology changes to the submission can result in the cost computed by the submitter being wrong at
-    * sequencing time. This parameter determines how outdated the topology used to compute the cost can be.
-    * If within the tolerance window, the submitted cost will be deducted (pending enough traffic is available) and the event
-    * will be delivered.
-    * If outside the tolerance window, no cost will be deducted but the event will not be delivered.
-    * It is the responsibility of the sequencer that received the request to do this check ahead of time and not
-    * let outdated requests be sequenced. After sequencing, such events will be reported via metrics as "wasted" traffic
-    * and tied to the sequencer who processed the request for tracing and accountability.
-    * The timestamp checked against this parameter will be the one used to sign the submission request, not
-    * the one in the submission request itself.
-    *
-    * Note: Current value is equal to [[sequencerTopologyTimestampTolerance]] to get the same behavior in terms of
-    * tolerance as senders get for the topology timestamp specified in the SubmissionRequest.
-    */
-  def submissionCostTimestampTopologyTolerance: NonNegativeFiniteDuration =
-    sequencerTopologyTimestampTolerance
 
   def automaticTransferInEnabled: Boolean =
     transferExclusivityTimeout > NonNegativeFiniteDuration.Zero
@@ -448,7 +428,7 @@ final case class DynamicDomainParameters private (
   override def pretty: Pretty[DynamicDomainParameters] = {
     if (
       representativeProtocolVersion >= companionObj.protocolVersionRepresentativeFor(
-        ProtocolVersion.v31
+        ProtocolVersion.v30
       )
     ) {
       prettyOfClass(
@@ -485,7 +465,7 @@ object DynamicDomainParameters extends HasProtocolVersionedCompanion[DynamicDoma
 
   val supportedProtoVersions: canton.protocol.DynamicDomainParameters.SupportedProtoVersions =
     SupportedProtoVersions(
-      ProtoVersion(30) -> VersionedProtoConverter(ProtocolVersion.v31)(
+      ProtoVersion(30) -> VersionedProtoConverter(ProtocolVersion.v30)(
         v30.DynamicDomainParameters
       )(
         supportedProtoVersion(_)(fromProtoV30),
@@ -530,9 +510,8 @@ object DynamicDomainParameters extends HasProtocolVersionedCompanion[DynamicDoma
   private val defaultOnboardingRestriction: OnboardingRestriction =
     OnboardingRestriction.UnrestrictedOpen
 
-  private val defaultAcsCommitmentsCatchUp: Option[AcsCommitmentsCatchUpConfig] = Some(
-    AcsCommitmentsCatchUpConfig(PositiveInt.tryCreate(5), PositiveInt.tryCreate(2))
-  )
+  private val defaultAcsCommitmentsCatchUp: Option[AcsCommitmentsCatchUpConfig] =
+    Option.empty[AcsCommitmentsCatchUpConfig]
 
   /** Safely creates DynamicDomainParameters.
     *
@@ -615,6 +594,18 @@ object DynamicDomainParameters extends HasProtocolVersionedCompanion[DynamicDoma
   def defaultValues(protocolVersion: ProtocolVersion): DynamicDomainParameters =
     initialValues(defaultTopologyChangeDelay, protocolVersion)
 
+  /** Default mediator-X dynamic parameters allowing to specify more generous mediator-x timeouts for BFT-distribution */
+  def defaultXValues(
+      protocolVersion: ProtocolVersion,
+      mediatorReactionTimeout: NonNegativeFiniteDuration = defaultMediatorReactionTimeout,
+  ): DynamicDomainParameters =
+    initialValues(
+      defaultTopologyChangeDelay,
+      protocolVersion,
+      mediatorReactionTimeout = mediatorReactionTimeout,
+    )
+
+  // TODO(#15161) Rework this when old nodes are killed
   def initialValues(
       topologyChangeDelay: NonNegativeFiniteDuration,
       protocolVersion: ProtocolVersion,
@@ -747,14 +738,12 @@ object DynamicDomainParameters extends HasProtocolVersionedCompanion[DynamicDoma
 
       confirmationRequestsMaxRate <- NonNegativeInt
         .create(confirmationRequestsMaxRateP)
-        .leftMap(
-          InvariantViolation.toProtoDeserializationError("confirmation_requests_max_rate", _)
-        )
+        .leftMap(InvariantViolation.toProtoDeserializationError)
 
       maxRequestSize <- NonNegativeInt
         .create(maxRequestSizeP)
         .map(MaxRequestSize)
-        .leftMap(InvariantViolation.toProtoDeserializationError("max_request_size", _))
+        .leftMap(InvariantViolation.toProtoDeserializationError)
 
       sequencerAggregateSubmissionTimeout <- NonNegativeFiniteDuration.fromProtoPrimitiveO(
         "sequencerAggregateSubmissionTimeout"
@@ -792,7 +781,7 @@ object DynamicDomainParameters extends HasProtocolVersionedCompanion[DynamicDoma
 
   class InvalidDynamicDomainParameters(message: String) extends RuntimeException(message) {
     lazy val toProtoDeserializationError: ProtoDeserializationError.InvariantViolation =
-      ProtoDeserializationError.InvariantViolation(field = None, error = message)
+      ProtoDeserializationError.InvariantViolation(message)
   }
 }
 
@@ -801,15 +790,17 @@ object DynamicDomainParameters extends HasProtocolVersionedCompanion[DynamicDoma
   *
   * @param validFrom Start point of the validity interval (exclusive)
   * @param validUntil End point of the validity interval (inclusive)
+  * @param serial The serial number of the corresponding topology transaction. It's incremented for each domain change.
   */
 final case class DynamicDomainParametersWithValidity(
     parameters: DynamicDomainParameters,
     validFrom: CantonTimestamp,
     validUntil: Option[CantonTimestamp],
+    serial: PositiveInt,
     domainId: DomainId,
 ) {
   def map[T](f: DynamicDomainParameters => T): DomainParameters.WithValidity[T] =
-    DomainParameters.WithValidity(validFrom, validUntil, f(parameters))
+    DomainParameters.WithValidity(validFrom, validUntil, serial, f(parameters))
 
   def isValidAt(ts: CantonTimestamp): Boolean =
     validFrom < ts && validUntil.forall(ts <= _)
@@ -822,7 +813,8 @@ final case class DynamicDomainParametersWithValidity(
 
   /** Computes the decision time for the given activeness time.
     *
-    * @return Left if the domain parameters are not valid at `activenessTime`, the decision time otherwise
+    * @param activenessTime
+    * @return Left in case of error, the decision time otherwise
     */
   def decisionTimeFor(activenessTime: CantonTimestamp): Either[String, CantonTimestamp] =
     checkValidity(activenessTime, "decision time").map(_ =>
@@ -833,7 +825,8 @@ final case class DynamicDomainParametersWithValidity(
 
   /** Computes the decision time for the given activeness time.
     *
-    * @return Left if the domain parameters are not valid at `activenessTime`, the decision time otherwise
+    * @param activenessTime
+    * @return Decision time or a failed future in case of error
     */
   def decisionTimeForF(activenessTime: CantonTimestamp): Future[CantonTimestamp] =
     decisionTimeFor(activenessTime).fold(
@@ -846,19 +839,11 @@ final case class DynamicDomainParametersWithValidity(
       baseline.add(transferExclusivityTimeout.unwrap)
     )
 
-  /** Computes the participant response time for the given timestamp.
-    *
-    * @return Left if the domain parameters are not valid at `timestamp`.
-    */
   def participantResponseDeadlineFor(timestamp: CantonTimestamp): Either[String, CantonTimestamp] =
     checkValidity(timestamp, "participant response deadline").map(_ =>
       timestamp.add(parameters.confirmationResponseTimeout.unwrap)
     )
 
-  /** Computes the participant response time for the given timestamp.
-    *
-    * @throws java.lang.IllegalStateException if the domain parameters are not valid at `timestamp`.
-    */
   def participantResponseDeadlineForF(timestamp: CantonTimestamp): Future[CantonTimestamp] =
     participantResponseDeadlineFor(timestamp).toFuture(new IllegalStateException(_))
 
@@ -870,61 +855,31 @@ final case class DynamicDomainParametersWithValidity(
   def transferExclusivityTimeout: NonNegativeFiniteDuration = parameters.transferExclusivityTimeout
   def sequencerTopologyTimestampTolerance: NonNegativeFiniteDuration =
     parameters.sequencerTopologyTimestampTolerance
-  def submissionCostTimestampTopologyTolerance: NonNegativeFiniteDuration =
-    parameters.submissionCostTimestampTopologyTolerance
 }
 
 /** The class specifies the catch-up parameters governing the catch-up mode of a participant lagging behind with its
   * ACS commitments computation.
-  * ***** Parameter recommendations
-  * A high [[catchUpIntervalSkip]] outputs more commitments and is slower to catch-up.
-  * For equal [[catchUpIntervalSkip]], a high [[nrIntervalsToTriggerCatchUp]] is less aggressive to trigger the
-  * catch-up mode.
-  *
-  * ***** Examples
-  * (5,2) and (2,5) both trigger the catch-up mode when the processor lags behind by at least 10
-  * reconciliation intervals. The former catches up quicker, but computes fewer commitments, whereas the latter
-  * computes more commitments but is slower to catch-up.
   *
   * @param catchUpIntervalSkip         The number of reconciliation intervals that the participant skips in
   *                                    catch-up mode.
   *                                    A catch-up interval thus has a length of
   *                                    reconciliation interval * `catchUpIntervalSkip`.
-  *                                    All participants must catch up to the same timestamp. To ensure this, the
-  *                                    interval count starts at EPOCH and gets incremented in catch-up intervals.
-  *                                    For example, a reconciliation interval of 5 seconds,
-  *                                    and a catchUpIntervalSkip of 2 (intervals), when a participant receiving a
-  *                                    valid commitment at 15 seconds with timestamp 20 seconds, will perform catch-up
-  *                                    from 10 seconds to 20 seconds (skipping 15 seconds commitment).
-  * @param nrIntervalsToTriggerCatchUp The number of intervals a participant should lag behind in
-  *                                    order to trigger catch-up mode. If a participant's current timestamp is behind
-  *                                    the timestamp of valid received commitments by `reconciliationInterval` *
-  *                                    `catchUpIntervalSkip` * `nrIntervalsToTriggerCatchUp`,
-  *                                     then the participant triggers catch-up mode.
-  *
-  * @throws java.lang.IllegalArgumentException when [[catchUpIntervalSkip]] * [[nrIntervalsToTriggerCatchUp]] overflows.
+  *                                    Note that, to ensure that all participants catch up to the same timestamp, the
+  *                                    interval count starts at the beginning of time, as opposed to starting at the
+  *                                    participant's current time when it triggers catch-up.
+  *                                    For example, with time beginning at 0, a reconciliation interval of 5 seconds,
+  *                                    and a catchUpIntervalSkip of 2 (intervals), a participant triggering catch-up at
+  *                                    time 15 seconds will catch-up to timestamp 20 seconds.
+  * @param nrIntervalsToTriggerCatchUp The number of catch-up intervals intervals a participant should lag behind in
+  *                                    order to enter catch-up mode. If a participant's current timestamp is behind
+  *                                    the timestamp of valid received commitments by reconciliation interval *
+  *                                    `catchUpIntervalSkip`.value` * `nrIntervalsToTriggerCatchUp`, and
+  *                                    `catchUpModeEnabled` is true, then the participant triggers catch-up mode.
   */
 final case class AcsCommitmentsCatchUpConfig(
     catchUpIntervalSkip: PositiveInt,
     nrIntervalsToTriggerCatchUp: PositiveInt,
 ) extends PrettyPrinting {
-
-  require(
-    Either
-      .catchOnly[ArithmeticException](
-        Math.multiplyExact(catchUpIntervalSkip.value, nrIntervalsToTriggerCatchUp.value)
-      )
-      .isRight,
-    s"Catch up parameters ($catchUpIntervalSkip, $nrIntervalsToTriggerCatchUp) are too large and cause overflow when computing the catch-up interval",
-  )
-
-  require(
-    catchUpIntervalSkip.value != 1 || nrIntervalsToTriggerCatchUp.value != 1,
-    s"Catch up config ($catchUpIntervalSkip, $nrIntervalsToTriggerCatchUp) is ambiguous. " +
-      s"It is not possible to catch up with a single interval. Did you intend to disable catch-up " +
-      s"(please use AcsCommitmentsCatchUpConfig.disabledCatchUp()) or did you intend a different config?",
-  )
-
   override def pretty: Pretty[AcsCommitmentsCatchUpConfig] = prettyOfClass(
     param("catchUpIntervalSkip", _.catchUpIntervalSkip),
     param("nrIntervalsToTriggerCatchUp", _.nrIntervalsToTriggerCatchUp),
@@ -934,10 +889,6 @@ final case class AcsCommitmentsCatchUpConfig(
     catchUpIntervalSkip.value,
     nrIntervalsToTriggerCatchUp.value,
   )
-
-  // the catch-up mode is effectively disabled when the nr of intervals is Int.MaxValue
-  def isCatchUpEnabled(): Boolean =
-    !(catchUpIntervalSkip.value == 1 && nrIntervalsToTriggerCatchUp.value == Int.MaxValue)
 }
 
 object AcsCommitmentsCatchUpConfig {
@@ -946,17 +897,10 @@ object AcsCommitmentsCatchUpConfig {
   ): ParsingResult[AcsCommitmentsCatchUpConfig] = {
     val v30.AcsCommitmentsCatchUpConfig(catchUpIntervalSkipP, nrIntervalsToTriggerCatchUpP) = value
     for {
-      catchUpIntervalSkip <- ProtoConverter.parsePositiveInt(
-        "catchup_interval_skip",
-        catchUpIntervalSkipP,
-      )
+      catchUpIntervalSkip <- ProtoConverter.parsePositiveInt(catchUpIntervalSkipP)
       nrIntervalsToTriggerCatchUp <- ProtoConverter.parsePositiveInt(
-        "nr_intervals_to_trigger_catch_up",
-        nrIntervalsToTriggerCatchUpP,
+        nrIntervalsToTriggerCatchUpP
       )
     } yield AcsCommitmentsCatchUpConfig(catchUpIntervalSkip, nrIntervalsToTriggerCatchUp)
   }
-
-  def disabledCatchUp(): AcsCommitmentsCatchUpConfig =
-    AcsCommitmentsCatchUpConfig(PositiveInt.tryCreate(1), PositiveInt.tryCreate(Integer.MAX_VALUE))
 }

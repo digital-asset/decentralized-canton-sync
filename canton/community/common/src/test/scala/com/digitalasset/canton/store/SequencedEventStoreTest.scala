@@ -5,12 +5,12 @@ package com.digitalasset.canton.store
 
 import cats.data.Validated.Valid
 import cats.syntax.parallel.*
+import com.digitalasset.canton.config.DefaultProcessingTimeouts
 import com.digitalasset.canton.crypto.provider.symbolic.SymbolicCrypto
-import com.digitalasset.canton.crypto.{Signature, SigningPublicKey, TestHash}
+import com.digitalasset.canton.crypto.{Crypto, Fingerprint, Signature, TestHash}
 import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.pruning.{PruningPhase, PruningStatus}
 import com.digitalasset.canton.sequencing.protocol.*
-import com.digitalasset.canton.sequencing.traffic.TrafficReceipt
 import com.digitalasset.canton.sequencing.{OrdinarySerializedEvent, SequencerTestUtils}
 import com.digitalasset.canton.store.SequencedEventStore.*
 import com.digitalasset.canton.topology.{DomainId, UniqueIdentifier}
@@ -25,19 +25,22 @@ import scala.concurrent.ExecutionContext
 trait SequencedEventStoreTest extends PrunableByTimeTest with CloseableTest {
   this: AsyncWordSpec with BaseTest =>
 
-  lazy val crypto: SymbolicCrypto =
-    SymbolicCrypto.create(
+  val sequencerKey: Fingerprint = Fingerprint.tryCreate("sequencer")
+  val crypto: Crypto =
+    SymbolicCrypto.tryCreate(
+      Seq(sequencerKey),
+      Seq(),
       testedReleaseProtocolVersion,
       timeouts,
       loggerFactory,
     )
 
-  lazy val sequencerKey: SigningPublicKey = crypto.generateSymbolicSigningKey()
-
   def sign(str: String): Signature =
-    crypto.sign(TestHash.digest(str), sequencerKey.id)
+    DefaultProcessingTimeouts.default
+      .await("event signing")(crypto.privateCrypto.sign(TestHash.digest(str), sequencerKey).value)
+      .valueOrFail("failed to create signature")
 
-  lazy val domainId: DomainId = DomainId(UniqueIdentifier.tryFromProtoPrimitive("da::default"))
+  val domainId: DomainId = DomainId(UniqueIdentifier.tryFromProtoPrimitive("da::default"))
 
   def mkBatch(envelopes: ClosedEnvelope*): Batch[ClosedEnvelope] =
     Batch(envelopes.toList, testedProtocolVersion)
@@ -63,7 +66,6 @@ trait SequencedEventStoreTest extends PrunableByTimeTest with CloseableTest {
           mkBatch(closedEnvelope),
           None,
           testedProtocolVersion,
-          Option.empty[TrafficReceipt],
         ),
         sign("deliver signature"),
         None,
@@ -86,7 +88,6 @@ trait SequencedEventStoreTest extends PrunableByTimeTest with CloseableTest {
           mkBatch(closedEnvelope),
           Some(CantonTimestamp.MaxValue),
           testedProtocolVersion,
-          Option.empty[TrafficReceipt],
         ),
         sign("single deliver signature"),
         None,
@@ -106,7 +107,6 @@ trait SequencedEventStoreTest extends PrunableByTimeTest with CloseableTest {
           mkBatch(closedEnvelope),
           Some(CantonTimestamp.MinValue),
           testedProtocolVersion,
-          Option.empty[TrafficReceipt],
         ),
         sign("single deliver signature"),
         None,
@@ -126,7 +126,6 @@ trait SequencedEventStoreTest extends PrunableByTimeTest with CloseableTest {
           mkBatch(closedEnvelope),
           None,
           testedProtocolVersion,
-          Option.empty[TrafficReceipt],
         ),
         singleDeliver.signedEvent.signature,
         None,
@@ -159,7 +158,6 @@ trait SequencedEventStoreTest extends PrunableByTimeTest with CloseableTest {
           mkBatch(),
           None,
           testedProtocolVersion,
-          Option.empty[TrafficReceipt],
         ),
         sign("Deliver signature"),
         None,
@@ -177,7 +175,6 @@ trait SequencedEventStoreTest extends PrunableByTimeTest with CloseableTest {
           MessageId.tryCreate("deliver-error"),
           SequencerErrors.SubmissionRequestRefused("paniertes schnitzel"),
           testedProtocolVersion,
-          Option.empty[TrafficReceipt],
         ),
         sign("Deliver error signature"),
         None,
@@ -191,7 +188,7 @@ trait SequencedEventStoreTest extends PrunableByTimeTest with CloseableTest {
       event: SignedContent[SequencedEvent[ClosedEnvelope]],
       traceContext: TraceContext = TraceContext.empty,
   ): OrdinarySerializedEvent =
-    OrdinarySequencedEvent(event)(traceContext)
+    OrdinarySequencedEvent(event, None)(traceContext)
 
   def mkEmptyIgnoredEvent(
       counter: Long,
@@ -200,7 +197,7 @@ trait SequencedEventStoreTest extends PrunableByTimeTest with CloseableTest {
     val t =
       if (microsSinceMin < 0) ts(counter)
       else CantonTimestamp.MinValue.addMicros(microsSinceMin)
-    IgnoredSequencedEvent(t, SequencerCounter(counter), None)(traceContext)
+    IgnoredSequencedEvent(t, SequencerCounter(counter), None, None)(traceContext)
   }
 
   def sequencedEventStore(mkSes: ExecutionContext => SequencedEventStore): Unit = {
@@ -532,7 +529,6 @@ trait SequencedEventStoreTest extends PrunableByTimeTest with CloseableTest {
               emptyBatch,
               None,
               testedProtocolVersion,
-              Option.empty[TrafficReceipt],
             )
           )
         )
@@ -546,7 +542,6 @@ trait SequencedEventStoreTest extends PrunableByTimeTest with CloseableTest {
             emptyBatch,
             None,
             testedProtocolVersion,
-            Option.empty[TrafficReceipt],
           )
         )
       )
@@ -600,7 +595,6 @@ trait SequencedEventStoreTest extends PrunableByTimeTest with CloseableTest {
               emptyBatch,
               None,
               testedProtocolVersion,
-              Option.empty[TrafficReceipt],
             )
           )
         )
@@ -615,7 +609,6 @@ trait SequencedEventStoreTest extends PrunableByTimeTest with CloseableTest {
               emptyBatch,
               None,
               testedProtocolVersion,
-              Option.empty[TrafficReceipt],
             )
           )
         )

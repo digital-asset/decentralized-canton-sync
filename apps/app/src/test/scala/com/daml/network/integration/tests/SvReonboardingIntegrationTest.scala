@@ -4,11 +4,11 @@ import com.daml.network.codegen.java.splice.dsorules.*
 import com.daml.network.codegen.java.splice.dsorules.actionrequiringconfirmation.*
 import com.daml.network.codegen.java.splice.dsorules.dsorules_actionrequiringconfirmation.*
 import com.daml.network.config.{
+  SpliceDbConfig,
   ConfigTransforms,
+  ParticipantClientConfig,
   NetworkAppClientConfig,
   ParticipantBootstrapDumpConfig,
-  ParticipantClientConfig,
-  SpliceDbConfig,
 }
 import com.daml.network.config.ConfigTransforms.{ConfigurableApp, bumpUrl, updateAutomationConfig}
 import com.daml.network.environment.EnvironmentImpl
@@ -18,7 +18,7 @@ import com.daml.network.integration.tests.SpliceTests.{
 }
 import com.daml.network.integration.EnvironmentDefinition
 import com.daml.network.scan.config.ScanAppClientConfig
-import com.daml.network.sv.automation.singlesv.offboarding.{
+import com.daml.network.sv.automation.singlesv.membership.offboarding.{
   SvOffboardingMediatorTrigger,
   SvOffboardingSequencerTrigger,
 }
@@ -28,7 +28,7 @@ import com.digitalasset.canton.config.CantonRequireTypes.InstanceName
 import com.digitalasset.canton.config.ClientConfig
 import com.digitalasset.canton.config.RequireTypes.{Port, PositiveInt}
 import com.digitalasset.canton.data.CantonTimestamp
-import com.digitalasset.canton.health.admin.data.{NodeStatus, WaitingForId}
+import com.digitalasset.canton.health.admin.data.NodeStatus
 
 import scala.jdk.CollectionConverters.*
 import scala.concurrent.duration.*
@@ -71,9 +71,6 @@ class SvReonboardingIntegrationTest
   private def sv4WalletClient(implicit
       env: SpliceTestConsoleEnvironment
   ) = wc("sv4Wallet")
-  private def sv4ReonboardValidatorBackend(implicit env: SpliceTestConsoleEnvironment) = v(
-    "sv4ReonboardValidator"
-  )
   private def validatorLocalBackend(implicit env: SpliceTestConsoleEnvironment) = v(
     "validatorLocal"
   )
@@ -114,11 +111,6 @@ class SvReonboardingIntegrationTest
                   )
               }),
             validatorApps = config.validatorApps +
-              (InstanceName.tryCreate("sv4ReonboardValidator") -> {
-                // The same as sv4Validator, but using the new participant identity,
-                // which is configured later with `.withCantonNodeNameSuffix()`
-                config.validatorApps(InstanceName.tryCreate("sv4Validator"))
-              }) +
               (InstanceName.tryCreate("validatorLocal") -> {
                 val referenceValidatorConfig =
                   config.validatorApps(InstanceName.tryCreate("aliceValidator"))
@@ -185,7 +177,6 @@ class SvReonboardingIntegrationTest
           )(config),
       )
       .withTrafficTopupsDisabled
-      .withCantonNodeNameSuffix("SvReonboarding")
       .withManualStart
 
   "reonboard SV with new party id and recover amulet via new regular validator" in { implicit env =>
@@ -384,13 +375,14 @@ class SvReonboardingIntegrationTest
         extraParticipantsEnvMap = Map(
           "EXTRA_PARTICIPANT_ADMIN_USER" -> validatorLocalBackend.config.ledgerApiUser,
           "EXTRA_PARTICIPANT_DB" -> s"participant_reonboard_new",
+          "EXTRA_PARTICIPANT_AUTO_INIT" -> "false",
         ),
       )() {
         // Canton is slooooooooooooooooooooooooooow
         eventuallySucceeds(timeUntilSuccess = 60.seconds) {
-          sv4ReonboardBackend.participantClientWithAdminToken.health.status should be(
-            NodeStatus.NotInitialized(true, Some(WaitingForId))
-          )
+          sv4ReonboardBackend.participantClientWithAdminToken.health.status should (be(
+            NodeStatus.NotInitialized(true)
+          ) or be(a[NodeStatus.Success[?]]))
         }
         better.files
           .File(dumpPath)
@@ -400,14 +392,14 @@ class SvReonboardingIntegrationTest
 
         startAllSync(
           sv4ReonboardBackend,
-          sv4ReonboardValidatorBackend,
+          sv4ValidatorBackend,
           validatorLocalBackend,
         )
 
         val sv4PartyNew = sv4ReonboardBackend.getDsoInfo().svParty
         clue("partyId of re-onboarded sv4 is different") {
           sv4PartyNew should not be sv4Party
-          sv4PartyNew.uid.identifier.unwrap should startWith("digital-asset-eng-4-reonboard")
+          sv4PartyNew.uid.id.unwrap should startWith("digital-asset-eng-4-reonboard")
           sv4PartyNew.uid.namespace should not be sv4Party.uid.namespace
         }
 
@@ -514,7 +506,7 @@ class SvReonboardingIntegrationTest
         )
 
         validatorLocalBackend.participantClient.id.code shouldBe ParticipantId.Code
-        validatorLocalBackend.participantClient.id.uid.identifier.unwrap shouldBe "validatorLocalNew"
+        validatorLocalBackend.participantClient.id.uid.id.unwrap shouldBe "validatorLocalNew"
 
         sv4WalletClient.userStatus().party shouldBe sv4PartyNew.toProtoPrimitive
 

@@ -53,7 +53,6 @@ import com.daml.network.validator.config.{
   AppInstance,
   MigrateValidatorPartyConfig,
   ValidatorAppBackendConfig,
-  ValidatorCantonIdentifierConfig,
   ValidatorOnboardingConfig,
 }
 import com.daml.network.validator.domain.DomainConnector
@@ -127,22 +126,13 @@ class ValidatorApp(
     _ <- withParticipantAdminConnection { participantAdminConnection =>
       readRestoreDump match {
         case Some(migrationDump) =>
-          logger.info(
-            "We're restoring from a migration dump, ensuring participant is initialized"
-          )
           val nodeInitializer =
             new NodeInitializer(participantAdminConnection, retryProvider, loggerFactory)
-          nodeInitializer.initializeFromDumpAndWait(
+          nodeInitializer.initializeAndWait(
             migrationDump.participant
           )
         case None =>
-          logger.info(
-            "Ensuring participant is initialized"
-          )
-          val cantonIdentifierConfig =
-            config.cantonIdentifierConfig.getOrElse(ValidatorCantonIdentifierConfig.default(config))
           ParticipantInitializer.ensureParticipantInitializedWithExpectedId(
-            cantonIdentifierConfig.participant,
             participantAdminConnection,
             config.participantBootstrappingDump,
             loggerFactory,
@@ -193,21 +183,10 @@ class ValidatorApp(
               case Some(migrationDump) =>
                 val decentralizedSynchronizerInitializer = new DomainDataRestorer(
                   participantAdminConnection,
-                  config.timeTrackerMinObservationDuration,
                   loggerFactory,
                 )
                 domainConnector.getDecentralizedSynchronizerSequencerConnections.flatMap {
-                  allSequencerConnections =>
-                    val sequencerConnections = allSequencerConnections.values.toSeq match {
-                      case Seq() =>
-                        sys.error("Expected at least one sequencer connection but got 0")
-                      case Seq(connections) => connections
-                      // TODO (#13301) handle this in a cleaner way (or just drop hard domain migration support at some point)
-                      case _ =>
-                        sys.error(
-                          s"Hard domain migrations and soft domain migrations are incompatible, got sequencer connections: $allSequencerConnections"
-                        )
-                    }
+                  sequencerConnections =>
                     appInitStep("Connecting domain and restoring data") {
                       decentralizedSynchronizerInitializer.connectDomainAndRestoreData(
                         connection,
@@ -286,57 +265,19 @@ class ValidatorApp(
                 sys.error(
                   "ParticipantBootstrappingDumpConfig is required if MigrateValidatorPartyConfig is set"
                 )
-              case (None, _) => {
+              case (None, _) =>
                 // Note that for the validator of an SV app, the user will be created by the SV app with a
                 // primary party set to the SV app already so this is a noop.
                 appInitStep("Ensuring user primary party is allocated") {
-                  {
-                    val hint = config.validatorPartyHint
+                  connection.ensureUserPrimaryPartyIsAllocated(
+                    config.ledgerApiUser,
+                    config.validatorPartyHint
                       .getOrElse(
-                        throw Status.NOT_FOUND
-                          .withDescription("Missing validator party hint for non-SV validator")
-                          .asRuntimeException()
-                      )
-                    connection.getOptionalPrimaryParty(config.ledgerApiUser).flatMap {
-                      case None =>
-                        // A party has not yet been allocated
-                        // Enforce hint format before allocating it
-                        val pattern = "^[a-zA-Z0-9_]+-[a-zA-Z0-9_]+-[0-9]+$".r
-                        pattern.findFirstMatchIn(hint) match {
-                          case None =>
-                            throw Status.INVALID_ARGUMENT
-                              .withDescription(
-                                s"Validator party hint ($hint) must match pattern <organization>-<function>-<enumerator>, where organization & function are alphanumerical, and enumerator is an integer"
-                              )
-                              .asRuntimeException()
-                          case Some(_) =>
-                        }
-                        appInitStep(
-                          "Creating user primary party and waiting for it to be allocated"
-                        ) {
-                          connection.ensureUserPrimaryPartyIsAllocated(
-                            config.ledgerApiUser,
-                            hint,
-                            participantAdminConnection,
-                          )
-                        }
-                      case Some(partyId) =>
-                        val existingHint = partyId.uid.identifier.str
-                        if (existingHint != hint) {
-                          throw Status.INVALID_ARGUMENT
-                            .withDescription(
-                              s"PartyId hint $existingHint does not match configured hint $hint."
-                            )
-                            .asRuntimeException()
-                        } else {
-                          logger.debug(s"PartyId matches the configured hint $hint")
-
-                        }
-                        Future.successful(())
-                    }
-                  } whenA !config.svValidator
-                }
-              }
+                        BaseLedgerConnection.sanitizeUserIdToPartyString(config.ledgerApiUser)
+                      ),
+                    participantAdminConnection,
+                  )
+                } whenA !config.svValidator
             }
           } yield ()
         }
@@ -718,7 +659,6 @@ class ValidatorApp(
               validatorTopupConfig,
               config.walletSweep,
               config.autoAcceptTransfers,
-              config.supportsSoftDomainMigrationPoc,
             )
           )
         else {
@@ -733,6 +673,7 @@ class ValidatorApp(
         config.appManager,
         config.domains.global.url.isEmpty,
         config.prevetDuration,
+        config.domains.global.alias,
         config.svValidator,
         clock,
         domainTimeAutomationService.domainTimeSync,
@@ -760,10 +701,11 @@ class ValidatorApp(
         config.svValidator,
         config.sequencerRequestAmplificationPatience,
         config.contactPoint,
-        config.supportsSoftDomainMigrationPoc,
         loggerFactory,
       )
-      domainId <- scanConnection.getAmuletRulesDomain()(traceContext)
+      domainId <- appInitStep(s"Wait for domain connection on ${config.domains.global.alias}") {
+        store.domains.waitForDomainConnection(config.domains.global.alias)
+      }
       _ <- config.appInstances.toList.traverse({ case (name, instance) =>
         appInitStep(s"Set up app instance $name") {
           setupAppInstance(

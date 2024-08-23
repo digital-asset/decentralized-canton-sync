@@ -5,17 +5,36 @@ package com.digitalasset.canton.platform.apiserver.execution
 
 import cats.data.*
 import cats.syntax.all.*
+import com.daml.lf.crypto
+import com.daml.lf.data.{ImmArray, Ref, Time}
+import com.daml.lf.engine.{
+  Engine,
+  Result,
+  ResultDone,
+  ResultError,
+  ResultInterruption,
+  ResultNeedAuthority,
+  ResultNeedContract,
+  ResultNeedKey,
+  ResultNeedPackage,
+  ResultNeedUpgradeVerification,
+}
+import com.daml.lf.transaction.*
+import com.daml.lf.value.Value
+import com.daml.lf.value.Value.{ContractId, ContractInstance}
 import com.daml.metrics.{Timed, Tracked}
 import com.digitalasset.canton.data.{CantonTimestamp, ProcessedDisclosedContract}
 import com.digitalasset.canton.ledger.api.domain.{Commands as ApiCommands, DisclosedContract}
 import com.digitalasset.canton.ledger.api.util.TimeProvider
-import com.digitalasset.canton.ledger.participant.state
-import com.digitalasset.canton.ledger.participant.state.WriteService
-import com.digitalasset.canton.ledger.participant.state.index.{ContractState, ContractStore}
+import com.digitalasset.canton.ledger.participant.state.index.v2.{
+  ContractState,
+  ContractStore,
+  IndexPackagesService,
+}
+import com.digitalasset.canton.ledger.participant.state.v2 as state
 import com.digitalasset.canton.logging.LoggingContextWithTrace.implicitExtractTraceContext
 import com.digitalasset.canton.logging.{LoggingContextWithTrace, NamedLoggerFactory, NamedLogging}
-import com.digitalasset.canton.metrics.LedgerApiServerMetrics
-import com.digitalasset.canton.platform.apiserver.configuration.EngineLoggingConfig
+import com.digitalasset.canton.metrics.Metrics
 import com.digitalasset.canton.platform.apiserver.execution.StoreBackedCommandExecutor.AuthenticateContract
 import com.digitalasset.canton.platform.apiserver.execution.UpgradeVerificationResult.MissingDriverMetadata
 import com.digitalasset.canton.platform.apiserver.services.ErrorCause
@@ -27,12 +46,6 @@ import com.digitalasset.canton.protocol.{
 }
 import com.digitalasset.canton.time.NonNegativeFiniteDuration
 import com.digitalasset.canton.util.Checked
-import com.digitalasset.daml.lf.crypto
-import com.digitalasset.daml.lf.data.{ImmArray, Ref, Time}
-import com.digitalasset.daml.lf.engine.*
-import com.digitalasset.daml.lf.transaction.*
-import com.digitalasset.daml.lf.value.Value
-import com.digitalasset.daml.lf.value.Value.{ContractId, ContractInstance}
 import scalaz.syntax.tag.*
 
 import java.util.concurrent.TimeUnit
@@ -40,17 +53,16 @@ import java.util.concurrent.atomic.AtomicLong
 import scala.concurrent.{ExecutionContext, Future}
 
 /** @param ec [[scala.concurrent.ExecutionContext]] that will be used for scheduling CPU-intensive computations
-  *           performed by an [[com.digitalasset.daml.lf.engine.Engine]].
+  *           performed by an [[com.daml.lf.engine.Engine]].
   */
 private[apiserver] final class StoreBackedCommandExecutor(
     engine: Engine,
     participant: Ref.ParticipantId,
-    writeService: WriteService,
+    packagesService: IndexPackagesService,
     contractStore: ContractStore,
     authorityResolver: AuthorityResolver,
     authenticateContract: AuthenticateContract,
-    metrics: LedgerApiServerMetrics,
-    config: EngineLoggingConfig,
+    metrics: Metrics,
     val loggerFactory: NamedLoggerFactory,
     dynParamGetter: DynamicDomainParameterGetter,
     timeProvider: TimeProvider,
@@ -71,7 +83,7 @@ private[apiserver] final class StoreBackedCommandExecutor(
     val interpretationTimeNanos = new AtomicLong(0L)
     val start = System.nanoTime()
     val coids = commands.commands.commands.toSeq.foldLeft(Set.empty[Value.ContractId]) {
-      case (acc, com.digitalasset.daml.lf.command.ApiCommand.Exercise(_, coid, _, argument)) =>
+      case (acc, com.daml.lf.command.ApiCommand.Exercise(_, coid, _, argument)) =>
         argument.collectCids(acc) + coid
       case (acc, _) => acc
     }
@@ -186,7 +198,6 @@ private[apiserver] final class StoreBackedCommandExecutor(
           disclosures = commands.disclosedContracts.map(_.toLf),
           participantId = participant,
           submissionSeed = submissionSeed,
-          config.toEngineLogger(loggerFactory.append("phase", "submission")),
         )
       }),
     )
@@ -256,7 +267,7 @@ private[apiserver] final class StoreBackedCommandExecutor(
           packageLoader
             .loadPackage(
               packageId = packageId,
-              delegate = writeService.getLfArchive(_)(loggingContext.traceContext),
+              delegate = packageId => packagesService.getLfArchive(packageId)(loggingContext),
               metric = metrics.execution.getLfPackage,
             )
             .flatMap { maybePackage =>
@@ -280,15 +291,13 @@ private[apiserver] final class StoreBackedCommandExecutor(
           // is true, then the Record Time (assigned later on when the transaction is sequenced) is already
           // out of bounds, and the sequencer will reject the transaction. We can therefore abort the
           // interpretation and return an error to the application.
-
-          // Using a `Future` as a trampoline to make the recursive call to `resolveStep` stack safe.
           def resume(): Future[Either[ErrorCause, A]] =
-            Future {
+            resolveStep(
               Tracked.value(
                 metrics.execution.engineRunning,
                 trackSyncExecution(interpretationTimeNanos)(continue()),
               )
-            }.flatMap(resolveStep)
+            )
 
           ledgerTimeRecordTimeToleranceO match {
             // Fall back to not checking if the tolerance could not be retrieved
@@ -384,7 +393,7 @@ private[apiserver] final class StoreBackedCommandExecutor(
     ContractMetadata.create(
       signatories = signatories,
       stakeholders = stakeholders,
-      maybeKeyWithMaintainersVersioned = maybeKeyWithMaintainers,
+      maybeKeyWithMaintainers = maybeKeyWithMaintainers,
     ) match {
       case Right(recomputedContractMetadata) =>
         checkContractUpgradable(coid, recomputedContractMetadata, disclosedContracts)
@@ -433,7 +442,7 @@ private[apiserver] final class StoreBackedCommandExecutor(
 
       val result: Either[String, SerializableContract] = for {
         salt <- DriverContractMetadata
-          .fromTrustedByteArray(driverMetadataBytes)
+          .fromByteArray(driverMetadataBytes)
           .bimap(
             e => s"Failed to build DriverContractMetadata ($e)",
             m => m.salt,
@@ -460,6 +469,7 @@ private[apiserver] final class StoreBackedCommandExecutor(
       EitherT.fromEither[Future](result).fold(UpgradeFailure, _ => Valid)
     }
 
+    // TODO(#14884): Guard contract activeness check with readers permission check
     def lookupActiveContractVerificationData(): Result =
       EitherT(
         contractStore
@@ -521,10 +531,9 @@ private[apiserver] final class StoreBackedCommandExecutor(
         contractId = disclosedContract.contractId,
         driverMetadataBytes = disclosedContract.driverMetadata.toByteArray,
         contractInstance = Versioned(
-          disclosedContract.transactionVersion,
+          unusedTxVersion,
           ContractInstance(
             packageName = disclosedContract.packageName,
-            packageVersion = disclosedContract.packageVersion,
             template = disclosedContract.templateId,
             arg = disclosedContract.argument,
           ),
@@ -532,18 +541,13 @@ private[apiserver] final class StoreBackedCommandExecutor(
         originalMetadata = ContractMetadata.tryCreate(
           signatories = disclosedContract.signatories,
           stakeholders = disclosedContract.stakeholders,
-          maybeKeyWithMaintainersVersioned =
+          maybeKeyWithMaintainers =
             (disclosedContract.keyValue zip disclosedContract.keyMaintainers).map {
               case (value, maintainers) =>
                 Versioned(
-                  disclosedContract.transactionVersion,
+                  unusedTxVersion,
                   GlobalKeyWithMaintainers
-                    .assertBuild(
-                      disclosedContract.templateId,
-                      value,
-                      maintainers,
-                      disclosedContract.packageName,
-                    ),
+                    .assertBuild(disclosedContract.templateId, value, maintainers),
                 )
             },
         ),
@@ -566,12 +570,9 @@ private[apiserver] final class StoreBackedCommandExecutor(
             originalMetadata = ContractMetadata.tryCreate(
               signatories = active.signatories,
               stakeholders = active.stakeholders,
-              maybeKeyWithMaintainersVersioned =
+              maybeKeyWithMaintainers =
                 (active.globalKey zip active.maintainers).map { case (globalKey, maintainers) =>
-                  Versioned(
-                    active.contractInstance.version,
-                    GlobalKeyWithMaintainers(globalKey, maintainers),
-                  )
+                  Versioned(unusedTxVersion, GlobalKeyWithMaintainers(globalKey, maintainers))
                 },
             ),
             recomputedMetadata = recomputedMetadata,

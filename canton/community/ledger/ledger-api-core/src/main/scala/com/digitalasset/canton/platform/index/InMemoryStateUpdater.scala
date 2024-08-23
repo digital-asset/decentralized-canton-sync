@@ -3,36 +3,38 @@
 
 package com.digitalasset.canton.platform.index
 
-import cats.data.NonEmptyVector
-import cats.implicits.toBifunctorOps
+import cats.implicits.{catsSyntaxSemigroup, toBifunctorOps}
+import com.daml.daml_lf_dev.DamlLf
 import com.daml.executors.InstrumentedExecutors
 import com.daml.ledger.resources.ResourceOwner
+import com.daml.lf.data.Ref.HexString
+import com.daml.lf.engine.Blinding
+import com.daml.lf.ledger.EventId
+import com.daml.lf.transaction.Node.{Create, Exercise}
+import com.daml.lf.transaction.Transaction.ChildrenRecursion
+import com.daml.lf.transaction.{Node, NodeId}
+import com.daml.metrics.Timed
 import com.daml.timer.FutureCheck.*
-import com.digitalasset.canton.data.DeduplicationPeriod.{DeduplicationDuration, DeduplicationOffset}
-import com.digitalasset.canton.data.{CantonTimestamp, Offset}
-import com.digitalasset.canton.discard.Implicits.DiscardOps
-import com.digitalasset.canton.ledger.participant.state.{CompletionInfo, Reassignment, Update}
+import com.digitalasset.canton.ledger.api.DeduplicationPeriod.{
+  DeduplicationDuration,
+  DeduplicationOffset,
+}
+import com.digitalasset.canton.ledger.offset.Offset
+import com.digitalasset.canton.ledger.participant.state.v2.{CompletionInfo, Reassignment, Update}
 import com.digitalasset.canton.logging.{NamedLoggerFactory, TracedLogger}
-import com.digitalasset.canton.metrics.LedgerApiServerMetrics
-import com.digitalasset.canton.platform.apiserver.execution.CommandProgressTracker
+import com.digitalasset.canton.metrics.Metrics
 import com.digitalasset.canton.platform.apiserver.services.tracking.SubmissionTracker
 import com.digitalasset.canton.platform.index.InMemoryStateUpdater.{PrepareResult, UpdaterFlow}
-import com.digitalasset.canton.platform.indexer.TransactionTraversalUtils
 import com.digitalasset.canton.platform.store.CompletionFromTransaction
-import com.digitalasset.canton.platform.store.cache.OffsetCheckpoint
 import com.digitalasset.canton.platform.store.dao.events.ContractStateEvent
 import com.digitalasset.canton.platform.store.interfaces.TransactionLogUpdate
 import com.digitalasset.canton.platform.store.interfaces.TransactionLogUpdate.CompletionDetails
+import com.digitalasset.canton.platform.store.packagemeta.PackageMetadata
+import com.digitalasset.canton.platform.store.packagemeta.PackageMetadata.Implicits.packageMetadataSemigroup
 import com.digitalasset.canton.platform.{Contract, InMemoryState, Key, Party}
 import com.digitalasset.canton.tracing.{TraceContext, Traced}
-import com.digitalasset.daml.lf.data.Ref.HexString
-import com.digitalasset.daml.lf.engine.Blinding
-import com.digitalasset.daml.lf.ledger.EventId
-import com.digitalasset.daml.lf.transaction.Node.{Create, Exercise}
-import com.digitalasset.daml.lf.transaction.NodeId
 import org.apache.pekko.NotUsed
-import org.apache.pekko.stream.FlowShape
-import org.apache.pekko.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Sink, Source}
+import org.apache.pekko.stream.scaladsl.Flow
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
@@ -40,7 +42,7 @@ import scala.concurrent.{ExecutionContext, Future}
 /** Builder of the in-memory state updater Pekko flow.
   *
   * This flow is attached at the end of the Indexer pipeline,
-  * consumes the [[com.digitalasset.canton.ledger.participant.state.Update]]s (that have been ingested by the Indexer
+  * consumes the [[com.digitalasset.canton.ledger.participant.state.v2.Update]]s (that have been ingested by the Indexer
   * into the Index database) for populating the Ledger API server in-memory state (see [[InMemoryState]]).
   */
 private[platform] object InMemoryStateUpdaterFlow {
@@ -50,133 +52,31 @@ private[platform] object InMemoryStateUpdaterFlow {
       prepareUpdatesExecutionContext: ExecutionContext,
       updateCachesExecutionContext: ExecutionContext,
       preparePackageMetadataTimeOutWarning: FiniteDuration,
-      offsetCheckpointCacheUpdateInterval: FiniteDuration,
-      metrics: LedgerApiServerMetrics,
+      metrics: Metrics,
       logger: TracedLogger,
   )(
-      inMemoryState: InMemoryState,
-      prepare: (Vector[(Offset, Traced[Update])], Long, CantonTimestamp) => PrepareResult,
+      prepare: (Vector[(Offset, Traced[Update])], Long) => PrepareResult,
       update: PrepareResult => Unit,
   )(implicit traceContext: TraceContext): UpdaterFlow =
-    Flow[(Vector[(Offset, Traced[Update])], Long, CantonTimestamp)]
+    Flow[(Vector[(Offset, Traced[Update])], Long)]
       .filter(_._1.nonEmpty)
-      .via(updateOffsetCheckpointCacheFlow(inMemoryState, offsetCheckpointCacheUpdateInterval))
-      .mapAsync(prepareUpdatesParallelism) {
-        case (batch, lastEventSequentialId, lastPublicationTime) =>
-          Future {
-            batch -> prepare(batch, lastEventSequentialId, lastPublicationTime)
-          }(prepareUpdatesExecutionContext)
-            .checkIfComplete(preparePackageMetadataTimeOutWarning)(
-              logger.warn(
-                s"Package Metadata View live update did not finish in ${preparePackageMetadataTimeOutWarning.toMillis}ms"
-              )
+      .mapAsync(prepareUpdatesParallelism) { case (batch, lastEventSequentialId) =>
+        Future {
+          prepare(batch, lastEventSequentialId)
+        }(prepareUpdatesExecutionContext)
+          .checkIfComplete(preparePackageMetadataTimeOutWarning)(
+            logger.warn(
+              s"Package Metadata View live update did not finish in ${preparePackageMetadataTimeOutWarning.toMillis}ms"
             )
+          )
       }
       .async
-      .mapAsync(1) { case (batch, result) =>
+      .mapAsync(1) { result =>
         Future {
           update(result)
           metrics.index.ledgerEndSequentialId.updateValue(result.lastEventSequentialId)
-          batch
         }(updateCachesExecutionContext)
       }
-
-  private def updateOffsetCheckpointCacheFlow(
-      inMemoryState: InMemoryState,
-      interval: FiniteDuration,
-  ): Flow[
-    (Vector[(Offset, Traced[Update])], Long, CantonTimestamp),
-    (Vector[(Offset, Traced[Update])], Long, CantonTimestamp),
-    NotUsed,
-  ] = {
-    // tick source so that we update offset checkpoint caches
-    // tick is denoted by None while the rest elements are encapsulated into a Some
-    val tick = Source
-      .tick(interval, interval, None: Option[Nothing])
-      .mapMaterializedValue(_ => NotUsed)
-
-    updateOffsetCheckpointCacheFlowWithTickingSource(inMemoryState.offsetCheckpointCache.push, tick)
-  }
-
-  private[index] def updateOffsetCheckpointCacheFlowWithTickingSource(
-      updateOffsetCheckpointCache: OffsetCheckpoint => Unit,
-      tick: Source[Option[Nothing], NotUsed],
-  ): Flow[
-    (Vector[(Offset, Traced[Update])], Long, CantonTimestamp),
-    (Vector[(Offset, Traced[Update])], Long, CantonTimestamp),
-    NotUsed,
-  ] =
-    Flow.fromGraph(GraphDSL.create() { implicit builder =>
-      import GraphDSL.Implicits.*
-      // this flow emits the original stream as is while at the same time broadcasts its elements
-      // through a secondary flow that updates the offset checkpoint cache
-      // the secondary flow keeps only the Offsets and the Updates of the original stream and merges
-      // them with a tick source that ticks every interval seconds to signify the update of the cache
-
-      val broadcast =
-        builder.add(Broadcast[(Vector[(Offset, Traced[Update])], Long, CantonTimestamp)](2))
-
-      val merge = builder.add(Merge[Option[(Offset, Update)]](inputPorts = 2, eagerComplete = true))
-
-      val preprocess: Flow[(Vector[(Offset, Traced[Update])], Long, CantonTimestamp), Option[
-        (Offset, Update)
-      ], NotUsed] =
-        Flow[(Vector[(Offset, Traced[Update])], Long, CantonTimestamp)]
-          .map(_._1)
-          .mapConcat(identity)
-          .map({ case (off, tracedUpdate) => (off, tracedUpdate.value) })
-          .map(Some(_))
-
-      val updateCheckpointState: Flow[Option[(Offset, Update)], OffsetCheckpoint, NotUsed] =
-        Flow[Option[(Offset, Update)]]
-          .statefulMap[Option[OffsetCheckpoint], Option[OffsetCheckpoint]](create = () => None)(
-            f = {
-              // an Offset and Update pair was received
-              // update the latest checkpoint
-              case (lastOffsetCheckpointO, Some((off, update))) =>
-                val domainTimeO = update match {
-                  case _: Update.Init => None
-                  case _: Update.PartyAddedToParticipant => None
-                  case _: Update.PartyAllocationRejected => None
-                  case tx: Update.TransactionAccepted => Some((tx.domainId, update.recordTime))
-                  case reassignment: Update.ReassignmentAccepted =>
-                    reassignment.reassignment match {
-                      case _: Reassignment.Unassign =>
-                        Some((reassignment.reassignmentInfo.sourceDomain.id, update.recordTime))
-                      case _: Reassignment.Assign =>
-                        Some((reassignment.reassignmentInfo.targetDomain.id, update.recordTime))
-                    }
-                  case Update.CommandRejected(recordTime, _, _, domainId, _, _) =>
-                    Some((domainId, recordTime))
-                  case _: Update.SequencerIndexMoved => None
-                }
-
-                val lastDomainTimes = lastOffsetCheckpointO.map(_.domainTimes).getOrElse(Map.empty)
-                val newDomainTimes =
-                  domainTimeO match {
-                    case Some((domainId, recordTime)) =>
-                      lastDomainTimes.updated(domainId, recordTime)
-                    case None => lastDomainTimes
-                  }
-                val newOffsetCheckpoint = OffsetCheckpoint(off, newDomainTimes)
-                (Some(newOffsetCheckpoint), None)
-              // a tick was received, propagate the OffsetCheckpoint
-              case (lastOffsetCheckpointO, None) =>
-                (lastOffsetCheckpointO, lastOffsetCheckpointO)
-            },
-            onComplete = _ => None,
-          )
-          .collect { case Some(oc) => oc }
-
-      val pushCheckpoint: Sink[OffsetCheckpoint, NotUsed] =
-        Sink.foreach(updateOffsetCheckpointCache).mapMaterializedValue(_ => NotUsed)
-
-      (tick ~> merge).discard
-      broadcast ~> preprocess ~> merge ~> updateCheckpointState ~> pushCheckpoint
-
-      FlowShape(broadcast.in, broadcast.out(1))
-    })
-
 }
 
 private[platform] object InMemoryStateUpdater {
@@ -184,19 +84,15 @@ private[platform] object InMemoryStateUpdater {
       updates: Vector[Traced[TransactionLogUpdate]],
       lastOffset: Offset,
       lastEventSequentialId: Long,
-      lastPublicationTime: CantonTimestamp,
       lastTraceContext: TraceContext,
+      packageMetadata: PackageMetadata,
   )
-  type UpdaterFlow =
-    Flow[(Vector[(Offset, Traced[Update])], Long, CantonTimestamp), Vector[
-      (Offset, Traced[Update])
-    ], NotUsed]
+  type UpdaterFlow = Flow[(Vector[(Offset, Traced[Update])], Long), Unit, NotUsed]
   def owner(
       inMemoryState: InMemoryState,
       prepareUpdatesParallelism: Int,
       preparePackageMetadataTimeOutWarning: FiniteDuration,
-      offsetCheckpointCacheUpdateInterval: FiniteDuration,
-      metrics: LedgerApiServerMetrics,
+      metrics: Metrics,
       loggerFactory: NamedLoggerFactory,
   )(implicit traceContext: TraceContext): ResourceOwner[UpdaterFlow] = for {
     prepareUpdatesExecutor <- ResourceOwner.forExecutorService(() =>
@@ -217,19 +113,37 @@ private[platform] object InMemoryStateUpdater {
     prepareUpdatesExecutionContext = ExecutionContext.fromExecutorService(prepareUpdatesExecutor),
     updateCachesExecutionContext = ExecutionContext.fromExecutorService(updateCachesExecutor),
     preparePackageMetadataTimeOutWarning = preparePackageMetadataTimeOutWarning,
-    offsetCheckpointCacheUpdateInterval = offsetCheckpointCacheUpdateInterval,
     metrics = metrics,
     logger = logger,
   )(
-    inMemoryState = inMemoryState,
-    prepare = prepare,
+    prepare = prepare(
+      archiveToMetadata = archive =>
+        Timed.value(
+          metrics.index.packageMetadata.decodeArchive,
+          PackageMetadata.from(archive),
+        )
+    ),
     update = update(inMemoryState, logger),
   )
 
+  private[index] def extractMetadataFromUploadedPackages(
+      archiveToMetadata: DamlLf.Archive => PackageMetadata
+  )(
+      batch: Vector[(Offset, Traced[Update])]
+  ): PackageMetadata =
+    batch.view
+      .collect { case (_, Traced(packageUpload: Update.PublicPackageUpload)) => packageUpload }
+      .foldLeft(PackageMetadata()) { case (pkgMeta, packageUpload) =>
+        packageUpload.archives.view
+          .map(archiveToMetadata)
+          .foldLeft(pkgMeta)(_ |+| _)
+      }
+
   private[index] def prepare(
+      archiveToMetadata: DamlLf.Archive => PackageMetadata
+  )(
       batch: Vector[(Offset, Traced[Update])],
       lastEventSequentialId: Long,
-      lastPublicationTime: CantonTimestamp,
   ): PrepareResult = {
     val (offset, traceContext) = batch.lastOption.fold(
       throw new NoSuchElementException("empty batch")
@@ -245,8 +159,8 @@ private[platform] object InMemoryStateUpdater {
       },
       lastOffset = offset,
       lastEventSequentialId = lastEventSequentialId,
-      lastPublicationTime = lastPublicationTime,
       lastTraceContext = traceContext,
+      packageMetadata = extractMetadataFromUploadedPackages(archiveToMetadata)(batch),
     )
   }
 
@@ -254,22 +168,15 @@ private[platform] object InMemoryStateUpdater {
       inMemoryState: InMemoryState,
       logger: TracedLogger,
   )(result: PrepareResult): Unit = {
+    inMemoryState.packageMetadataView.update(result.packageMetadata)
     updateCaches(inMemoryState, result.updates)
     // must be the last update: see the comment inside the method for more details
     // must be after cache updates: see the comment inside the method for more details
-    updateLedgerEnd(
-      inMemoryState,
-      result.lastOffset,
-      result.lastEventSequentialId,
-      result.lastPublicationTime,
-      logger,
-    )(
+    updateLedgerEnd(inMemoryState, result.lastOffset, result.lastEventSequentialId, logger)(
       result.lastTraceContext
     )
     // must be after LedgerEnd update because this could trigger API actions relating to this LedgerEnd
     trackSubmissions(inMemoryState.submissionTracker, result.updates)
-    // can be done at any point in the pipeline, it is for debugging only
-    trackCommandProgress(inMemoryState.commandProgressTracker, result.updates)
   }
 
   private def trackSubmissions(
@@ -292,16 +199,10 @@ private[platform] object InMemoryStateUpdater {
               )
             ) =>
           completionDetails.completionStreamResponse -> completionDetails.submitters
-        case Traced(TransactionLogUpdate.TransactionRejected(_, completionDetails)) =>
-          completionDetails.completionStreamResponse -> completionDetails.submitters
+        case Traced(rejected: TransactionLogUpdate.TransactionRejected) =>
+          rejected.completionDetails.completionStreamResponse -> rejected.completionDetails.submitters
       }
       .foreach(submissionTracker.onCompletion)
-
-  private def trackCommandProgress(
-      commandProgressTracker: CommandProgressTracker,
-      updates: Vector[Traced[TransactionLogUpdate]],
-  ): Unit =
-    updates.view.foreach(commandProgressTracker.processLedgerUpdate)
 
   private def updateCaches(
       inMemoryState: InMemoryState,
@@ -313,9 +214,9 @@ private[platform] object InMemoryStateUpdater {
         transaction => {
           inMemoryState.inMemoryFanoutBuffer.push(transaction.offset, tracedTransaction)
           val contractStateEventsBatch = convertToContractStateEvents(transaction)
-          NonEmptyVector
-            .fromVector(contractStateEventsBatch)
-            .foreach(inMemoryState.contractStateCaches.push)
+          if (contractStateEventsBatch.nonEmpty) {
+            inMemoryState.contractStateCaches.push(contractStateEventsBatch)
+          }
         }
       )
     }
@@ -324,12 +225,11 @@ private[platform] object InMemoryStateUpdater {
       inMemoryState: InMemoryState,
       lastOffset: Offset,
       lastEventSequentialId: Long,
-      lastPublicationTime: CantonTimestamp,
       logger: TracedLogger,
   )(implicit
       traceContext: TraceContext
   ): Unit = {
-    inMemoryState.ledgerEndCache.set((lastOffset, lastEventSequentialId, lastPublicationTime))
+    inMemoryState.ledgerEndCache.set((lastOffset, lastEventSequentialId))
     // the order here is very important: first we need to make data available for point-wise lookups
     // and SQL queries, and only then we can make it available on the streams.
     // (consider example: completion arrived on a stream, but the transaction cannot be looked up)
@@ -348,12 +248,11 @@ private[platform] object InMemoryStateUpdater {
               contractId = createdEvent.contractId,
               contract = Contract(
                 packageName = createdEvent.packageName,
-                packageVersion = createdEvent.packageVersion,
                 template = createdEvent.templateId,
                 arg = createdEvent.createArgument,
               ),
               globalKey = createdEvent.contractKey.map(k =>
-                Key.assertBuild(createdEvent.templateId, k.unversioned, createdEvent.packageName)
+                Key.assertBuild(createdEvent.templateId, k.unversioned)
               ),
               ledgerEffectiveTime = createdEvent.ledgerEffectiveTime,
               stakeholders = createdEvent.flatEventWitnesses.map(Party.assertFromString),
@@ -367,11 +266,7 @@ private[platform] object InMemoryStateUpdater {
             ContractStateEvent.Archived(
               contractId = exercisedEvent.contractId,
               globalKey = exercisedEvent.contractKey.map(k =>
-                Key.assertBuild(
-                  exercisedEvent.templateId,
-                  k.unversioned,
-                  exercisedEvent.packageName,
-                )
+                Key.assertBuild(exercisedEvent.templateId, k.unversioned)
               ),
               stakeholders = exercisedEvent.flatEventWitnesses.map(Party.assertFromString),
               eventOffset = exercisedEvent.eventOffset,
@@ -386,8 +281,17 @@ private[platform] object InMemoryStateUpdater {
       txAccepted: Update.TransactionAccepted,
       traceContext: TraceContext,
   ): TransactionLogUpdate.TransactionAccepted = {
-    val rawEvents =
-      TransactionTraversalUtils.preorderTraversalForIngestion(txAccepted.transaction.transaction)
+    // TODO(i12283) LLP: Extract in common functionality together with duplicated code in [[UpdateToDbDto]]
+    val rawEvents = txAccepted.transaction.transaction
+      .foldInExecutionOrder(List.empty[(NodeId, Node)])(
+        exerciseBegin = (acc, nid, node) => ((nid -> node) :: acc, ChildrenRecursion.DoRecurse),
+        // Rollback nodes are not indexed
+        rollbackBegin = (acc, _, _) => (acc, ChildrenRecursion.DoNotRecurse),
+        leaf = (acc, nid, node) => (nid -> node) :: acc,
+        exerciseEnd = (acc, _, _) => acc,
+        rollbackEnd = (acc, _, _) => acc,
+      )
+      .reverseIterator
 
     // TODO(i12283) LLP: Deduplicate blinding info computation with the work done in [[UpdateToDbDto]]
     val blinding = txAccepted.blindingInfoO.getOrElse(Blinding.blind(txAccepted.transaction))
@@ -404,19 +308,16 @@ private[platform] object InMemoryStateUpdater {
           ledgerEffectiveTime = txAccepted.transactionMeta.ledgerEffectiveTime,
           templateId = create.templateId,
           packageName = create.packageName,
-          packageVersion = create.packageVersion,
           commandId = txAccepted.completionInfoO.map(_.commandId).getOrElse(""),
           workflowId = txAccepted.transactionMeta.workflowId.getOrElse(""),
-          contractKey = create.keyOpt.map(k =>
-            com.digitalasset.daml.lf.transaction.Versioned(create.version, k.value)
-          ),
+          contractKey =
+            create.keyOpt.map(k => com.daml.lf.transaction.Versioned(create.version, k.value)),
           treeEventWitnesses = blinding.disclosure.getOrElse(nodeId, Set.empty),
           flatEventWitnesses = create.stakeholders,
           submitters = txAccepted.completionInfoO
             .map(_.actAs.toSet)
             .getOrElse(Set.empty),
-          createArgument =
-            com.digitalasset.daml.lf.transaction.Versioned(create.version, create.arg),
+          createArgument = com.daml.lf.transaction.Versioned(create.version, create.arg),
           createSignatories = create.signatories,
           createObservers = create.stakeholders.diff(create.signatories),
           createKeyHash = create.keyOpt.map(_.globalKey.hash),
@@ -437,9 +338,8 @@ private[platform] object InMemoryStateUpdater {
           packageName = exercise.packageName,
           commandId = txAccepted.completionInfoO.map(_.commandId).getOrElse(""),
           workflowId = txAccepted.transactionMeta.workflowId.getOrElse(""),
-          contractKey = exercise.keyOpt.map(k =>
-            com.digitalasset.daml.lf.transaction.Versioned(exercise.version, k.value)
-          ),
+          contractKey =
+            exercise.keyOpt.map(k => com.daml.lf.transaction.Versioned(exercise.version, k.value)),
           treeEventWitnesses = blinding.disclosure.getOrElse(nodeId, Set.empty),
           flatEventWitnesses = if (exercise.consuming) exercise.stakeholders else Set.empty,
           submitters = txAccepted.completionInfoO
@@ -488,7 +388,7 @@ private[platform] object InMemoryStateUpdater {
       offset = offset,
       events = events.toVector,
       completionDetails = completionDetails,
-      domainId = txAccepted.domainId.toProtoPrimitive,
+      domainId = Some(txAccepted.domainId.toProtoPrimitive),
       recordTime = txAccepted.recordTime,
     )
   }
@@ -576,19 +476,16 @@ private[platform] object InMemoryStateUpdater {
               ledgerEffectiveTime = assign.ledgerEffectiveTime,
               templateId = create.templateId,
               packageName = create.packageName,
-              packageVersion = create.packageVersion,
               commandId = u.optCompletionInfo.map(_.commandId).getOrElse(""),
               workflowId = u.workflowId.getOrElse(""),
-              contractKey = create.keyOpt.map(k =>
-                com.digitalasset.daml.lf.transaction.Versioned(create.version, k.value)
-              ),
+              contractKey =
+                create.keyOpt.map(k => com.daml.lf.transaction.Versioned(create.version, k.value)),
               treeEventWitnesses = Set.empty,
               flatEventWitnesses = u.reassignmentInfo.hostedStakeholders.toSet,
               submitters = u.optCompletionInfo
                 .map(_.actAs.toSet)
                 .getOrElse(Set.empty),
-              createArgument =
-                com.digitalasset.daml.lf.transaction.Versioned(create.version, create.arg),
+              createArgument = com.daml.lf.transaction.Versioned(create.version, create.arg),
               createSignatories = create.signatories,
               createObservers = create.stakeholders.diff(create.signatories),
               createKeyHash = create.keyOpt.map(_.globalKey.hash),

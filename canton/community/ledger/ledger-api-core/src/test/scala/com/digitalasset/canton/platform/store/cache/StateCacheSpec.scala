@@ -4,10 +4,10 @@
 package com.digitalasset.canton.platform.store.cache
 
 import com.daml.metrics.CacheMetrics
+import com.daml.metrics.api.MetricName
 import com.daml.metrics.api.noop.{NoOpMetricsFactory, NoOpTimer}
-import com.daml.metrics.api.{MetricInfo, MetricName, MetricQualification}
 import com.digitalasset.canton.caching.{CaffeineCache, ConcurrentCache, SizedCache}
-import com.digitalasset.canton.data.Offset
+import com.digitalasset.canton.ledger.offset.Offset
 import com.digitalasset.canton.{BaseTest, HasExecutionContext}
 import com.github.benmanes.caffeine.cache.Caffeine
 import org.mockito.MockitoSugar
@@ -32,9 +32,7 @@ class StateCacheSpec
 
   private val className = classOf[StateCache[?, ?]].getSimpleName
 
-  private val cacheUpdateTimer = NoOpTimer(
-    MetricInfo(MetricName("state_update"), "", MetricQualification.Debug)
-  )
+  private val cacheUpdateTimer = NoOpTimer("state_update")
 
   behavior of s"$className.putAsync"
 

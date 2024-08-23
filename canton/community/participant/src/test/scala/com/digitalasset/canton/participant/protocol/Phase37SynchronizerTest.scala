@@ -5,16 +5,15 @@ package com.digitalasset.canton.participant.protocol
 
 import com.digitalasset.canton.concurrent.FutureSupervisor
 import com.digitalasset.canton.data.CantonTimestamp
-import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
-import com.digitalasset.canton.participant.protocol.EngineController.EngineAbortStatus
 import com.digitalasset.canton.participant.protocol.Phase37Synchronizer.RequestOutcome
-import com.digitalasset.canton.participant.protocol.ProcessingSteps.{RequestType, Wrapped}
+import com.digitalasset.canton.participant.protocol.ProcessingSteps.RequestType
+import com.digitalasset.canton.participant.protocol.ProtocolProcessor.WrappedPendingRequestData
 import com.digitalasset.canton.participant.protocol.TestProcessingSteps.{
   TestPendingRequestData,
   TestPendingRequestDataType,
 }
 import com.digitalasset.canton.protocol.RequestId
-import com.digitalasset.canton.sequencing.protocol.MediatorGroupRecipient
+import com.digitalasset.canton.sequencing.protocol.MediatorsOfDomain
 import com.digitalasset.canton.topology.MediatorGroup.MediatorGroupIndex
 import com.digitalasset.canton.{BaseTest, HasExecutionContext, RequestCounter, SequencerCounter}
 import org.scalatest.wordspec.AnyWordSpec
@@ -33,15 +32,13 @@ class Phase37SynchronizerTest extends AnyWordSpec with BaseTest with HasExecutio
 
   private def pendingRequestDataFor(
       i: Long
-  ): Wrapped[TestPendingRequestData] =
-    Wrapped(
+  ): WrappedPendingRequestData[TestPendingRequestData] =
+    WrappedPendingRequestData(
       TestPendingRequestData(
         RequestCounter(i),
         SequencerCounter(i),
-        MediatorGroupRecipient(MediatorGroupIndex.one),
-        locallyRejectedF = FutureUnlessShutdown.pure(false),
-        abortEngine = _ => (),
-        engineAbortStatusF = FutureUnlessShutdown.pure(EngineAbortStatus.notAborted),
+        MediatorsOfDomain(MediatorGroupIndex.one),
+        locallyRejected = false,
       )
     )
 

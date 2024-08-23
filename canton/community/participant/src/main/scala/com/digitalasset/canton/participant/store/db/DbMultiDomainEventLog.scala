@@ -13,7 +13,6 @@ import com.daml.nonempty.NonEmpty
 import com.digitalasset.canton.config.ProcessingTimeout
 import com.digitalasset.canton.config.RequireTypes.{NonNegativeInt, NonNegativeLong, PositiveInt}
 import com.digitalasset.canton.data.CantonTimestamp
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.lifecycle.*
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.metrics.MetricsHelper
@@ -29,24 +28,28 @@ import com.digitalasset.canton.participant.store.MultiDomainEventLog.{
   PublicationData,
 }
 import com.digitalasset.canton.participant.store.db.DbMultiDomainEventLog.*
-import com.digitalasset.canton.participant.store.{EventLogId, MultiDomainEventLog}
+import com.digitalasset.canton.participant.store.{EventLogId, MultiDomainEventLog, TransferStore}
+import com.digitalasset.canton.participant.sync.TimestampedEvent.TransactionEventId
 import com.digitalasset.canton.participant.sync.{LedgerSyncEvent, TimestampedEvent}
 import com.digitalasset.canton.participant.{GlobalOffset, LocalOffset, RequestOffset}
 import com.digitalasset.canton.pekkostreams.dispatcher.Dispatcher
 import com.digitalasset.canton.pekkostreams.dispatcher.SubSource.RangeSource
+import com.digitalasset.canton.protocol.TargetDomainId
 import com.digitalasset.canton.resource.DbStorage
 import com.digitalasset.canton.resource.DbStorage.Implicits.{
   getResultLfPartyId as _,
   getResultPackageId as _,
 }
 import com.digitalasset.canton.resource.DbStorage.Profile
-import com.digitalasset.canton.store.IndexedStringStore
 import com.digitalasset.canton.store.db.DbDeserializationException
+import com.digitalasset.canton.store.{IndexedDomain, IndexedStringStore}
 import com.digitalasset.canton.time.Clock
+import com.digitalasset.canton.topology.DomainId
 import com.digitalasset.canton.tracing.{TraceContext, Traced}
 import com.digitalasset.canton.util.FutureInstances.*
 import com.digitalasset.canton.util.ShowUtil.*
 import com.digitalasset.canton.util.*
+import com.digitalasset.canton.{DiscardOps, LedgerTransactionId}
 import com.google.common.annotations.VisibleForTesting
 import org.apache.pekko.NotUsed
 import org.apache.pekko.stream.*
@@ -87,6 +90,7 @@ class DbMultiDomainEventLog private[db] (
     storage: DbStorage,
     clock: Clock,
     metrics: ParticipantMetrics,
+    override val transferStoreFor: TargetDomainId => Either[String, TransferStore],
     override val indexedStringStore: IndexedStringStore,
     protected val timeouts: ProcessingTimeout,
     protected val loggerFactory: NamedLoggerFactory,
@@ -287,6 +291,18 @@ class DbMultiDomainEventLog private[db] (
         globalOffsetStrictLowerBound = previousGlobalOffset,
         lastEvents = foundEvents,
       )
+
+      transferEvents = published.mapFilter { publication =>
+        publication.event match {
+          case transfer: LedgerSyncEvent.TransferEvent if transfer.isTransferringParticipant =>
+            Some((transfer, publication.globalOffset))
+          case _ => None
+        }
+      }
+
+      // We wait here because we don't want to update the ledger end (new head of the dispatcher) if notification fails
+      _ <- notifyOnPublishTransfer(transferEvents)
+
     } yield {
       logger.debug(show"Signalling global offset $newGlobalOffset.")
 
@@ -500,6 +516,22 @@ class DbMultiDomainEventLog private[db] (
         }.toMap
       }
     case _ => Future.successful(Map.empty)
+  }
+
+  override def lookupTransactionDomain(transactionId: LedgerTransactionId)(implicit
+      traceContext: TraceContext
+  ): OptionT[Future, DomainId] = {
+    storage
+      .querySingle(
+        sql"""select log_id from par_event_log where event_id = ${TransactionEventId(
+            transactionId
+          )}"""
+          .as[Int]
+          .headOption,
+        functionFullName,
+      )
+      .flatMap(idx => IndexedDomain.fromDbIndexOT("event_log", indexedStringStore)(idx))
+      .map(_.domainId)
   }
 
   private def lastLocalOffsetBeforeOrAt[T <: LocalOffset](
@@ -756,7 +788,7 @@ class DbMultiDomainEventLog private[db] (
   override def reportMaxEventAgeMetric(oldestEventTimestamp: Option[CantonTimestamp]): Unit =
     MetricsHelper.updateAgeInHoursGauge(
       clock,
-      metrics.pruning.maxEventAge,
+      metrics.pruning.prune.maxEventAge,
       oldestEventTimestamp,
     )
 
@@ -789,6 +821,7 @@ object DbMultiDomainEventLog {
       indexedStringStore: IndexedStringStore,
       loggerFactory: NamedLoggerFactory,
       participantEventLogId: ParticipantEventLogId,
+      transferStoreFor: TargetDomainId => Either[String, TransferStore],
       maxBatchSize: PositiveInt = PositiveInt.tryCreate(1000),
   )(implicit
       ec: ExecutionContext,
@@ -813,6 +846,7 @@ object DbMultiDomainEventLog {
         clock = clock,
         metrics = metrics,
         indexedStringStore = indexedStringStore,
+        transferStoreFor = transferStoreFor,
         timeouts = timeouts,
         loggerFactory = loggerFactory,
       )

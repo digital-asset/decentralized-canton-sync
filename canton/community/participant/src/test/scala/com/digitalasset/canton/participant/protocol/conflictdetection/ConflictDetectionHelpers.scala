@@ -24,7 +24,7 @@ import com.digitalasset.canton.participant.store.{
 }
 import com.digitalasset.canton.participant.util.TimeOfChange
 import com.digitalasset.canton.protocol.*
-import com.digitalasset.canton.sequencing.protocol.MediatorGroupRecipient
+import com.digitalasset.canton.sequencing.protocol.MediatorsOfDomain
 import com.digitalasset.canton.store.memory.InMemoryIndexedStringStore
 import com.digitalasset.canton.topology.DomainId
 import com.digitalasset.canton.tracing.TraceContext
@@ -65,7 +65,7 @@ private[protocol] trait ConflictDetectionHelpers {
       store: TransferStore =
         new InMemoryTransferStore(TransferStoreTest.targetDomain, loggerFactory),
   )(
-      entries: (TransferId, MediatorGroupRecipient)*
+      entries: (TransferId, MediatorsOfDomain)*
   )(implicit traceContext: TraceContext): Future[TransferCache] = {
     Future
       .traverse(entries) { case (transferId, sourceMediator) =>
@@ -78,7 +78,6 @@ private[protocol] trait ConflictDetectionHelpers {
           result <- store
             .addTransfer(transfer)
             .value
-            .failOnShutdown
         } yield result
       }
       .map(_ => new TransferCache(store, loggerFactory)(parallelExecutionContext))
@@ -100,7 +99,7 @@ private[protocol] object ConflictDetectionHelpers extends ScalaFuturesWithPatien
             .markContractCreated(coid -> initialTransferCounter, toc)
             .value
         case (coid, toc, Archived) => acs.archiveContract(coid, toc).value
-        case (coid, toc, Purged) => acs.purgeContracts(Seq((coid, toc))).value
+        case (coid, toc, Purged) => acs.purgeContracts(Seq(coid), toc).value
         case (coid, toc, TransferredAway(targetDomain, transferCounter)) =>
           acs.transferOutContract(coid, toc, targetDomain, transferCounter).value
       }

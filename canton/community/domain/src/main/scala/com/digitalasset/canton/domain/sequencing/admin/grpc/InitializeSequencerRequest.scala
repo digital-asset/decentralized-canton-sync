@@ -5,10 +5,10 @@ package com.digitalasset.canton.domain.sequencing.admin.grpc
 
 import com.digitalasset.canton.domain.sequencing.sequencer.SequencerSnapshot
 import com.digitalasset.canton.protocol.StaticDomainParameters
-import com.digitalasset.canton.topology.store.StoredTopologyTransactions.GenericStoredTopologyTransactions
+import com.digitalasset.canton.topology.store.StoredTopologyTransactionsX.GenericStoredTopologyTransactionsX
 
 final case class InitializeSequencerRequest(
-    topologySnapshot: GenericStoredTopologyTransactions,
+    topologySnapshot: GenericStoredTopologyTransactionsX,
     domainParameters: StaticDomainParameters,
     sequencerSnapshot: Option[SequencerSnapshot] = None,
 )

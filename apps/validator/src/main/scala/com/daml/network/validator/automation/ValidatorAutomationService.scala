@@ -24,6 +24,7 @@ import com.daml.network.validator.store.{AppManagerStore, ValidatorStore}
 import com.daml.network.wallet.UserWalletManager
 import com.daml.network.wallet.automation.{OffboardUserPartyTrigger, WalletAppInstallTrigger}
 import com.daml.network.wallet.util.ValidatorTopupConfig
+import com.digitalasset.canton.DomainAlias
 import com.digitalasset.canton.config.NonNegativeFiniteDuration
 import com.digitalasset.canton.logging.NamedLoggerFactory
 import com.digitalasset.canton.time.Clock
@@ -43,6 +44,7 @@ class ValidatorAutomationService(
     appManagerConfig: Option[AppManagerConfig],
     sequencerConnectionFromScan: Boolean,
     prevetDuration: NonNegativeFiniteDuration,
+    decentralizedSynchronizerAlias: DomainAlias,
     isSvValidator: Boolean,
     clock: Clock,
     domainTimeSync: DomainTimeSynchronization,
@@ -62,7 +64,6 @@ class ValidatorAutomationService(
     svValidator: Boolean,
     sequencerSubmissionAmplificationPatience: NonNegativeFiniteDuration,
     contactPoint: String,
-    supportsSoftDomainMigrationPoc: Boolean,
     override protected val loggerFactory: NamedLoggerFactory,
 )(implicit
     ec: ExecutionContextExecutor,
@@ -162,26 +163,24 @@ class ValidatorAutomationService(
     )
   )
 
-  if (!supportsSoftDomainMigrationPoc) {
-    registerTrigger(
-      new TransferFollowTrigger(
-        triggerContext,
-        store,
-        connection,
-        store.key.validatorParty,
-        implicit tc =>
-          scanConnection.getAmuletRulesWithState().flatMap { amuletRulesCWS =>
-            amuletRulesCWS.toAssignedContract
-              .map { amuletRules =>
-                store
-                  .listAmuletRulesTransferFollowers(amuletRules)
-                  .map(_ map (FollowTask(amuletRules, _)))
-              }
-              .getOrElse(Future successful Seq.empty)
-          },
-      )
+  registerTrigger(
+    new TransferFollowTrigger(
+      triggerContext,
+      store,
+      connection,
+      store.key.validatorParty,
+      implicit tc =>
+        scanConnection.getAmuletRulesWithState().flatMap { amuletRulesCWS =>
+          amuletRulesCWS.toAssignedContract
+            .map { amuletRules =>
+              store
+                .listAmuletRulesTransferFollowers(amuletRules)
+                .map(_ map (FollowTask(amuletRules, _)))
+            }
+            .getOrElse(Future successful Seq.empty)
+        },
     )
-  }
+  )
   registerTrigger(new AssignTrigger(triggerContext, store, connection, store.key.validatorParty))
   if (sequencerConnectionFromScan)
     registerTrigger(
@@ -189,9 +188,9 @@ class ValidatorAutomationService(
         triggerContext,
         participantAdminConnection,
         scanConnection,
+        decentralizedSynchronizerAlias,
         domainConnector,
         sequencerSubmissionAmplificationPatience,
-        supportsSoftDomainMigrationPoc,
       )
     )
 

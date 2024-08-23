@@ -11,13 +11,21 @@ import com.digitalasset.canton.lifecycle.Lifecycle.CloseableChannel
 import com.digitalasset.canton.lifecycle.{FlagCloseable, Lifecycle}
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.networking.Endpoint
-import com.digitalasset.canton.sequencing.authentication.grpc.SequencerClientTokenAuthentication
+import com.digitalasset.canton.sequencing.authentication.grpc.{
+  SequencerClientNoAuthentication,
+  SequencerClientTokenAuthentication,
+}
 import com.digitalasset.canton.sequencing.authentication.{
   AuthenticationTokenManagerConfig,
   AuthenticationTokenProvider,
 }
 import com.digitalasset.canton.time.Clock
-import com.digitalasset.canton.topology.{DomainId, Member}
+import com.digitalasset.canton.topology.{
+  AuthenticatedMember,
+  DomainId,
+  Member,
+  UnauthenticatedMemberId,
+}
 import com.digitalasset.canton.tracing.{TraceContext, TraceContextGrpc}
 import com.digitalasset.canton.version.ProtocolVersion
 import io.grpc.ManagedChannel
@@ -36,7 +44,7 @@ class GrpcSequencerClientAuth(
     clock: Clock,
     override protected val timeouts: ProcessingTimeout,
     protected val loggerFactory: NamedLoggerFactory,
-)(implicit executionContext: ExecutionContext, traceContext: TraceContext)
+)(implicit executionContext: ExecutionContext)
     extends FlagCloseable
     with NamedLogging {
 
@@ -60,15 +68,20 @@ class GrpcSequencerClientAuth(
           tokenProvider.generateToken(authenticationClient)
         }
     }
-    val clientAuthentication = SequencerClientTokenAuthentication(
-      domainId,
-      member,
-      obtainTokenPerEndpoint,
-      tokenProvider.isClosing,
-      tokenManagerConfig,
-      clock,
-      loggerFactory,
-    )
+    val clientAuthentication = member match {
+      case unauthenticatedMember: UnauthenticatedMemberId =>
+        new SequencerClientNoAuthentication(domainId, unauthenticatedMember)
+      case authenticatedMember: AuthenticatedMember =>
+        SequencerClientTokenAuthentication(
+          domainId,
+          authenticatedMember,
+          obtainTokenPerEndpoint,
+          tokenProvider.isClosing,
+          tokenManagerConfig,
+          clock,
+          loggerFactory,
+        )
+    }
     clientAuthentication(client)
   }
 

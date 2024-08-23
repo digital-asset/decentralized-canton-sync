@@ -3,10 +3,9 @@
 
 package com.daml.network.util
 
-import cats.implicits.toBifunctorOps
 import com.daml.ledger.javaapi.data.codegen.{ContractCompanion, ContractId as JavaContractId}
-import com.digitalasset.daml.lf.data.Numeric
-import com.digitalasset.canton.{topology, LfTimestamp}
+import com.daml.lf.data.Numeric
+import com.digitalasset.canton.{LfTimestamp, topology}
 import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.topology.{
   MediatorId,
@@ -94,8 +93,7 @@ object Codec {
 
   implicit val partyValue: Codec[PartyId, String] = new Codec[PartyId, String] {
     def encode(d: PartyId) = d.filterString
-    def decode(e: String) =
-      UniqueIdentifier.fromProtoPrimitive_(e).leftMap(_.message).map(PartyId(_))
+    def decode(e: String) = UniqueIdentifier.fromProtoPrimitive_(e).map(PartyId(_))
   }
 
   object Party extends CodecCompanion[PartyId] {

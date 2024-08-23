@@ -20,7 +20,7 @@ import com.digitalasset.canton.sequencing.client.TestSequencerClientSend
 import com.digitalasset.canton.sequencing.protocol.{
   AggregationRule,
   Batch,
-  MediatorGroupRecipient,
+  MediatorsOfDomain,
   MemberRecipient,
   OpenEnvelope,
   Recipients,
@@ -32,12 +32,12 @@ import com.digitalasset.canton.topology.{
   MediatorGroup,
   MediatorId,
   ParticipantId,
-  TestingIdentityFactory,
-  TestingTopology,
+  TestingIdentityFactoryX,
+  TestingTopologyX,
   UniqueIdentifier,
 }
 import com.digitalasset.canton.version.ProtocolVersion
-import com.digitalasset.canton.{BaseTest, HasExecutionContext, ProtocolVersionChecksAsyncWordSpec}
+import com.digitalasset.canton.{BaseTest, ProtocolVersionChecksAsyncWordSpec}
 import org.scalatest.wordspec.AsyncWordSpec
 
 import scala.concurrent.Future
@@ -46,14 +46,13 @@ import scala.jdk.CollectionConverters.*
 class DefaultVerdictSenderTest
     extends AsyncWordSpec
     with ProtocolVersionChecksAsyncWordSpec
-    with HasExecutionContext
     with BaseTest {
 
   private val activeMediator1 = MediatorId(UniqueIdentifier.tryCreate("mediator", "one"))
   private val activeMediator2 = MediatorId(UniqueIdentifier.tryCreate("mediator", "two"))
   private val passiveMediator3 = MediatorId(UniqueIdentifier.tryCreate("mediator", "three"))
 
-  private val mediatorGroupRecipient = MediatorGroupRecipient(MediatorGroupIndex.zero)
+  private val mediatorGroupRecipient = MediatorsOfDomain(MediatorGroupIndex.zero)
   private val mediatorGroup: MediatorGroup = MediatorGroup(
     index = mediatorGroupRecipient.group,
     active = NonEmpty.mk(Seq, activeMediator1, activeMediator2),
@@ -162,17 +161,16 @@ class DefaultVerdictSenderTest
 
   case class TestHelper(
       mediatorId: MediatorId,
-      transactionMediatorGroup: MediatorGroupRecipient,
+      transactionMediatorGroup: MediatorsOfDomain,
   ) {
 
     val domainId: DomainId = DomainId(
       UniqueIdentifier.tryFromProtoPrimitive("domain::test")
     )
-    val testTopologyTimestamp = CantonTimestamp.Epoch
 
     val factory =
       new ExampleTransactionFactory()(domainId = domainId, mediatorGroup = transactionMediatorGroup)
-    val mediatorRecipient: MediatorGroupRecipient = factory.mediatorGroup
+    val mediatorRecipient: MediatorsOfDomain = factory.mediatorGroup
     val fullInformeeTree = factory.MultipleRootsAndViewNestings.fullInformeeTree
     val informeeMessage =
       InformeeMessage(fullInformeeTree, Signature.noSignature)(testedProtocolVersion)
@@ -181,7 +179,6 @@ class DefaultVerdictSenderTest
       domainId,
       testedProtocolVersion,
       ViewType.TransactionViewType,
-      testTopologyTimestamp,
       SerializedRootHashMessagePayload.empty,
     )
     val participant: ParticipantId = ExampleTransactionFactory.submittingParticipant
@@ -201,8 +198,8 @@ class DefaultVerdictSenderTest
     val initialDomainParameters = TestDomainParameters.defaultDynamic
 
     val domainSyncCryptoApi: DomainSyncCryptoClient =
-      if (testedProtocolVersion >= ProtocolVersion.v31) {
-        val topology = TestingTopology(
+      if (testedProtocolVersion >= ProtocolVersion.v30) {
+        val topology = TestingTopologyX(
           Set(domainId),
           Map(
             submitter -> Map(participant -> ParticipantPermission.Confirmation),
@@ -214,7 +211,7 @@ class DefaultVerdictSenderTest
           Set(mediatorGroup),
         )
 
-        val identityFactory = TestingIdentityFactory(
+        val identityFactory = TestingIdentityFactoryX(
           topology,
           loggerFactory,
           dynamicDomainParameters = initialDomainParameters,
@@ -222,7 +219,7 @@ class DefaultVerdictSenderTest
 
         identityFactory.forOwnerAndDomain(mediatorId, domainId)
       } else {
-        val topology = TestingTopology(
+        val topology = TestingTopologyX(
           Set(domainId),
           Map(
             submitter -> Map(participant -> ParticipantPermission.Confirmation),
@@ -241,7 +238,7 @@ class DefaultVerdictSenderTest
           ),
         )
 
-        val identityFactory = TestingIdentityFactory(
+        val identityFactory = TestingIdentityFactoryX(
           topology,
           loggerFactory,
           dynamicDomainParameters = initialDomainParameters,
@@ -277,17 +274,15 @@ class DefaultVerdictSenderTest
     }
 
     def sendReject(): Future[Unit] = {
-      verdictSender
-        .sendReject(
-          requestId,
-          Some(informeeMessage),
-          Seq(rhmEnvelope),
-          MediatorVerdict
-            .MediatorReject(MalformedMessage.Reject("Test failure"))
-            .toVerdict(testedProtocolVersion),
-          decisionTime,
-        )
-        .failOnShutdown
+      verdictSender.sendReject(
+        requestId,
+        Some(informeeMessage),
+        Seq(rhmEnvelope),
+        MediatorVerdict
+          .MediatorReject(MalformedMessage.Reject("Test failure"))
+          .toVerdict(testedProtocolVersion),
+        decisionTime,
+      )
     }
   }
 

@@ -3,11 +3,12 @@
 
 package com.digitalasset.canton.platform.store.dao
 
+import com.daml.lf.data.Ref
 import com.daml.metrics.api.MetricsContext
-import com.digitalasset.canton.data.{CantonTimestamp, Offset}
-import com.digitalasset.canton.ledger.participant.state.Update
+import com.digitalasset.canton.ledger.offset.Offset
+import com.digitalasset.canton.ledger.participant.state.v2.Update
 import com.digitalasset.canton.logging.NamedLoggerFactory
-import com.digitalasset.canton.metrics.LedgerApiServerMetrics
+import com.digitalasset.canton.metrics.Metrics
 import com.digitalasset.canton.platform.store.backend.{
   DbDto,
   DbDtoToStringsForInterning,
@@ -23,7 +24,6 @@ import com.digitalasset.canton.platform.store.interning.{
   StringInterning,
 }
 import com.digitalasset.canton.tracing.Traced
-import com.digitalasset.daml.lf.data.Ref
 
 import java.sql.Connection
 import scala.concurrent.{Future, blocking}
@@ -36,7 +36,7 @@ trait SequentialWriteDao {
 object SequentialWriteDao {
   def apply(
       participantId: Ref.ParticipantId,
-      metrics: LedgerApiServerMetrics,
+      metrics: Metrics,
       compressionStrategy: CompressionStrategy,
       ledgerEndCache: MutableLedgerEndCache,
       stringInterningView: StringInterning with InternizingStringInterningView,
@@ -161,10 +161,9 @@ private[dao] final case class SequentialWriteDaoImpl[DB_BATCH](
           lastOffset = offset,
           lastEventSeqId = lastEventSeqId,
           lastStringInterningId = lastStringInterningId,
-          lastPublicationTime = CantonTimestamp.MinValue,
         )
       )(connection)
 
-      ledgerEndCache.set((offset, lastEventSeqId, CantonTimestamp.MinValue))
+      ledgerEndCache.set(offset -> lastEventSeqId)
     })
 }

@@ -4,18 +4,22 @@ import com.daml.network.codegen.java.splice
 import com.daml.network.console.ParticipantClientReference
 import com.daml.network.sv.util.{SvOnboardingToken, SvUtil}
 import com.daml.network.util.WalletTestUtil
-import com.digitalasset.canton.topology.transaction.TopologyChangeOp
+import com.digitalasset.canton.topology.transaction.TopologyChangeOpX
 import com.digitalasset.canton.topology.{PartyId, UniqueIdentifier}
 
 class SvDsoPartyManagementIntegrationTest extends SvIntegrationTestBase with WalletTestUtil {
 
-  "SV users can act as SV party and act the DSO party" in { implicit env =>
+  "SV users can act as SV party and act or read as the DSO party" in { implicit env =>
     initDso()
-    env.svs.local.foreach { sv =>
+    val rights =
+      sv1Backend.participantClient.ledger_api.users.rights.list(sv1Backend.config.ledgerApiUser)
+    rights.actAs should contain(dsoParty)
+    rights.readAs shouldBe empty
+    Seq(sv2Backend, sv3Backend, sv4Backend).foreach(sv => {
       val rights = sv.participantClient.ledger_api.users.rights.list(sv.config.ledgerApiUser)
-      rights.actAs should contain(dsoParty)
-      rights.readAs shouldBe empty
-    }
+      rights.actAs should not contain dsoParty
+      rights.readAs should contain(dsoParty)
+    })
     actAndCheck(
       "creating a `ValidatorOnboarding` contract readable only by sv3", {
         val sv = sv3Backend // it doesn't really matter which sv we pick
@@ -70,7 +74,7 @@ class SvDsoPartyManagementIntegrationTest extends SvIntegrationTestBase with Wal
             randomParty,
           ),
           _.errorMessage should include(
-            "Candidate party is not an sv and no `SvOnboardingConfirmed` for the candidate party is found."
+            "Candidate party is not a member and no `SvOnboardingConfirmed` for the candidate party is found."
           ),
         )
       }
@@ -79,12 +83,7 @@ class SvDsoPartyManagementIntegrationTest extends SvIntegrationTestBase with Wal
         "DSO party hosting authorization request with party which is not hosted on the target participant"
       ) {
         val unAuthorizedParty =
-          PartyId(
-            UniqueIdentifier.tryCreate(
-              sv1Party.uid.identifier.str,
-              namespace = sv3Party.uid.namespace,
-            )
-          )
+          PartyId(UniqueIdentifier(id = sv1Party.uid.id, namespace = sv3Party.uid.namespace))
         assertThrowsAndLogsCommandFailures(
           sv1Backend.startSvOnboarding(
             SvOnboardingToken(
@@ -105,12 +104,7 @@ class SvDsoPartyManagementIntegrationTest extends SvIntegrationTestBase with Wal
         "SV party namespace matches the namespace of its participant."
       ) {
         val sv3PartyWithWrongNamespace =
-          PartyId(
-            UniqueIdentifier.tryCreate(
-              sv3Party.uid.identifier.str,
-              namespace = sv1Party.uid.namespace,
-            )
-          )
+          PartyId(UniqueIdentifier(id = sv3Party.uid.id, namespace = sv1Party.uid.namespace))
         assertThrowsAndLogsCommandFailures(
           sv3Backend.startSvOnboarding(
             SvOnboardingToken(
@@ -150,7 +144,7 @@ class SvDsoPartyManagementIntegrationTest extends SvIntegrationTestBase with Wal
       eventually() {
         sv1Participant.topology.party_to_participant_mappings
           .list(
-            operation = Some(TopologyChangeOp.Replace),
+            operation = Some(TopologyChangeOpX.Replace),
             domain = decentralizedSynchronizerId,
             filterParty = dsoPartyStr,
             filterParticipant = sv3Participant.id.toProtoPrimitive,
@@ -158,7 +152,7 @@ class SvDsoPartyManagementIntegrationTest extends SvIntegrationTestBase with Wal
 
         sv3Participant.topology.party_to_participant_mappings
           .list(
-            operation = Some(TopologyChangeOp.Replace),
+            operation = Some(TopologyChangeOpX.Replace),
             domain = decentralizedSynchronizerId,
             filterParty = dsoPartyStr,
             filterParticipant = sv3Participant.id.toProtoPrimitive,

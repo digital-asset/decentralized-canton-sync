@@ -4,25 +4,19 @@
 package com.digitalasset.canton.platform.indexer.ha
 
 import com.daml.ledger.resources.{Resource, ResourceContext, ResourceOwner}
-import com.daml.metrics.api.noop.NoOpMetricsFactory
-import com.daml.metrics.api.{HistogramInventory, MetricName}
-import com.digitalasset.canton.config.ProcessingTimeout
+import com.daml.metrics.api.MetricName
 import com.digitalasset.canton.ledger.api.health.ReportsHealth
 import com.digitalasset.canton.logging.{NamedLoggerFactory, TracedLogger}
-import com.digitalasset.canton.metrics.{LedgerApiServerHistograms, LedgerApiServerMetrics}
+import com.digitalasset.canton.metrics.CantonLabeledMetricsFactory.NoOpMetricsFactory
+import com.digitalasset.canton.metrics.Metrics
 import com.digitalasset.canton.platform.LedgerApiServer
-import com.digitalasset.canton.platform.apiserver.execution.CommandProgressTracker
 import com.digitalasset.canton.platform.config.{CommandServiceConfig, IndexServiceConfig}
-import com.digitalasset.canton.platform.indexer.parallel.NoOpReassignmentOffsetPersistence
 import com.digitalasset.canton.platform.indexer.{
   IndexerConfig,
   IndexerServiceOwner,
   IndexerStartupMode,
 }
 import com.digitalasset.canton.platform.store.DbSupport.ParticipantDataSourceConfig
-import com.digitalasset.canton.platform.store.cache.MutableLedgerEndCache
-import com.digitalasset.canton.platform.store.interning.StringInterningView
-import com.digitalasset.canton.time.{Clock, WallClock}
 import com.digitalasset.canton.tracing.TraceContext.withNewTraceContext
 import com.digitalasset.canton.tracing.{NoReportingTracerProvider, TraceContext}
 import io.opentelemetry.api.trace.Tracer
@@ -49,11 +43,7 @@ final case class Indexers(indexers: List[ReadServiceAndIndexer]) {
 final class IndexerStabilityTestFixture(loggerFactory: NamedLoggerFactory) {
 
   private val logger: TracedLogger = TracedLogger(loggerFactory.getLogger(getClass))
-  private val tracer: Tracer = NoReportingTracerProvider.tracer
-  private val wallClock: Clock = new WallClock(
-    ProcessingTimeout(),
-    loggerFactory,
-  )
+  val tracer: Tracer = NoReportingTracerProvider.tracer
 
   def owner(
       updatesPerSecond: Int,
@@ -95,24 +85,21 @@ final class IndexerStabilityTestFixture(loggerFactory: NamedLoggerFactory) {
         // Gauges can only be registered once. A subsequent attempt results in an exception for the
         // call MetricRegistry#register or MetricRegistry#registerGauge
         metrics = {
-          new LedgerApiServerMetrics(
-            new LedgerApiServerHistograms(MetricName("test"))(new HistogramInventory()),
+          new Metrics(
+            MetricName("test"),
             NoOpMetricsFactory,
           )
         }
-        mutableLedgerEndCache = MutableLedgerEndCache()
-        stringInterningView = new StringInterningView(loggerFactory)
         (inMemoryState, inMemoryStateUpdaterFlow) <-
           LedgerApiServer
             .createInMemoryStateAndUpdater(
-              commandProgressTracker = CommandProgressTracker.NoOp,
               IndexServiceConfig(),
               CommandServiceConfig.DefaultMaxCommandsInFlight,
               metrics,
               executionContext,
               tracer,
               loggerFactory,
-            )(mutableLedgerEndCache, stringInterningView)
+            )
             .acquire()
 
         // Create an indexer and immediately start it
@@ -136,9 +123,6 @@ final class IndexerStabilityTestFixture(loggerFactory: NamedLoggerFactory) {
             indexerWorkerLockId = lockIdSeed + 1,
           ),
           indexServiceDbDispatcher = None,
-          excludedPackageIds = Set.empty,
-          clock = wallClock,
-          reassignmentOffsetPersistence = NoOpReassignmentOffsetPersistence,
         ).acquire()
       } yield ReadServiceAndIndexer(readService, indexing)
     }

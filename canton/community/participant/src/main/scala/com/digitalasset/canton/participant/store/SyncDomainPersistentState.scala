@@ -4,18 +4,24 @@
 package com.digitalasset.canton.participant.store
 
 import com.digitalasset.canton.concurrent.FutureSupervisor
+import com.digitalasset.canton.config.{
+  BatchingConfig,
+  CachingConfigs,
+  ProcessingTimeout,
+  TopologyConfig,
+}
 import com.digitalasset.canton.crypto.{Crypto, CryptoPureApi}
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
-import com.digitalasset.canton.participant.ParticipantNodeParameters
+import com.digitalasset.canton.participant.config.ParticipantStoreConfig
 import com.digitalasset.canton.participant.store.EventLogId.DomainEventLogId
 import com.digitalasset.canton.participant.store.db.DbSyncDomainPersistentState
 import com.digitalasset.canton.participant.store.memory.InMemorySyncDomainPersistentState
 import com.digitalasset.canton.resource.{DbStorage, MemoryStorage, Storage}
 import com.digitalasset.canton.store.*
 import com.digitalasset.canton.time.Clock
-import com.digitalasset.canton.topology.store.TopologyStore
 import com.digitalasset.canton.topology.store.TopologyStoreId.DomainStore
-import com.digitalasset.canton.topology.{DomainOutboxQueue, DomainTopologyManager, ParticipantId}
+import com.digitalasset.canton.topology.store.TopologyStoreX
+import com.digitalasset.canton.topology.{DomainOutboxQueue, DomainTopologyManagerX}
 import com.digitalasset.canton.version.ProtocolVersion
 
 import scala.concurrent.ExecutionContext
@@ -43,21 +49,25 @@ trait SyncDomainPersistentState extends NamedLogging with AutoCloseable {
   def submissionTrackerStore: SubmissionTrackerStore
   def isMemory: Boolean
 
-  def topologyStore: TopologyStore[DomainStore]
-  def topologyManager: DomainTopologyManager
+  def topologyStore: TopologyStoreX[DomainStore]
+  def topologyManager: DomainTopologyManagerX
   def domainOutboxQueue: DomainOutboxQueue
 }
 
 object SyncDomainPersistentState {
 
-  def create(
-      participantId: ParticipantId,
+  def createX(
       storage: Storage,
       domainId: IndexedDomain,
       protocolVersion: ProtocolVersion,
       clock: Clock,
       crypto: Crypto,
-      parameters: ParticipantNodeParameters,
+      parameters: ParticipantStoreConfig,
+      topologyXConfig: TopologyConfig,
+      caching: CachingConfigs,
+      batching: BatchingConfig,
+      processingTimeouts: ProcessingTimeout,
+      enableAdditionalConsistencyChecks: Boolean,
       indexedStringStore: IndexedStringStore,
       loggerFactory: NamedLoggerFactory,
       futureSupervisor: FutureSupervisor,
@@ -66,27 +76,30 @@ object SyncDomainPersistentState {
     storage match {
       case _: MemoryStorage =>
         new InMemorySyncDomainPersistentState(
-          participantId,
           clock,
           crypto,
           domainId,
           protocolVersion,
-          parameters.enableAdditionalConsistencyChecks,
+          enableAdditionalConsistencyChecks,
+          topologyXConfig.enableTopologyTransactionValidation,
           indexedStringStore,
-          exitOnFatalFailures = parameters.exitOnFatalFailures,
           domainLoggerFactory,
-          parameters.processingTimeouts,
+          processingTimeouts,
           futureSupervisor,
         )
       case db: DbStorage =>
         new DbSyncDomainPersistentState(
-          participantId,
           domainId,
           protocolVersion,
           clock,
           db,
           crypto,
           parameters,
+          caching,
+          batching,
+          processingTimeouts,
+          enableAdditionalConsistencyChecks,
+          topologyXConfig.enableTopologyTransactionValidation,
           indexedStringStore,
           domainLoggerFactory,
           futureSupervisor,

@@ -5,12 +5,11 @@ package com.digitalasset.canton.version
 
 import cats.syntax.either.*
 import com.daml.nonempty.{NonEmpty, NonEmptyUtil}
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.serialization.ProtoConverter
 import com.digitalasset.canton.serialization.ProtoConverter.ParsingResult
 import com.digitalasset.canton.store.db.DbDeserializationException
 import com.digitalasset.canton.util.BinaryFileUtil
-import com.digitalasset.canton.{ProtoDeserializationError, checked}
+import com.digitalasset.canton.{DiscardOps, ProtoDeserializationError, checked}
 import com.google.protobuf.ByteString
 import slick.jdbc.{GetResult, SetParameter}
 
@@ -62,10 +61,7 @@ trait HasVersionedWrapper[ValueClass] extends HasVersionedToByteString {
   def toByteArray(version: ProtocolVersion): Array[Byte] = toByteString(version).toByteArray
 
   /** Writes the byte string representation of the corresponding `UntypedVersionedMessage` wrapper of this instance to a file. */
-  def writeToFile(
-      outputFile: String,
-      version: ProtocolVersion = ProtocolVersion.latest,
-  ): Unit = {
+  def writeToFile(outputFile: String, version: ProtocolVersion = ProtocolVersion.latest): Unit = {
     val bytes = toByteString(version)
     BinaryFileUtil.writeByteStringToFile(outputFile, bytes)
   }
@@ -185,36 +181,38 @@ trait HasVersionedMessageCompanion[ValueClass]
       data => supportedProtoVersions.deserializerFor(ProtoVersion(proto.version))(data)
     }
 
-  /** The embedded version is not validated */
-  def fromTrustedByteString(bytes: ByteString): ParsingResult[ValueClass] =
-    for { // no input validation for proto version
-      proto <- ProtoConverter.protoParser(v1.UntypedVersionedMessage.parseFrom)(bytes)
-      valueClass <- fromProtoVersioned(VersionedMessage(proto))
-    } yield valueClass
+  def fromByteString(bytes: ByteString): ParsingResult[ValueClass] = for {
+    proto <- ProtoConverter.protoParser(v1.UntypedVersionedMessage.parseFrom)(bytes)
+    valueClass <- fromProtoVersioned(VersionedMessage(proto))
+  } yield valueClass
 
-  def fromTrustedByteArray(bytes: Array[Byte]): ParsingResult[ValueClass] = for {
+  def tryFromByteString(bytes: ByteString): ValueClass =
+    fromByteString(bytes).valueOr(err =>
+      throw new IllegalArgumentException(s"Deserializing $name bytestring failed: $err")
+    )
+
+  def fromByteArray(bytes: Array[Byte]): ParsingResult[ValueClass] = for {
     proto <- ProtoConverter.protoParserArray(v1.UntypedVersionedMessage.parseFrom)(bytes)
     valueClass <- fromProtoVersioned(VersionedMessage(proto))
   } yield valueClass
 
-  def readFromTrustedFile(
+  def readFromFile(
       inputFile: String
   ): Either[String, ValueClass] = {
     for {
       bs <- BinaryFileUtil.readByteStringFromFile(inputFile)
-      value <- fromTrustedByteString(bs).leftMap(_.toString)
+      value <- fromByteString(bs).leftMap(_.toString)
     } yield value
   }
 
-  def tryReadFromTrustedFile(inputFile: String): ValueClass =
-    readFromTrustedFile(inputFile).valueOr(err =>
-      throw new IllegalArgumentException(s"Reading $name from file $inputFile failed: $err")
-    )
+  def tryReadFromFile(inputFile: String): ValueClass = readFromFile(inputFile).valueOr(err =>
+    throw new IllegalArgumentException(s"Reading $name from file $inputFile failed: $err")
+  )
 
   implicit def hasVersionedWrapperGetResult(implicit
       getResultByteArray: GetResult[Array[Byte]]
   ): GetResult[ValueClass] = GetResult { r =>
-    fromTrustedByteArray(r.<<[Array[Byte]]).valueOr(err =>
+    fromByteArray(r.<<[Array[Byte]]).valueOr(err =>
       throw new DbDeserializationException(s"Failed to deserialize $name: $err")
     )
   }
@@ -224,7 +222,7 @@ trait HasVersionedMessageCompanion[ValueClass]
   ): GetResult[Option[ValueClass]] = GetResult { r =>
     r.<<[Option[Array[Byte]]]
       .map(
-        fromTrustedByteArray(_).valueOr(err =>
+        fromByteArray(_).valueOr(err =>
           throw new DbDeserializationException(s"Failed to deserialize $name: $err")
         )
       )
@@ -247,7 +245,8 @@ trait HasVersionedMessageCompanionDbHelpers[ValueClass <: HasVersionedWrapper[Va
 /** Traits for the companion objects of classes that implement [[HasVersionedWrapper]].
   * They provide default methods.
   * Unlike [[HasVersionedMessageCompanion]] these traits allow to pass additional
-  * context to the conversion methods.
+  * context to the conversion methods (see, e.g., [[com.digitalasset.canton.data.TransferInViewTree.fromProtoVersioned]]
+  * which takes a `HashOps` parameter).
   */
 trait HasVersionedMessageWithContextCompanion[ValueClass, Ctx]
     extends HasVersionedMessageCompanionCommon[ValueClass] {
@@ -268,10 +267,8 @@ trait HasVersionedMessageWithContextCompanion[ValueClass, Ctx]
       data => supportedProtoVersions.deserializerFor(ProtoVersion(proto.version))(ctx, data)
     }
 
-  /** The embedded version is not validated */
-  def fromTrustedByteString(ctx: Ctx)(bytes: ByteString): ParsingResult[ValueClass] =
-    for { // no input validation for proto version
-      proto <- ProtoConverter.protoParser(v1.UntypedVersionedMessage.parseFrom)(bytes)
-      valueClass <- fromProtoVersioned(ctx)(VersionedMessage(proto))
-    } yield valueClass
+  def fromByteString(ctx: Ctx)(bytes: ByteString): ParsingResult[ValueClass] = for {
+    proto <- ProtoConverter.protoParser(v1.UntypedVersionedMessage.parseFrom)(bytes)
+    valueClass <- fromProtoVersioned(ctx)(VersionedMessage(proto))
+  } yield valueClass
 }

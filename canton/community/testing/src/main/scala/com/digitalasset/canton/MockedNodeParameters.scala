@@ -4,10 +4,11 @@
 package com.digitalasset.canton
 
 import com.digitalasset.canton.config.*
-import com.digitalasset.canton.environment.{CantonNodeParameters, DefaultNodeParameters}
+import com.digitalasset.canton.environment.CantonNodeParameters
 import com.digitalasset.canton.sequencing.client.SequencerClientConfig
 import com.digitalasset.canton.time.NonNegativeFiniteDuration
 import com.digitalasset.canton.tracing.TracingConfig
+import com.digitalasset.canton.version.ProtocolVersion
 
 object MockedNodeParameters {
   def cantonNodeParameters(
@@ -17,7 +18,6 @@ object MockedNodeParameters {
       _loggingConfig: LoggingConfig = LoggingConfig(),
       _enableAdditionalConsistencyChecks: Boolean = true,
       _nonStandardConfig: Boolean = false,
-      _useUnifiedSequencer: Boolean = DefaultNodeParameters.UseUnifiedSequencer,
   ): CantonNodeParameters = new CantonNodeParameters {
     override def delayLoggingThreshold: NonNegativeFiniteDuration = ???
 
@@ -41,18 +41,18 @@ object MockedNodeParameters {
 
     override def loggingConfig: LoggingConfig = _loggingConfig
 
-    override def alphaVersionSupport: Boolean = ???
-
-    override def betaVersionSupport: Boolean = ???
+    override def devVersionSupport: Boolean = ???
 
     override def dontWarnOnDeprecatedPV: Boolean = ???
 
+    override def initialProtocolVersion: ProtocolVersion = ???
+
     override def dbMigrateAndStart: Boolean = false
 
-    override def exitOnFatalFailures: Boolean = true
+    override def useNewTrafficControl: Boolean = false
 
-    override def useUnifiedSequencer: Boolean = _useUnifiedSequencer
+    override def exitOnFatalFailures: Boolean = ???
 
-    override def watchdog: Option[WatchdogConfig] = None
+    override def useUnifiedSequencer: Boolean = false
   }
 }

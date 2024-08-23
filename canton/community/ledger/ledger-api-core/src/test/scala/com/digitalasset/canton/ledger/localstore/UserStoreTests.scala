@@ -3,6 +3,8 @@
 
 package com.digitalasset.canton.ledger.localstore
 
+import com.daml.lf.data.Ref
+import com.daml.lf.data.Ref.{LedgerString, Party, UserId}
 import com.digitalasset.canton.ledger.api.domain.{
   IdentityProviderConfig,
   IdentityProviderId,
@@ -18,8 +20,6 @@ import com.digitalasset.canton.ledger.localstore.api.{
   UserUpdate,
 }
 import com.digitalasset.canton.logging.LoggingContextWithTrace
-import com.digitalasset.daml.lf.data.Ref
-import com.digitalasset.daml.lf.data.Ref.{LedgerString, Party, UserId}
 import org.scalatest.freespec.AsyncFreeSpec
 
 import scala.concurrent.Future

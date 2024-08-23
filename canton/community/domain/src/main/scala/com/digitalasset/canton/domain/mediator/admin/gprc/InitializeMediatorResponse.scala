@@ -6,16 +6,16 @@ package com.digitalasset.canton.domain.mediator.admin.gprc
 import com.digitalasset.canton.mediator.admin.v30
 import com.digitalasset.canton.serialization.ProtoConverter.ParsingResult
 
-final case class InitializeMediatorResponse() {
+final case class InitializeMediatorResponseX() {
   def toProtoV30: v30.InitializeMediatorResponse = v30.InitializeMediatorResponse()
 }
 
-object InitializeMediatorResponse {
+object InitializeMediatorResponseX {
 
   def fromProtoV30(
       responseP: v30.InitializeMediatorResponse
-  ): ParsingResult[InitializeMediatorResponse] = {
+  ): ParsingResult[InitializeMediatorResponseX] = {
     val v30.InitializeMediatorResponse() = responseP
-    Right(InitializeMediatorResponse())
+    Right(InitializeMediatorResponseX())
   }
 }

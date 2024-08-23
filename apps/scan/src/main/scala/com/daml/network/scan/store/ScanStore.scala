@@ -3,7 +3,7 @@
 
 package com.daml.network.scan.store
 
-import com.digitalasset.daml.lf.data.Time.Timestamp
+import com.daml.lf.data.Time.Timestamp
 import com.daml.network.codegen.java.splice
 import com.daml.network.environment.{PackageIdResolver, RetryProvider}
 import com.daml.network.scan.admin.api.client.commands.HttpScanAppClient.ValidatorPurchasedTraffic
@@ -45,7 +45,7 @@ object SortOrder {
   case object Ascending extends SortOrder
   case object Descending extends SortOrder
 }
-final case class ScanInfo(publicUrl: String, svName: String)
+final case class ScanInfo(publicUrl: String, memberName: String)
 
 /** Utility class grouping the two kinds of stores managed by the DsoApp. */
 trait ScanStore

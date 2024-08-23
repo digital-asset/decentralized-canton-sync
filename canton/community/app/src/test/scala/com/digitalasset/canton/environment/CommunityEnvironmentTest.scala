@@ -7,14 +7,17 @@ import cats.data.EitherT
 import com.digitalasset.canton.config.CantonRequireTypes.InstanceName
 import com.digitalasset.canton.config.RequireTypes.Port
 import com.digitalasset.canton.config.{CantonCommunityConfig, TestingConfigInternal}
-import com.digitalasset.canton.domain.mediator.{CommunityMediatorNodeConfig, MediatorNodeBootstrap}
-import com.digitalasset.canton.domain.sequencing.SequencerNodeBootstrap
-import com.digitalasset.canton.domain.sequencing.config.CommunitySequencerNodeConfig
+import com.digitalasset.canton.domain.mediator.{
+  CommunityMediatorNodeXConfig,
+  MediatorNodeBootstrapX,
+}
+import com.digitalasset.canton.domain.sequencing.SequencerNodeBootstrapX
+import com.digitalasset.canton.domain.sequencing.config.CommunitySequencerNodeXConfig
 import com.digitalasset.canton.integration.CommunityConfigTransforms
 import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
 import com.digitalasset.canton.participant.config.*
 import com.digitalasset.canton.participant.sync.SyncServiceError
-import com.digitalasset.canton.participant.{ParticipantNode, ParticipantNodeBootstrap}
+import com.digitalasset.canton.participant.{ParticipantNodeBootstrapX, ParticipantNodeX}
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.{BaseTest, ConfigStubs, HasExecutionContext}
 import monocle.macros.syntax.lens.*
@@ -26,21 +29,21 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class CommunityEnvironmentTest extends AnyWordSpec with BaseTest with HasExecutionContext {
   // we don't care about any values of this config, so just mock
-  lazy val participant1Config: CommunityParticipantConfig = ConfigStubs.participant
-  lazy val participant2Config: CommunityParticipantConfig = ConfigStubs.participant
+  lazy val participant1xConfig: CommunityParticipantConfig = ConfigStubs.participant
+  lazy val participant2xConfig: CommunityParticipantConfig = ConfigStubs.participant
 
   lazy val sampleConfig: CantonCommunityConfig = CantonCommunityConfig(
     sequencers = Map(
-      InstanceName.tryCreate("s1") -> ConfigStubs.sequencer,
-      InstanceName.tryCreate("s2") -> ConfigStubs.sequencer,
+      InstanceName.tryCreate("s1") -> ConfigStubs.sequencerx,
+      InstanceName.tryCreate("s2") -> ConfigStubs.sequencerx,
     ),
     mediators = Map(
-      InstanceName.tryCreate("m1") -> ConfigStubs.mediator,
-      InstanceName.tryCreate("m2") -> ConfigStubs.mediator,
+      InstanceName.tryCreate("m1") -> ConfigStubs.mediatorx,
+      InstanceName.tryCreate("m2") -> ConfigStubs.mediatorx,
     ),
     participants = Map(
-      InstanceName.tryCreate("p1") -> participant1Config,
-      InstanceName.tryCreate("p2") -> participant2Config,
+      InstanceName.tryCreate("p1") -> participant1xConfig,
+      InstanceName.tryCreate("p2") -> participant2xConfig,
     ),
   )
 
@@ -52,80 +55,80 @@ class CommunityEnvironmentTest extends AnyWordSpec with BaseTest with HasExecuti
     def config: CantonCommunityConfig = sampleConfig
 
     private val createParticipantMock =
-      mock[(String, LocalParticipantConfig) => ParticipantNodeBootstrap]
+      mock[(String, LocalParticipantConfig) => ParticipantNodeBootstrapX]
     private val createSequencerMock =
-      mock[(String, CommunitySequencerNodeConfig) => SequencerNodeBootstrap]
+      mock[(String, CommunitySequencerNodeXConfig) => SequencerNodeBootstrapX]
     private val createMediatorMock =
-      mock[(String, CommunityMediatorNodeConfig) => MediatorNodeBootstrap]
+      mock[(String, CommunityMediatorNodeXConfig) => MediatorNodeBootstrapX]
 
-    def mockSequencer: SequencerNodeBootstrap = {
-      val sequencer = mock[SequencerNodeBootstrap]
+    def mockSequencer: SequencerNodeBootstrapX = {
+      val sequencer = mock[SequencerNodeBootstrapX]
       when(sequencer.start()).thenReturn(EitherT.pure[Future, String](()))
       when(sequencer.name).thenReturn(InstanceName.tryCreate("mockD"))
       sequencer
     }
 
-    def mockMediator: MediatorNodeBootstrap = {
-      val mediator = mock[MediatorNodeBootstrap]
+    def mockMediator: MediatorNodeBootstrapX = {
+      val mediator = mock[MediatorNodeBootstrapX]
       when(mediator.start()).thenReturn(EitherT.pure[Future, String](()))
       when(mediator.name).thenReturn(InstanceName.tryCreate("mockD"))
       mediator
     }
 
-    def mockParticipantAndNode: (ParticipantNodeBootstrap, ParticipantNode) = {
-      val bootstrap = mock[ParticipantNodeBootstrap]
-      val node = mock[ParticipantNode]
+    def mockParticipantAndNode: (ParticipantNodeBootstrapX, ParticipantNodeX) = {
+      val bootstrap = mock[ParticipantNodeBootstrapX]
+      val node = mock[ParticipantNodeX]
       when(bootstrap.name).thenReturn(InstanceName.tryCreate("mockP"))
       when(bootstrap.start()).thenReturn(EitherT.pure[Future, String](()))
       when(bootstrap.getNode).thenReturn(Some(node))
       when(node.reconnectDomainsIgnoreFailures()(any[TraceContext], any[ExecutionContext]))
         .thenReturn(EitherT.pure[FutureUnlessShutdown, SyncServiceError](()))
-      when(node.config).thenReturn(participant1Config)
+      when(node.config).thenReturn(participant1xConfig)
       (bootstrap, node)
     }
-    def mockParticipant: ParticipantNodeBootstrap = mockParticipantAndNode._1
+    def mockParticipant: ParticipantNodeBootstrapX = mockParticipantAndNode._1
 
     val environment = new CommunityEnvironment(
       config,
       TestingConfigInternal(initializeGlobalOpenTelemetry = false),
       loggerFactory,
     ) {
-      override def createParticipant(
+      override def createParticipantX(
           name: String,
           participantConfig: CommunityParticipantConfig,
-      ): ParticipantNodeBootstrap =
+      ): ParticipantNodeBootstrapX =
         createParticipantMock(name, participantConfig)
 
-      override def createSequencer(
+      override def createSequencerX(
           name: String,
-          sequencerConfig: CommunitySequencerNodeConfig,
-      ): SequencerNodeBootstrap =
+          sequencerConfig: CommunitySequencerNodeXConfig,
+      ): SequencerNodeBootstrapX =
         createSequencerMock(name, sequencerConfig)
 
-      override def createMediator(
+      override def createMediatorX(
           name: String,
-          mediatorConfig: CommunityMediatorNodeConfig,
-      ): MediatorNodeBootstrap =
+          mediatorConfig: CommunityMediatorNodeXConfig,
+      ): MediatorNodeBootstrapX =
         createMediatorMock(name, mediatorConfig)
     }
 
-    protected def setupParticipantFactory(create: => ParticipantNodeBootstrap): Unit =
+    protected def setupParticipantFactory(create: => ParticipantNodeBootstrapX): Unit =
       setupParticipantFactoryInternal(anyString(), create)
 
-    protected def setupParticipantFactory(id: String, create: => ParticipantNodeBootstrap): Unit =
+    protected def setupParticipantFactory(id: String, create: => ParticipantNodeBootstrapX): Unit =
       setupParticipantFactoryInternal(ArgumentMatchers.eq(id), create)
 
     private def setupParticipantFactoryInternal(
         idMatcher: => String,
-        create: => ParticipantNodeBootstrap,
+        create: => ParticipantNodeBootstrapX,
     ): Unit =
       when(createParticipantMock(idMatcher, any[LocalParticipantConfig])).thenAnswer(create)
 
-    protected def setupSequencerFactory(id: String, create: => SequencerNodeBootstrap): Unit =
-      when(createSequencerMock(eqTo(id), any[CommunitySequencerNodeConfig])).thenAnswer(create)
+    protected def setupSequencerFactory(id: String, create: => SequencerNodeBootstrapX): Unit =
+      when(createSequencerMock(eqTo(id), any[CommunitySequencerNodeXConfig])).thenAnswer(create)
 
-    protected def setupMediatorFactory(id: String, create: => MediatorNodeBootstrap): Unit =
-      when(createMediatorMock(eqTo(id), any[CommunityMediatorNodeConfig])).thenAnswer(create)
+    protected def setupMediatorFactory(id: String, create: => MediatorNodeBootstrapX): Unit =
+      when(createMediatorMock(eqTo(id), any[CommunityMediatorNodeXConfig])).thenAnswer(create)
   }
 
   "Environment" when {
@@ -190,7 +193,7 @@ class CommunityEnvironmentTest extends AnyWordSpec with BaseTest with HasExecuti
 
         override def config: CantonCommunityConfig = {
           val tmp = sampleConfig.focus(_.parameters.portsFile).replace(Some("my-ports.txt"))
-          (CommunityConfigTransforms.updateAllParticipantConfigs { case (_, config) =>
+          (CommunityConfigTransforms.updateAllParticipantXConfigs { case (_, config) =>
             config
               .focus(_.ledgerApi)
               .replace(LedgerApiServerConfig(internalPort = Some(Port.tryCreate(42))))
@@ -220,9 +223,9 @@ class CommunityEnvironmentTest extends AnyWordSpec with BaseTest with HasExecuti
           sampleConfig.focus(_.parameters.manualStart).replace(true)
 
         // These would throw on start, as all methods return null.
-        val mySequencer: SequencerNodeBootstrap = mock[SequencerNodeBootstrap]
-        val myMediator: MediatorNodeBootstrap = mock[MediatorNodeBootstrap]
-        val myParticipant: ParticipantNodeBootstrap = mock[ParticipantNodeBootstrap]
+        val mySequencer: SequencerNodeBootstrapX = mock[SequencerNodeBootstrapX]
+        val myMediator: MediatorNodeBootstrapX = mock[MediatorNodeBootstrapX]
+        val myParticipant: ParticipantNodeBootstrapX = mock[ParticipantNodeBootstrapX]
 
         Seq("p1", "p2").foreach(setupParticipantFactory(_, myParticipant))
         Seq("s1", "s2").foreach(setupSequencerFactory(_, mySequencer))
@@ -247,11 +250,11 @@ class CommunityEnvironmentTest extends AnyWordSpec with BaseTest with HasExecuti
         val exception = new RuntimeException("nope")
 
         // p1, d1 and d2 will successfully come up
-        val s1: SequencerNodeBootstrap = mockSequencer
-        val s2: SequencerNodeBootstrap = mockSequencer
-        val m1: MediatorNodeBootstrap = mockMediator
-        val m2: MediatorNodeBootstrap = mockMediator
-        val p1: ParticipantNodeBootstrap = mockParticipant
+        val s1: SequencerNodeBootstrapX = mockSequencer
+        val s2: SequencerNodeBootstrapX = mockSequencer
+        val m1: MediatorNodeBootstrapX = mockMediator
+        val m2: MediatorNodeBootstrapX = mockMediator
+        val p1: ParticipantNodeBootstrapX = mockParticipant
         setupParticipantFactory("p1", p1)
         setupSequencerFactory("s1", s1)
         setupSequencerFactory("s2", s2)

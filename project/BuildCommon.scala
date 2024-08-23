@@ -19,7 +19,6 @@ import protocbridge.ProtocRunner
 import sbt.internal.util.ManagedLogger
 import xsbti.compile.CompileAnalysis
 import de.heikoseeberger.sbtheader.HeaderPlugin.autoImport.{headerResources, headerSources}
-import CantonDependencies.daml_ledger_api_value_proto
 
 object BuildCommon {
 
@@ -279,10 +278,11 @@ object BuildCommon {
   lazy val `canton-util-external` = {
     import CantonDependencies._
     sbt.Project
-      .apply("canton-util-external", file("canton/daml-common-staging/util-external"))
+      .apply("canton-util-external", file("canton/community/util-external"))
       .dependsOn(
         `canton-pekko-fork`,
         `canton-wartremover-extension` % "compile->compile;test->test",
+        `canton-ledger-common`,
         `canton-util-logging`,
         // Canton depends on the Daml code via a git submodule and the two
         // projects below. We instead depend on the artifacts released
@@ -293,7 +293,7 @@ object BuildCommon {
       .settings(
         sharedCantonSettings,
         libraryDependencies ++= Seq(
-          daml_metrics,
+          daml_telemetry,
           daml_tracing,
           daml_executors,
           daml_lf_data,
@@ -320,27 +320,6 @@ object BuildCommon {
         dependencyOverrides ++= Seq(log4j_core, log4j_api),
         // commented out from Canton OS repo as settings don't apply to us (yet)
         // JvmRulesPlugin.damlRepoHeaderSettings,
-      )
-  }
-
-  lazy val `canton-daml-tls` = {
-    import CantonDependencies._
-    sbt.Project
-      .apply("canton-daml-tls", file("canton/daml-common-staging/daml-tls"))
-      .dependsOn(
-        `canton-util-internal`,
-        `canton-wartremover-extension` % "compile->compile;test->test",
-        `canton-util-logging`,
-      )
-      .settings(
-        sharedCantonSettings,
-        libraryDependencies ++= Seq(
-          grpc_netty,
-          netty_handler,
-          netty_boring_ssl, // This should be a Runtime dep, but needs to be declared at Compile scope due to https://github.com/sbt/sbt/issues/5568
-          scopt,
-          apache_commons_io % "test",
-        ),
       )
   }
 
@@ -390,8 +369,8 @@ object BuildCommon {
         libraryDependencies ++= Seq(
           daml_grpc_utils exclude ("com.daml", "ledger-api-scalapb_2.13"),
           daml_lf_data,
+          daml_telemetry,
           daml_nonempty_cats,
-          daml_metrics,
           daml_tracing,
           daml_contextualized_logging,
           logback_classic,
@@ -504,7 +483,6 @@ object BuildCommon {
       .dependsOn(
         `canton-slick-fork`,
         `canton-util-external`,
-        `canton-daml-tls`,
         `canton-ledger-common`,
         `canton-bindings-java`,
         `canton-community-admin-api`,
@@ -528,7 +506,6 @@ object BuildCommon {
           circe_core,
           circe_generic,
           flyway.excludeAll(ExclusionRule("org.apache.logging.log4j")),
-          flyway_postgresql,
           grpc_services,
           postgres,
           pprint,
@@ -558,8 +535,7 @@ object BuildCommon {
           scalaVersion,
           sbtVersion,
           BuildInfoKey("damlLibrariesVersion" -> CantonDependencies.daml_libraries_version),
-          BuildInfoKey("stableProtocolVersions" -> List("31")),
-          BuildInfoKey("betaProtocolVersions" -> List()),
+          BuildInfoKey("protocolVersions" -> List("30")),
         ),
         buildInfoPackage := "com.digitalasset.canton.buildinfo",
         buildInfoObject := "BuildInfo",
@@ -701,7 +677,6 @@ object BuildCommon {
           log4j_core,
           log4j_api,
           flyway excludeAll (ExclusionRule("org.apache.logging.log4j")),
-          flyway_postgresql,
           h2,
           tink,
           slick,
@@ -771,7 +746,6 @@ object BuildCommon {
         `canton-community-common` % "compile->compile;test->test",
         `canton-community-admin-api` % "compile->compile;test->test",
         `canton-sequencer-driver-api`,
-        `canton-community-reference-driver`,
       )
       .settings(
         removeTestSources,
@@ -850,6 +824,7 @@ object BuildCommon {
           scalatestScalacheck % Test,
           scalacheck % Test,
           daml_lf_archive_reader,
+          daml_lf_dev_archive_java_proto,
           daml_lf_engine,
           logback_classic % Runtime,
           logback_core % Runtime,
@@ -876,7 +851,7 @@ object BuildCommon {
           Seq(
             (
               (Compile / baseDirectory).value,
-              (Compile / damlDarOutput).value / "AdminWorkflows-3.1.0.dar",
+              (Compile / damlDarOutput).value / "AdminWorkflows-3.0.0.dar",
               "com.digitalasset.canton.participant.admin.workflows",
             )
           ),
@@ -997,7 +972,6 @@ object BuildCommon {
       .apply("canton-ledger-common", file("canton/community/ledger/ledger-common"))
       .disablePlugins(WartRemover, ScalafmtPlugin)
       .dependsOn(
-        `canton-util-external`,
         `canton-daml-errors` % "compile->compile;test->test",
         `canton-util-logging`,
         `canton-ledger-api`,
@@ -1164,33 +1138,11 @@ object BuildCommon {
       )
   }
 
-  // this project exists solely for the purpose of extracting value.proto
-  // from the jar file built in the daml repository
-  lazy val `canton-ledger-api-value` = project
-    .in(file("community/lib/ledger-api-value"))
-    .disablePlugins(
-      ScalafixPlugin,
-      ScalafmtPlugin,
-      WartRemover,
-    )
-    .settings(
-      sharedSettings,
-      // we restrict the compilation to a few files that we actually need, skipping the large majority ...
-      excludeFilter := HiddenFileFilter || "scalapb.proto",
-      PB.generate / includeFilter := "value.proto",
-      dependencyOverrides ++= Seq(),
-      // compile proto files that we've extracted here
-      Compile / PB.protoSources ++= Seq(target.value / "protobuf_external"),
-      libraryDependencies ++= Seq(
-        daml_ledger_api_value_proto % "protobuf"
-      ),
-    )
-
   lazy val `canton-ledger-api` = {
     import CantonDependencies._
     sbt.Project
       .apply("canton-ledger-api", file("canton/community/ledger-api"))
-      .dependsOn(`canton-google-common-protos-scala`, `canton-ledger-api-value`)
+      .dependsOn(`canton-google-common-protos-scala`)
       .disablePlugins(
         ScalafixPlugin,
         ScalafmtPlugin,
@@ -1213,7 +1165,6 @@ object BuildCommon {
         libraryDependencies ++= Seq(
           scalapb_runtime,
           scalapb_runtime_grpc,
-          daml_ledger_api_value_scalapb,
         ),
       )
   }
@@ -1239,7 +1190,6 @@ object BuildCommon {
           scalacheck,
           scalatestScalacheck,
           slf4j_api,
-          daml_ledger_api_value_java,
         ),
       )
   }
@@ -1277,8 +1227,7 @@ object BuildCommon {
           pekko_http_core,
           daml_pekko_http_metrics,
           daml_lf_api_type_signature,
-          tapir_json_circe,
-          tapir_pekko_http_server,
+          spray_json_derived_codecs,
           pekko_stream_testkit % Test,
           scalatest % Test,
           scalacheck % Test,

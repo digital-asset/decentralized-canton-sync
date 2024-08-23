@@ -5,7 +5,6 @@ package com.digitalasset.canton.domain.mediator
 
 import com.digitalasset.canton.SequencerCounter
 import com.digitalasset.canton.data.CantonTimestamp
-import com.digitalasset.canton.logging.pretty.{Pretty, PrettyPrinting}
 import com.digitalasset.canton.protocol.RequestId
 import com.digitalasset.canton.protocol.messages.*
 import com.digitalasset.canton.sequencing.protocol.{OpenEnvelope, Recipients}
@@ -13,10 +12,10 @@ import com.digitalasset.canton.sequencing.protocol.{OpenEnvelope, Recipients}
 /** The [[MediatorEventsProcessor]] looks through all sequencer events provided by the sequencer client in a batch
   * to pick out events for the Mediator with the same request-id while also scheduling timeouts and running
   * topology transactions at appropriate times. We map all the mediator events we generate into this simplified
-  * structure so the [[ConfirmationRequestAndResponseProcessor]] processes these events without having to perform the same extraction
+  * structure so the [[ConfirmationResponseProcessor]] processes these events without having to perform the same extraction
   * and error handling of the original SequencerEvent.
   */
-private[mediator] sealed trait MediatorEvent extends PrettyPrinting {
+private[mediator] sealed trait MediatorEvent {
   val requestId: RequestId
   val counter: SequencerCounter
   val timestamp: CantonTimestamp
@@ -28,14 +27,9 @@ private[mediator] object MediatorEvent {
       timestamp: CantonTimestamp,
       request: MediatorConfirmationRequest,
       rootHashMessages: List[OpenEnvelope[RootHashMessage[SerializedRootHashMessagePayload]]],
-      batchAlsoContainsTopologyTransaction: Boolean,
+      batchAlsoContainsTopologyXTransaction: Boolean,
   ) extends MediatorEvent {
     override val requestId: RequestId = RequestId(timestamp)
-
-    override def pretty: Pretty[Request] = prettyOfClass(
-      param("timestamp", _.timestamp),
-      param("request", _.request),
-    )
   }
 
   /** A response to a mediator confirmation request.
@@ -49,11 +43,11 @@ private[mediator] object MediatorEvent {
       recipients: Recipients,
   ) extends MediatorEvent {
     override val requestId: RequestId = response.message.requestId
-
-    override def pretty: Pretty[Response] = prettyOfClass(
-      param("timestamp", _.timestamp),
-      param("response", _.response),
-      param("recipient", _.recipients),
-    )
   }
+
+  final case class Timeout(
+      counter: SequencerCounter,
+      timestamp: CantonTimestamp,
+      requestId: RequestId,
+  ) extends MediatorEvent
 }

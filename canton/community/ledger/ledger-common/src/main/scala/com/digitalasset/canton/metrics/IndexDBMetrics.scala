@@ -4,76 +4,24 @@
 package com.digitalasset.canton.metrics
 
 import com.daml.metrics.DatabaseMetrics
-import com.daml.metrics.api.HistogramInventory.Item
+import com.daml.metrics.api.MetricDoc.MetricQualification.Debug
 import com.daml.metrics.api.MetricHandle.{Counter, Histogram, LabeledMetricsFactory, Timer}
-import com.daml.metrics.api.{
-  HistogramInventory,
-  MetricInfo,
-  MetricName,
-  MetricQualification,
-  MetricsContext,
-}
-
-trait TransactionStreamsDbHistograms {
-
-  protected implicit def inventory: HistogramInventory
-  protected def prefix: MetricName
-
-  private val flatTxStreamPrefix: MetricName = prefix :+ "flat_transactions_stream"
-
-  private[metrics] val flatTxStreamTranslationTimer: Item = Item(
-    flatTxStreamPrefix :+ "translation",
-    summary = "The time needed to turn serialized Daml-LF values into in-memory objects.",
-    description = """Some index database queries that target contracts and transactions involve a
-            |Daml-LF translation step. For such queries this metric stands for the time it
-            |takes to turn the serialized Daml-LF values into in-memory representation.""",
-    qualification = MetricQualification.Debug,
-  )
-
-  private val treeTxStreamPrefix: MetricName = prefix :+ "tree_transactions_stream"
-
-  private[metrics] val treeTxStreamTranslationTimer: Item = Item(
-    treeTxStreamPrefix :+ "translation",
-    summary = "The time needed to turn serialized Daml-LF values into in-memory objects.",
-    description = """Some index database queries that target contracts and transactions involve a
-            |Daml-LF translation step. For such queries this metric stands for the time it
-            |takes to turn the serialized Daml-LF values into in-memory representation.""",
-    qualification = MetricQualification.Debug,
-  )
-
-  private val reassignmentStreamPrefix: MetricName = prefix :+ "reassignment_stream"
-
-  private[metrics] val reassignmentStreamTranslationTimer: Item = Item(
-    reassignmentStreamPrefix :+ "translation",
-    summary = "The time needed to turn serialized Daml-LF values into in-memory objects.",
-    description = """Some index database queries that target contracts and transactions involve a
-            |Daml-LF translation step. For such queries this metric stands for the time it
-            |takes to turn the serialized Daml-LF values into in-memory representation.""",
-    qualification = MetricQualification.Debug,
-  )
-
-}
-
-class IndexDBHistograms(prefix: MetricName)(implicit
-    protected val inventory: HistogramInventory
-) extends MainIndexDBHistograms(prefix)
-    with TransactionStreamsDbHistograms
+import com.daml.metrics.api.{MetricDoc, MetricName}
 
 class IndexDBMetrics(
-    override val inventory: IndexDBHistograms,
+    val prefix: MetricName,
     override val openTelemetryMetricsFactory: LabeledMetricsFactory,
-) extends MainIndexDBMetrics(inventory, openTelemetryMetricsFactory)
+) extends MainIndexDBMetrics(prefix, openTelemetryMetricsFactory)
     with TransactionStreamsDbMetrics
 
 trait TransactionStreamsDbMetrics {
   self: DatabaseMetricsFactory =>
-
-  val inventory: TransactionStreamsDbHistograms
+  val prefix: MetricName
   val openTelemetryMetricsFactory: LabeledMetricsFactory
 
-  private implicit val metricsContext: MetricsContext = MetricsContext.Empty
-
   object flatTxStream {
+    val prefix: MetricName = self.prefix :+ "flat_transactions_stream"
+
     val fetchEventCreateIdsStakeholder: DatabaseMetrics = createDbMetrics(
       "fetch_event_create_ids_stakeholder"
     )
@@ -84,12 +32,18 @@ trait TransactionStreamsDbMetrics {
     val fetchEventConsumingPayloads: DatabaseMetrics = createDbMetrics(
       "fetch_event_consuming_payloads"
     )
-
-    val translationTimer: Timer =
-      openTelemetryMetricsFactory.timer(inventory.flatTxStreamTranslationTimer.info)
+    @MetricDoc.Tag(
+      summary = "The time needed to turn serialized Daml-LF values into in-memory objects.",
+      description = """Some index database queries that target contracts and transactions involve a
+                      |Daml-LF translation step. For such queries this metric stands for the time it
+                      |takes to turn the serialized Daml-LF values into in-memory representation.""",
+      qualification = Debug,
+    )
+    val translationTimer: Timer = openTelemetryMetricsFactory.timer(prefix :+ "translation")
   }
 
   object treeTxStream {
+    val prefix: MetricName = self.prefix :+ "tree_transactions_stream"
 
     val fetchEventCreateIdsStakeholder: DatabaseMetrics = createDbMetrics(
       "fetch_event_create_ids_stakeholder"
@@ -113,13 +67,18 @@ trait TransactionStreamsDbMetrics {
     val fetchEventNonConsumingPayloads: DatabaseMetrics = createDbMetrics(
       "fetch_event_non_consuming_payloads"
     )
-
-    val translationTimer: Timer =
-      openTelemetryMetricsFactory.timer(inventory.treeTxStreamTranslationTimer.info)
-
+    @MetricDoc.Tag(
+      summary = "The time needed to turn serialized Daml-LF values into in-memory objects.",
+      description = """Some index database queries that target contracts and transactions involve a
+                      |Daml-LF translation step. For such queries this metric stands for the time it
+                      |takes to turn the serialized Daml-LF values into in-memory representation.""",
+      qualification = Debug,
+    )
+    val translationTimer: Timer = openTelemetryMetricsFactory.timer(prefix :+ "translation")
   }
 
   object reassignmentStream {
+    val prefix: MetricName = self.prefix :+ "reassignment_stream"
 
     val fetchEventAssignIdsStakeholder: DatabaseMetrics = createDbMetrics(
       "fetch_event_assign_ids_stakeholder"
@@ -131,170 +90,77 @@ trait TransactionStreamsDbMetrics {
     val fetchEventUnassignPayloads: DatabaseMetrics = createDbMetrics(
       "fetch_event_unassign_payloads"
     )
-
-    val translationTimer: Timer =
-      openTelemetryMetricsFactory.timer(inventory.reassignmentStreamTranslationTimer.info)
-
+    @MetricDoc.Tag(
+      summary = "The time needed to turn serialized Daml-LF values into in-memory objects.",
+      description = """Some index database queries that target contracts and transactions involve a
+          |Daml-LF translation step. For such queries this metric stands for the time it
+          |takes to turn the serialized Daml-LF values into in-memory representation.""",
+      qualification = Debug,
+    )
+    val translationTimer: Timer = openTelemetryMetricsFactory.timer(prefix :+ "translation")
   }
 }
 
-class MainIndexDBHistograms(val prefix: MetricName)(implicit
-    inventory: HistogramInventory
-) {
+class MainIndexDBMetrics(
+    prefix: MetricName,
+    openTelemetryMetricsFactory: LabeledMetricsFactory,
+) extends DatabaseMetricsFactory(prefix, openTelemetryMetricsFactory) { self =>
 
-  private[metrics] val lookupKey: Item = Item(
-    prefix :+ "lookup_key",
+  @MetricDoc.Tag(
     summary = "The time spent looking up a contract using its key.",
     description = """This metric exposes the time spent looking up a contract using its key in the
-                      |index db. It is then used by the Daml interpreter when evaluating a command
-                      |into a transaction.""",
-    qualification = MetricQualification.Debug,
+                    |index db. It is then used by the Daml interpreter when evaluating a command
+                    |into a transaction.""",
+    qualification = Debug,
   )
+  val lookupKey: Timer = openTelemetryMetricsFactory.timer(prefix :+ "lookup_key")
 
-  private[metrics] val lookupActiveContract: Item = Item(
-    prefix :+ "lookup_active_contract",
+  @MetricDoc.Tag(
     summary = "The time spent fetching a contract using its id.",
     description = """This metric exposes the time spent fetching a contract using its id from the
-            |index db. It is then used by the Daml interpreter when evaluating a command
-            |into a transaction.""",
-    qualification = MetricQualification.Debug,
+                    |index db. It is then used by the Daml interpreter when evaluating a command
+                    |into a transaction.""",
+    qualification = Debug,
   )
+  val lookupActiveContract: Timer =
+    openTelemetryMetricsFactory.timer(prefix :+ "lookup_active_contract")
 
-  private[metrics] val activeContractLookupBufferDelay: Item = Item(
-    prefix :+ "active_contract_lookup_buffer_delay",
+  @MetricDoc.Tag(
+    summary = "The number of the currently pending active contract lookups.",
+    description =
+      "The number of the currently pending active contract lookups in the batch-loading queue of the Contract Service.",
+    qualification = Debug,
+  )
+  val activeContractLookupBufferLength: Counter =
+    openTelemetryMetricsFactory.counter(prefix :+ "active_contract_lookup_buffer_length")
+
+  @MetricDoc.Tag(
+    summary = "The capacity of the active contract lookup queue.",
+    description =
+      """The maximum number of elements that can be kept in the queue of active contract lookups
+        |in the batch-loading queue of the Contract Service.""",
+    qualification = Debug,
+  )
+  val activeContractLookupBufferCapacity: Counter =
+    openTelemetryMetricsFactory.counter(prefix :+ "active_contract_lookup_buffer_capacity")
+
+  @MetricDoc.Tag(
     summary = "The queuing delay for the active contract lookup queue.",
     description =
       "The queuing delay for the pending active contract lookups in the batch-loading queue of the Contract Service.",
-    qualification = MetricQualification.Debug,
+    qualification = Debug,
   )
+  val activeContractLookupBufferDelay: Timer =
+    openTelemetryMetricsFactory.timer(prefix :+ "active_contract_lookup_buffer_delay")
 
-  private[metrics] val activeContractLookupBatchSize: Item = Item(
-    prefix :+ "active_contract_lookup_batch_size",
+  @MetricDoc.Tag(
     summary = "The batch sizes in the active contract lookup batch-loading Contract Service.",
     description =
       """The number of active contract lookups contained in a batch, used in the batch-loading Contract Service.""",
-    qualification = MetricQualification.Debug,
+    qualification = Debug,
   )
-
-  private val translationPrefix = prefix :+ "translation"
-  // TODO(#17635): It's not an IndexDB op anymore
-  private[metrics] val getLfPackage: Item = Item(
-    translationPrefix :+ "get_lf_package",
-    summary = "The time needed to deserialize and decode a Daml-LF archive.",
-    description = """A Daml archive before it can be used in the interpretation needs to be
-                        |deserialized and decoded, in other words converted into the in-memory
-                        |representation. This metric represents time necessary to do that.""",
-    qualification = MetricQualification.Debug,
-  )
-
-  private val compressionPrefix: MetricName = prefix :+ "compression"
-
-  private[metrics] val createArgumentCompressed: Item = Item(
-    compressionPrefix :+ "create_argument_compressed",
-    summary = "The size of the compressed arguments of a create event.",
-    description = """Event information can be compressed by the indexer before storing it in the
-              |database. This metric collects statistics about the size of compressed
-              |arguments of a create event.""",
-    qualification = MetricQualification.Debug,
-  )
-
-  private[metrics] val createKeyValueCompressed: Item = Item(
-    compressionPrefix :+ "create_key_value_compressed",
-    summary = "The size of the compressed key value of a create event.",
-    description = """Event information can be compressed by the indexer before storing it in the
-              |database. This metric collects statistics about the size of compressed key
-              |value of a create event.""",
-    qualification = MetricQualification.Debug,
-  )
-
-  private[metrics] val createKeyValueUncompressed: Item = Item(
-    compressionPrefix :+ "create_key_value_uncompressed",
-    summary = "The size of the decompressed key value of a create event.",
-    description = """Event information can be compressed by the indexer before storing it in the
-                        |database. This metric collects statistics about the size of decompressed key
-                        |value of a create event.""",
-    qualification = MetricQualification.Debug,
-  )
-
-  private[metrics] val exerciseArgumentCompressed: Item = Item(
-    compressionPrefix :+ "exercise_argument_compressed",
-    summary = "The size of the compressed argument of an exercise event.",
-    description = """Event information can be compressed by the indexer before storing it in the
-              |database. This metric collects statistics about the size of compressed
-              |arguments of an exercise event.""",
-    qualification = MetricQualification.Debug,
-  )
-
-  private[metrics] val exerciseArgumentUncompressed: Item = Item(
-    compressionPrefix :+ "exercise_argument_uncompressed",
-    summary = "The size of the decompressed argument of an exercise event.",
-    description = """Event information can be compressed by the indexer before storing it in the
-                        |database. This metric collects statistics about the size of decompressed
-                        |arguments of an exercise event.""",
-    qualification = MetricQualification.Debug,
-  )
-
-  private[metrics] val exerciseResultCompressed: Item = Item(
-    compressionPrefix :+ "exercise_result_compressed",
-    summary = "The size of the compressed result of an exercise event.",
-    description = """Event information can be compressed by the indexer before storing it in the
-              |database. This metric collects statistics about the size of compressed
-              |result of an exercise event.""",
-    qualification = MetricQualification.Debug,
-  )
-
-  private[metrics] val exerciseResultUncompressed: Item = Item(
-    compressionPrefix :+ "exercise_result_uncompressed",
-    summary = "The size of the decompressed result of an exercise event.",
-    description = """Event information can be compressed by the indexer before storing it in the
-              |database. This metric collects statistics about the size of compressed
-              |result of an exercise event.""",
-    qualification = MetricQualification.Debug,
-  )
-
-}
-
-class MainIndexDBMetrics(
-    inventory: MainIndexDBHistograms,
-    openTelemetryMetricsFactory: LabeledMetricsFactory,
-) extends DatabaseMetricsFactory(inventory.prefix, openTelemetryMetricsFactory) { self =>
-
-  implicit val metricsContext: MetricsContext = MetricsContext.Empty
-  private val prefix = inventory.prefix
-
-  val lookupKey: Timer = openTelemetryMetricsFactory.timer(inventory.lookupKey.info)
-
-  val lookupActiveContract: Timer =
-    openTelemetryMetricsFactory.timer(inventory.lookupActiveContract.info)
-
-  val activeContractLookupBufferLength: Counter =
-    openTelemetryMetricsFactory.counter(
-      MetricInfo(
-        prefix :+ "active_contract_lookup_buffer_length",
-        summary = "The number of the currently pending active contract lookups.",
-        description =
-          "The number of the currently pending active contract lookups in the batch-loading queue of the Contract Service.",
-        qualification = MetricQualification.Debug,
-      )
-    )
-
-  val activeContractLookupBufferCapacity: Counter =
-    openTelemetryMetricsFactory.counter(
-      MetricInfo(
-        prefix :+ "active_contract_lookup_buffer_capacity",
-        summary = "The capacity of the active contract lookup queue.",
-        description =
-          """The maximum number of elements that can be kept in the queue of active contract lookups
-          |in the batch-loading queue of the Contract Service.""",
-        qualification = MetricQualification.Debug,
-      )
-    )
-
-  val activeContractLookupBufferDelay: Timer =
-    openTelemetryMetricsFactory.timer(inventory.activeContractLookupBufferDelay.info)
-
   val activeContractLookupBatchSize: Histogram =
-    openTelemetryMetricsFactory.histogram(inventory.activeContractLookupBatchSize.info)
+    openTelemetryMetricsFactory.histogram(prefix :+ "active_contract_lookup_batch_size")
 
   private val overall = createDbMetrics("all")
   val waitAll: Timer = overall.waitTimer
@@ -303,13 +169,16 @@ class MainIndexDBMetrics(
   val getCompletions: DatabaseMetrics = createDbMetrics("get_completions")
   val getParticipantId: DatabaseMetrics = createDbMetrics("get_participant_id")
   val getLedgerEnd: DatabaseMetrics = createDbMetrics("get_ledger_end")
-  val getDomainledgerEnd: DatabaseMetrics = createDbMetrics("get_domain_ledger_end")
-  val getPostProcessingEnd: DatabaseMetrics = createDbMetrics("get_post_processing_end")
   val initializeLedgerParameters: DatabaseMetrics = createDbMetrics(
     "initialize_ledger_parameters"
   )
   val lookupConfiguration: DatabaseMetrics = createDbMetrics("lookup_configuration")
-
+  val loadConfigurationEntries: DatabaseMetrics = createDbMetrics(
+    "load_configuration_entries"
+  )
+  val storeConfigurationEntryDbMetrics: DatabaseMetrics = createDbMetrics(
+    "store_configuration_entry"
+  )
   val storePartyEntryDbMetrics: DatabaseMetrics = createDbMetrics(
     "store_party_entry"
   )
@@ -322,6 +191,10 @@ class MainIndexDBMetrics(
   )
   val loadParties: DatabaseMetrics = createDbMetrics("load_parties")
   val loadAllParties: DatabaseMetrics = createDbMetrics("load_all_parties")
+  val loadPackages: DatabaseMetrics = createDbMetrics("load_packages")
+  val loadArchive: DatabaseMetrics = createDbMetrics("load_archive")
+  val storePackageEntryDbMetrics: DatabaseMetrics = createDbMetrics("store_package_entry")
+  val loadPackageEntries: DatabaseMetrics = createDbMetrics("load_package_entries")
   val pruneDbMetrics: DatabaseMetrics = createDbMetrics("prune")
   val fetchPruningOffsetsMetrics: DatabaseMetrics = createDbMetrics("fetch_pruning_offsets")
   val lookupCreatedContractsDbMetrics: DatabaseMetrics = createDbMetrics("lookup_created_contracts")
@@ -342,6 +215,7 @@ class MainIndexDBMetrics(
     "lookup_transaction_tree_by_id"
   )
   val getEventsByContractId: DatabaseMetrics = createDbMetrics("get_events_by_contract_id")
+  val getEventsByContractKey: DatabaseMetrics = createDbMetrics("get_events_by_contract_key")
   val getActiveContracts: DatabaseMetrics = createDbMetrics("get_active_contracts")
   val getActiveContractIdsForCreated: DatabaseMetrics = createDbMetrics(
     "get_active_contract_ids_for_created"
@@ -380,51 +254,103 @@ class MainIndexDBMetrics(
     "get_assign_ids_for_contract_ids"
   )
 
-  val firstDomainOffsetAfterOrAt: DatabaseMetrics = createDbMetrics(
-    "first_domain_offset_after_or_at"
-  )
-  val lastDomainOffsetBeforeOrAt: DatabaseMetrics = createDbMetrics(
-    "last_domain_offset_before_or_at"
-  )
-  val domainOffset: DatabaseMetrics = createDbMetrics("domain_offet")
-  val firstDomainOffsetAfterOrAtPublicationTime: DatabaseMetrics = createDbMetrics(
-    "first_domain_offset_after_or_at_publication_time"
-  )
-  val lastDomainOffsetBeforeOrAtPublicationTime: DatabaseMetrics = createDbMetrics(
-    "last_domain_offset_before_or_at_publication_time"
-  )
-
-  val archivals: DatabaseMetrics = createDbMetrics("archivals")
-
   object translation {
-    val getLfPackage: Timer = openTelemetryMetricsFactory.timer(inventory.getLfPackage.info)
+    private val prefix: MetricName = MainIndexDBMetrics.this.prefix :+ "translation"
+
+    @MetricDoc.Tag(
+      summary = "The time needed to deserialize and decode a Daml-LF archive.",
+      description = """A Daml archive before it can be used in the interpretation needs to be
+                      |deserialized and decoded, in other words converted into the in-memory
+                      |representation. This metric represents time necessary to do that.""",
+      qualification = Debug,
+    )
+    val getLfPackage: Timer = openTelemetryMetricsFactory.timer(prefix :+ "get_lf_package")
   }
 
   object compression {
+    private val prefix: MetricName = MainIndexDBMetrics.this.prefix :+ "compression"
 
+    @MetricDoc.Tag(
+      summary = "The size of the compressed arguments of a create event.",
+      description = """Event information can be compressed by the indexer before storing it in the
+                      |database. This metric collects statistics about the size of compressed
+                      |arguments of a create event.""",
+      qualification = Debug,
+    )
     val createArgumentCompressed: Histogram =
-      openTelemetryMetricsFactory.histogram(inventory.createArgumentCompressed.info)
+      openTelemetryMetricsFactory.histogram(prefix :+ "create_argument_compressed")
 
+    @MetricDoc.Tag(
+      summary = "The size of the decompressed argument of a create event.",
+      description = """Event information can be compressed by the indexer before storing it in the
+                      |database. This metric collects statistics about the size of decompressed
+                      |arguments of a create event.""",
+      qualification = Debug,
+    )
     val createArgumentUncompressed: Histogram =
-      openTelemetryMetricsFactory.histogram(inventory.createArgumentCompressed.info)
+      openTelemetryMetricsFactory.histogram(prefix :+ "create_argument_uncompressed")
 
+    @MetricDoc.Tag(
+      summary = "The size of the compressed key value of a create event.",
+      description = """Event information can be compressed by the indexer before storing it in the
+                      |database. This metric collects statistics about the size of compressed key
+                      |value of a create event.""",
+      qualification = Debug,
+    )
     val createKeyValueCompressed: Histogram =
-      openTelemetryMetricsFactory.histogram(inventory.createKeyValueCompressed.info)
+      openTelemetryMetricsFactory.histogram(prefix :+ "create_key_value_compressed")
 
-    val createKeyValueUncompressed: Histogram =
-      openTelemetryMetricsFactory.histogram(inventory.createKeyValueUncompressed.info)
+    @MetricDoc.Tag(
+      summary = "The size of the decompressed key value of a create event.",
+      description = """Event information can be compressed by the indexer before storing it in the
+                      |database. This metric collects statistics about the size of decompressed key
+                      |value of a create event.""",
+      qualification = Debug,
+    )
+    val createKeyValueUncompressed: Histogram = openTelemetryMetricsFactory.histogram(
+      prefix :+ "create_key_value_uncompressed"
+    )
 
+    @MetricDoc.Tag(
+      summary = "The size of the compressed argument of an exercise event.",
+      description = """Event information can be compressed by the indexer before storing it in the
+                      |database. This metric collects statistics about the size of compressed
+                      |arguments of an exercise event.""",
+      qualification = Debug,
+    )
     val exerciseArgumentCompressed: Histogram =
-      openTelemetryMetricsFactory.histogram(inventory.exerciseArgumentCompressed.info)
+      openTelemetryMetricsFactory.histogram(prefix :+ "exercise_argument_compressed")
 
-    val exerciseArgumentUncompressed: Histogram =
-      openTelemetryMetricsFactory.histogram(inventory.exerciseArgumentUncompressed.info)
+    @MetricDoc.Tag(
+      summary = "The size of the decompressed argument of an exercise event.",
+      description = """Event information can be compressed by the indexer before storing it in the
+                      |database. This metric collects statistics about the size of decompressed
+                      |arguments of an exercise event.""",
+      qualification = Debug,
+    )
+    val exerciseArgumentUncompressed: Histogram = openTelemetryMetricsFactory.histogram(
+      prefix :+ "exercise_argument_uncompressed"
+    )
 
+    @MetricDoc.Tag(
+      summary = "The size of the compressed result of an exercise event.",
+      description = """Event information can be compressed by the indexer before storing it in the
+                      |database. This metric collects statistics about the size of compressed
+                      |result of an exercise event.""",
+      qualification = Debug,
+    )
     val exerciseResultCompressed: Histogram =
-      openTelemetryMetricsFactory.histogram(inventory.exerciseResultCompressed.info)
+      openTelemetryMetricsFactory.histogram(prefix :+ "exercise_result_compressed")
 
+    @MetricDoc.Tag(
+      summary = "The size of the decompressed result of an exercise event.",
+      description = """Event information can be compressed by the indexer before storing it in the
+                      |database. This metric collects statistics about the size of compressed
+                      |result of an exercise event.""",
+      qualification = Debug,
+    )
     val exerciseResultUncompressed: Histogram =
-      openTelemetryMetricsFactory.histogram(inventory.exerciseResultUncompressed.info)
+      openTelemetryMetricsFactory.histogram(prefix :+ "exercise_result_uncompressed")
   }
 
   object threadpool {

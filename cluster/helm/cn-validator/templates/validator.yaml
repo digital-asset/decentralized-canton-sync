@@ -95,11 +95,6 @@ spec:
           value: |
             canton.validator-apps.validator_backend.scan-client.type = "trust-single"
             canton.validator-apps.validator_backend.scan-client.url = ${_scan.admin-api.address}
-        {{ else if .Values.nonSvValidatorTrustSingleScan | default false -}}
-        - name: ADDITIONAL_CONFIG_NON_VALIDATOR_TRUST_SINGLE_SCAN
-          value: |
-            canton.validator-apps.validator_backend.scan-client.type = "trust-single"
-            canton.validator-apps.validator_backend.scan-client.url = ${_scan.admin-api.address}
         {{ else -}}
         - name: ADDITIONAL_CONFIG_BFT_SCAN
           value: |
@@ -241,8 +236,6 @@ spec:
         {{- include "cn-util-lib.log-level" .Values | indent 8}}
         - name: CN_APP_CONTACT_POINT
           value: {{ .Values.contactPoint | default "" | quote }}
-        - name: CN_APP_VALIDATOR_PARTICIPANT_IDENTIFIER
-          value: {{ .Values.nodeIdentifier | quote }}
         ports:
         - containerPort: 5003
           name: val-http

@@ -5,8 +5,6 @@ package com.digitalasset.canton.traffic
 
 import com.digitalasset.canton.config.RequireTypes.PositiveInt
 import com.digitalasset.canton.sequencing.protocol.{AllMembersOfDomain, ClosedEnvelope, Recipients}
-import com.digitalasset.canton.sequencing.traffic.EventCostCalculator
-import com.digitalasset.canton.sequencing.traffic.EventCostCalculator.EnvelopeCostDetails
 import com.digitalasset.canton.topology.Member
 import com.digitalasset.canton.{BaseTest, ProtocolVersionChecksAnyWordSpec}
 import com.google.protobuf.ByteString
@@ -20,43 +18,31 @@ class EventCostCalculatorTest
   private val recipient2 = mock[Member]
 
   "calculate cost correctly" in {
-    val recipients = Recipients.cc(recipient1, recipient2)
     new EventCostCalculator(loggerFactory).computeEnvelopeCost(
       PositiveInt.tryCreate(5000),
       Map.empty,
     )(
       ClosedEnvelope.create(
         ByteString.copyFrom(Array.fill(5)(1.toByte)),
-        recipients,
+        Recipients.cc(recipient1, recipient2),
         Seq.empty,
         testedProtocolVersion,
       )
-    ) shouldBe EnvelopeCostDetails(
-      5L,
-      5L, // 5 * 2 * 5000 / 10000
-      10L,
-      recipients.allRecipients.toSeq,
-    )
+    ) shouldBe 10L // == 5 + 5 * 2 * 5000 / 10000
   }
 
   "use resolved group recipients" in {
-    val recipients = Recipients.cc(AllMembersOfDomain)
     new EventCostCalculator(loggerFactory).computeEnvelopeCost(
       PositiveInt.tryCreate(5000),
       Map(AllMembersOfDomain -> Set(recipient1, recipient2)),
     )(
       ClosedEnvelope.create(
         ByteString.copyFrom(Array.fill(5)(1.toByte)),
-        recipients,
+        Recipients.cc(AllMembersOfDomain),
         Seq.empty,
         testedProtocolVersion,
       )
-    ) shouldBe EnvelopeCostDetails(
-      writeCost = 5L,
-      readCost = 5L, // 5 * 2 * 5000 / 10000
-      finalCost = 10L,
-      recipients.allRecipients.toSeq,
-    )
+    ) shouldBe 10L // == 5 + 5 * 2 * 5000 / 10000
   }
 
   "cost computation does not overflow an int" in {
@@ -64,7 +50,6 @@ class EventCostCalculatorTest
     // ~ 500 recipients, cost multiplier 200, estimated payload 25000
     // This overflows an Int computation (-154496 instead of 275000)
 
-    val recipients = Recipients.cc(AllMembersOfDomain)
     val manyRecipients = List.fill(500)(mock[Member]).toSet
     new EventCostCalculator(loggerFactory).computeEnvelopeCost(
       PositiveInt.tryCreate(200),
@@ -72,16 +57,11 @@ class EventCostCalculatorTest
     )(
       ClosedEnvelope.create(
         ByteString.copyFrom(Array.fill(25000)(1.toByte)),
-        recipients,
+        Recipients.cc(AllMembersOfDomain),
         Seq.empty,
         testedProtocolVersion,
       )
-    ) shouldBe EnvelopeCostDetails(
-      25000L,
-      250000L, // 25000 * 500 * 200 / 10000
-      275000L,
-      recipients.allRecipients.toSeq,
-    )
+    ) shouldBe 275000L // == 25000 + 25000 * 500 * 200 / 10000
   }
 
   "detect cost computation overflow" in {

@@ -44,7 +44,8 @@ class NodeIdentitiesStore(
       NodeIdentitiesDump(
         id,
         keys,
-        authorizedStoreSnapshot,
+        Some(authorizedStoreSnapshot),
+        None,
         Some(BuildInfo.compiledVersion),
       )
     }

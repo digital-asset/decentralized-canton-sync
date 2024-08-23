@@ -132,7 +132,9 @@ class MemberTrafficIntegrationTest
       val statusAsPerScan = sv1ScanBackend.getMemberTrafficStatus(activeSynchronizerId, memberId)
 
       statusAsPerScan.actual.totalConsumed shouldBe actualStateAsPerSequencer.extraTrafficConsumed.value
-      statusAsPerScan.actual.totalLimit shouldBe actualStateAsPerSequencer.extraTrafficPurchased.value
+      statusAsPerScan.actual.totalLimit shouldBe actualStateAsPerSequencer.extraTrafficLimit.fold(
+        0L
+      )(_.value)
       statusAsPerScan.target.totalPurchased shouldBe actualTotalPurchasedAsPerDso
     }
   }

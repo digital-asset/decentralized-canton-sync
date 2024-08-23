@@ -6,11 +6,10 @@ import { test, expect } from 'vitest';
 import App from '../App';
 import { config } from './setup/config';
 
-const spliceInstanceNames = config.spliceInstanceNames;
-
 test('home screen shows up', async () => {
   render(<App />);
-  const a = await screen.findByText(`${spliceInstanceNames.amuletName} Scan`);
+  const amuletName = config.spliceInstanceNames.amuletName;
+  const a = await screen.findByText(`${amuletName} Scan`);
   expect(a).toBeDefined();
 });
 
@@ -31,16 +30,12 @@ test('recent activity link from tab opens a tab', async () => {
   const rows = await within(table).findAllByRole('row');
   const firstRow = rows[1];
   expect(within(firstRow).getByText('Automation')).toBeDefined();
-  expect(within(firstRow).getByText(`0.03 ${spliceInstanceNames.amuletNameAcronym}`)).toBeDefined();
-  expect(
-    within(firstRow).getByText(`1 ${spliceInstanceNames.amuletNameAcronym}/USD`)
-  ).toBeDefined();
+  expect(within(firstRow).getByText('0.03 CC')).toBeDefined();
+  expect(within(firstRow).getByText('1 CC/USD')).toBeDefined();
 });
 
-test('recent activity looks up entries', async () => {
+test('recent activity looks up CNS entries', async () => {
   render(<App />);
-  const ansNameElement = await screen.findByText(
-    `charlie.unverified.${spliceInstanceNames.nameServiceNameAcronym.toLowerCase()}`
-  );
+  const ansNameElement = await screen.findByText('charlie.unverified.cns');
   expect(ansNameElement).toBeDefined();
 });

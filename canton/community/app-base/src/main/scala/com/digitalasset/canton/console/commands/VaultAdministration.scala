@@ -19,7 +19,6 @@ import com.digitalasset.canton.console.{
 }
 import com.digitalasset.canton.crypto.*
 import com.digitalasset.canton.crypto.admin.grpc.PrivateKeyMetadata
-import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
 import com.digitalasset.canton.logging.NamedLoggerFactory
 import com.digitalasset.canton.time.Clock
 import com.digitalasset.canton.topology.store.TopologyStoreId.AuthorizedStore
@@ -30,7 +29,7 @@ import com.digitalasset.canton.version.ProtocolVersion
 import com.google.protobuf.ByteString
 
 import java.time.Instant
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class SecretKeyAdministration(
     instance: InstanceReference,
@@ -46,7 +45,7 @@ class SecretKeyAdministration(
     currentKey match {
       case encKey: EncryptionPublicKey =>
         instance.keys.secret.generate_encryption_key(
-          keySpec = Some(encKey.keySpec),
+          scheme = Some(encKey.scheme),
           name = OptionUtil.noneAsEmptyString(name),
         )
       case signKey: SigningPublicKey =>
@@ -93,10 +92,10 @@ class SecretKeyAdministration(
   )
   def generate_encryption_key(
       name: String = "",
-      keySpec: Option[EncryptionKeySpec] = None,
+      scheme: Option[EncryptionKeyScheme] = None,
   ): EncryptionPublicKey = {
     consoleEnvironment.run {
-      adminCommand(VaultAdminCommands.GenerateEncryptionKey(name, keySpec))
+      adminCommand(VaultAdminCommands.GenerateEncryptionKey(name, scheme))
     }
   }
 
@@ -136,7 +135,7 @@ class SecretKeyAdministration(
 
   private def findPublicKey(
       fingerprint: String,
-      topologyAdmin: TopologyAdministrationGroup,
+      topologyAdmin: TopologyAdministrationGroupCommon,
       owner: Member,
   ): PublicKey =
     findPublicKeys(topologyAdmin, owner).find(_.fingerprint.unwrap == fingerprint) match {
@@ -242,17 +241,24 @@ class SecretKeyAdministration(
   /** Helper to find public keys for topology/x shared between community and enterprise
     */
   protected def findPublicKeys(
-      topologyAdmin: TopologyAdministrationGroup,
+      topologyAdmin: TopologyAdministrationGroupCommon,
       owner: Member,
-  ): Seq[PublicKey] = {
-    topologyAdmin.owner_to_key_mappings
-      .list(
-        filterStore = AuthorizedStore.filterName,
-        filterKeyOwnerUid = owner.filterString,
-        filterKeyOwnerType = Some(owner.code),
-      )
-      .flatMap(_.item.keys)
-  }
+  ): Seq[PublicKey] =
+    topologyAdmin match {
+      case tx: TopologyAdministrationGroup =>
+        tx.owner_to_key_mappings
+          .list(
+            filterStore = AuthorizedStore.filterName,
+            filterKeyOwnerUid = owner.filterString,
+            filterKeyOwnerType = Some(owner.code),
+          )
+          .flatMap(_.item.keys)
+      case _ =>
+        // TODO(#15161): Remove the match when flattening TopologyAdministrationGroup and Common
+        throw new IllegalStateException(
+          "Impossible to encounter topology admin group besides X"
+        )
+    }
 
   /** Helper to name new keys generated during a rotation with a ...-rotated-<timestamp> tag to better identify
     * the new keys after a rotation
@@ -485,7 +491,8 @@ class PublicKeyAdministration(
       filterDomain: String = "",
       asOf: Option[Instant] = None,
       limit: PositiveInt = defaultLimit,
-  ): Seq[ListKeyOwnersResult] =
+  ): Seq[ListKeyOwnersResult] = {
+    println(s"keyOwner.uid.toProtoPrimitive = ${keyOwner.uid.toProtoPrimitive}")
     consoleEnvironment.run {
       adminCommand(
         TopologyAdminCommands.Aggregation.ListKeyOwners(
@@ -497,6 +504,7 @@ class PublicKeyAdministration(
         )
       )
     }
+  }
 }
 
 class KeyAdministrationGroup(
@@ -530,12 +538,10 @@ class LocalSecretKeyAdministration(
 )(implicit executionContext: ExecutionContext)
     extends SecretKeyAdministration(instance, runner, consoleEnvironment, loggerFactory) {
 
-  private def run[V](eitherT: EitherT[FutureUnlessShutdown, String, V], action: String): V = {
+  private def run[V](eitherT: EitherT[Future, String, V], action: String): V = {
     import TraceContext.Implicits.Empty.*
     consoleEnvironment.environment.config.parameters.timeouts.processing.default
-      .await(action)(
-        eitherT.onShutdown(throw new RuntimeException("aborted due to shutdown.")).value
-      ) match {
+      .await(action)(eitherT.value) match {
       case Left(error) =>
         throw new IllegalArgumentException(s"Problem while $action. Error: $error")
       case Right(value) => value
@@ -554,7 +560,7 @@ class LocalSecretKeyAdministration(
           .toRight(
             "The selected crypto provider does not support exporting of private keys."
           )
-          .toEitherT[FutureUnlessShutdown]
+          .toEitherT[Future]
         privateKey <- cryptoPrivateStore
           .exportPrivateKey(fingerprint)
           .leftMap(_.toString)
@@ -562,7 +568,9 @@ class LocalSecretKeyAdministration(
           .leftMap(err => s"Error retrieving private key [$fingerprint] $err")
         publicKey <- crypto.cryptoPublicStore
           .publicKey(fingerprint)
-          .toRight(s"Error retrieving public key [$fingerprint]: no public key found")
+          .leftMap(_.toString)
+          .subflatMap(_.toRight(s"no public key found for [$fingerprint]"))
+          .leftMap(err => s"Error retrieving public key [$fingerprint] $err")
         keyPair: CryptoKeyPair[PublicKey, PrivateKey] = (publicKey, privateKey) match {
           case (pub: SigningPublicKey, pkey: SigningPrivateKey) =>
             new SigningKeyPair(pub, pkey)

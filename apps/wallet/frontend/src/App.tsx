@@ -96,7 +96,6 @@ const App: React.FC = () => (
       <Helmet>
         <title>{pageTitle}</title>
         <meta name="description" content={pageTitle} />
-        <link rel="icon" href={config.spliceInstanceNames.networkFaviconUrl} />
       </Helmet>
       <CssBaseline />
       <RouterProvider router={router} />

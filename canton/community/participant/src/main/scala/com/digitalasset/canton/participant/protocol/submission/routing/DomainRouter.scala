@@ -8,20 +8,23 @@ import cats.syntax.bifunctor.*
 import cats.syntax.either.*
 import cats.syntax.foldable.*
 import cats.syntax.parallel.*
+import com.daml.lf.data.{ImmArray, Ref}
 import com.digitalasset.canton.config.ProcessingTimeout
 import com.digitalasset.canton.crypto.CryptoPureApi
 import com.digitalasset.canton.data.ProcessedDisclosedContract
-import com.digitalasset.canton.ledger.participant.state.{SubmitterInfo, TransactionMeta}
+import com.digitalasset.canton.ledger.participant.state.v2.{SubmitterInfo, TransactionMeta}
 import com.digitalasset.canton.lifecycle.{FlagCloseable, FutureUnlessShutdown}
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
-import com.digitalasset.canton.participant.ParticipantNodeParameters
 import com.digitalasset.canton.participant.domain.DomainAliasManager
-import com.digitalasset.canton.participant.protocol.SerializableContractAuthenticator
 import com.digitalasset.canton.participant.protocol.TransactionProcessor.{
   TransactionSubmissionError,
-  TransactionSubmissionResult,
+  TransactionSubmitted,
 }
 import com.digitalasset.canton.participant.protocol.submission.routing.DomainRouter.inputContractRoutingParties
+import com.digitalasset.canton.participant.protocol.{
+  SerializableContractAuthenticator,
+  SerializableContractAuthenticatorImpl,
+}
 import com.digitalasset.canton.participant.store.DomainConnectionConfigStore
 import com.digitalasset.canton.participant.sync.TransactionRoutingError.ConfigurationErrors.{
   MultiDomainSupportNotEnabled,
@@ -44,7 +47,6 @@ import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.EitherTUtil
 import com.digitalasset.canton.util.FutureInstances.*
 import com.digitalasset.canton.{LfKeyResolver, LfPartyId}
-import com.digitalasset.daml.lf.data.{ImmArray, Ref}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -64,9 +66,7 @@ class DomainRouter(
         WellFormedTransaction[WithoutSuffixes],
         TraceContext,
         Map[LfContractId, SerializableContract],
-    ) => EitherT[Future, TransactionRoutingError, FutureUnlessShutdown[
-      TransactionSubmissionResult
-    ]],
+    ) => EitherT[Future, TransactionRoutingError, FutureUnlessShutdown[TransactionSubmitted]],
     contractsTransferer: ContractsTransfer,
     snapshotProvider: DomainStateProvider,
     serializableContractAuthenticator: SerializableContractAuthenticator,
@@ -89,7 +89,7 @@ class DomainRouter(
       explicitlyDisclosedContracts: ImmArray[ProcessedDisclosedContract],
   )(implicit
       traceContext: TraceContext
-  ): EitherT[Future, TransactionRoutingError, FutureUnlessShutdown[TransactionSubmissionResult]] = {
+  ): EitherT[Future, TransactionRoutingError, FutureUnlessShutdown[TransactionSubmitted]] = {
 
     for {
       // do some sanity checks for invalid inputs (to not conflate these with broken nodes)
@@ -144,7 +144,7 @@ class DomainRouter(
 
       inputDomains = transactionData.inputContractsDomainData.domains
 
-      isMultiDomainTx <- isMultiDomainTx(inputDomains, transactionData.informees, optDomainId)
+      isMultiDomainTx <- isMultiDomainTx(inputDomains, transactionData.informees)
 
       domainRankTarget <-
         if (!isMultiDomainTx) {
@@ -187,7 +187,7 @@ class DomainRouter(
   ): EitherT[Future, UnableToQueryTopologySnapshot.Failed, Boolean] =
     for {
       snapshot <- EitherT.fromEither[Future](snapshotProvider.getTopologySnapshotFor(domainId))
-      allInformeesOnDomain <- EitherT.right(
+      allInformeesOnDomain <- EitherT.liftF(
         snapshot.allHaveActiveParticipants(informees).bimap(_ => false, _ => true).merge
       )
     } yield allInformeesOnDomain
@@ -200,24 +200,18 @@ class DomainRouter(
       domainRankTarget <- domainSelector.forMultiDomain
     } yield domainRankTarget
 
-  /** We have a multi-domain transaction if the input contracts are on more than one domain,
-    * if the (single) input domain does not host all informees
-    * or if the target domain is different than the domain of the input contracts
+  /** We have a multi-domain transaction if the input contracts are on more than one domain
+    * or if the (single) input domain does not host all informees
     * (because we will need to transfer the contracts to a domain that that *does* host all informees.
     * Transactions without input contracts are always single-domain.
     */
   private def isMultiDomainTx(
       inputDomains: Set[DomainId],
       informees: Set[LfPartyId],
-      optDomainId: Option[DomainId],
   )(implicit
       traceContext: TraceContext
   ): EitherT[Future, UnableToQueryTopologySnapshot.Failed, Boolean] =
     if (inputDomains.sizeCompare(2) >= 0) EitherT.rightT(true)
-    else if (
-      optDomainId
-        .exists(targetDomain => inputDomains.exists(inputDomain => inputDomain != targetDomain))
-    ) EitherT.rightT(true)
     else
       inputDomains.toList
         .parTraverse(allInformeesOnDomain(informees)(_))
@@ -272,7 +266,8 @@ object DomainRouter {
       domainAliasManager: DomainAliasManager,
       cryptoPureApi: CryptoPureApi,
       participantId: ParticipantId,
-      parameters: ParticipantNodeParameters,
+      autoTransferTransaction: Boolean,
+      timeouts: ProcessingTimeout,
       loggerFactory: NamedLoggerFactory,
   )(implicit ec: ExecutionContext): DomainRouter = {
 
@@ -299,9 +294,10 @@ object DomainRouter {
       loggerFactory = loggerFactory,
     )
 
-    val serializableContractAuthenticator = SerializableContractAuthenticator(
-      cryptoPureApi,
-      parameters,
+    val serializableContractAuthenticator = new SerializableContractAuthenticatorImpl(
+      // This unicum generator is used for all domains uniformly. This means that domains cannot specify
+      // different unicum generator strategies (e.g., different hash functions).
+      new UnicumGenerator(cryptoPureApi)
     )
 
     new DomainRouter(
@@ -309,9 +305,9 @@ object DomainRouter {
       transfer,
       domainStateProvider,
       serializableContractAuthenticator,
-      autoTransferTransaction = parameters.enablePreviewFeatures,
+      autoTransferTransaction = autoTransferTransaction,
       domainSelectorFactory,
-      parameters.processingTimeouts,
+      timeouts,
       loggerFactory,
     )
   }
@@ -344,7 +340,7 @@ object DomainRouter {
       disclosedContracts: Map[LfContractId, SerializableContract],
   )(implicit
       ec: ExecutionContext
-  ): EitherT[Future, TransactionRoutingError, FutureUnlessShutdown[TransactionSubmissionResult]] =
+  ): EitherT[Future, TransactionRoutingError, FutureUnlessShutdown[TransactionSubmitted]] =
     for {
       domain <- EitherT.fromEither[Future](
         connectedDomains

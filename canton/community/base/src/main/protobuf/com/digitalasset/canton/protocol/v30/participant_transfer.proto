@@ -6,8 +6,9 @@ syntax = "proto3";
 package com.digitalasset.canton.protocol.v30;
 
 import "com/digitalasset/canton/crypto/v30/crypto.proto";
-import "com/digitalasset/canton/protocol/v30/common_stable.proto";
+import "com/digitalasset/canton/protocol/v30/common.proto";
 import "com/digitalasset/canton/protocol/v30/merkle.proto";
+import "com/digitalasset/canton/protocol/v30/signed_content.proto";
 import "com/digitalasset/canton/time/v30/time_proof.proto";
 import "scalapb/scalapb.proto";
 
@@ -28,8 +29,9 @@ message TransferOutCommonData {
   repeated string stakeholders = 3;
   repeated string admin_parties = 4;
   string uuid = 5;
-  int32 source_mediator_group = 6;
-  TransferSubmitterMetadata submitter_metadata = 7;
+  string source_mediator = 6;
+  int32 source_protocol_version = 7;
+  TransferSubmitterMetadata submitter_metadata = 8;
 }
 
 message TransferViewTree {
@@ -60,15 +62,16 @@ message TransferInCommonData {
   string target_domain = 2;
   repeated string stakeholders = 3;
   string uuid = 4;
-  int32 target_mediator_group = 6;
-  TransferSubmitterMetadata submitter_metadata = 7;
+  string target_mediator = 6;
+  int32 target_protocol_version = 7;
+  TransferSubmitterMetadata submitter_metadata = 8;
 }
 
 message TransferSubmitterMetadata {
   option (scalapb.message).companion_extends = "com.digitalasset.canton.version.StableProtoVersion";
 
   string submitter = 1;
-  string submitting_participant_uid = 2;
+  string submitting_participant = 2;
   string command_id = 3;
   string submission_id = 4; // optional
   string application_id = 5;
@@ -92,8 +95,7 @@ message TransferInView {
 
   com.digitalasset.canton.crypto.v30.Salt salt = 1;
   v30.SerializableContract contract = 3;
-  // Serialized SignedContent[SequencedEvent]
-  bytes transfer_out_result_event = 4;
+  v30.SignedContent transfer_out_result_event = 4;
   bytes creating_transaction_id = 5;
   int32 source_protocol_version = 6;
   int64 transfer_counter = 12;

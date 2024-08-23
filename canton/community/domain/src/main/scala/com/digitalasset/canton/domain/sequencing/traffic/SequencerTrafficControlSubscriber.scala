@@ -5,15 +5,14 @@ package com.digitalasset.canton.domain.sequencing.traffic
 
 import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
-import com.digitalasset.canton.protocol.messages.SetTrafficPurchasedMessage
-import com.digitalasset.canton.sequencing.traffic.TrafficControlProcessor.TrafficControlSubscriber
-import com.digitalasset.canton.sequencing.traffic.TrafficPurchased
+import com.digitalasset.canton.protocol.messages.SetTrafficBalanceMessage
 import com.digitalasset.canton.tracing.TraceContext
+import com.digitalasset.canton.traffic.TrafficControlProcessor.TrafficControlSubscriber
 
 import scala.concurrent.Future
 
 class SequencerTrafficControlSubscriber(
-    manager: TrafficPurchasedManager,
+    manager: TrafficBalanceManager,
     override protected val loggerFactory: NamedLoggerFactory,
 ) extends TrafficControlSubscriber
     with NamedLogging {
@@ -24,18 +23,18 @@ class SequencerTrafficControlSubscriber(
     manager.tick(timestamp)
   }
 
-  override def trafficPurchasedUpdate(
-      update: SetTrafficPurchasedMessage,
+  override def balanceUpdate(
+      update: SetTrafficBalanceMessage,
       sequencingTimestamp: CantonTimestamp,
   )(implicit
       traceContext: TraceContext
   ): Future[Unit] = {
     logger.debug(s"Received balance update from traffic control processor: $update")
-    manager.addTrafficPurchased(
-      TrafficPurchased(
+    manager.addTrafficBalance(
+      TrafficBalance(
         update.member,
         update.serial,
-        update.totalTrafficPurchased,
+        update.totalTrafficBalance,
         sequencingTimestamp,
       )
     )

@@ -16,11 +16,8 @@ import com.digitalasset.canton.domain.sequencing.admin.grpc.InitializeSequencerR
 import com.digitalasset.canton.domain.sequencing.sequencer.SequencerSnapshot
 import com.digitalasset.canton.sequencer.admin.v30
 import com.digitalasset.canton.topology.{Member, SequencerId}
-import com.digitalasset.canton.util.GrpcStreamingUtils
 import com.google.protobuf.ByteString
-import io.grpc.Context.CancellableContext
-import io.grpc.stub.StreamObserver
-import io.grpc.{Context, ManagedChannel}
+import io.grpc.ManagedChannel
 
 import scala.concurrent.Future
 
@@ -63,12 +60,7 @@ object EnterpriseSequencerAdminCommands {
         service: v30.SequencerInitializationServiceGrpc.SequencerInitializationServiceStub,
         request: v30.InitializeSequencerFromOnboardingStateRequest,
     ): Future[v30.InitializeSequencerFromOnboardingStateResponse] =
-      GrpcStreamingUtils.streamToServer(
-        service.initializeSequencerFromOnboardingState,
-        (onboardingState: Array[Byte]) =>
-          v30.InitializeSequencerFromOnboardingStateRequest(ByteString.copyFrom(onboardingState)),
-        request.onboardingState,
-      )
+      service.initializeSequencerFromOnboardingState(request)
 
     override def createRequest()
         : Either[String, v30.InitializeSequencerFromOnboardingStateRequest] =
@@ -100,15 +92,7 @@ object EnterpriseSequencerAdminCommands {
         service: v30.SequencerInitializationServiceGrpc.SequencerInitializationServiceStub,
         request: v30.InitializeSequencerFromGenesisStateRequest,
     ): Future[v30.InitializeSequencerFromGenesisStateResponse] =
-      GrpcStreamingUtils.streamToServer(
-        service.initializeSequencerFromGenesisState,
-        (topologySnapshot: Array[Byte]) =>
-          v30.InitializeSequencerFromGenesisStateRequest(
-            topologySnapshot = ByteString.copyFrom(topologySnapshot),
-            Some(domainParameters.toProtoV30),
-          ),
-        request.topologySnapshot,
-      )
+      service.initializeSequencerFromGenesisState(request)
 
     override def createRequest(): Either[String, v30.InitializeSequencerFromGenesisStateRequest] =
       Right(
@@ -150,7 +134,7 @@ object EnterpriseSequencerAdminCommands {
         case v30.SnapshotResponse.Value
               .VersionedSuccess(v30.SnapshotResponse.VersionedSuccess(snapshot)) =>
           SequencerSnapshot
-            .fromTrustedByteString(snapshot)
+            .fromByteStringUnsafe(snapshot)
             .leftMap(_.toString)
         case _ => Left("response is empty")
       }
@@ -159,20 +143,17 @@ object EnterpriseSequencerAdminCommands {
     override def timeoutType: TimeoutType = DefaultUnboundedTimeout
   }
 
-  final case class OnboardingState(
-      observer: StreamObserver[v30.OnboardingStateResponse],
-      sequencerOrTimestamp: Either[SequencerId, CantonTimestamp],
-  ) extends BaseSequencerAdministrationCommand[
+  final case class OnboardingState(memberOrTimestamp: Either[SequencerId, CantonTimestamp])
+      extends BaseSequencerAdministrationCommand[
         v30.OnboardingStateRequest,
-        CancellableContext,
-        CancellableContext,
+        v30.OnboardingStateResponse,
+        ByteString,
       ] {
     override def createRequest(): Either[String, v30.OnboardingStateRequest] = {
       Right(
         v30.OnboardingStateRequest(request =
-          sequencerOrTimestamp.fold[v30.OnboardingStateRequest.Request](
-            sequencer =>
-              v30.OnboardingStateRequest.Request.SequencerUid(sequencer.uid.toProtoPrimitive),
+          memberOrTimestamp.fold[v30.OnboardingStateRequest.Request](
+            member => v30.OnboardingStateRequest.Request.SequencerId(member.toProtoPrimitive),
             timestamp => v30.OnboardingStateRequest.Request.Timestamp(timestamp.toProtoTimestamp),
           )
         )
@@ -182,14 +163,60 @@ object EnterpriseSequencerAdminCommands {
     override def submitRequest(
         service: v30.SequencerAdministrationServiceGrpc.SequencerAdministrationServiceStub,
         request: v30.OnboardingStateRequest,
-    ): Future[CancellableContext] = {
-      val context = Context.current().withCancellation()
-      context.run(() => service.onboardingState(request, observer))
-      Future.successful(context)
-    }
+    ): Future[v30.OnboardingStateResponse] = service.onboardingState(request)
 
-    override def handleResponse(response: CancellableContext): Either[String, CancellableContext] =
-      Right(response)
+    override def handleResponse(
+        response: v30.OnboardingStateResponse
+    ): Either[String, ByteString] =
+      response.value match {
+        case v30.OnboardingStateResponse.Value
+              .Failure(v30.OnboardingStateResponse.Failure(reason)) =>
+          Left(reason)
+        case v30.OnboardingStateResponse.Value
+              .Success(
+                v30.OnboardingStateResponse.Success(onboardingState)
+              ) =>
+          Right(onboardingState)
+        case _ => Left("response is empty")
+      }
+
+    //  command will potentially take a long time
+    override def timeoutType: TimeoutType = DefaultUnboundedTimeout
+  }
+
+  final case class GenesisState(
+      timestamp: Option[CantonTimestamp]
+  ) extends BaseSequencerAdministrationCommand[
+        v30.GenesisStateRequest,
+        v30.GenesisStateResponse,
+        ByteString,
+      ] {
+    override def createRequest(): Either[String, v30.GenesisStateRequest] =
+      Right(
+        v30.GenesisStateRequest(
+          timestamp = timestamp.map(_.toProtoTimestamp)
+        )
+      )
+
+    override def submitRequest(
+        service: v30.SequencerAdministrationServiceGrpc.SequencerAdministrationServiceStub,
+        request: v30.GenesisStateRequest,
+    ): Future[v30.GenesisStateResponse] = service.genesisState(request)
+
+    override def handleResponse(
+        response: v30.GenesisStateResponse
+    ): Either[String, ByteString] =
+      response.value match {
+        case v30.GenesisStateResponse.Value
+              .Failure(v30.GenesisStateResponse.Failure(reason)) =>
+          Left(reason)
+        case v30.GenesisStateResponse.Value
+              .Success(
+                v30.GenesisStateResponse.Success(genesisState)
+              ) =>
+          Right(genesisState)
+        case _ => Left("response is empty")
+      }
 
     //  command will potentially take a long time
     override def timeoutType: TimeoutType = DefaultUnboundedTimeout

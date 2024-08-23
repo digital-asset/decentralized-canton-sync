@@ -13,7 +13,6 @@ import com.digitalasset.canton.SequencerCounter
 import com.digitalasset.canton.config.ProcessingTimeout
 import com.digitalasset.canton.crypto.*
 import com.digitalasset.canton.data.CantonTimestamp
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.lifecycle.{FlagCloseable, FutureUnlessShutdown, Lifecycle}
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.resource.DbStorage.PassiveInstanceException
@@ -24,7 +23,7 @@ import com.digitalasset.canton.time.Clock
 import com.digitalasset.canton.topology.*
 import com.digitalasset.canton.topology.client.TopologySnapshot
 import com.digitalasset.canton.topology.processing.*
-import com.digitalasset.canton.topology.transaction.SignedTopologyTransaction.GenericSignedTopologyTransaction
+import com.digitalasset.canton.topology.transaction.SignedTopologyTransactionX.GenericSignedTopologyTransactionX
 import com.digitalasset.canton.topology.transaction.*
 import com.digitalasset.canton.tracing.{TraceContext, Traced}
 import com.digitalasset.canton.util.FutureInstances.*
@@ -198,14 +197,15 @@ class MemberAuthenticationService(
     member match {
       case participant: ParticipantId =>
         EitherT(isParticipantActive(participant).map {
-          Either.cond(_, (), MemberAccessDisabled(participant))
+          if (_) Right(()) else Left(ParticipantAccessDisabled(participant))
         })
       case mediator: MediatorId =>
         EitherT(isMediatorActive(mediator).map {
-          Either.cond(_, (), MemberAccessDisabled(mediator))
+          if (_) Right(()) else Left(MediatorAccessDisabled(mediator))
         })
-      case sequencer: SequencerId =>
-        EitherT.leftT(AuthenticationNotSupportedForMember(sequencer))
+      case _ =>
+        // TODO(#4933) check if sequencer is active
+        EitherT.rightT(())
     }
 
   private def correctDomain(
@@ -300,31 +300,31 @@ class MemberAuthenticationServiceImpl(
       timeouts,
       loggerFactory,
     )
-    with TopologyTransactionProcessingSubscriber {
+    with TopologyTransactionProcessingSubscriberX {
 
   /** domain topology client subscriber used to remove member tokens if they get disabled */
   override def observed(
       sequencerTimestamp: SequencedTime,
       effectiveTimestamp: EffectiveTime,
       sc: SequencerCounter,
-      transactions: Seq[GenericSignedTopologyTransaction],
+      transactions: Seq[GenericSignedTopologyTransactionX],
   )(implicit traceContext: TraceContext): FutureUnlessShutdown[Unit] =
     FutureUnlessShutdown.lift(performUnlessClosing(functionFullName) {
       transactions.map(_.transaction).foreach {
-        case TopologyTransaction(
-              TopologyChangeOp.Remove,
+        case TopologyTransactionX(
+              TopologyChangeOpX.Remove,
               _serial,
-              cert: DomainTrustCertificate,
+              cert: DomainTrustCertificateX,
             ) =>
           val participant = cert.participantId
           logger.info(
             s"Domain trust certificate of ${participant} was removed, forcefully disconnecting the participant."
           )
           invalidateAndExpire(isParticipantActive)(participant)
-        case TopologyTransaction(
-              TopologyChangeOp.Replace,
+        case TopologyTransactionX(
+              TopologyChangeOpX.Replace,
               _serial,
-              cert: ParticipantDomainPermission,
+              cert: ParticipantDomainPermissionX,
             ) if cert.loginAfter.exists(_ > clock.now) =>
           val participant = cert.participantId
           logger.info(
@@ -357,7 +357,7 @@ object MemberAuthenticationServiceFactory {
       useExponentialRandomTokenExpiration: Boolean,
       timeouts: ProcessingTimeout,
       loggerFactory: NamedLoggerFactory,
-      topologyTransactionProcessor: TopologyTransactionProcessor,
+      topologyTransactionProcessorX: TopologyTransactionProcessorX,
   ): MemberAuthenticationServiceFactory =
     new MemberAuthenticationServiceFactory {
       override def createAndSubscribe(
@@ -379,7 +379,7 @@ object MemberAuthenticationServiceFactory {
           timeouts,
           loggerFactory,
         )
-        topologyTransactionProcessor.subscribe(service)
+        topologyTransactionProcessorX.subscribe(service)
         service
       }
     }

@@ -8,9 +8,6 @@ import org.scalatest.wordspec.AsyncWordSpec
 
 class CryptoPublicStoreTestInMemory extends AsyncWordSpec with CryptoPublicStoreTest {
   "InMemoryCryptoPublicStore" should {
-    behave like cryptoPublicStore(
-      new InMemoryCryptoPublicStore(loggerFactory),
-      backedByDatabase = false,
-    )
+    behave like cryptoPublicStore(new InMemoryCryptoPublicStore, backedByDatabase = false)
   }
 }

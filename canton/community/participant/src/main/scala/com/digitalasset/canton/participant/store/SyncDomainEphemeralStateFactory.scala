@@ -13,6 +13,7 @@ import com.digitalasset.canton.participant.RequestOffset
 import com.digitalasset.canton.participant.admin.repair.RepairService
 import com.digitalasset.canton.participant.metrics.SyncDomainMetrics
 import com.digitalasset.canton.participant.protocol.*
+import com.digitalasset.canton.participant.protocol.submission.InFlightSubmissionTracker
 import com.digitalasset.canton.participant.store.EventLogId.DomainEventLogId
 import com.digitalasset.canton.sequencing.PossiblyIgnoredSerializedEvent
 import com.digitalasset.canton.store.CursorPrehead.{
@@ -21,7 +22,7 @@ import com.digitalasset.canton.store.CursorPrehead.{
 }
 import com.digitalasset.canton.store.SequencedEventStore.{ByTimestamp, LatestUpto}
 import com.digitalasset.canton.store.*
-import com.digitalasset.canton.time.{Clock, DomainTimeTracker}
+import com.digitalasset.canton.time.DomainTimeTracker
 import com.digitalasset.canton.topology.ParticipantId
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.ErrorUtil
@@ -34,8 +35,8 @@ trait SyncDomainEphemeralStateFactory {
   def createFromPersistent(
       persistentState: SyncDomainPersistentState,
       multiDomainEventLog: Eval[MultiDomainEventLog],
-      participantNodeEphemeralState: ParticipantNodeEphemeralState,
-      createTimeTracker: () => DomainTimeTracker,
+      inFlightSubmissionTracker: InFlightSubmissionTracker,
+      createTimeTracker: NamedLoggerFactory => DomainTimeTracker,
       metrics: SyncDomainMetrics,
       sessionKeyCacheConfig: SessionKeyCacheConfig,
       participantId: ParticipantId,
@@ -46,11 +47,9 @@ trait SyncDomainEphemeralStateFactory {
 }
 
 class SyncDomainEphemeralStateFactoryImpl(
-    exitOnFatalFailures: Boolean,
     timeouts: ProcessingTimeout,
     override val loggerFactory: NamedLoggerFactory,
     futureSupervisor: FutureSupervisor,
-    clock: Clock,
 )(implicit ec: ExecutionContext)
     extends SyncDomainEphemeralStateFactory
     with NamedLogging {
@@ -58,8 +57,8 @@ class SyncDomainEphemeralStateFactoryImpl(
   override def createFromPersistent(
       persistentState: SyncDomainPersistentState,
       multiDomainEventLog: Eval[MultiDomainEventLog],
-      participantNodeEphemeralState: ParticipantNodeEphemeralState,
-      createTimeTracker: () => DomainTimeTracker,
+      inFlightSubmissionTracker: InFlightSubmissionTracker,
+      createTimeTracker: NamedLoggerFactory => DomainTimeTracker,
       metrics: SyncDomainMetrics,
       sessionKeyCacheConfig: SessionKeyCacheConfig,
       participantId: ParticipantId,
@@ -80,18 +79,16 @@ class SyncDomainEphemeralStateFactoryImpl(
       logger.debug("Created SyncDomainEphemeralState")
       new SyncDomainEphemeralState(
         participantId,
-        participantNodeEphemeralState,
         persistentState,
         multiDomainEventLog,
+        inFlightSubmissionTracker,
         startingPoints,
         createTimeTracker,
         metrics,
-        exitOnFatalFailures = exitOnFatalFailures,
         sessionKeyCacheConfig,
         timeouts,
         persistentState.loggerFactory,
         futureSupervisor,
-        clock,
       )
     }
   }
@@ -270,9 +267,7 @@ object SyncDomainEphemeralStateFactory {
                 .RequestData(rcProcess, _state, requestTimestampProcess, _commitTime, repairContext)
             ) =>
           if (isRepairOnEmptyDomain(processData)) {
-            logger.debug(
-              show"First inflight validation request is repair request $rcProcess on an empty domain."
-            )
+            logger.debug(show"First dirty request is repair request $rcProcess on an empty domain.")
             Future.successful(
               MessageProcessingStartingPoint(
                 cleanRequestPreheadLocalOffsetO,
@@ -282,9 +277,7 @@ object SyncDomainEphemeralStateFactory {
               ) -> cleanSequencerCounterPreheadO
             )
           } else {
-            logger.debug(
-              show"First inflight validation request $rcProcess at $requestTimestampProcess"
-            )
+            logger.debug(show"First dirty request $rcProcess at $requestTimestampProcess")
 
             for {
               startingEvent <- sequencedEventStore
@@ -323,7 +316,7 @@ object SyncDomainEphemeralStateFactory {
                   }
                 } else {
                   // This is a repair, so the sequencer counter will remain clean
-                  // as there is no inflight validation request since the clean request prehead.
+                  // as there is no dirty request since the clean request prehead.
                   val startingPoint =
                     MessageProcessingStartingPoint(
                       cleanRequestPreheadLocalOffsetO,
@@ -411,7 +404,7 @@ object SyncDomainEphemeralStateFactory {
                   )
               case _ =>
                 // No need to replay clean requests
-                // because no requests to be reprocessed were in-flight at the processing starting point.
+                // because no requests to be reprocessed were in flight at the processing starting point.
                 Future.successful(processingStartingPoint.toMessageCleanReplayStartingPoint)
             }
           } yield checked(
@@ -434,9 +427,8 @@ object SyncDomainEphemeralStateFactory {
     * so that crash recovery will still work.
     */
   def crashRecoveryPruningBoundInclusive(
-      requestCounterCursorPrehead: Option[RequestCounterCursorPrehead],
-      sequencerCounterCursorPrehead: Option[SequencerCounterCursorPrehead],
       requestJournalStore: RequestJournalStore,
+      sequencerCounterTrackerStore: SequencerCounterTrackerStore,
   )(implicit ec: ExecutionContext, traceContext: TraceContext): Future[CantonTimestamp] = {
     // Crash recovery cleans up the stores before replay starts,
     // however we may have used some of the deleted information to determine the starting points for the replay.
@@ -449,7 +441,7 @@ object SyncDomainEphemeralStateFactory {
     // * The first request whose commit time is after the clean request prehead timestamp
     // * The clean sequencer counter prehead timestamp
     for {
-      requestReplayTs <- requestCounterCursorPrehead match {
+      requestReplayTs <- requestJournalStore.preheadClean.flatMap {
         case None =>
           // No request is known to be clean, nothing can be pruned
           Future.successful(CantonTimestamp.MinValue)
@@ -463,9 +455,9 @@ object SyncDomainEphemeralStateFactory {
             if (ts == CantonTimestamp.MinValue) ts else ts.immediatePredecessor
           }
       }
-      preheadSequencerCounterTs = sequencerCounterCursorPrehead.fold(CantonTimestamp.MinValue)(
-        _.timestamp.immediatePredecessor
-      )
+      preheadSequencerCounterTs <- sequencerCounterTrackerStore.preheadSequencerCounter.map {
+        _.fold(CantonTimestamp.MinValue)(_.timestamp.immediatePredecessor)
+      }
     } yield requestReplayTs.min(preheadSequencerCounterTs)
   }
 
@@ -476,7 +468,7 @@ object SyncDomainEphemeralStateFactory {
     implicit val traceContext: TraceContext = loggingContext.traceContext
     val logger = loggingContext.logger
     for {
-      // We're about to clean the inflight validation requests from the stores.
+      // We're about to clean the dirty requests from the stores.
       // Some of the corresponding events may already have become clean.
       // So we rewind the clean sequencer counter prehead first
       _ <- persistentState.sequencerCounterTrackerStore.rewindPreheadSequencerCounter(
@@ -505,7 +497,7 @@ object SyncDomainEphemeralStateFactory {
           )
           persistentState.eventLog.deleteAfter(unpublishedOffsetAfterCleanPrehead)
       }
-      _ = logger.debug("Deleting inflight validation requests")
+      _ = logger.debug("Deleting dirty requests")
       _ <- persistentState.requestJournalStore.deleteSince(
         processingStartingPoint.nextRequestCounter
       )

@@ -10,7 +10,6 @@ import cats.syntax.parallel.*
 import com.daml.nonempty.NonEmpty
 import com.digitalasset.canton.config.RequireTypes.NonNegativeInt
 import com.digitalasset.canton.data.CantonTimestamp
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.participant.GlobalOffset
@@ -20,6 +19,7 @@ import com.digitalasset.canton.participant.util.TimeOfChange
 import com.digitalasset.canton.protocol.messages.DeliveredTransferOutResult
 import com.digitalasset.canton.protocol.{SourceDomainId, TargetDomainId, TransferId}
 import com.digitalasset.canton.tracing.TraceContext
+import com.digitalasset.canton.util.FutureInstances.*
 import com.digitalasset.canton.util.{Checked, CheckedT, ErrorUtil, MapsUtil}
 import com.digitalasset.canton.{LfPartyId, RequestCounter}
 
@@ -42,9 +42,7 @@ class InMemoryTransferStore(
 
   override def addTransfer(
       transferData: TransferData
-  )(implicit
-      traceContext: TraceContext
-  ): EitherT[FutureUnlessShutdown, TransferStoreError, Unit] = {
+  )(implicit traceContext: TraceContext): EitherT[Future, TransferStoreError, Unit] = {
     ErrorUtil.requireArgument(
       transferData.targetDomain == domain,
       s"Domain ${domain.unwrap.unwrap}: Transfer store cannot store transfer for domain ${transferData.targetDomain.unwrap.unwrap}",
@@ -66,13 +64,13 @@ class InMemoryTransferStore(
       )
       .toEither
 
-    EitherT(FutureUnlessShutdown.pure(result))
+    EitherT(Future.successful(result))
   }
 
   private def editTransferEntry(
       transferId: TransferId,
       updateEntry: TransferEntry => Either[TransferStoreError, TransferEntry],
-  ): EitherT[FutureUnlessShutdown, TransferStoreError, Unit] = {
+  ): EitherT[Future, TransferStoreError, Unit] = {
     val res =
       MapsUtil.updateWithConcurrentlyM_[Either[TransferStoreError, *], TransferId, TransferEntry](
         transferDataMap,
@@ -81,14 +79,12 @@ class InMemoryTransferStore(
         updateEntry,
       )
 
-    EitherT(FutureUnlessShutdown.pure(res))
+    EitherT(Future.successful(res))
   }
 
   override def addTransferOutResult(
       transferOutResult: DeliveredTransferOutResult
-  )(implicit
-      traceContext: TraceContext
-  ): EitherT[FutureUnlessShutdown, TransferStoreError, Unit] = {
+  )(implicit traceContext: TraceContext): EitherT[Future, TransferStoreError, Unit] = {
     val transferId = transferOutResult.transferId
     editTransferEntry(transferId, _.addTransferOutResult(transferOutResult))
   }
@@ -99,6 +95,7 @@ class InMemoryTransferStore(
     .parTraverse_ { case (transferId, newGlobalOffset) =>
       editTransferEntry(transferId, _.addTransferOutGlobalOffset(newGlobalOffset))
     }
+    .mapK(FutureUnlessShutdown.outcomeK)
 
   override def completeTransfer(transferId: TransferId, timeOfCompletion: TimeOfChange)(implicit
       traceContext: TraceContext

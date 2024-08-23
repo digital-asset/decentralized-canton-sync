@@ -6,8 +6,7 @@ package com.digitalasset.canton.domain.config
 import com.daml.nonempty.NonEmpty
 import com.digitalasset.canton.config.{CommunityCryptoConfig, CryptoConfig, ProtocolConfig}
 import com.digitalasset.canton.crypto.CryptoFactory.{
-  selectAllowedEncryptionAlgorithmSpecs,
-  selectAllowedEncryptionKeySpecs,
+  selectAllowedEncryptionKeyScheme,
   selectAllowedHashAlgorithms,
   selectAllowedSigningKeyScheme,
   selectAllowedSymmetricKeySchemes,
@@ -15,7 +14,7 @@ import com.digitalasset.canton.crypto.CryptoFactory.{
 import com.digitalasset.canton.crypto.*
 import com.digitalasset.canton.logging.pretty.{Pretty, PrettyPrinting}
 import com.digitalasset.canton.protocol.StaticDomainParameters
-import com.digitalasset.canton.version.ProtocolVersion
+import com.digitalasset.canton.version.{DomainProtocolVersion, ProtocolVersion}
 
 /** Configuration of domain parameters that all members connecting to a domain must adhere to.
   *
@@ -24,45 +23,46 @@ import com.digitalasset.canton.version.ProtocolVersion
   * for further information.
   *
   * @param requiredSigningKeySchemes    The optional required signing key schemes that a member has to support. If none is specified, all the allowed schemes are required.
-  * @param requiredEncryptionAlgorithmSpecs      The optional required encryption algorithm specifications that a member has to support. If none is specified, all the allowed specifications are required.
-  * @param requiredEncryptionKeySpecs   The optional required encryption key specifications that a member has to support. If none is specified, all the allowed specifications are required.
+  * @param requiredEncryptionKeySchemes The optional required encryption key schemes that a member has to support. If none is specified, all the allowed schemes are required.
   * @param requiredSymmetricKeySchemes  The optional required symmetric key schemes that a member has to support. If none is specified, all the allowed schemes are required.
   * @param requiredHashAlgorithms       The optional required hash algorithms that a member has to support. If none is specified, all the allowed algorithms are required.
   * @param requiredCryptoKeyFormats     The optional required crypto key formats that a member has to support. If none is specified, all the supported algorithms are required.
+  * @param protocolVersion              The protocol version spoken on the domain. All participants and domain nodes attempting to connect to the sequencer need to support this protocol version to connect.
   * @param dontWarnOnDeprecatedPV       If true, then this domain will not emit a warning when configured to use a deprecated protocol version (such as 2.0.0).
   */
 final case class DomainParametersConfig(
     requiredSigningKeySchemes: Option[NonEmpty[Set[SigningKeyScheme]]] = None,
-    requiredEncryptionAlgorithmSpecs: Option[NonEmpty[Set[EncryptionAlgorithmSpec]]] = None,
-    requiredEncryptionKeySpecs: Option[NonEmpty[Set[EncryptionKeySpec]]] = None,
+    requiredEncryptionKeySchemes: Option[NonEmpty[Set[EncryptionKeyScheme]]] = None,
     requiredSymmetricKeySchemes: Option[NonEmpty[Set[SymmetricKeyScheme]]] = None,
     requiredHashAlgorithms: Option[NonEmpty[Set[HashAlgorithm]]] = None,
     requiredCryptoKeyFormats: Option[NonEmpty[Set[CryptoKeyFormat]]] = None,
-    override val alphaVersionSupport: Boolean = false,
-    override val betaVersionSupport: Boolean = false,
+    protocolVersion: DomainProtocolVersion = DomainProtocolVersion(
+      ProtocolVersion.latest
+    ),
+    override val devVersionSupport: Boolean = false,
     override val dontWarnOnDeprecatedPV: Boolean = false,
 ) extends ProtocolConfig
     with PrettyPrinting {
 
   override def pretty: Pretty[DomainParametersConfig] = prettyOfClass(
     param("requiredSigningKeySchemes", _.requiredSigningKeySchemes),
-    param("requiredEncryptionAlgorithmSpecs", _.requiredEncryptionAlgorithmSpecs),
-    param("requiredEncryptionKeySpecs", _.requiredEncryptionKeySpecs),
+    param("requiredEncryptionKeySchemes", _.requiredEncryptionKeySchemes),
     param("requiredSymmetricKeySchemes", _.requiredSymmetricKeySchemes),
     param("requiredHashAlgorithms", _.requiredHashAlgorithms),
     param("requiredCryptoKeyFormats", _.requiredCryptoKeyFormats),
-    param("alphaVersionSupport", _.alphaVersionSupport),
-    param("betaVersionSupport", _.betaVersionSupport),
+    param("protocolVersion", _.protocolVersion.version),
+    param("devVersionSupport", _.devVersionSupport),
     param("dontWarnOnDeprecatedPV", _.dontWarnOnDeprecatedPV),
   )
+
+  override def initialProtocolVersion: ProtocolVersion = protocolVersion.version
 
   /** Converts the domain parameters config into a domain parameters protocol message.
     *
     * Sets the required crypto schemes based on the provided crypto config if they are unset in the config.
     */
   def toStaticDomainParameters(
-      cryptoConfig: CryptoConfig = CommunityCryptoConfig(),
-      protocolVersion: ProtocolVersion,
+      cryptoConfig: CryptoConfig = CommunityCryptoConfig()
   ): Either[String, StaticDomainParameters] = {
 
     def selectSchemes[S](
@@ -86,13 +86,9 @@ final case class DomainParametersConfig(
         requiredSigningKeySchemes,
         selectAllowedSigningKeyScheme,
       )
-      newRequiredEncryptionAlgorithmSpecs <- selectSchemes(
-        requiredEncryptionAlgorithmSpecs,
-        selectAllowedEncryptionAlgorithmSpecs,
-      )
-      newRequiredEncryptionKeySpecs <- selectSchemes(
-        requiredEncryptionKeySpecs,
-        selectAllowedEncryptionKeySpecs,
+      newRequiredEncryptionKeySchemes <- selectSchemes(
+        requiredEncryptionKeySchemes,
+        selectAllowedEncryptionKeyScheme,
       )
       newRequiredSymmetricKeySchemes <- selectSchemes(
         requiredSymmetricKeySchemes,
@@ -103,19 +99,16 @@ final case class DomainParametersConfig(
         selectAllowedHashAlgorithms,
       )
       newCryptoKeyFormats = requiredCryptoKeyFormats.getOrElse(
-        cryptoConfig.provider.supportedCryptoKeyFormatsForProtocol(protocolVersion)
+        cryptoConfig.provider.supportedCryptoKeyFormatsForProtocol(protocolVersion.unwrap)
       )
     } yield {
-      StaticDomainParameters(
+      StaticDomainParameters.create(
         requiredSigningKeySchemes = newRequiredSigningKeySchemes,
-        requiredEncryptionSpecs = RequiredEncryptionSpecs(
-          newRequiredEncryptionAlgorithmSpecs,
-          newRequiredEncryptionKeySpecs,
-        ),
+        requiredEncryptionKeySchemes = newRequiredEncryptionKeySchemes,
         requiredSymmetricKeySchemes = newRequiredSymmetricKeySchemes,
         requiredHashAlgorithms = newRequiredHashAlgorithms,
         requiredCryptoKeyFormats = newCryptoKeyFormats,
-        protocolVersion = protocolVersion,
+        protocolVersion = protocolVersion.unwrap,
       )
     }
   }

@@ -3,21 +3,19 @@
 
 package com.digitalasset.canton.protocol
 
+import com.daml.lf.transaction.Versioned
 import com.digitalasset.canton.LfPartyId
 import com.digitalasset.canton.config.RequireTypes.{NonNegativeInt, PositiveInt}
 import com.digitalasset.canton.crypto.*
 import com.digitalasset.canton.crypto.provider.symbolic.SymbolicPureCrypto
 import com.digitalasset.canton.data.ViewPosition
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.protocol.DomainParameters.MaxRequestSize
 import com.digitalasset.canton.protocol.SerializableContract.LedgerCreateTime
 import com.digitalasset.canton.sequencing.TrafficControlParameters
-import com.digitalasset.canton.sequencing.protocol.MediatorGroupRecipient
+import com.digitalasset.canton.sequencing.protocol.MediatorsOfDomain
 import com.digitalasset.canton.time.{NonNegativeFiniteDuration, PositiveSeconds}
 import com.digitalasset.canton.topology.DomainId
 import com.digitalasset.canton.version.ProtocolVersion
-import com.digitalasset.daml.lf.transaction.Versioned
-import com.google.protobuf.ByteString
 import magnolify.scalacheck.auto.*
 import org.scalacheck.{Arbitrary, Gen}
 
@@ -35,15 +33,14 @@ final class GeneratorsProtocol(
   implicit val staticDomainParametersArb: Arbitrary[StaticDomainParameters] = {
     Arbitrary(for {
       requiredSigningKeySchemes <- nonEmptySetGen[SigningKeyScheme]
-      requiredEncryptionAlgorithmSpecs <- nonEmptySetGen[EncryptionAlgorithmSpec]
-      requiredKeySpecs <- nonEmptySetGen[EncryptionKeySpec]
+      requiredEncryptionKeySchemes <- nonEmptySetGen[EncryptionKeyScheme]
       requiredSymmetricKeySchemes <- nonEmptySetGen[SymmetricKeyScheme]
       requiredHashAlgorithms <- nonEmptySetGen[HashAlgorithm]
       requiredCryptoKeyFormats <- nonEmptySetGen[CryptoKeyFormat]
 
-      parameters = StaticDomainParameters(
+      parameters = StaticDomainParameters.create(
         requiredSigningKeySchemes,
-        RequiredEncryptionSpecs(requiredEncryptionAlgorithmSpecs, requiredKeySpecs),
+        requiredEncryptionKeySchemes,
         requiredSymmetricKeySchemes,
         requiredHashAlgorithms,
         requiredCryptoKeyFormats,
@@ -80,21 +77,7 @@ final class GeneratorsProtocol(
       sequencerAggregateSubmissionTimeout <- Arbitrary.arbitrary[NonNegativeFiniteDuration]
       onboardingRestriction <- Arbitrary.arbitrary[OnboardingRestriction]
 
-      acsCommitmentsCatchupConfig <-
-        for {
-          isNone <- Gen.oneOf(true, false)
-          skip <- Gen.choose(1, Math.sqrt(PositiveInt.MaxValue.value.toDouble).intValue)
-          trigger <- Gen.choose(1, Math.sqrt(PositiveInt.MaxValue.value.toDouble).intValue)
-        } yield {
-          if (!isNone)
-            Some(
-              new AcsCommitmentsCatchUpConfig(
-                PositiveInt.tryCreate(skip),
-                PositiveInt.tryCreate(trigger),
-              )
-            )
-          else None
-        }
+      acsCommitmentsCatchupConfig <- Gen.option(Arbitrary.arbitrary[AcsCommitmentsCatchUpConfig])
 
       dynamicDomainParameters = DynamicDomainParameters.tryCreate(
         confirmationResponseTimeout,
@@ -115,22 +98,14 @@ final class GeneratorsProtocol(
     } yield dynamicDomainParameters
   )
 
-  implicit val dynamicSequencingParametersArb: Arbitrary[DynamicSequencingParameters] = Arbitrary(
-    for {
-      payload <- Arbitrary.arbitrary[Option[ByteString]]
-      representativePV = DynamicSequencingParameters.protocolVersionRepresentativeFor(
-        protocolVersion
-      )
-      dynamicSequencingParameters = DynamicSequencingParameters(payload)(representativePV)
-    } yield dynamicSequencingParameters
-  )
-
   implicit val rootHashArb: Arbitrary[RootHash] = Arbitrary(
     Arbitrary.arbitrary[Hash].map(RootHash(_))
   )
   implicit val viewHashArb: Arbitrary[ViewHash] = Arbitrary(
     Arbitrary.arbitrary[Hash].map(ViewHash(_))
   )
+
+  implicit val confirmationPolicyArb: Arbitrary[ConfirmationPolicy] = genArbitrary
 
   implicit val serializableRawContractInstanceArb: Arbitrary[SerializableRawContractInstance] = {
     val contractInstance = ExampleTransactionFactory.contractInstance()
@@ -157,7 +132,7 @@ final class GeneratorsProtocol(
         ledgerCreateTime <- Arbitrary.arbitrary[LedgerCreateTime]
 
         domainId <- Arbitrary.arbitrary[DomainId]
-        mediatorGroup <- Arbitrary.arbitrary[MediatorGroupRecipient]
+        mediatorGroup <- Arbitrary.arbitrary[MediatorsOfDomain]
 
         saltIndex <- Gen.choose(Int.MinValue, Int.MaxValue)
         transactionUUID <- Gen.uuid

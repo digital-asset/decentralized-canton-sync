@@ -4,11 +4,11 @@
 package com.digitalasset.canton.util
 
 import cats.{Monad, Order}
+import com.daml.lf.data.*
+import com.daml.lf.transaction.TransactionVersion
+import com.daml.lf.value.Value
 import com.digitalasset.canton.LfPartyId
 import com.digitalasset.canton.protocol.*
-import com.digitalasset.daml.lf.data.*
-import com.digitalasset.daml.lf.transaction.TransactionVersion
-import com.digitalasset.daml.lf.value.Value
 
 import scala.annotation.nowarn
 
@@ -19,6 +19,25 @@ object LfTransactionUtil {
 
   implicit val orderTransactionVersion: Order[TransactionVersion] =
     Order.by[TransactionVersion, String](_.protoValue)(Order.fromOrdering)
+
+  /** Return the template associated to a node.
+    * Note: unlike [[nodeTemplates]] below, it does not return the interface package
+    *       for exercise by interface nodes.
+    */
+  def nodeTemplate(node: LfActionNode): LfTemplateId = node match {
+    case n: LfNodeCreate => n.coinst.template
+    case n: LfNodeFetch => n.templateId
+    case n: LfNodeExercises => n.templateId
+    case n: LfNodeLookupByKey => n.templateId
+  }
+
+  /** Return the templates associated to a node. */
+  def nodeTemplates(node: LfActionNode): Seq[LfTemplateId] = node match {
+    case n: LfNodeCreate => Seq(n.coinst.template)
+    case n: LfNodeFetch => Seq(n.templateId)
+    case n: LfNodeExercises => n.templateId +: n.interfaceId.toList
+    case n: LfNodeLookupByKey => Seq(n.templateId)
+  }
 
   def consumedContractId(node: LfActionNode): Option[LfContractId] = node match {
     case _: LfNodeCreate => None
@@ -36,13 +55,13 @@ object LfTransactionUtil {
   }
 
   def usedContractId(node: LfActionNode): Option[LfContractId] = node match {
-    case _: LfNodeCreate => None
+    case n: LfNodeCreate => None
     case n: LfNodeFetch => Some(n.coid)
     case n: LfNodeExercises => Some(n.targetCoid)
     case n: LfNodeLookupByKey => n.result
   }
 
-  /** All contract IDs referenced with a Daml `com.digitalasset.daml.lf.value.Value` */
+  /** All contract IDs referenced with a Daml `com.daml.lf.value.Value` */
   def referencedContractIds(value: Value): Set[LfContractId] = value.cids
 
   /** Whether or not a node has a random seed */
@@ -87,7 +106,7 @@ object LfTransactionUtil {
 
   /** Monadic visit to all nodes of the transaction in execution order.
     * Exercise nodes are visited twice: when execution reaches them and when execution leaves their body.
-    * Crashes on malformed transactions (see `com.digitalasset.daml.lf.transaction.GenTransaction.isWellFormed`)
+    * Crashes on malformed transactions (see `com.daml.lf.transaction.GenTransaction.isWellFormed`)
     */
   @nowarn("msg=match may not be exhaustive")
   def foldExecutionOrderM[F[_], A](tx: LfTransaction, initial: A)(

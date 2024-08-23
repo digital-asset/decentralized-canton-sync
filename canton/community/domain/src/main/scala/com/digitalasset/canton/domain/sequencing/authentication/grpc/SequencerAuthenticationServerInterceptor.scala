@@ -18,7 +18,13 @@ import com.digitalasset.canton.sequencing.authentication.MemberAuthentication.{
   TokenVerificationException,
 }
 import com.digitalasset.canton.sequencing.authentication.grpc.Constant
-import com.digitalasset.canton.topology.{DomainId, Member, UniqueIdentifier}
+import com.digitalasset.canton.topology.{
+  AuthenticatedMember,
+  DomainId,
+  Member,
+  UnauthenticatedMemberId,
+  UniqueIdentifier,
+}
 import com.digitalasset.canton.tracing.TraceContext
 import io.grpc.*
 
@@ -61,17 +67,23 @@ class SequencerAuthenticationServerInterceptor(
             intendedDomainId <- UniqueIdentifier
               .fromProtoPrimitive_(intendedDomain)
               .map(DomainId(_))
-              .leftMap(err => VerifyTokenError.GeneralError(err.message))
+              .leftMap(VerifyTokenError.GeneralError)
               .toEitherT[Future]
-            storedTokenO <-
-              for {
-                token <- tokenO
-                  .toRight[VerifyTokenError](
-                    VerifyTokenError.GeneralError("Authentication headers are missing for token")
+            storedTokenO <- member match {
+              case _: UnauthenticatedMemberId =>
+                EitherT.pure[Future, VerifyTokenError](None: Option[StoredAuthenticationToken])
+              case authenticatedMember: AuthenticatedMember =>
+                for {
+                  token <- tokenO
+                    .toRight(
+                      VerifyTokenError.GeneralError("Authentication headers are missing for token")
+                    )
+                    .toEitherT[Future]
+                  storedToken <- verifyToken(authenticatedMember, intendedDomainId, token).map(
+                    _.some
                   )
-                  .toEitherT[Future]
-                storedToken <- verifyToken(member, intendedDomainId, token)
-              } yield Some(storedToken)
+                } yield storedToken
+            }
           } yield {
             val contextWithAuthorizedMember = originalContext
               .withValue(IdentityContextHelper.storedAuthenticationTokenContextKey, storedTokenO)
@@ -107,7 +119,7 @@ class SequencerAuthenticationServerInterceptor(
               logger.warn(s"Authentication token verification caused an unexpected exception", ex)
               setNextListener(
                 failVerification(
-                  s"Verification failed for participant $memberId with an internal error",
+                  s"Verification failed for participant $memberId with exception $ex",
                   serverCall,
                   headers,
                   Some(TokenVerificationException(memberId).code),
@@ -120,7 +132,7 @@ class SequencerAuthenticationServerInterceptor(
 
   /** Checks the supplied authentication token for the member. */
   private def verifyToken(
-      member: Member,
+      member: AuthenticatedMember,
       intendedDomain: DomainId,
       token: AuthenticationToken,
   )(implicit

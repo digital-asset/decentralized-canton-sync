@@ -8,7 +8,6 @@ import com.digitalasset.canton.crypto.{CryptoPureApi, TestHash}
 import com.digitalasset.canton.data.{CantonTimestamp, ViewType}
 import com.digitalasset.canton.protocol.RequestId
 import com.digitalasset.canton.protocol.messages.*
-import com.digitalasset.canton.sequencing.traffic.TrafficReceipt
 import com.digitalasset.canton.serialization.ProtoConverter.ParsingResult
 import com.digitalasset.canton.topology.DefaultTestIdentities
 import com.digitalasset.canton.topology.DefaultTestIdentities.domainId
@@ -48,7 +47,6 @@ class SequencedEventTest extends BaseTestWordSpec {
           batch,
           Some(CantonTimestamp.ofEpochSecond(1)),
           testedProtocolVersion,
-          Option.empty[TrafficReceipt],
         )
 
       val deliverEventBS = deliver.toByteString
@@ -65,7 +63,6 @@ class SequencedEventTest extends BaseTestWordSpec {
         MessageId.tryCreate("some-message-id"),
         SequencerErrors.SubmissionRequestRefused("no batches here please"),
         testedProtocolVersion,
-        Option.empty[TrafficReceipt],
       )
       val deliverErrorP = deliverError.toProtoVersioned
       val deserializedEvent = deserializeVersioned(deliverErrorP)

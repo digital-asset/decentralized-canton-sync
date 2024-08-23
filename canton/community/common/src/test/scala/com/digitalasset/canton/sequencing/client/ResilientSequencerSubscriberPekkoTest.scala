@@ -7,7 +7,6 @@ import com.daml.nonempty.NonEmpty
 import com.digitalasset.canton.config.DefaultProcessingTimeouts
 import com.digitalasset.canton.crypto.Signature
 import com.digitalasset.canton.data.CantonTimestamp
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.health.HealthComponent.AlwaysHealthyComponent
 import com.digitalasset.canton.health.{ComponentHealthState, HealthComponent}
 import com.digitalasset.canton.logging.{ErrorLoggingContext, NamedLoggerFactory, NamedLogging}
@@ -20,7 +19,6 @@ import com.digitalasset.canton.sequencing.client.TestSubscriptionError.{
   UnretryableError,
 }
 import com.digitalasset.canton.sequencing.protocol.{Batch, Deliver, SignedContent}
-import com.digitalasset.canton.sequencing.traffic.TrafficReceipt
 import com.digitalasset.canton.store.SequencedEventStore.OrdinarySequencedEvent
 import com.digitalasset.canton.topology.{DefaultTestIdentities, SequencerId}
 import com.digitalasset.canton.tracing.TraceContext
@@ -300,7 +298,7 @@ class TestSequencerSubscriptionFactoryPekko(
     with NamedLogging {
   import TestSequencerSubscriptionFactoryPekko.*
 
-  override def sequencerId: SequencerId = DefaultTestIdentities.daSequencerId
+  override def sequencerId: SequencerId = DefaultTestIdentities.sequencerId
 
   private val sources = new AtomicReference[Seq[SequencerCounter => Seq[Element]]](Seq.empty)
 
@@ -382,16 +380,15 @@ object TestSequencerSubscriptionFactoryPekko {
       Batch.empty(BaseTest.testedProtocolVersion),
       None,
       BaseTest.testedProtocolVersion,
-      Option.empty[TrafficReceipt],
     )
     val signedContent =
-      SignedContent.create(
+      SignedContent.tryCreate(
         sequencedEvent,
         signatures.toSeq,
         None,
         SignedContent.protocolVersionRepresentativeFor(BaseTest.testedProtocolVersion),
       )
-    OrdinarySequencedEvent(signedContent)(TraceContext.empty)
+    OrdinarySequencedEvent(signedContent, None)(TraceContext.empty)
   }
 
   private class TestSubscriptionErrorRetryPolicyPekko

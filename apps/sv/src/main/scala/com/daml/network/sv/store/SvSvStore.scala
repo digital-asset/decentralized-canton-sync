@@ -3,7 +3,7 @@
 
 package com.daml.network.sv.store
 
-import com.digitalasset.daml.lf.data.Time.Timestamp
+import com.daml.lf.data.Time.Timestamp
 import com.daml.network.automation.MultiDomainExpiredContractTrigger.ListExpiredContracts
 import com.daml.network.automation.TransferFollowTrigger.Task as FollowTask
 import com.daml.network.codegen.java.splice.validatoronboarding.ValidatorOnboarding
@@ -69,7 +69,7 @@ trait SvSvStore extends AppStore {
 
   def listExpiredValidatorOnboardings()
       : ListExpiredContracts[ValidatorOnboarding.ContractId, ValidatorOnboarding] =
-    multiDomainAcsStore.listExpiredFromPayloadExpiry(ValidatorOnboarding.COMPANION)
+    multiDomainAcsStore.listExpiredFromPayloadExpiry(ValidatorOnboarding.COMPANION)(_.expiresAt)
 
   def lookupSvOnboardingConfirmed()(implicit tc: TraceContext): Future[
     Option[Contract[so.SvOnboardingConfirmed.ContractId, so.SvOnboardingConfirmed]]

@@ -5,6 +5,8 @@ package com.digitalasset.canton.platform.apiserver.services.command
 
 import com.daml.error.ContextualizedErrorLogger
 import com.daml.error.ErrorCode.LoggedApiException
+import com.daml.lf.command.ApiCommand
+import com.daml.lf.crypto
 import com.daml.scalautil.future.FutureConversion.CompletionStageConversionOps
 import com.daml.timer.Delayed
 import com.daml.tracing.Telemetry
@@ -14,7 +16,7 @@ import com.digitalasset.canton.ledger.api.services.CommandSubmissionService
 import com.digitalasset.canton.ledger.api.util.TimeProvider
 import com.digitalasset.canton.ledger.api.validation.CommandsValidator
 import com.digitalasset.canton.ledger.configuration.LedgerTimeModel
-import com.digitalasset.canton.ledger.participant.state
+import com.digitalasset.canton.ledger.participant.state.v2 as state
 import com.digitalasset.canton.logging.LoggingContextWithTrace.{
   implicitExtractTraceContext,
   withEnrichedLoggingContext,
@@ -26,7 +28,7 @@ import com.digitalasset.canton.logging.{
   NamedLoggerFactory,
   NamedLogging,
 }
-import com.digitalasset.canton.metrics.LedgerApiServerMetrics
+import com.digitalasset.canton.metrics.Metrics
 import com.digitalasset.canton.platform.apiserver.SeedService
 import com.digitalasset.canton.platform.apiserver.execution.{
   CommandExecutionResult,
@@ -40,8 +42,6 @@ import com.digitalasset.canton.platform.apiserver.services.{
 }
 import com.digitalasset.canton.tracing.{Spanning, TraceContext}
 import com.digitalasset.canton.util.ShowUtil.*
-import com.digitalasset.daml.lf.command.ApiCommand
-import com.digitalasset.daml.lf.crypto
 import io.opentelemetry.api.trace.Tracer
 
 import java.time.Duration
@@ -58,7 +58,7 @@ private[apiserver] object CommandSubmissionServiceImpl {
       seedService: SeedService,
       commandExecutor: CommandExecutor,
       checkOverloaded: TraceContext => Option[state.SubmissionResult],
-      metrics: LedgerApiServerMetrics,
+      metrics: Metrics,
       telemetry: Telemetry,
       loggerFactory: NamedLoggerFactory,
   )(implicit
@@ -84,7 +84,7 @@ private[apiserver] final class CommandSubmissionServiceImpl private[services] (
     seedService: SeedService,
     commandExecutor: CommandExecutor,
     checkOverloaded: TraceContext => Option[state.SubmissionResult],
-    metrics: LedgerApiServerMetrics,
+    metrics: Metrics,
     val loggerFactory: NamedLoggerFactory,
 )(implicit executionContext: ExecutionContext, tracer: Tracer)
     extends CommandSubmissionService
