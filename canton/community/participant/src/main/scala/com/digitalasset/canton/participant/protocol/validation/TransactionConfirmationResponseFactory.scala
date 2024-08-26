@@ -4,19 +4,16 @@
 package com.digitalasset.canton.participant.protocol.validation
 
 import cats.syntax.parallel.*
-import com.digitalasset.canton.discard.Implicits.DiscardOps
+import com.digitalasset.canton.data.ConfirmingParty
 import com.digitalasset.canton.error.TransactionError
-import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
-import com.digitalasset.canton.participant.protocol.ProtocolProcessor.{
-  MalformedPayload,
-  WrongRecipientsDueToTopologyChange,
-}
+import com.digitalasset.canton.participant.protocol.ProtocolProcessor.MalformedPayload
 import com.digitalasset.canton.protocol.*
 import com.digitalasset.canton.protocol.messages.*
 import com.digitalasset.canton.topology.client.TopologySnapshot
 import com.digitalasset.canton.topology.{DomainId, ParticipantId}
 import com.digitalasset.canton.tracing.TraceContext
+import com.digitalasset.canton.util.FutureInstances.*
 import com.digitalasset.canton.version.ProtocolVersion
 import com.digitalasset.canton.{LfPartyId, checked}
 
@@ -31,8 +28,6 @@ class TransactionConfirmationResponseFactory(
 
   import com.digitalasset.canton.util.ShowUtil.*
 
-  /** Takes a `transactionValidationResult` and computes the [[protocol.messages.ConfirmationResponse]], to be sent to the mediator.
-    */
   def createConfirmationResponses(
       requestId: RequestId,
       malformedPayloads: Seq[MalformedPayload],
@@ -41,13 +36,13 @@ class TransactionConfirmationResponseFactory(
   )(implicit
       traceContext: TraceContext,
       ec: ExecutionContext,
-  ): FutureUnlessShutdown[Seq[ConfirmationResponse]] = {
+  ): Future[Seq[ConfirmationResponse]] = {
 
     def hostedConfirmingPartiesOfView(
         viewValidationResult: ViewValidationResult
     ): Future[Set[LfPartyId]] = {
-      val confirmingParties =
-        viewValidationResult.view.viewCommonData.viewConfirmationParameters.confirmers
+      val confirmingParties = viewValidationResult.view.viewCommonData.informees
+        .collect { case cp: ConfirmingParty => cp.party }
       topologySnapshot.canConfirm(participantId, confirmingParties)
     }
 
@@ -67,11 +62,11 @@ class TransactionConfirmationResponseFactory(
         viewValidationResult.activenessResult
 
       if (inactive.nonEmpty)
-        logger.info(
+        logger.debug(
           show"View $viewHash of request $requestId rejected due to inactive contract(s) $inactive"
         )
       if (alreadyLocked.nonEmpty)
-        logger.info(
+        logger.debug(
           show"View $viewHash of request $requestId rejected due to contention on contract(s) $alreadyLocked"
         )
 
@@ -133,21 +128,17 @@ class TransactionConfirmationResponseFactory(
 
     def responsesForWellformedPayloads(
         transactionValidationResult: TransactionValidationResult
-    ): FutureUnlessShutdown[Seq[ConfirmationResponse]] =
+    ): Future[Seq[ConfirmationResponse]] =
       transactionValidationResult.viewValidationResults.toSeq.parTraverseFilter {
         case (viewPosition, viewValidationResult) =>
           for {
-            hostedConfirmingParties <- FutureUnlessShutdown.outcomeF(
-              hostedConfirmingPartiesOfView(viewValidationResult)
-            )
-            modelConformanceResultE <- transactionValidationResult.modelConformanceResultET.value
+            hostedConfirmingParties <- hostedConfirmingPartiesOfView(viewValidationResult)
           } yield {
 
             // Rejections due to a failed model conformance check
-            // Aborts are logged by the Engine callback when the abort happens
             val modelConformanceRejections =
-              modelConformanceResultE.swap.toSeq.flatMap(error =>
-                error.nonAbortErrors.map(cause =>
+              transactionValidationResult.modelConformanceResultE.swap.toSeq.flatMap(error =>
+                error.errors.map(cause =>
                   logged(
                     requestId,
                     LocalRejectError.MalformedRejects.ModelConformance.Reject(cause.toString),
@@ -271,7 +262,7 @@ class TransactionConfirmationResponseFactory(
       }
 
     if (malformedPayloads.nonEmpty) {
-      FutureUnlessShutdown.pure(
+      Future.successful(
         Seq(
           createConfirmationResponsesForMalformedPayloads(
             requestId,
@@ -296,15 +287,7 @@ class TransactionConfirmationResponseFactory(
       requestId: RequestId,
       rootHash: RootHash,
       malformedPayloads: Seq[MalformedPayload],
-  )(implicit traceContext: TraceContext): ConfirmationResponse = {
-    val rejectError = LocalRejectError.MalformedRejects.Payloads.Reject(malformedPayloads.toString)
-
-    val dueToTopologyChange = malformedPayloads.forall {
-      case WrongRecipientsDueToTopologyChange(_) => true
-      case _ => false
-    }
-    if (!dueToTopologyChange) logged(requestId, rejectError).discard
-
+  )(implicit traceContext: TraceContext): ConfirmationResponse =
     checked(
       ConfirmationResponse
         .tryCreate(
@@ -314,12 +297,15 @@ class TransactionConfirmationResponseFactory(
           // The mediator will interpret this as a rejection
           // for all views and on behalf of all declared confirming parties hosted by the participant.
           None,
-          rejectError.toLocalReject(protocolVersion),
+          logged(
+            requestId,
+            LocalRejectError.MalformedRejects.Payloads
+              .Reject(malformedPayloads.toString),
+          ).toLocalReject(protocolVersion),
           rootHash,
           Set.empty,
           domainId,
           protocolVersion,
         )
     )
-  }
 }

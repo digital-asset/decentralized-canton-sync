@@ -11,7 +11,6 @@ import cats.syntax.functor.*
 import cats.syntax.traverse.*
 import com.digitalasset.canton.concurrent.{DirectExecutionContext, FutureSupervisor}
 import com.digitalasset.canton.config.ProcessingTimeout
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.lifecycle.{FlagCloseable, FutureUnlessShutdown, Lifecycle}
 import com.digitalasset.canton.logging.pretty.{Pretty, PrettyPrinting}
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
@@ -33,6 +32,7 @@ import com.digitalasset.canton.protocol.{LfContractId, TransferId}
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.ShowUtil.*
 import com.digitalasset.canton.util.{CheckedT, ErrorUtil, MonadUtil, SimpleExecutionQueue}
+import com.digitalasset.canton.version.ProtocolVersion
 import com.digitalasset.canton.{RequestCounter, TransferCounter}
 import com.google.common.annotations.VisibleForTesting
 
@@ -42,7 +42,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 /** The [[ConflictDetector]] stores the state of contracts activated or deactivated by in-flight requests in memory.
   * Such states take precedence over the states stored in the ACS, which are only updated when a request is finalized.
-  * A request is in-flight from the call to [[ConflictDetector.registerActivenessSet]] until the corresponding call to
+  * A request is in flight from the call to [[ConflictDetector.registerActivenessSet]] until the corresponding call to
   * [[ConflictDetector.finalizeRequest]] has written the updates to the ACS.
   *
   * The [[ConflictDetector]] also checks that transfer-ins refer to active transfers and atomically completes them
@@ -60,9 +60,9 @@ private[participant] class ConflictDetector(
     protected override val loggerFactory: NamedLoggerFactory,
     private val checkedInvariant: Boolean,
     private val executionContext: ExecutionContext,
-    exitOnFatalFailures: Boolean,
     override protected val timeouts: ProcessingTimeout,
     futureSupervisor: FutureSupervisor,
+    private val protocolVersion: ProtocolVersion,
 ) extends NamedLogging
     with FlagCloseable {
   import ConflictDetector.*
@@ -75,7 +75,6 @@ private[participant] class ConflictDetector(
       futureSupervisor,
       timeouts,
       loggerFactory,
-      crashOnFailure = exitOnFatalFailures,
     )
 
   /** Lock management and cache for contracts. */
@@ -196,7 +195,7 @@ private[participant] class ConflictDetector(
           statesReady = statesReady,
         )
       },
-      IllegalConflictDetectionStateException(s"Request $rc is already in-flight."),
+      IllegalConflictDetectionStateException(s"Request $rc is already in flight."),
     )
 
   /** Fetch the states for the contracts and keys in the handle from the stores and return them.
@@ -329,7 +328,7 @@ private[participant] class ConflictDetector(
     *   <li>Transfers in [[ActivenessSet.transferIds]] are completed if they are in `commitSet.`[[CommitSet.transferIns transferIns]].</li>
     * </ul>
     * and writes the updates from `commitSet` to the [[com.digitalasset.canton.participant.store.ActiveContractStore]].
-    * If no exception is thrown, the request is no longer in-flight.
+    * If no exception is thrown, the request is no longer in flight.
     *
     * All changes are carried out even if the [[ActivenessResult]] was not successful.
     *
@@ -350,7 +349,7 @@ private[participant] class ConflictDetector(
     *         This exception is not recoverable.</li>
     *         <li>[[RequestTracker$.InvalidCommitSet]] if the `commitSet` violates its precondition.
     *         For the contract, key, and transfer state management, this case is treated like passing [[CommitSet.empty]].</li>
-    *         <li>[[java.lang.IllegalArgumentException]] if the request is not in-flight.</li>
+    *         <li>[[java.lang.IllegalArgumentException]] if the request is not in flight.</li>
     *         </ul>
     */
   def finalizeRequest(commitSet: CommitSet, toc: TimeOfChange)(implicit
@@ -367,7 +366,7 @@ private[participant] class ConflictDetector(
       val locked @ LockedStates(checkedTransfers, lockedContracts) =
         transfersAndLockedStates
           .remove(rc)
-          .getOrElse(throw new IllegalArgumentException(s"Request $rc is not in-flight."))
+          .getOrElse(throw new IllegalArgumentException(s"Request $rc is not in flight."))
 
       val CommitSet(archivals, creations, transferOuts, transferIns) = commitSet
 

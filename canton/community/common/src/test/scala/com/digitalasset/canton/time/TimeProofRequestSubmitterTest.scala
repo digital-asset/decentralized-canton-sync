@@ -18,7 +18,6 @@ import com.digitalasset.canton.sequencing.protocol.{
   SignedContent,
   TimeProof,
 }
-import com.digitalasset.canton.sequencing.traffic.TrafficReceipt
 import com.digitalasset.canton.store.SequencedEventStore.OrdinarySequencedEvent
 import com.digitalasset.canton.topology.DefaultTestIdentities
 import com.digitalasset.canton.tracing.TraceContext
@@ -86,12 +85,12 @@ class TimeProofRequestSubmitterTest extends FixtureAsyncWordSpec with BaseTest {
               Batch.empty(testedProtocolVersion),
               None,
               testedProtocolVersion,
-              Option.empty[TrafficReceipt],
             ),
             SymbolicCrypto.emptySignature,
             None,
             testedProtocolVersion,
-          )
+          ),
+          None,
         )(traceContext)
       TimeProof.fromEventO(event).value
     }

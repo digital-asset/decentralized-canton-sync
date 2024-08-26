@@ -73,10 +73,7 @@ object TrafficControlParameters {
       proto: protoV30.TrafficControlParameters
   ): ParsingResult[TrafficControlParameters] = {
     for {
-      maxBaseTrafficAmount <- ProtoConverter.parseNonNegativeLong(
-        "max_base_traffic_amount",
-        proto.maxBaseTrafficAmount,
-      )
+      maxBaseTrafficAmount <- ProtoConverter.parseNonNegativeLong(proto.maxBaseTrafficAmount)
       maxBaseTrafficAccumulationDuration <- ProtoConverter.parseRequired(
         time.NonNegativeFiniteDuration.fromProtoPrimitive("max_base_traffic_accumulation_duration"),
         "max_base_traffic_accumulation_duration",
@@ -89,10 +86,7 @@ object TrafficControlParameters {
         "set_balance_request_submission_window_size",
         proto.setBalanceRequestSubmissionWindowSize,
       )
-      scalingFactor <- ProtoConverter.parsePositiveInt(
-        "read_vs_write_scaling_factor",
-        proto.readVsWriteScalingFactor,
-      )
+      scalingFactor <- ProtoConverter.parsePositiveInt(proto.readVsWriteScalingFactor)
     } yield TrafficControlParameters(
       maxBaseTrafficAmount,
       scalingFactor,

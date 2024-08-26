@@ -8,7 +8,6 @@ import com.daml.network.config.{
   SpliceDbConfig,
   SpliceBackendConfig,
   SpliceParametersConfig,
-  SpliceInstanceNamesConfig,
   ParticipantClientConfig,
   HttpClientConfig,
   NetworkAppClientConfig,
@@ -46,7 +45,6 @@ case class ScanAppBackendConfig(
     parameters: SpliceParametersConfig = SpliceParametersConfig(batching = BatchingConfig()),
     // TODO(#13301) Remove this flag
     supportsSoftDomainMigrationPoc: Boolean = false,
-    spliceInstanceNames: SpliceInstanceNamesConfig,
 ) extends SpliceBackendConfig
     with BaseScanAppConfig // TODO(#736): fork or generalize this trait.
     {

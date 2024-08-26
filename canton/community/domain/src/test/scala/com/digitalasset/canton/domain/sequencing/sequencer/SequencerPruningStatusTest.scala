@@ -17,14 +17,14 @@ class SequencerPruningStatusTest extends BaseTestWordSpec {
       val status = SequencerPruningStatus(
         lowerBound = ts(0),
         now = ts(15),
-        members = Set(
+        members = Seq(
           SequencerMemberStatus(
-            member = DefaultTestIdentities.daSequencerId,
+            member = DefaultTestIdentities.sequencerId,
             registeredAt = ts(8),
             ts(10).some,
           ),
           SequencerMemberStatus(
-            member = DefaultTestIdentities.daMediator,
+            member = DefaultTestIdentities.mediator,
             registeredAt = ts(7),
             ts(12).some,
           ),
@@ -39,14 +39,14 @@ class SequencerPruningStatusTest extends BaseTestWordSpec {
       val status = SequencerPruningStatus(
         lowerBound = ts(0),
         now = ts(15),
-        members = Set(
+        members = Seq(
           SequencerMemberStatus(
-            member = DefaultTestIdentities.daSequencerId,
+            member = DefaultTestIdentities.sequencerId,
             registeredAt = ts(8),
             ts(15).some,
           ),
           SequencerMemberStatus(
-            member = DefaultTestIdentities.daMediator,
+            member = DefaultTestIdentities.mediator,
             registeredAt = ts(7),
             None,
           ),
@@ -61,9 +61,9 @@ class SequencerPruningStatusTest extends BaseTestWordSpec {
       val status = SequencerPruningStatus(
         lowerBound = ts(0),
         now = ts(12),
-        members = Set(
+        members = Seq(
           SequencerMemberStatus(
-            member = DefaultTestIdentities.daSequencerId,
+            member = DefaultTestIdentities.sequencerId,
             registeredAt = ts(3),
             None,
           )
@@ -77,15 +77,15 @@ class SequencerPruningStatusTest extends BaseTestWordSpec {
       val status = SequencerPruningStatus(
         lowerBound = ts(0),
         now = ts(12),
-        members = Set(
+        members = Seq(
           SequencerMemberStatus(
-            member = DefaultTestIdentities.daSequencerId,
+            member = DefaultTestIdentities.sequencerId,
             registeredAt = ts(1),
             ts(2).some,
             enabled = false, // this is the key bit..
           ),
           SequencerMemberStatus(
-            member = DefaultTestIdentities.daMediator,
+            member = DefaultTestIdentities.mediator,
             registeredAt = ts(2),
             ts(12).some,
           ),

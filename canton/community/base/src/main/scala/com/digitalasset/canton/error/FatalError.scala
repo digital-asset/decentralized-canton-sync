@@ -23,7 +23,7 @@ object FatalError {
       case None => logger.error(message)
     }
 
-    sys.exit(117)
+    sys.exit(1)
   }
 
   def exitOnFatalError(error: CantonError, logger: TracedLogger)(implicit

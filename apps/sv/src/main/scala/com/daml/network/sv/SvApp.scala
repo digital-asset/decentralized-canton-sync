@@ -44,7 +44,7 @@ import com.daml.network.sv.cometbft.{
   CometBftNode,
   CometBftRequestSigner,
 }
-import com.daml.network.sv.config.{SvAppBackendConfig, SvCantonIdentifierConfig, SvOnboardingConfig}
+import com.daml.network.sv.config.{SvAppBackendConfig, SvOnboardingConfig}
 import com.daml.network.sv.metrics.SvAppMetrics
 import com.daml.network.sv.migration.{DomainDataSnapshotGenerator, SynchronizerNodeIdentities}
 import com.daml.network.sv.onboarding.domainmigration.DomainMigrationInitializer
@@ -75,7 +75,6 @@ import com.digitalasset.canton.time.Clock
 import com.digitalasset.canton.time.EnrichedDurations.*
 import com.digitalasset.canton.topology.{DomainId, ParticipantId, PartyId}
 import com.digitalasset.canton.tracing.{TraceContext, TracerProvider}
-import com.digitalasset.canton.version.ProtocolVersion
 import io.circe.Json
 import io.circe.syntax.*
 import io.grpc.Status
@@ -144,7 +143,7 @@ class SvApp(
                 retryProvider,
                 loggerFactory,
               )
-              participantInitializer.initializeFromDumpAndWait(
+              participantInitializer.initializeAndWait(
                 DomainMigrationInitializer
                   .loadDomainMigrationDump(dumpFilePath)
                   .nodeIdentities
@@ -152,14 +151,7 @@ class SvApp(
               )
 
             case _ =>
-              logger.info(
-                "Ensuring participant is initialized"
-              )
-              val cantonIdentifierConfig = config.cantonIdentifierConfig.getOrElse(
-                SvCantonIdentifierConfig.default(config)
-              )
               ParticipantInitializer.ensureParticipantInitializedWithExpectedId(
-                cantonIdentifierConfig.participant,
                 participantAdminConnection,
                 config.participantBootstrappingDump,
                 loggerFactory,
@@ -201,8 +193,7 @@ class SvApp(
           ),
           config.parameters
             .toStaticDomainParameters(
-              CommunityCryptoConfig(provider = CommunityCryptoProvider.Jce),
-              ProtocolVersion.v31,
+              CommunityCryptoConfig(provider = CommunityCryptoProvider.Tink)
             )
             .valueOr(err =>
               throw new IllegalArgumentException(s"Invalid domain parameters config: $err")
@@ -215,27 +206,16 @@ class SvApp(
           retryProvider,
         )
       )
-    val extraSynchronizerNodes = config.synchronizerNodes.view.mapValues { c =>
-      ExtraSynchronizerNode.fromConfig(
-        c,
-        amuletAppParameters.loggingConfig.api,
-        loggerFactory,
-        metrics.grpcClientMetrics,
-        retryProvider,
-      )
-    }.toMap
     initialize(
       participantAdminConnection,
       ledgerClient,
       localSynchronizerNode,
-      extraSynchronizerNodes,
     )
       .recoverWith { case err =>
         // TODO(#3474) Replace this by a more general solution for closing resources on
         // init failures.
         participantAdminConnection.close()
         localSynchronizerNode.foreach(_.close())
-        extraSynchronizerNodes.values.foreach(_.close())
         Future.failed(err)
       }
   }
@@ -244,7 +224,6 @@ class SvApp(
       participantAdminConnection: ParticipantAdminConnection,
       ledgerClient: SpliceLedgerClient,
       localSynchronizerNode: Option[LocalSynchronizerNode],
-      extraSynchronizerNodes: Map[String, ExtraSynchronizerNode],
   )(implicit tc: TraceContext): Future[SvApp.State] = {
     val cometBftClient = newCometBftClient
 
@@ -293,7 +272,6 @@ class SvApp(
       ) =>
         new JoiningNodeInitializer(
           localSynchronizerNode,
-          extraSynchronizerNodes,
           joiningConfig,
           participantId,
           Seq.empty, // A joining SV does not initially upload any DARs, they will be vetted by PackageVettingTrigger instead
@@ -308,7 +286,6 @@ class SvApp(
           storage,
           loggerFactory,
           retryProvider,
-          config.spliceInstanceNames,
         )
       // Ensure DSO party, DsoRules, AmuletRules, Mediator, and Sequencer nodes are setup
       // -------------------------------------------------------------------------------
@@ -344,7 +321,6 @@ class SvApp(
                 localSynchronizerNode.getOrElse(
                   sys.error("SV1 must always specify a domain config")
                 ),
-                extraSynchronizerNodes,
                 sv1Config,
                 darFilesToBootstrapNetwork,
                 participantId,
@@ -358,7 +334,6 @@ class SvApp(
                 domainParamsAutomationService.domainUnpausedSync,
                 storage,
                 retryProvider,
-                config.spliceInstanceNames,
                 loggerFactory,
               )
               initializer.bootstrapDso()
@@ -385,7 +360,6 @@ class SvApp(
               localSynchronizerNode.getOrElse(
                 sys.error("It must always specify a domain config for Domain Migration")
               ),
-              extraSynchronizerNodes,
               domainMigrationConfig,
               participantId,
               cometBftConfig,
@@ -401,7 +375,6 @@ class SvApp(
               storage,
               loggerFactory,
               retryProvider,
-              config.spliceInstanceNames,
               newJoiningNodeInitializer,
             ).migrateDomain()
           }
@@ -423,11 +396,13 @@ class SvApp(
       }
 
       (_, _, isDevNet, _, _, _) <- (
+        // TODO(#5141) Remove the comment about DAR uploads.
         // We create the validator user only after the DSO party migration and DAR uploads have completed. This avoids two issues:
         // 1. The ValidatorLicense has both the DSO and the SV as a stakeholder.
         //    That can cause problems during the DSO party migration because the contract is imported there
         //    but could also be imported through the stream of the SV party. By only creating the validator user here
         //    we ensure that the party migration has been completed before the contract is created.
+        // 2. Concurrent DAR uploads currently break Canton's topology state management.
         appInitStep("Initialize validator") {
           SvApp.initializeValidator(dsoAutomation, config, retryProvider, logger, clock)
         },
@@ -547,14 +522,13 @@ class SvApp(
             new HttpSvSoftDomainMigrationPocHandler(
               dsoAutomation,
               localSynchronizerNode,
-              extraSynchronizerNodes,
+              config.synchronizerNodes,
               participantAdminConnection,
-              config.domainMigrationId,
-              config.legacyMigrationId,
               clock,
               retryProvider,
               loggerFactory,
               amuletAppParameters,
+              metrics,
             )
           )
         else Seq.empty
@@ -614,7 +588,6 @@ class SvApp(
       SvApp.State(
         participantAdminConnection,
         localSynchronizerNode,
-        extraSynchronizerNodes,
         storage,
         domainTimeAutomationService,
         domainParamsAutomationService,
@@ -782,7 +755,6 @@ object SvApp {
   case class State(
       participantAdminConnection: ParticipantAdminConnection,
       localSynchronizerNode: Option[LocalSynchronizerNode],
-      extraSynchronizerNodes: Map[String, ExtraSynchronizerNode],
       storage: Storage,
       domainTimeAutomationService: DomainTimeAutomationService,
       domainParamsAutomationService: DomainParamsAutomationService,
@@ -804,10 +776,6 @@ object SvApp {
         SyncCloseable(
           s"Domain connections",
           localSynchronizerNode.foreach(_.close()),
-        ),
-        SyncCloseable(
-          s"Extra synchronizer nodes",
-          extraSynchronizerNodes.values.foreach(_.close()),
         ),
         SyncCloseable(
           s"Participant Admin connection",
@@ -1149,7 +1117,7 @@ object SvApp {
     } yield (token.candidateParty, token.candidateName, approvedSv.rewardWeightBps)
   }
 
-  private[sv] def isSv(
+  private[sv] def isDsoMember(
       name: String,
       party: PartyId,
       dsoRules: Contract.Has[splice.dsorules.DsoRules.ContractId, splice.dsorules.DsoRules],
@@ -1170,7 +1138,7 @@ object SvApp {
   ): Either[Status, Unit] = {
     for {
       _ <- Either.cond(
-        !SvApp.isSvParty(candidateParty, dsoRules),
+        !SvApp.isDsoMemberParty(candidateParty, dsoRules),
         (),
         Status.ALREADY_EXISTS.withDescription(
           s"An SV with party ID $candidateParty already exists."
@@ -1191,12 +1159,12 @@ object SvApp {
     } yield ()
   }
 
-  private[sv] def isSvParty(
+  private[sv] def isDsoMemberParty(
       party: PartyId,
       dsoRules: Contract.Has[splice.dsorules.DsoRules.ContractId, splice.dsorules.DsoRules],
   ): Boolean = dsoRules.payload.svs.containsKey(party.toProtoPrimitive)
 
-  private[sv] def isSvName(
+  private[sv] def isDsoMemberName(
       name: String,
       dsoRules: Contract.Has[splice.dsorules.DsoRules.ContractId, splice.dsorules.DsoRules],
   ): Boolean = getDsoPartyFromName(name, dsoRules).isDefined

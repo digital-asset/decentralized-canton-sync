@@ -3,10 +3,9 @@
 
 package com.digitalasset.canton.platform.apiserver.services
 
-import cats.data.OptionT
 import com.daml.grpc.adapter.ExecutionSequencerFactory
-import com.daml.ledger.api.v2.transaction.Transaction
 import com.daml.ledger.api.v2.update_service.*
+import com.daml.lf.ledger.EventId
 import com.daml.logging.entries.LoggingEntries
 import com.daml.tracing.Telemetry
 import com.digitalasset.canton.ledger.api.ValidationLogger
@@ -17,7 +16,7 @@ import com.digitalasset.canton.ledger.api.validation.{
   ValidationErrors,
 }
 import com.digitalasset.canton.ledger.error.groups.RequestValidationErrors
-import com.digitalasset.canton.ledger.participant.state.index.IndexTransactionsService
+import com.digitalasset.canton.ledger.participant.state.index.v2.IndexTransactionsService
 import com.digitalasset.canton.logging.LoggingContextWithTrace.implicitExtractTraceContext
 import com.digitalasset.canton.logging.TracedLoggerOps.TracedLoggerOps
 import com.digitalasset.canton.logging.{
@@ -26,9 +25,7 @@ import com.digitalasset.canton.logging.{
   NamedLoggerFactory,
   NamedLogging,
 }
-import com.digitalasset.canton.metrics.LedgerApiServerMetrics
-import com.digitalasset.daml.lf.data.Ref.Party
-import com.digitalasset.daml.lf.ledger.EventId
+import com.digitalasset.canton.metrics.Metrics
 import io.grpc.stub.StreamObserver
 import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.scaladsl.Source
@@ -38,7 +35,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 final class ApiUpdateService(
     transactionsService: IndexTransactionsService,
-    metrics: LedgerApiServerMetrics,
+    metrics: Metrics,
     telemetry: Telemetry,
     val loggerFactory: NamedLoggerFactory,
     validator: UpdateServiceRequestValidator,
@@ -73,10 +70,8 @@ final class ApiUpdateService(
         validation.fold(
           t => Source.failed(ValidationLogger.logFailureWithTrace(logger, request, t)),
           req =>
-            if (req.filter.filtersByParty.isEmpty && req.filter.filtersForAnyParty.isEmpty) {
-              logger.debug("transaction filters were empty, will not return anything")
-              Source.empty
-            } else {
+            if (req.filter.filtersByParty.isEmpty) Source.empty
+            else {
               LoggingContextWithTrace.withEnrichedLoggingContext(
                 logging.startExclusive(req.startExclusive),
                 logging.endInclusive(req.endInclusive),
@@ -123,10 +118,8 @@ final class ApiUpdateService(
         validation.fold(
           t => Source.failed(ValidationLogger.logFailureWithTrace(logger, request, t)),
           req =>
-            if (req.filter.filtersByParty.isEmpty && req.filter.filtersForAnyParty.isEmpty) {
-              logger.debug("transaction filters were empty, will not return anything")
-              Source.empty
-            } else {
+            if (req.filter.filtersByParty.isEmpty) Source.empty
+            else {
               LoggingContextWithTrace.withEnrichedLoggingContext(
                 logging.startExclusive(req.startExclusive),
                 logging.endInclusive(req.endInclusive),
@@ -148,7 +141,7 @@ final class ApiUpdateService(
                 )
                 .via(logger.enrichedDebugStream("Responding with update trees.", updatesLoggable))
                 .via(logger.logErrorsOnStream)
-                .via(StreamMetrics.countElements(metrics.lapi.streams.updateTrees))
+                .via(StreamMetrics.countElements(metrics.lapi.streams.updates))
             },
         )
       }
@@ -274,9 +267,20 @@ final class ApiUpdateService(
           EventId
             .fromString(request.eventId.unwrap)
             .map { case EventId(transactionId, _) =>
-              internalGetTransactionById(TransactionId(transactionId), request.requestingParties)(
-                loggingContextWithTrace
-              )
+              transactionsService
+                .getTransactionById(TransactionId(transactionId), request.requestingParties)(
+                  loggingContextWithTrace
+                )
+                .flatMap {
+                  case None =>
+                    Future.failed(
+                      RequestValidationErrors.NotFound.Transaction
+                        .Reject(transactionId)
+                        .asGrpcError
+                    )
+                  case Some(transaction) =>
+                    Future.successful(transaction)
+                }
             }
             .getOrElse {
               Future.failed {
@@ -293,15 +297,13 @@ final class ApiUpdateService(
   override def getTransactionById(
       req: GetTransactionByIdRequest
   ): Future[GetTransactionResponse] = {
-    val loggingContextWithTrace = LoggingContextWithTrace(loggerFactory, telemetry)
-    val errorLoggingContext = ErrorLoggingContext(logger, loggingContextWithTrace)
+    implicit val loggingContextWithTrace = LoggingContextWithTrace(loggerFactory, telemetry)
+    implicit val errorLoggingContext = ErrorLoggingContext(logger, loggingContextWithTrace)
 
     validator
-      .validateTransactionById(req)(errorLoggingContext)
+      .validateTransactionById(req)
       .fold(
-        t =>
-          Future
-            .failed(ValidationLogger.logFailureWithTrace(logger, req, t)(loggingContextWithTrace)),
+        t => Future.failed(ValidationLogger.logFailureWithTrace(logger, req, t)),
         request => {
           implicit val enrichedLoggingContext: LoggingContextWithTrace =
             LoggingContextWithTrace.enriched(
@@ -311,8 +313,20 @@ final class ApiUpdateService(
           logger.info(s"Received request for transaction by ID, ${enrichedLoggingContext
               .serializeFiltered("eventId", "parties")}.")(loggingContextWithTrace.traceContext)
           logger.trace(s"Transaction by ID request: $request")(loggingContextWithTrace.traceContext)
-
-          internalGetTransactionById(request.transactionId, request.requestingParties)
+          transactionsService
+            .getTransactionById(request.transactionId, request.requestingParties)(
+              loggingContextWithTrace
+            )
+            .flatMap {
+              case None =>
+                Future.failed(
+                  RequestValidationErrors.NotFound.Transaction
+                    .Reject(request.transactionId.unwrap)
+                    .asGrpcError
+                )
+              case Some(transaction) =>
+                Future.successful(transaction)
+            }
             .andThen(
               logger.logErrorsOnCall[GetTransactionResponse](loggingContextWithTrace.traceContext)
             )
@@ -320,56 +334,12 @@ final class ApiUpdateService(
       )
   }
 
-  private def internalGetTransactionById(
-      transactionId: TransactionId,
-      requestingParties: Set[Party],
-  )(implicit
-      loggingContextWithTrace: LoggingContextWithTrace
-  ): Future[GetTransactionResponse] =
-    OptionT(transactionsService.getTransactionById(transactionId, requestingParties))
-      .orElse {
-        logger.debug(
-          s"Transaction not found in flat transaction lookup for transactionId $transactionId and requestingParties $requestingParties, falling back to transaction tree lookup."
-        )
-        // When a command submission completes successfully,
-        // the submitters can end up getting a TRANSACTION_NOT_FOUND when querying its corresponding flat transaction that either:
-        // * has only non-consuming events
-        // * has only events of contracts which have stakeholders that are not amongst the requestingParties
-        // In these situations, we fallback to a transaction tree lookup and populate the flat transaction response
-        // with its details but no events.
-        OptionT(transactionsService.getTransactionTreeById(transactionId, requestingParties))
-          .map(tree =>
-            GetTransactionResponse(
-              tree.transaction.map(transaction =>
-                Transaction(
-                  updateId = transaction.updateId,
-                  commandId = transaction.commandId,
-                  workflowId = transaction.workflowId,
-                  effectiveAt = transaction.effectiveAt,
-                  events = Seq.empty,
-                  offset = transaction.offset,
-                  domainId = transaction.domainId,
-                  traceContext = transaction.traceContext,
-                  recordTime = transaction.recordTime,
-                )
-              )
-            )
-          )
-      }
-      .getOrElseF(
-        Future.failed(
-          RequestValidationErrors.NotFound.Transaction.Reject(transactionId.unwrap).asGrpcError
-        )
-      )
-
   private def updatesLoggable(updates: GetUpdatesResponse): LoggingEntries =
     updates.update match {
       case GetUpdatesResponse.Update.Transaction(t) =>
         entityLoggable(t.commandId, t.updateId, t.workflowId, t.offset)
       case GetUpdatesResponse.Update.Reassignment(r) =>
         entityLoggable(r.commandId, r.updateId, r.workflowId, r.offset)
-      case GetUpdatesResponse.Update.OffsetCheckpoint(c) =>
-        LoggingEntries(logging.offset(c.offset))
       case GetUpdatesResponse.Update.Empty =>
         LoggingEntries()
     }
@@ -380,8 +350,6 @@ final class ApiUpdateService(
         entityLoggable(t.commandId, t.updateId, t.workflowId, t.offset)
       case GetUpdateTreesResponse.Update.Reassignment(r) =>
         entityLoggable(r.commandId, r.updateId, r.workflowId, r.offset)
-      case GetUpdateTreesResponse.Update.OffsetCheckpoint(c) =>
-        LoggingEntries(logging.offset(c.offset))
       case GetUpdateTreesResponse.Update.Empty =>
         LoggingEntries()
     }

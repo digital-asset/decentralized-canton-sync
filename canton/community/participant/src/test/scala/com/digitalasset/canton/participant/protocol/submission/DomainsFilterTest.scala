@@ -3,6 +3,8 @@
 
 package com.digitalasset.canton.participant.protocol.submission
 
+import com.daml.lf.transaction.TransactionVersion
+import com.daml.lf.transaction.test.TransactionBuilder.Implicits.*
 import com.digitalasset.canton.logging.NamedLoggerFactory
 import com.digitalasset.canton.participant.protocol.submission.DomainSelectionFixture.Transactions.ExerciseByInterface
 import com.digitalasset.canton.participant.protocol.submission.DomainSelectionFixture.*
@@ -12,8 +14,6 @@ import com.digitalasset.canton.topology.*
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.version.{DamlLfVersionToProtocolVersions, ProtocolVersion}
 import com.digitalasset.canton.{BaseTest, HasExecutionContext, LfPackageId, LfPartyId}
-import com.digitalasset.daml.lf.transaction.TransactionVersion
-import com.digitalasset.daml.lf.transaction.test.TransactionBuilder.Implicits.*
 import org.scalatest.wordspec.AnyWordSpec
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -75,7 +75,7 @@ class DomainsFilterTest extends AnyWordSpec with BaseTest with HasExecutionConte
       import SimpleTopology.*
 
       // LanguageVersion.VDev needs pv=dev so we use pv=6
-      val currentDomainPV = ProtocolVersion.v31
+      val currentDomainPV = ProtocolVersion.v30
       val filter =
         DomainsFilterForTx(Transactions.Create.tx(TransactionVersion.VDev), currentDomainPV)
 

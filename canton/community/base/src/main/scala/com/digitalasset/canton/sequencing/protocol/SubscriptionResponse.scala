@@ -3,6 +3,7 @@
 
 package com.digitalasset.canton.sequencing.protocol
 
+import cats.syntax.traverse.*
 import com.digitalasset.canton.domain.api.v30
 import com.digitalasset.canton.serialization.ProtoConverter.ParsingResult
 import com.digitalasset.canton.tracing.TraceContext
@@ -11,6 +12,7 @@ import com.digitalasset.canton.version.ProtocolVersion
 final case class SubscriptionResponse(
     signedSequencedEvent: SignedContent[SequencedEvent[ClosedEnvelope]],
     traceContext: TraceContext,
+    trafficState: Option[SequencedEventTrafficState],
 )
 
 object SubscriptionResponse {
@@ -22,6 +24,7 @@ object SubscriptionResponse {
     val v30.VersionedSubscriptionResponse(
       signedSequencedEvent,
       _ignoredTraceContext,
+      trafficStateP,
     ) = responseP
     for {
       signedContent <- SignedContent.fromByteString(protocolVersion)(
@@ -30,7 +33,8 @@ object SubscriptionResponse {
       signedSequencedEvent <- signedContent.deserializeContent(
         SequencedEvent.fromByteString(protocolVersion)
       )
-    } yield SubscriptionResponse(signedSequencedEvent, traceContext)
+      trafficState <- trafficStateP.traverse(SequencedEventTrafficState.fromProtoV30)
+    } yield SubscriptionResponse(signedSequencedEvent, traceContext, trafficState)
 
   }
 }

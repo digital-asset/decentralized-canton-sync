@@ -3,7 +3,6 @@
 
 package com.digitalasset.canton.resource
 
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import slick.jdbc.PositionedParameters
 import slick.jdbc.canton.SQLActionBuilder
 

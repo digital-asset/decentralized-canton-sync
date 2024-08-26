@@ -8,7 +8,7 @@ import com.daml.network.integration.tests.runbook.{
   SvUiIntegrationTestUtil,
   PreflightIntegrationTestUtil,
 }
-import com.daml.network.sv.util.AnsUtil
+import com.daml.network.sv.util.AnsUtil.entryNameSuffix
 import com.daml.network.util.{FrontendLoginUtil, SvFrontendTestUtil, WalletFrontendTestUtil}
 import com.digitalasset.canton.integration.BaseEnvironmentDefinition
 import com.digitalasset.canton.topology.PartyId
@@ -64,8 +64,7 @@ class SvReOnboardPreflightIntegrationTest
           usd should be >= BigDecimal("100000")
 
           val loggedInUser = seleniumText(find(id("logged-in-user")))
-          val ansUtil = new AnsUtil(ansAcronym)
-          if (loggedInUser.endsWith(ansUtil.entryNameSuffix)) {
+          if (loggedInUser.endsWith(entryNameSuffix)) {
             val entry = sv1ScanClient.lookupEntryByName(loggedInUser)
             PartyId.tryFromProtoPrimitive(entry.user)
           } else PartyId.tryFromProtoPrimitive(loggedInUser)
@@ -89,7 +88,7 @@ class SvReOnboardPreflightIntegrationTest
           userIsLoggedIn()
 
           val loggedInEntry = seleniumText(find(id("logged-in-user")))
-          loggedInEntry shouldBe s"da-helm-test-node.sv.$ansAcronym"
+          loggedInEntry shouldBe "da-helm-test-node.sv.cns"
 
           val entry = sv1ScanClient.lookupEntryByName(loggedInEntry)
           PartyId.tryFromProtoPrimitive(entry.user)

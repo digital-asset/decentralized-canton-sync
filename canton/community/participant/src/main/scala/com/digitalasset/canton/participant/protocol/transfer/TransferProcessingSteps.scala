@@ -4,29 +4,21 @@
 package com.digitalasset.canton.participant.protocol.transfer
 
 import cats.data.{EitherT, OptionT}
+import cats.syntax.either.*
 import cats.syntax.option.*
 import cats.syntax.parallel.*
+import com.daml.lf.engine
 import com.daml.nonempty.NonEmpty
 import com.daml.nonempty.catsinstances.*
 import com.digitalasset.canton.crypto.{DomainSnapshotSyncCryptoApi, Signature}
 import com.digitalasset.canton.data.ViewType.TransferViewType
-import com.digitalasset.canton.data.{
-  CantonTimestamp,
-  TransferSubmitterMetadata,
-  TransferViewTree,
-  ViewType,
-}
+import com.digitalasset.canton.data.{CantonTimestamp, TransferSubmitterMetadata, ViewType}
 import com.digitalasset.canton.error.TransactionError
-import com.digitalasset.canton.ledger.participant.state.CompletionInfo
-import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
+import com.digitalasset.canton.ledger.participant.state.v2.CompletionInfo
 import com.digitalasset.canton.logging.pretty.{Pretty, PrettyPrinting}
 import com.digitalasset.canton.logging.{NamedLogging, TracedLogger}
 import com.digitalasset.canton.participant.RequestOffset
-import com.digitalasset.canton.participant.protocol.ProcessingSteps.{
-  ParsedRequest,
-  PendingRequestData,
-  WrapsProcessorError,
-}
+import com.digitalasset.canton.participant.protocol.ProcessingSteps.WrapsProcessorError
 import com.digitalasset.canton.participant.protocol.ProtocolProcessor.{
   MalformedPayload,
   NoMediatorError,
@@ -40,7 +32,6 @@ import com.digitalasset.canton.participant.protocol.{
   SubmissionTracker,
 }
 import com.digitalasset.canton.participant.store.TransferStore.TransferStoreError
-import com.digitalasset.canton.participant.sync.SyncServiceError.SyncServiceAlarm
 import com.digitalasset.canton.participant.sync.{LedgerSyncEvent, TimestampedEvent}
 import com.digitalasset.canton.participant.util.DAMLe
 import com.digitalasset.canton.protocol.*
@@ -51,15 +42,15 @@ import com.digitalasset.canton.protocol.messages.Verdict.{
   ParticipantReject,
 }
 import com.digitalasset.canton.protocol.messages.*
-import com.digitalasset.canton.sequencing.protocol.*
+import com.digitalasset.canton.sequencing.protocol.{Batch, OpenEnvelope, WithRecipients}
 import com.digitalasset.canton.store.SessionKeyStore
 import com.digitalasset.canton.topology.client.TopologySnapshot
 import com.digitalasset.canton.topology.{DomainId, ParticipantId}
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.ErrorUtil
+import com.digitalasset.canton.util.FutureInstances.*
 import com.digitalasset.canton.version.Transfer.{SourceProtocolVersion, TargetProtocolVersion}
 import com.digitalasset.canton.{LfPartyId, RequestCounter, SequencerCounter}
-import com.digitalasset.daml.lf.engine
 
 import scala.collection.concurrent
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -102,9 +93,6 @@ trait TransferProcessingSteps[
   override type RequestType <: ProcessingSteps.RequestType.Transfer
   override val requestType: RequestType
 
-  override type FullView <: TransferViewTree
-  override type ParsedRequestType = ParsedTransferRequest[FullView]
-
   override def embedNoMediatorError(error: NoMediatorError): TransferProcessorError =
     GenericStepsError(error)
 
@@ -136,7 +124,7 @@ trait TransferProcessingSteps[
   }
 
   override def authenticateInputContracts(
-      parsedRequest: ParsedRequestType
+      pendingDataAndResponseArgs: PendingDataAndResponseArgs
   )(implicit
       traceContext: TraceContext
   ): EitherT[Future, TransferProcessorError, Unit] = {
@@ -166,7 +154,7 @@ trait TransferProcessingSteps[
       envelope: OpenEnvelope[EncryptedViewMessage[RequestViewType]]
   )(implicit
       tc: TraceContext
-  ): EitherT[FutureUnlessShutdown, EncryptedViewMessageError, WithRecipients[
+  ): EitherT[Future, EncryptedViewMessageError, WithRecipients[
     DecryptedView
   ]]
 
@@ -176,7 +164,7 @@ trait TransferProcessingSteps[
       sessionKeyStore: SessionKeyStore,
   )(implicit
       traceContext: TraceContext
-  ): EitherT[FutureUnlessShutdown, TransferProcessorError, DecryptedViews] = {
+  ): EitherT[Future, TransferProcessorError, DecryptedViews] = {
     val result = for {
       decryptedEitherList <- batch.toNEF.parTraverse(
         decryptTree(snapshot, sessionKeyStore)(_).value
@@ -191,54 +179,6 @@ trait TransferProcessingSteps[
       decryptedViewsWithSignatures: Seq[(WithRecipients[DecryptedView], Option[Signature])]
   ): (Seq[(WithRecipients[FullView], Option[Signature])], Seq[ProtocolProcessor.MalformedPayload]) =
     (decryptedViewsWithSignatures, Seq.empty)
-
-  override def computeParsedRequest(
-      rc: RequestCounter,
-      ts: CantonTimestamp,
-      sc: SequencerCounter,
-      rootViewsWithMetadata: NonEmpty[
-        Seq[(WithRecipients[FullView], Option[Signature])]
-      ],
-      submitterMetadataO: Option[ViewSubmitterMetadata],
-      isFreshOwnTimelyRequest: Boolean,
-      malformedPayloads: Seq[MalformedPayload],
-      mediator: MediatorGroupRecipient,
-      snapshot: DomainSnapshotSyncCryptoApi,
-      domainParameters: DynamicDomainParametersWithValidity,
-  )(implicit traceContext: TraceContext): Future[ParsedTransferRequest[FullView]] = {
-
-    val numberOfViews = rootViewsWithMetadata.size
-    if (numberOfViews > 1) {
-      // The root hash check ensures that all views have the same contents.
-      // The recipients check ensures that the first view has the right recipients.
-      // Therefore, we can discard the remaining views.
-      SyncServiceAlarm
-        .Warn(
-          s"Received $numberOfViews instead of 1 views in Request $ts. Discarding all but the first view."
-        )
-        .report()
-    }
-
-    val (WithRecipients(viewTree, recipients), signature) = rootViewsWithMetadata.head1
-
-    Future.successful(
-      ParsedTransferRequest(
-        rc,
-        ts,
-        sc,
-        viewTree,
-        recipients,
-        signature,
-        submitterMetadataO,
-        isFreshOwnTimelyRequest,
-        viewTree.isTransferringParticipant(participantId),
-        malformedPayloads,
-        mediator,
-        snapshot,
-        domainParameters,
-      )
-    )
-  }
 
   override def constructResponsesForMalformedPayloads(
       requestId: RequestId,
@@ -278,7 +218,7 @@ trait TransferProcessingSteps[
       commandId = submitterMetadata.commandId,
       optDeduplicationPeriod = None,
       submissionId = None,
-      messageUuid = None,
+      statistics = None,
     )
 
     val tse = Option.when(isSubmittingParticipant)(
@@ -308,7 +248,7 @@ trait TransferProcessingSteps[
         commandId = pendingTransfer.submitterMetadata.commandId,
         optDeduplicationPeriod = None,
         submissionId = pendingTransfer.submitterMetadata.submissionId,
-        messageUuid = None,
+        statistics = None,
       )
     )
 
@@ -334,6 +274,12 @@ trait TransferProcessingSteps[
     Right(tse)
   }
 
+  override def decisionTimeFor(
+      parameters: DynamicDomainParametersWithValidity,
+      requestTs: CantonTimestamp,
+  ): Either[TransferProcessorError, CantonTimestamp] =
+    parameters.decisionTimeFor(requestTs).leftMap(TransferParametersError(parameters.domainId, _))
+
   override def getSubmitterInformation(
       views: Seq[DecryptedView]
   ): (Option[ViewSubmitterMetadata], Option[SubmissionTracker.SubmissionData]) = {
@@ -342,6 +288,14 @@ trait TransferProcessingSteps[
 
     (submitterMetadataO, submissionDataForTrackerO)
   }
+
+  override def participantResponseDeadlineFor(
+      parameters: DynamicDomainParametersWithValidity,
+      requestTs: CantonTimestamp,
+  ): Either[TransferProcessorError, CantonTimestamp] =
+    parameters
+      .participantResponseDeadlineFor(requestTs)
+      .leftMap(TransferParametersError(parameters.domainId, _))
 
   case class TransferSubmission(
       override val batch: Batch[DefaultOpenEnvelope],
@@ -376,25 +330,7 @@ object TransferProcessingSteps {
         Promise[com.google.rpc.status.Status]()
   )
 
-  final case class ParsedTransferRequest[VT <: TransferViewTree](
-      override val rc: RequestCounter,
-      override val requestTimestamp: CantonTimestamp,
-      override val sc: SequencerCounter,
-      fullViewTree: VT,
-      recipients: Recipients,
-      signatureO: Option[Signature],
-      override val submitterMetadataO: Option[TransferSubmitterMetadata],
-      override val isFreshOwnTimelyRequest: Boolean,
-      transferringParticipant: Boolean,
-      override val malformedPayloads: Seq[MalformedPayload],
-      override val mediator: MediatorGroupRecipient,
-      override val snapshot: DomainSnapshotSyncCryptoApi,
-      override val domainParameters: DynamicDomainParametersWithValidity,
-  ) extends ParsedRequest[TransferSubmitterMetadata] {
-    override def rootHash: RootHash = fullViewTree.rootHash
-  }
-
-  trait PendingTransfer extends PendingRequestData with Product with Serializable {
+  trait PendingTransfer extends Product with Serializable {
     def requestId: RequestId
 
     def requestCounter: RequestCounter
@@ -402,8 +338,6 @@ object TransferProcessingSteps {
     def requestSequencerCounter: SequencerCounter
 
     def submitterMetadata: TransferSubmitterMetadata
-
-    override def isCleanReplay: Boolean = false
   }
 
   final case class RejectionArgs[T <: PendingTransfer](
@@ -427,6 +361,10 @@ object TransferProcessingSteps {
     override def underlyingProcessorError(): Option[ProcessorError] = Some(error)
 
     override def message: String = error.toString
+  }
+
+  final case class InvalidTransferCommonData(reason: String) extends TransferProcessorError {
+    override def message: String = s"Invalid transfer common data: $reason"
   }
 
   final case class InvalidTransferView(reason: String) extends TransferProcessorError {
@@ -579,11 +517,5 @@ object TransferProcessingSteps {
       param("field", _.field.unquoted),
       param("error", _.error.unquoted),
     )
-  }
-
-  final case class ReinterpretationAborted(transferId: TransferId, reason: String)
-      extends TransferProcessorError {
-    override def message: String =
-      s"Cannot transfer `$transferId`: reinterpretation aborted for reason `$reason`"
   }
 }

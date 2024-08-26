@@ -8,13 +8,16 @@ import com.daml.network.scan.metrics.ScanAppMetrics
 import com.daml.network.splitwell.metrics.SplitwellAppMetrics
 import com.daml.network.sv.metrics.SvAppMetrics
 import com.daml.network.validator.metrics.ValidatorAppMetrics
-import com.digitalasset.canton.metrics.{DbStorageHistograms, MetricsFactoryProvider}
+import com.digitalasset.canton.buildinfo.BuildInfo
+import com.digitalasset.canton.metrics.CantonLabeledMetricsFactory.CantonOpenTelemetryMetricsFactory
+import com.digitalasset.canton.metrics.MetricsFactoryType
+import io.opentelemetry.api.metrics.{Meter, MeterProvider}
 
 import scala.collection.concurrent.TrieMap
 
 case class SpliceMetricsFactory(
-    metricsFactoryProvider: MetricsFactoryProvider,
-    storageHistograms: DbStorageHistograms,
+    meter: Meter,
+    factoryType: MetricsFactoryType,
 ) {
 
   private val validators = TrieMap[String, ValidatorAppMetrics]()
@@ -27,8 +30,7 @@ case class SpliceMetricsFactory(
       name, {
         val metricsContext = MetricsContext("node_name" -> name, "node_type" -> "validator")
         new ValidatorAppMetrics(
-          metricsFactoryProvider.generateMetricsFactory(metricsContext),
-          storageHistograms,
+          createLabeledMetricsFactory(metricsContext)
         )
       },
     )
@@ -39,8 +41,7 @@ case class SpliceMetricsFactory(
       name, {
         val metricsContext = MetricsContext("node_name" -> name, "node_type" -> "sv")
         new SvAppMetrics(
-          metricsFactoryProvider.generateMetricsFactory(metricsContext),
-          storageHistograms,
+          createLabeledMetricsFactory(metricsContext)
         )
       },
     )
@@ -51,8 +52,7 @@ case class SpliceMetricsFactory(
       name, {
         val metricsContext = MetricsContext("node_name" -> name, "node_type" -> "scan")
         new ScanAppMetrics(
-          metricsFactoryProvider.generateMetricsFactory(metricsContext),
-          storageHistograms,
+          createLabeledMetricsFactory(metricsContext)
         )
       },
     )
@@ -63,11 +63,36 @@ case class SpliceMetricsFactory(
       name, {
         val metricsContext = MetricsContext("node_name" -> name, "node_type" -> "splitwell")
         new SplitwellAppMetrics(
-          metricsFactoryProvider.generateMetricsFactory(metricsContext),
-          storageHistograms,
+          createLabeledMetricsFactory(metricsContext)
         )
       },
     )
   }
 
+  def createLabeledMetricsFactory(extraContext: MetricsContext) = {
+    factoryType match {
+      case MetricsFactoryType.InMemory(provider) =>
+        provider(extraContext)
+      case MetricsFactoryType.External =>
+        new CantonOpenTelemetryMetricsFactory(
+          meter,
+          globalMetricsContext = MetricsContext(
+            "canton_version" -> BuildInfo.version
+          ).merge(extraContext),
+        )
+    }
+  }
+
+}
+
+object SpliceMetricsFactory {
+  def forConfig(
+      meter: MeterProvider,
+      metricsFactoryType: MetricsFactoryType,
+  ): SpliceMetricsFactory = {
+    new SpliceMetricsFactory(
+      meter.meterBuilder("cn").build(),
+      metricsFactoryType,
+    )
+  }
 }

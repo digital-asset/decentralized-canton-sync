@@ -3,6 +3,7 @@
 
 package com.digitalasset.canton.ledger.localstore
 
+import com.daml.lf.data.Ref
 import com.digitalasset.canton.platform.store.backend.StorageBackendProvider
 import com.digitalasset.canton.platform.store.backend.localstore.UserManagementStorageBackend.DbUserPayload
 import com.digitalasset.canton.platform.store.backend.localstore.{
@@ -10,7 +11,6 @@ import com.digitalasset.canton.platform.store.backend.localstore.{
   UserManagementStorageBackend,
   UserManagementStorageBackendImpl,
 }
-import com.digitalasset.daml.lf.data.Ref
 import org.scalatest.freespec.AsyncFreeSpec
 
 import java.sql.Connection

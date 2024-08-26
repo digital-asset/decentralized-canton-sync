@@ -3,20 +3,19 @@
 
 package com.digitalasset.canton.platform.store.backend
 
-import com.digitalasset.canton.data.{CantonTimestamp, Offset}
+import com.daml.daml_lf_dev.DamlLf
+import com.daml.lf.crypto.Hash
+import com.daml.lf.data.Time.Timestamp
+import com.daml.lf.data.{Bytes, Ref}
+import com.daml.lf.ledger.EventId
+import com.daml.lf.transaction.NodeId
+import com.daml.lf.value.Value.ContractId
 import com.digitalasset.canton.ledger.api.domain.ParticipantId
-import com.digitalasset.canton.ledger.participant.state.index.MeteringStore.TransactionMetering
+import com.digitalasset.canton.ledger.offset.Offset
+import com.digitalasset.canton.ledger.participant.state.index.v2.MeteringStore.TransactionMetering
 import com.digitalasset.canton.platform.store.backend.MeteringParameterStorageBackend.LedgerMeteringEnd
 import com.digitalasset.canton.platform.store.dao.JdbcLedgerDao
-import com.digitalasset.canton.topology.DomainId
 import com.digitalasset.canton.tracing.{SerializableTraceContext, TraceContext}
-import com.digitalasset.daml.lf.archive.DamlLf
-import com.digitalasset.daml.lf.crypto.Hash
-import com.digitalasset.daml.lf.data.Time.Timestamp
-import com.digitalasset.daml.lf.data.{Bytes, Ref}
-import com.digitalasset.daml.lf.ledger.EventId
-import com.digitalasset.daml.lf.transaction.NodeId
-import com.digitalasset.daml.lf.value.Value.ContractId
 import com.google.protobuf.ByteString
 
 import java.time.Instant
@@ -30,9 +29,9 @@ private[store] object StorageBackendTestValues {
   def hashCid(key: String): ContractId = ContractId.V1(Hash.hashPrivateKey(key))
 
   /** Produces offsets that are ordered the same as the input value */
-  def offset(x: Long): Offset = Offset.fromLong(x)
+  def offset(x: Long): Offset = Offset.fromHexString(Ref.HexString.assertFromString(f"$x%08d"))
   def ledgerEnd(o: Long, e: Long): ParameterStorageBackend.LedgerEnd =
-    ParameterStorageBackend.LedgerEnd(offset(o), e, 0, CantonTimestamp.now())
+    ParameterStorageBackend.LedgerEnd(offset(o), e, 0)
   def transactionIdFromOffset(x: Offset): Ref.LedgerString =
     Ref.LedgerString.assertFromString(x.toHexString)
 
@@ -46,7 +45,6 @@ private[store] object StorageBackendTestValues {
   val someTemplateId2: Ref.Identifier = Ref.Identifier.assertFromString("pkg:Mod:Template2")
   val someTemplateId3: Ref.Identifier = Ref.Identifier.assertFromString("pkg:Mod:Template3")
   val somePackageName: Ref.PackageName = Ref.PackageName.assertFromString("pkg-name")
-  val somePackageVersion: Ref.PackageVersion = Ref.PackageVersion.assertFromString("1.2.3")
   val someIdentityParams: ParameterStorageBackend.IdentityParams =
     ParameterStorageBackend.IdentityParams(someParticipantId)
   val someParty: Ref.Party = Ref.Party.assertFromString("party")
@@ -68,8 +66,6 @@ private[store] object StorageBackendTestValues {
   // The tests never deserialize Daml-Lf values, we the just need some non-empty array
   // because Oracle converts empty arrays to NULL, which then breaks non-null constraints.
   val someSerializedDamlLfValue: Array[Byte] = Array.fill[Byte](8)(15)
-  val someDomainId: DomainId = DomainId.tryFromString("x::somedomain")
-  val someDomainId2: DomainId = DomainId.tryFromString("x::somedomain2")
 
   private val serializableTraceContext: Array[Byte] =
     SerializableTraceContext(TraceContext.empty).toDamlProto.toByteArray
@@ -79,7 +75,6 @@ private[store] object StorageBackendTestValues {
       party: String = someParty,
       isLocal: Boolean = true,
       displayNameOverride: Option[Option[String]] = None,
-      reject: Boolean = false,
   ): DbDto.PartyEntry = {
     val displayName = displayNameOverride.getOrElse(Some(party))
     DbDto.PartyEntry(
@@ -88,11 +83,29 @@ private[store] object StorageBackendTestValues {
       submission_id = Some("submission_id"),
       party = Some(party),
       display_name = displayName,
-      typ = if (reject) JdbcLedgerDao.rejectType else JdbcLedgerDao.acceptType,
-      rejection_reason = Option.when(reject)("some rejection reason"),
+      typ = JdbcLedgerDao.acceptType,
+      rejection_reason = None,
       is_local = Some(isLocal),
     )
   }
+
+  def dtoPackage(offset: Offset): DbDto.Package = DbDto.Package(
+    package_id = someArchive.getHash,
+    upload_id = "upload_id",
+    source_description = Some("source_description"),
+    package_size = someArchive.getPayload.size.toLong,
+    known_since = someTime.micros,
+    ledger_offset = offset.toHexString,
+    _package = someArchive.toByteArray,
+  )
+
+  def dtoPackageEntry(offset: Offset): DbDto.PackageEntry = DbDto.PackageEntry(
+    ledger_offset = offset.toHexString,
+    recorded_at = someTime.micros,
+    submission_id = Some("submission_id"),
+    typ = JdbcLedgerDao.acceptType,
+    rejection_reason = None,
+  )
 
   /** A simple create event.
     * Corresponds to a transaction with a single create node.
@@ -112,7 +125,6 @@ private[store] object StorageBackendTestValues {
       createKey: Option[Array[Byte]] = None,
       createKeyMaintainer: Option[String] = None,
       traceContext: Array[Byte] = serializableTraceContext,
-      recordTime: Timestamp = someTime,
   ): DbDto.EventCreate = {
     val transactionId = transactionIdFromOffset(offset)
     val stakeholders = Set(signatory, observer)
@@ -130,7 +142,6 @@ private[store] object StorageBackendTestValues {
       contract_id = contractId.coid,
       template_id = someTemplateId.toString,
       package_name = somePackageName.toString,
-      package_version = Some(somePackageVersion.toString()),
       flat_event_witnesses = stakeholders,
       tree_event_witnesses = informees,
       create_argument = someSerializedDamlLfValue,
@@ -145,7 +156,7 @@ private[store] object StorageBackendTestValues {
       driver_metadata = driverMetadata,
       domain_id = domainId,
       trace_context = traceContext,
-      record_time = recordTime.micros,
+      record_time = someTime.micros,
     )
   }
 
@@ -165,7 +176,6 @@ private[store] object StorageBackendTestValues {
       commandId: String = UUID.randomUUID().toString,
       domainId: String = "x::sourcedomain",
       traceContext: Array[Byte] = serializableTraceContext,
-      recordTime: Timestamp = someTime,
   ): DbDto.EventExercise = {
     val transactionId = transactionIdFromOffset(offset)
     DbDto.EventExercise(
@@ -196,7 +206,7 @@ private[store] object StorageBackendTestValues {
       event_sequential_id = eventSequentialId,
       domain_id = domainId,
       trace_context = traceContext,
-      record_time = recordTime.micros,
+      record_time = someTime.micros,
     )
   }
 
@@ -211,7 +221,6 @@ private[store] object StorageBackendTestValues {
       sourceDomainId: String = "x::sourcedomain",
       targetDomainId: String = "x::targetdomain",
       traceContext: Array[Byte] = serializableTraceContext,
-      recordTime: Timestamp = someTime,
   ): DbDto.EventAssign = {
     val transactionId = transactionIdFromOffset(offset)
     DbDto.EventAssign(
@@ -223,7 +232,6 @@ private[store] object StorageBackendTestValues {
       contract_id = contractId.coid,
       template_id = someTemplateId.toString,
       package_name = somePackageName.toString,
-      package_version = Some(somePackageVersion.toString()),
       flat_event_witnesses = Set(signatory, observer),
       create_argument = someSerializedDamlLfValue,
       create_signatories = Set(signatory),
@@ -241,7 +249,7 @@ private[store] object StorageBackendTestValues {
       unassign_id = "123456789",
       reassignment_counter = 1000L,
       trace_context = traceContext,
-      record_time = recordTime.micros,
+      record_time = someTime.micros,
     )
   }
 
@@ -255,7 +263,6 @@ private[store] object StorageBackendTestValues {
       sourceDomainId: String = "x::sourcedomain",
       targetDomainId: String = "x::targetdomain",
       traceContext: Array[Byte] = serializableTraceContext,
-      recordTime: Timestamp = someTime,
   ): DbDto.EventUnassign = {
     val transactionId = transactionIdFromOffset(offset)
     DbDto.EventUnassign(
@@ -275,7 +282,7 @@ private[store] object StorageBackendTestValues {
       reassignment_counter = 1000L,
       assignment_exclusivity = Some(11111),
       trace_context = traceContext,
-      record_time = recordTime.micros,
+      record_time = someTime.micros,
     )
   }
 
@@ -291,21 +298,14 @@ private[store] object StorageBackendTestValues {
       deduplicationStart: Option[Timestamp] = None,
       domainId: String = "x::sourcedomain",
       traceContext: Array[Byte] = serializableTraceContext,
-      recordTime: Timestamp = someTime,
-      messageUuid: Option[String] = None,
-      transactionId: Option[String] = Some(""),
-      publicationTime: Timestamp = someTime,
-      isTransaction: Boolean = true,
-      requestSequencerCounter: Option[Long] = None,
   ): DbDto.CommandCompletion =
     DbDto.CommandCompletion(
       completion_offset = offset.toHexString,
-      record_time = recordTime.micros,
-      publication_time = publicationTime.micros,
+      record_time = someTime.micros,
       application_id = applicationId,
       submitters = Set(submitter),
       command_id = commandId,
-      transaction_id = transactionId.filter(_ == "").map(_ => transactionIdFromOffset(offset)),
+      transaction_id = Some(transactionIdFromOffset(offset)),
       rejection_status_code = None,
       rejection_status_message = None,
       rejection_status_details = None,
@@ -315,9 +315,6 @@ private[store] object StorageBackendTestValues {
       deduplication_duration_nanos = deduplicationDurationNanos,
       deduplication_start = deduplicationStart.map(_.micros),
       domain_id = domainId,
-      message_uuid = messageUuid,
-      request_sequencer_counter = requestSequencerCounter,
-      is_transaction = isTransaction,
       trace_context = traceContext,
     )
 
@@ -325,16 +322,9 @@ private[store] object StorageBackendTestValues {
       offset: Offset,
       event_sequential_id_first: Long,
       event_sequential_id_last: Long,
-      recordTime: Timestamp = someTime,
-      transactionId: Option[String] = None,
-      domainId: String = someDomainId.toProtoPrimitive,
-      publicationTime: Timestamp = someTime,
   ): DbDto.TransactionMeta = DbDto.TransactionMeta(
-    transaction_id = transactionId.getOrElse(transactionIdFromOffset(offset)),
+    transactionIdFromOffset(offset),
     event_offset = offset.toHexString,
-    publication_time = publicationTime.micros,
-    record_time = recordTime.micros,
-    domain_id = domainId,
     event_sequential_id_first = event_sequential_id_first,
     event_sequential_id_last = event_sequential_id_last,
   )
@@ -410,9 +400,6 @@ private[store] object StorageBackendTestValues {
   def metaFromSingle(dbDto: DbDto): DbDto.TransactionMeta = DbDto.TransactionMeta(
     transaction_id = dtoTransactionId(dbDto),
     event_offset = dtoOffset(dbDto),
-    publication_time = someTime.micros,
-    record_time = someTime.micros,
-    domain_id = someDomainId.toProtoPrimitive,
     event_sequential_id_first = dtoEventSeqId(dbDto),
     event_sequential_id_last = dtoEventSeqId(dbDto),
   )

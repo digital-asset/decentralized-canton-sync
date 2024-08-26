@@ -10,7 +10,6 @@ import com.daml.network.config.{
   SpliceDbConfig,
   SpliceBackendConfig,
   SpliceParametersConfig,
-  SpliceInstanceNamesConfig,
   ParticipantClientConfig,
   GcpBucketConfig,
   ParticipantBootstrapDumpConfig,
@@ -25,8 +24,8 @@ import com.digitalasset.canton.config.RequireTypes.{
   PositiveNumeric,
 }
 import com.digitalasset.canton.domain.config.DomainParametersConfig
-import com.digitalasset.canton.domain.sequencing.config.RemoteSequencerConfig
 import com.digitalasset.canton.topology.PartyId
+import com.digitalasset.canton.version.{DomainProtocolVersion, ProtocolVersion}
 import org.apache.pekko.http.scaladsl.model.Uri
 
 import java.nio.file.Path
@@ -201,14 +200,8 @@ case class SvAppBackendConfig(
     // We don't make this optional to encourage users to think about it at least. They
     // can always set it to an empty string.
     contactPoint: String,
-    spliceInstanceNames: SpliceInstanceNamesConfig,
-    // The rate at which acknowledgements are produced, we allow reducing this for tests with aggressive pruning intervals.
-    timeTrackerMinObservationDuration: NonNegativeFiniteDuration =
-      NonNegativeFiniteDuration.ofMinutes(1),
     // TODO(#13301) Remove this flag
     supportsSoftDomainMigrationPoc: Boolean = false,
-    // Identifier for all Canton nodes controlled by this application
-    cantonIdentifierConfig: Option[SvCantonIdentifierConfig] = None,
     legacyMigrationId: Option[Long] = None,
 ) extends SpliceBackendConfig {
   override val nodeTypeName: String = "SV"
@@ -252,15 +245,7 @@ final case class SvSequencerConfig(
     // TODO (#8282): consider reading config value from participant instead of configuring here
     sequencerAvailabilityDelay: NonNegativeFiniteDuration = NonNegativeFiniteDuration.ofSeconds(60),
     pruning: Option[SequencerPruningConfig] = None,
-) {
-  def toCantonConfig: RemoteSequencerConfig = RemoteSequencerConfig(
-    adminApi,
-    SequencerConnectionConfig.Grpc(
-      internalApi.address,
-      internalApi.port,
-    ),
-  )
-}
+)
 
 final case class SvMediatorConfig(
     adminApi: ClientConfig
@@ -274,21 +259,7 @@ final case class SvScanConfig(
 final case class SvSynchronizerNodeConfig(
     sequencer: SvSequencerConfig,
     mediator: SvMediatorConfig,
-    parameters: DomainParametersConfig = DomainParametersConfig(),
+    parameters: DomainParametersConfig = DomainParametersConfig(
+      protocolVersion = DomainProtocolVersion(ProtocolVersion.v30)
+    ),
 )
-
-final case class SvCantonIdentifierConfig(
-    participant: String,
-    sequencer: String,
-    mediator: String,
-)
-object SvCantonIdentifierConfig {
-  def default(config: SvAppBackendConfig): SvCantonIdentifierConfig = {
-    val identifier = config.onboarding.fold("unnamedSv")(_.name)
-    SvCantonIdentifierConfig(
-      participant = identifier,
-      sequencer = identifier,
-      mediator = identifier,
-    )
-  }
-}

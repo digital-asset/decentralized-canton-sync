@@ -7,7 +7,7 @@ import cats.syntax.either.*
 import cats.syntax.option.*
 import com.daml.nonempty.NonEmpty
 import com.digitalasset.canton.config.CantonRequireTypes.String73
-import com.digitalasset.canton.config.RequireTypes.PositiveInt
+import com.digitalasset.canton.config.RequireTypes.{NonNegativeLong, PositiveInt}
 import com.digitalasset.canton.crypto.provider.symbolic.SymbolicCrypto
 import com.digitalasset.canton.crypto.{HashPurpose, TestHash}
 import com.digitalasset.canton.data.CantonTimestamp
@@ -18,8 +18,7 @@ import com.digitalasset.canton.domain.sequencing.sequencer.{
   InternalSequencerPruningStatus,
   SequencerMemberStatus,
 }
-import com.digitalasset.canton.sequencing.protocol.*
-import com.digitalasset.canton.sequencing.traffic.TrafficReceipt
+import com.digitalasset.canton.sequencing.protocol.{SequencerErrors, *}
 import com.digitalasset.canton.sequencing.{OrdinarySerializedEvent, SequencerTestUtils}
 import com.digitalasset.canton.store.SequencedEventStore.OrdinarySequencedEvent
 import com.digitalasset.canton.topology.{
@@ -27,7 +26,7 @@ import com.digitalasset.canton.topology.{
   Member,
   ParticipantId,
   SequencerGroup,
-  TestingTopology,
+  TestingTopologyX,
   UniqueIdentifier,
 }
 import com.digitalasset.canton.tracing.TraceContext
@@ -57,16 +56,16 @@ trait SequencerStateManagerStoreTest
   private var materializer: Materializer = _
   private lazy val domainId = DefaultTestIdentities.domainId
   private lazy val syncCryptoApi =
-    TestingTopology(
+    TestingTopologyX(
       domains = Set(domainId),
       sequencerGroup = SequencerGroup(
-        active = NonEmpty.mk(Seq, DefaultTestIdentities.daSequencerId),
+        active = NonEmpty.mk(Seq, DefaultTestIdentities.sequencerId),
         passive = Seq.empty,
         threshold = PositiveInt.one,
       ),
     )
       .build()
-      .forOwnerAndDomain(DefaultTestIdentities.daSequencerId, domainId)
+      .forOwnerAndDomain(DefaultTestIdentities.sequencerId, domainId)
       .currentSnapshotApproximation
 
   // we don't do any signature verification in these tests so any signature that will deserialize with the testing crypto api is fine
@@ -76,10 +75,7 @@ trait SequencerStateManagerStoreTest
         HashPurpose.SequencedEventSignature,
         ByteString.copyFromUtf8("signature"),
       )
-    Await
-      .result(syncCryptoApi.sign(hash).value, 10.seconds)
-      .failOnShutdown
-      .valueOr(err => fail(err.toString))
+    Await.result(syncCryptoApi.sign(hash).value, 10.seconds).valueOr(err => fail(err.toString))
   }
 
   override def beforeAll(): Unit = {
@@ -129,13 +125,15 @@ trait SequencerStateManagerStoreTest
             _ <- store.addMember(alice, t1)
             _ <- store.addMember(bob, t1)
             _ <- store.addEvents(
-              Map(alice -> send(alice, SequencerCounter(0), t1, message))
+              Map(alice -> send(alice, SequencerCounter(0), t1, message)),
+              Map.empty,
             )
             _ <- store.addEvents(
               Map(
                 alice -> mockDeliver(1, t2),
                 bob -> mockDeliver(0, t2),
-              )
+              ),
+              Map.empty,
             )
             _ <- store.addMember(carlos, t2)
             stateAtT1 <- store.readAtBlockTimestamp(t1)
@@ -152,6 +150,59 @@ trait SequencerStateManagerStoreTest
           }
         }
 
+      "hydrate traffic state from previous updates" in
+        withNewTraceContext { implicit traceContext =>
+          val store = mk()
+          val trafficStateAlice = TrafficState(
+            NonNegativeLong.tryCreate(5L),
+            NonNegativeLong.tryCreate(6L),
+            NonNegativeLong.tryCreate(7L),
+            t1,
+          )
+          val trafficStateAlice2 =
+            trafficStateAlice.copy(
+              extraTrafficRemainder = NonNegativeLong.tryCreate(64L),
+              timestamp = t2,
+            )
+          val trafficStateBob =
+            trafficStateAlice.copy(
+              extraTrafficRemainder = NonNegativeLong.tryCreate(54L),
+              timestamp = t2,
+            )
+          for {
+            _ <- store.addMember(alice, t1)
+            _ <- store.addMember(bob, t1)
+            _ <- store.addEvents(
+              Map(alice -> send(alice, SequencerCounter(0), t1, message)),
+              Map(alice -> trafficStateAlice),
+            )
+            _ <- store.addEvents(
+              Map(
+                alice -> mockDeliver(1, t2),
+                bob -> mockDeliver(0, t2),
+              ),
+              Map(alice -> trafficStateAlice2, bob -> trafficStateBob),
+            )
+            _ <- store.addMember(carlos, t2)
+            stateAtT1 <- store.readAtBlockTimestamp(t1)
+            head <- store.readAtBlockTimestamp(t2)
+          } yield {
+            stateAtT1.registeredMembers should contain.only(alice, bob)
+            stateAtT1.headCounter(alice) should contain(SequencerCounter(0))
+            stateAtT1.checkpoints.keys should contain only alice
+            stateAtT1.trafficState(alice) shouldBe trafficStateAlice
+            stateAtT1.trafficState.keys should contain only alice
+
+            head.registeredMembers should contain.only(alice, bob, carlos)
+            head.headCounter(alice) should contain(SequencerCounter(1))
+            head.headCounter(bob) should contain(SequencerCounter(0))
+            head.checkpoints.keys should not contain carlos
+            head.trafficState(alice) shouldBe trafficStateAlice2
+            head.trafficState(bob) shouldBe trafficStateBob
+            head.trafficState.keys should not contain carlos
+          }
+        }
+
       "take into consideration timestamps of adding members" in withNewTraceContext {
         implicit traceContext =>
           val store = mk()
@@ -159,7 +210,8 @@ trait SequencerStateManagerStoreTest
           for {
             _ <- store.addMember(alice, t1)
             _ <- store.addEvents(
-              Map(alice -> send(alice, SequencerCounter(0), t1, message))
+              Map(alice -> send(alice, SequencerCounter(0), t1, message)),
+              Map.empty,
             )
             _ <- store.addMember(bob, t2)
             head <- store.readAtBlockTimestamp(t2)
@@ -181,19 +233,19 @@ trait SequencerStateManagerStoreTest
         )
         val signatureAlice1 = SymbolicCrypto.signature(
           ByteString.copyFromUtf8("signatureAlice1"),
-          alice.fingerprint,
+          alice.uid.namespace.fingerprint,
         )
         val signatureAlice2 = SymbolicCrypto.signature(
           ByteString.copyFromUtf8("signatureAlice2"),
-          alice.fingerprint,
+          alice.uid.namespace.fingerprint,
         )
         val signatureAlice3 = SymbolicCrypto.signature(
           ByteString.copyFromUtf8("signatureAlice3"),
-          alice.fingerprint,
+          alice.uid.namespace.fingerprint,
         )
         val signatureBob = SymbolicCrypto.signature(
           ByteString.copyFromUtf8("signatureBob"),
-          bob.fingerprint,
+          bob.uid.namespace.fingerprint,
         )
 
         val inFlightAggregation1 = InFlightAggregation(
@@ -297,8 +349,8 @@ trait SequencerStateManagerStoreTest
           _ <- store.addMember(alice, t1)
           _ <- store.addMember(bob, t1)
           _ <- store.disableMember(bob)
-          _ <- store.addEvents(Map(bob -> send(bob, SequencerCounter(0), t2, message)))
-          _ <- store.addEvents(Map(bob -> send(bob, SequencerCounter(1), t3, message)))
+          _ <- store.addEvents(Map(bob -> send(bob, SequencerCounter(0), t2, message)), Map.empty)
+          _ <- store.addEvents(Map(bob -> send(bob, SequencerCounter(1), t3, message)), Map.empty)
           state <- store.readAtBlockTimestamp(t3)
         } yield state.headCounter(bob) should contain(SequencerCounter(1))
       }
@@ -308,7 +360,7 @@ trait SequencerStateManagerStoreTest
       "throw an error if a counter is invalid" in withNewTraceContext { implicit traceContext =>
         val store = mk()
         loggerFactory.assertInternalError[IllegalArgumentException](
-          store.addEvents(Map(alice -> mockDeliver(-1, t1))),
+          store.addEvents(Map(alice -> mockDeliver(-1, t1)), Map.empty),
           _.getMessage shouldBe "all counters must be greater or equal to the genesis counter",
         )
         Future.successful(succeed)
@@ -321,7 +373,8 @@ trait SequencerStateManagerStoreTest
             Map(
               alice -> mockDeliver(0, t1),
               bob -> mockDeliver(0, t2),
-            )
+            ),
+            Map.empty,
           ),
           _.getMessage shouldBe "events should all be for the same timestamp",
         )
@@ -362,6 +415,17 @@ trait SequencerStateManagerStoreTest
 
       "replay events correctly" in {
         val store = mk()
+        val trafficStateAlice = TrafficState(
+          NonNegativeLong.tryCreate(5L),
+          NonNegativeLong.tryCreate(6L),
+          NonNegativeLong.tryCreate(7L),
+          t1,
+        )
+        val trafficStateAlice2 =
+          trafficStateAlice.copy(
+            extraTrafficRemainder = NonNegativeLong.tryCreate(64L),
+            timestamp = t2,
+          )
         for {
           _ <- store.addMember(alice, t1)
           _ <- store.addEvents(
@@ -371,14 +435,22 @@ trait SequencerStateManagerStoreTest
                 SequencerCounter(0),
                 t1,
                 message,
+                Some(trafficStateAlice.toSequencedEventTrafficState),
               )
-            )
+            ),
+            Map(alice -> trafficStateAlice),
           )
           _ <- store.addEvents(
-            Map(alice -> mockDeliver(1, t2))
+            Map(alice -> mockDeliver(1, t2, Some(trafficStateAlice2.toSequencedEventTrafficState))),
+            Map(alice -> trafficStateAlice2),
           )
           items <- rangeToSeq(store.readRange(alice, SequencerCounter(0), SequencerCounter(2)))
         } yield {
+
+          items.flatMap(_.trafficState) should contain theSameElementsInOrderAs Seq(
+            trafficStateAlice.toSequencedEventTrafficState,
+            trafficStateAlice2.toSequencedEventTrafficState,
+          )
 
           items.map(e => e.signedEvent.content) should contain theSameElementsInOrderAs Seq(
             send(alice, SequencerCounter(0), t1, message).signedEvent.content,
@@ -465,20 +537,23 @@ trait SequencerStateManagerStoreTest
         for {
           _ <- store.addMember(alice, t1)
           _ <- store.addEvents(
-            Map(alice -> send(alice, SequencerCounter(0), t2, message))
+            Map(alice -> send(alice, SequencerCounter(0), t2, message)),
+            Map.empty,
           )
           _ <- store.addMember(bob, t3)
           _ <- store.addEvents(
             Map(
               alice -> mockDeliver(1, ts(5)),
               bob -> mockDeliver(0, ts(5)),
-            )
+            ),
+            Map.empty,
           )
           _ <- store.addEvents(
             Map(
               alice -> mockDeliver(2, ts(6)),
               bob -> mockDeliver(1, ts(6)),
-            )
+            ),
+            Map.empty,
           )
           _ <- store.acknowledge(alice, ts(6))
           _ <- store.acknowledge(bob, ts(6))
@@ -511,8 +586,8 @@ trait SequencerStateManagerStoreTest
         for {
           _ <- store.addMember(alice, t1)
           _ <- store.addMember(bob, t2)
-          _ <- store.addEvents(Map(alice -> mockDeliver(3, ts(3))))
-          _ <- store.addEvents(Map(bob -> mockDeliver(5, ts(4))))
+          _ <- store.addEvents(Map(alice -> mockDeliver(3, ts(3))), Map.empty)
+          _ <- store.addEvents(Map(bob -> mockDeliver(5, ts(4))), Map.empty)
           // clients have acknowledgements at different points
           _ <- store.acknowledge(alice, ts(3))
           _ <- store.acknowledge(bob, ts(4))
@@ -543,19 +618,19 @@ trait SequencerStateManagerStoreTest
         )
         val signatureAlice1 = SymbolicCrypto.signature(
           ByteString.copyFromUtf8("signatureAlice1"),
-          alice.fingerprint,
+          alice.uid.namespace.fingerprint,
         )
         val signatureAlice2 = SymbolicCrypto.signature(
           ByteString.copyFromUtf8("signatureAlice2"),
-          alice.fingerprint,
+          alice.uid.namespace.fingerprint,
         )
         val signatureAlice3 = SymbolicCrypto.signature(
           ByteString.copyFromUtf8("signatureAlice3"),
-          alice.fingerprint,
+          alice.uid.namespace.fingerprint,
         )
         val signatureBob = SymbolicCrypto.signature(
           ByteString.copyFromUtf8("signatureBob"),
-          bob.fingerprint,
+          bob.uid.namespace.fingerprint,
         )
 
         val inFlightAggregation1 = InFlightAggregation(
@@ -644,7 +719,8 @@ trait SequencerStateManagerStoreTest
         for {
           _ <- store.addMember(alice, t1)
           _ <- store.addEvents(
-            Map(alice -> mockTombstone(SequencerCounter(1), ts(3)))
+            Map(alice -> mockTombstone(SequencerCounter(1), ts(3))),
+            Map.empty,
           )
           eventOrTombstone <- rangeToSeq(
             store.readRange(alice, SequencerCounter(1), SequencerCounter(2))
@@ -668,6 +744,7 @@ trait SequencerStateManagerStoreTest
         counter: SequencerCounter,
         ts: CantonTimestamp,
         message: ByteString,
+        trafficState: Option[SequencedEventTrafficState] = None,
     ): OrdinarySerializedEvent =
       OrdinarySequencedEvent(
         SignedContent(
@@ -685,17 +762,18 @@ trait SequencerStateManagerStoreTest
             ),
             None,
             testedProtocolVersion,
-            Option.empty[TrafficReceipt],
           ),
           signature,
           None,
           testedProtocolVersion,
-        )
+        ),
+        trafficState,
       )(TraceContext.empty)
 
     def mockDeliver(
         sc: Long,
         ts: CantonTimestamp,
+        trafficState: Option[SequencedEventTrafficState] = None,
     ): OrdinarySerializedEvent =
       OrdinarySequencedEvent(
         SignedContent(
@@ -703,7 +781,8 @@ trait SequencerStateManagerStoreTest
           signature,
           None,
           testedProtocolVersion,
-        )
+        ),
+        trafficState,
       )(TraceContext.empty)
 
     def mockTombstone(
@@ -719,12 +798,12 @@ trait SequencerStateManagerStoreTest
             MessageId(String73.tryCreate("tombstone")),
             SequencerErrors.PersistTombstone(ts, sc),
             testedProtocolVersion,
-            Option.empty[TrafficReceipt],
           ),
           signature,
           None,
           testedProtocolVersion,
-        )
+        ),
+        None,
       )(TraceContext.empty)
 
     def rangeToSeq(

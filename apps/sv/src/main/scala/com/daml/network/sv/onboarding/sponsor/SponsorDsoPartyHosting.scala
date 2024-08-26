@@ -15,7 +15,7 @@ import com.daml.network.sv.onboarding.DsoPartyHosting.{
 import com.digitalasset.canton.config.RequireTypes.PositiveInt
 import com.digitalasset.canton.crypto.Fingerprint
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
-import com.digitalasset.canton.topology.transaction.PartyToParticipant
+import com.digitalasset.canton.topology.transaction.PartyToParticipantX
 import com.digitalasset.canton.topology.{DomainId, ParticipantId, PartyId}
 import com.digitalasset.canton.tracing.TraceContext
 
@@ -64,8 +64,8 @@ class SponsorDsoPartyHosting(
       signedBy: Fingerprint,
   )(implicit
       traceContext: TraceContext
-  ): EitherT[Future, DsoPartyMigrationFailure, TopologyResult[PartyToParticipant]] = {
-    validateProposalForNewSv(domainId, newParticipant).flatMap {
+  ): EitherT[Future, DsoPartyMigrationFailure, TopologyResult[PartyToParticipantX]] = {
+    validateProposalForNewMember(domainId, newParticipant).flatMap {
       case SponsorDsoPartyHosting.ValidAcceptedState(accepted) =>
         EitherT.right(Future.successful(accepted))
       case SponsorDsoPartyHosting.ValidProposal(proposal) =>
@@ -89,7 +89,7 @@ class SponsorDsoPartyHosting(
     }
   }
 
-  private def validateProposalForNewSv(
+  private def validateProposalForNewMember(
       domainId: DomainId,
       participantId: ParticipantId,
   )(implicit tc: TraceContext): EitherT[
@@ -144,8 +144,8 @@ class SponsorDsoPartyHosting(
 
 object SponsorDsoPartyHosting {
   sealed abstract class ValidProposalOrAcceptedState extends Product with Serializable
-  final case class ValidProposal(proposal: TopologyResult[PartyToParticipant])
+  final case class ValidProposal(proposal: TopologyResult[PartyToParticipantX])
       extends ValidProposalOrAcceptedState
-  final case class ValidAcceptedState(accepted: TopologyResult[PartyToParticipant])
+  final case class ValidAcceptedState(accepted: TopologyResult[PartyToParticipantX])
       extends ValidProposalOrAcceptedState
 }

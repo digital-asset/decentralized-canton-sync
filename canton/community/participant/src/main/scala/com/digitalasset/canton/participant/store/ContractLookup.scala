@@ -20,15 +20,10 @@ trait ContractLookup {
 
   def lookup(id: LfContractId)(implicit traceContext: TraceContext): OptionT[Future, StoredContract]
 
-  def lookupManyExistingUncached(
+  def lookupManyUncached(
       ids: Seq[LfContractId]
   )(implicit traceContext: TraceContext): EitherT[Future, LfContractId, List[StoredContract]] =
     ids.toList.parTraverse(id => lookup(id).toRight(id))
-
-  def lookupManyUncached(
-      ids: Seq[LfContractId]
-  )(implicit traceContext: TraceContext): Future[List[Option[StoredContract]]] =
-    ids.toList.parTraverse(id => lookup(id).value)
 
   def lookupE(id: LfContractId)(implicit
       traceContext: TraceContext
@@ -104,7 +99,7 @@ object ContractLookupAndVerification {
       ): OptionT[Future, StoredContract] =
         OptionT.none[Future, StoredContract]
 
-      override def lookupManyExistingUncached(ids: Seq[LfContractId])(implicit
+      override def lookupManyUncached(ids: Seq[LfContractId])(implicit
           traceContext: TraceContext
       ): EitherT[Future, LfContractId, List[StoredContract]] =
         EitherT.rightT(Nil)

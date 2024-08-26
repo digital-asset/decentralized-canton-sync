@@ -10,14 +10,13 @@ import com.digitalasset.canton.crypto.*
 import com.digitalasset.canton.crypto.store.db.DbCryptoPrivateStore
 import com.digitalasset.canton.crypto.store.memory.InMemoryCryptoPrivateStore
 import com.digitalasset.canton.error.{BaseCantonError, CantonErrorGroups}
-import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
 import com.digitalasset.canton.logging.NamedLoggerFactory
 import com.digitalasset.canton.logging.pretty.{Pretty, PrettyPrinting}
 import com.digitalasset.canton.resource.{DbStorage, MemoryStorage, Storage}
 import com.digitalasset.canton.tracing.{TraceContext, TracerProvider}
 import com.digitalasset.canton.version.ReleaseProtocolVersion
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 sealed trait PrivateKeyWithName extends Product with Serializable {
   type K <: PrivateKey
@@ -48,24 +47,20 @@ trait CryptoPrivateStore extends AutoCloseable {
 
   def removePrivateKey(
       keyId: Fingerprint
-  )(implicit
-      traceContext: TraceContext
-  ): EitherT[FutureUnlessShutdown, CryptoPrivateStoreError, Unit]
+  )(implicit traceContext: TraceContext): EitherT[Future, CryptoPrivateStoreError, Unit]
 
   def existsPrivateKey(
       keyId: Fingerprint,
       purpose: KeyPurpose,
-  )(implicit
-      traceContext: TraceContext
-  ): EitherT[FutureUnlessShutdown, CryptoPrivateStoreError, Boolean]
+  )(implicit traceContext: TraceContext): EitherT[Future, CryptoPrivateStoreError, Boolean]
 
   def existsSigningKey(signingKeyId: Fingerprint)(implicit
       traceContext: TraceContext
-  ): EitherT[FutureUnlessShutdown, CryptoPrivateStoreError, Boolean]
+  ): EitherT[Future, CryptoPrivateStoreError, Boolean]
 
   def existsDecryptionKey(decryptionKeyId: Fingerprint)(implicit
       traceContext: TraceContext
-  ): EitherT[FutureUnlessShutdown, CryptoPrivateStoreError, Boolean]
+  ): EitherT[Future, CryptoPrivateStoreError, Boolean]
 
   def toExtended: Option[CryptoPrivateStoreExtended] = this match {
     case extended: CryptoPrivateStoreExtended => Some(extended)
@@ -84,7 +79,7 @@ object CryptoPrivateStore {
     )(implicit
         ec: ExecutionContext,
         traceContext: TraceContext,
-    ): EitherT[FutureUnlessShutdown, CryptoPrivateStoreError, CryptoPrivateStore]
+    ): EitherT[Future, CryptoPrivateStoreError, CryptoPrivateStore]
   }
 
   class CommunityCryptoPrivateStoreFactory extends CryptoPrivateStoreFactory {
@@ -97,14 +92,14 @@ object CryptoPrivateStore {
     )(implicit
         ec: ExecutionContext,
         traceContext: TraceContext,
-    ): EitherT[FutureUnlessShutdown, CryptoPrivateStoreError, CryptoPrivateStore] =
+    ): EitherT[Future, CryptoPrivateStoreError, CryptoPrivateStore] =
       storage match {
         case _: MemoryStorage =>
-          EitherT.rightT[FutureUnlessShutdown, CryptoPrivateStoreError](
+          EitherT.rightT[Future, CryptoPrivateStoreError](
             new InMemoryCryptoPrivateStore(releaseProtocolVersion, loggerFactory)
           )
         case jdbc: DbStorage =>
-          EitherT.rightT[FutureUnlessShutdown, CryptoPrivateStoreError](
+          EitherT.rightT[Future, CryptoPrivateStoreError](
             new DbCryptoPrivateStore(jdbc, releaseProtocolVersion, timeouts, loggerFactory)
           )
       }
@@ -126,6 +121,10 @@ object CryptoPrivateStoreError extends CantonErrorGroups.CommandErrorGroup {
 
     final case class WrapStr(reason: String)
         extends BaseCantonError.Impl(cause = "An error occurred with the private crypto store")
+  }
+
+  final case class FailedToListKeys(reason: String) extends CryptoPrivateStoreError {
+    override def pretty: Pretty[FailedToListKeys] = prettyOfClass(unnamedParam(_.reason.unquoted))
   }
 
   final case class FailedToGetWrapperKeyId(reason: String) extends CryptoPrivateStoreError {
@@ -162,6 +161,12 @@ object CryptoPrivateStoreError extends CantonErrorGroups.CommandErrorGroup {
   final case class FailedToDeleteKey(keyId: Fingerprint, reason: String)
       extends CryptoPrivateStoreError {
     override def pretty: Pretty[FailedToDeleteKey] =
+      prettyOfClass(param("keyId", _.keyId), param("reason", _.reason.unquoted))
+  }
+
+  final case class FailedToReplaceKeys(keyId: Seq[Fingerprint], reason: String)
+      extends CryptoPrivateStoreError {
+    override def pretty: Pretty[FailedToReplaceKeys] =
       prettyOfClass(param("keyId", _.keyId), param("reason", _.reason.unquoted))
   }
 

@@ -9,24 +9,19 @@ import com.daml.nameof.NameOf.functionFullName
 import com.digitalasset.canton.concurrent.{DirectExecutionContext, FutureSupervisor}
 import com.digitalasset.canton.config.ProcessingTimeout
 import com.digitalasset.canton.data.PeanoQueue.{BeforeHead, InsertedValue, NotInserted}
-import com.digitalasset.canton.data.TaskScheduler.Scheduled
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.lifecycle.{FlagCloseable, FutureUnlessShutdown, Lifecycle}
 import com.digitalasset.canton.logging.pretty.PrettyPrinting
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
-import com.digitalasset.canton.time.Clock
-import com.digitalasset.canton.tracing.TraceContext
+import com.digitalasset.canton.tracing.{TraceContext, Traced}
 import com.digitalasset.canton.util.ShowUtil.*
 import com.digitalasset.canton.util.{ErrorUtil, FutureUtil, SimpleExecutionQueue}
-import com.digitalasset.canton.{SequencerCounter, SequencerCounterDiscriminator}
+import com.digitalasset.canton.{DiscardOps, SequencerCounter, SequencerCounterDiscriminator}
 import com.google.common.annotations.VisibleForTesting
 
-import java.time.Duration as JDuration
 import java.util.concurrent.atomic.AtomicReference
 import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future, Promise, blocking}
-import scala.math.Ordering.Implicits.infixOrderingOps
 import scala.util.control.NonFatal
 
 /** The task scheduler manages tasks with associated timestamps and sequencer counters.
@@ -43,15 +38,11 @@ import scala.util.control.NonFatal
 class TaskScheduler[Task <: TaskScheduler.TimedTask](
     initSc: SequencerCounter,
     initTimestamp: CantonTimestamp,
-    alertAfter: JDuration,
-    alertEvery: JDuration,
     equalTimestampTaskOrdering: Ordering[Task],
     metrics: TaskSchedulerMetrics,
-    exitOnFatalFailures: Boolean,
     override protected val timeouts: ProcessingTimeout,
     protected val loggerFactory: NamedLoggerFactory,
     futureSupervisor: FutureSupervisor,
-    clock: Clock,
 )(implicit executionContext: ExecutionContext)
     extends NamedLogging
     with FlagCloseable {
@@ -72,9 +63,9 @@ class TaskScheduler[Task <: TaskScheduler.TimedTask](
     * Invariant: contains only timestamps equal to or higher than [[latestPolledTimestamp]],
     * except if the first entry is a task that could not be completed.
     */
-  private[this] val taskQueue: mutable.PriorityQueue[Task] = mutable.PriorityQueue()(
+  private[this] val taskQueue: mutable.PriorityQueue[Traced[Task]] = mutable.PriorityQueue()(
     Ordering
-      .by[Task, (CantonTimestamp, Task)](task => (task.timestamp, task))(
+      .by[Traced[Task], (CantonTimestamp, Task)](task => (task.value.timestamp, task.value))(
         Ordering.Tuple2(Ordering.ordered, equalTimestampTaskOrdering)
       )
       .reverse
@@ -110,74 +101,12 @@ class TaskScheduler[Task <: TaskScheduler.TimedTask](
       timeouts,
       loggerFactory,
       logTaskTiming = true,
-      crashOnFailure = exitOnFatalFailures,
     )
 
   private[this] val lock: Object = new Object
 
   // init metrics
   private val queueSizeGauge: CloseableGauge = metrics.taskQueue(() => taskQueue.size)
-
-  /** The sequencer counter that has last been ticked *and* thereby advanced sequencerCounterQueue.front.
-    * The timestamp corresponds to `clock.now` at the time of the tick.
-    */
-  private val lastProgress: AtomicReference[(SequencerCounter, CantonTimestamp)] =
-    new AtomicReference((initSc - 1) -> clock.now)
-
-  /** The highest sequencer timestamp that has ever been ticked. */
-  private val highWatermark: AtomicReference[CantonTimestamp] =
-    new AtomicReference(initTimestamp)
-
-  scheduleNextCheck(alertAfter)
-
-  private def scheduleNextCheck(after: JDuration): Unit =
-    FutureUtil.doNotAwaitUnlessShutdown(
-      clock
-        .scheduleAfter(
-          _ => checkIfBlocked(),
-          after,
-        ),
-      "The check for missing ticks has failed unexpectedly",
-    )(errorLoggingContext(TraceContext.empty))
-
-  private def checkIfBlocked(): Unit = {
-    implicit val empty: TraceContext = TraceContext.empty
-    performUnlessClosing("check for missing ticks") {
-
-      val now = clock.now
-      val (sc, lastTick) = lastProgress.get()
-      val noProgressDuration = now - lastTick
-
-      if (noProgressDuration >= alertAfter) {
-        val highWatermarkTs = highWatermark.get()
-
-        def getBlockedTraceIds[A <: Scheduled](
-            queue: mutable.PriorityQueue[A]
-        ): mutable.Iterable[String] =
-          if (queue.headOption.exists(_.timestamp <= highWatermarkTs))
-            queue.filter(_.timestamp <= highWatermarkTs).map(_.traceContext.traceId.getOrElse(""))
-          else {
-            // If there is no blocked task, we do not need to traverse the entire queue.
-            mutable.Iterable.empty
-          }
-
-        val blocked = blocking {
-          lock.synchronized {
-            (getBlockedTraceIds(taskQueue) ++ getBlockedTraceIds(barrierQueue)).toSet
-          }
-        }
-        if (blocked.nonEmpty) {
-          logger.info(
-            s"Task scheduler waits for tick of sc=${sc + 1}. The tick with sc=$sc occurred at $lastTick. " +
-              s"Blocked trace ids: ${blocked.mkString(", ")}"
-          )
-        }
-        scheduleNextCheck(alertEvery)
-      } else {
-        scheduleNextCheck(alertAfter minus noProgressDuration)
-      }
-    }.onShutdown(logger.debug("Stop periodic check for missing ticks."))
-  }
 
   /** Used to inspect the state of the sequencerCounterQueue, for testing purposes. */
   @VisibleForTesting
@@ -193,9 +122,8 @@ class TaskScheduler[Task <: TaskScheduler.TimedTask](
     *         if the `timestamp` or `sequencer counter` of the task is earlier
     *         than to where the task scheduler has already progressed
     */
-  def scheduleTask(task: Task): Unit = blocking {
+  def scheduleTask(task: Task)(implicit traceContext: TraceContext): Unit = blocking {
     lock.synchronized {
-      implicit val traceContext: TraceContext = task.traceContext
       if (task.timestamp < latestPolledTimestamp.get) {
         ErrorUtil.internalError(
           new IllegalArgumentException(
@@ -205,10 +133,10 @@ class TaskScheduler[Task <: TaskScheduler.TimedTask](
       }
       ErrorUtil.requireArgument(
         task.sequencerCounter >= sequencerCounterQueue.head,
-        s"Sequencer counter already processed; head is at ${sequencerCounterQueue.head}, task is $task",
+        s"Sequencer counter already processed; head is at ${sequencerCounterQueue.head}, task is ${task}",
       )
       logger.trace(s"Adding task $task to the task scheduler.")
-      taskQueue.enqueue(task)
+      taskQueue.enqueue(Traced(task))
     }
   }
 
@@ -217,9 +145,7 @@ class TaskScheduler[Task <: TaskScheduler.TimedTask](
     * @return A future that completes when all sequencer counters up to the given timestamp have been signalled.
     *         [[scala.None$]] if all sequencer counters up to the given timestamp have already been signalled.
     */
-  def scheduleBarrier(
-      timestamp: CantonTimestamp
-  )(implicit traceContext: TraceContext): Option[Future[Unit]] = blocking {
+  def scheduleBarrier(timestamp: CantonTimestamp): Option[Future[Unit]] = blocking {
     lock.synchronized {
       if (latestPolledTimestamp.get >= timestamp) None
       else {
@@ -316,15 +242,6 @@ class TaskScheduler[Task <: TaskScheduler.TimedTask](
             )
       }
 
-      val now = clock.now
-      lastProgress.updateAndGet { lastState =>
-        val (lastFront, _) = lastState
-        val nextFront = sequencerCounterQueue.front - 1
-        if (nextFront > lastFront) nextFront -> now
-        else lastState
-      }
-      highWatermark.updateAndGet(_ max timestamp)
-
       performActionsAndCompleteBarriers()
     }
   }
@@ -376,31 +293,26 @@ class TaskScheduler[Task <: TaskScheduler.TimedTask](
   private[this] def performActionsUpto(observedTime: CantonTimestamp): Unit = {
     @tailrec def go(): Unit = taskQueue.headOption match {
       case None => ()
-      case Some(task) if task.timestamp > observedTime => ()
-      case Some(task) =>
-        implicit val traceContext: TraceContext = task.traceContext
-        FutureUtil.doNotAwait(
-          // Close the task if the queue is shutdown or if it has failed
-          queue
-            .executeUS(
-              futureSupervisor.supervisedUS(
-                task.toString,
-                timeouts.slowFutureWarn.duration,
-              )(task.perform()),
-              task.toString,
-            )
-            .onShutdown(task.close())
-            .recoverWith {
-              // If any task fails, none of subsequent tasks will be executed so we might as well close the scheduler
-              // to force completion of the tasks and signal that the scheduler is not functional
-              case NonFatal(e) if !this.isClosing =>
-                this.close()
-                Future.failed(e)
-              // Use a direct context here to avoid closing the scheduler in a different thread
-            }(DirectExecutionContext(noTracingLogger)),
-          show"A task failed with an exception.\n$task",
-        )
-        taskQueue.dequeue().discard
+      case Some(tracedTask) if tracedTask.value.timestamp > observedTime => ()
+      case Some(tracedTask) =>
+        tracedTask.withTraceContext { implicit traceContext => task =>
+          FutureUtil.doNotAwait(
+            // Close the task if the queue is shutdown or if it has failed
+            queue
+              .executeUS(task.perform(), task.toString)
+              .onShutdown(task.close())
+              .recoverWith {
+                // If any task fails, none of subsequent tasks will be executed so we might as well close the scheduler
+                // to force completion of the tasks and signal that the scheduler is not functional
+                case NonFatal(e) if !this.isClosing =>
+                  this.close()
+                  Future.failed(e)
+                // Use a direct context here to avoid closing the scheduler in a different thread
+              }(DirectExecutionContext(errorLoggingContext(traceContext).noTracingLogger)),
+            show"A task failed with an exception.\n$task",
+          )
+          taskQueue.dequeue()
+        }.discard
         go()
     }
 
@@ -428,44 +340,13 @@ trait TaskSchedulerMetrics {
 
 object TaskScheduler {
 
-  def apply[Task <: TaskScheduler.TimedTask](
-      initSc: SequencerCounter,
-      initTimestamp: CantonTimestamp,
-      equalTimestampTaskOrdering: Ordering[Task],
-      metrics: TaskSchedulerMetrics,
-      exitOnFatalFailures: Boolean,
-      timeouts: ProcessingTimeout,
-      loggerFactory: NamedLoggerFactory,
-      futureSupervisor: FutureSupervisor,
-      clock: Clock,
-  )(implicit executionContext: ExecutionContext): TaskScheduler[Task] = new TaskScheduler[Task](
-    initSc,
-    initTimestamp,
-    timeouts.slowFutureWarn.asJavaApproximation,
-    timeouts.slowFutureWarn.asJavaApproximation,
-    equalTimestampTaskOrdering,
-    metrics,
-    exitOnFatalFailures = exitOnFatalFailures,
-    timeouts,
-    loggerFactory,
-    futureSupervisor,
-    clock,
-  )
-
-  sealed trait Scheduled {
-    def traceContext: TraceContext
-
-    /** The timestamp when the instance should be executed/completed. */
-    def timestamp: CantonTimestamp
-  }
-
-  private final case class TimeBarrier(override val timestamp: CantonTimestamp)(implicit
-      override val traceContext: TraceContext
-  ) extends Scheduled {
+  final case class TimeBarrier(timestamp: CantonTimestamp) {
     private[TaskScheduler] val completion: Promise[Unit] = Promise[Unit]()
   }
+  trait TimedTask extends PrettyPrinting with AutoCloseable {
 
-  trait TimedTask extends Scheduled with PrettyPrinting with AutoCloseable {
+    /** The timestamp when the task should be scheduled */
+    def timestamp: CantonTimestamp
 
     /** The sequencer counter that triggers this task */
     def sequencerCounter: SequencerCounter

@@ -204,10 +204,6 @@ case class ValidatorAppBackendConfig(
     // The rate at which acknowledgements are produced, we allow reducing this for tests with aggressive pruning intervals.
     timeTrackerMinObservationDuration: NonNegativeFiniteDuration =
       NonNegativeFiniteDuration.ofMinutes(1),
-    // TODO(#13301) Remove this flag
-    supportsSoftDomainMigrationPoc: Boolean = false,
-    // Identifier for all Canton nodes controlled by this application
-    cantonIdentifierConfig: Option[ValidatorCantonIdentifierConfig] = None,
 ) extends SpliceBackendConfig // TODO(#736): fork or generalize this trait.
     {
   override val nodeTypeName: String = "validator"
@@ -234,16 +230,4 @@ case class AnsAppExternalClientConfig(
     ledgerApiUser: String,
 ) extends HttpClientConfig {
   override def clientAdminApi: NetworkAppClientConfig = adminApi
-}
-
-final case class ValidatorCantonIdentifierConfig(
-    participant: String
-)
-object ValidatorCantonIdentifierConfig {
-  def default(config: ValidatorAppBackendConfig): ValidatorCantonIdentifierConfig = {
-    val identifier = config.validatorPartyHint.getOrElse("unnamedValidator")
-    ValidatorCantonIdentifierConfig(
-      participant = identifier
-    )
-  }
 }

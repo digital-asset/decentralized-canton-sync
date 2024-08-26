@@ -8,7 +8,7 @@ import org.apache.pekko.stream.Materializer
 import cats.implicits.{catsSyntaxTuple2Semigroupal, catsSyntaxTuple4Semigroupal, toTraverseOps}
 import cats.syntax.foldable.*
 import com.daml.network.codegen.java.splice.svonboarding.SvOnboardingConfirmed
-import com.daml.network.config.{NetworkAppClientConfig, SpliceInstanceNamesConfig, UpgradesConfig}
+import com.daml.network.config.{NetworkAppClientConfig, UpgradesConfig}
 import com.daml.network.environment.*
 import com.daml.network.environment.TopologyAdminConnection.TopologyTransactionType
 import com.daml.network.http.HttpClient
@@ -20,35 +20,28 @@ import com.daml.network.store.{
 }
 import com.daml.network.sv.admin.api.client.SvConnection
 import com.daml.network.sv.automation.{SvDsoAutomationService, SvSvAutomationService}
-import com.daml.network.sv.automation.singlesv.{
-  ReconcileSequencerLimitWithMemberTrafficTrigger,
-  SvPackageVettingTrigger,
-}
-import com.daml.network.sv.automation.singlesv.onboarding.SvOnboardingUnlimitedTrafficTrigger
+import com.daml.network.sv.automation.singlesv.SvPackageVettingTrigger
 import com.daml.network.sv.cometbft.{
   CometBftClient,
   CometBftConnectionConfig,
   CometBftHttpRpcClient,
   CometBftNode,
 }
-import com.daml.network.sv.config.{SvAppBackendConfig, SvCantonIdentifierConfig, SvOnboardingConfig}
+import com.daml.network.sv.config.{SvAppBackendConfig, SvOnboardingConfig}
 import com.daml.network.sv.onboarding.SynchronizerNodeReconciler.SynchronizerNodeState.{
-  OnboardedAfterDelay,
+  Onboarded,
   Onboarding,
 }
 import com.daml.network.sv.onboarding.{
   DsoPartyHosting,
   NodeInitializerUtil,
   SetupUtil,
-  SynchronizerNodeInitializer,
   SynchronizerNodeReconciler,
 }
 import com.daml.network.sv.store.{SvDsoStore, SvStore, SvSvStore}
 import com.daml.network.sv.util.{SvOnboardingToken, SvUtil}
-import com.daml.network.sv.{ExtraSynchronizerNode, LocalSynchronizerNode, SvApp}
+import com.daml.network.sv.{LocalSynchronizerNode, SvApp}
 import com.daml.network.util.{Contract, PackageVetting, TemplateJsonDecoder, UploadablePackage}
-import com.digitalasset.canton.config.DomainTimeTrackerConfig
-import com.digitalasset.canton.config.RequireTypes.NonNegativeLong
 import com.digitalasset.canton.lifecycle.CloseContext
 import com.digitalasset.canton.logging.NamedLoggerFactory
 import com.digitalasset.canton.participant.domain.DomainConnectionConfig
@@ -70,7 +63,6 @@ import scala.jdk.CollectionConverters.*
 /** Container for the methods required by the SvApp to initialize a joining SV node. */
 class JoiningNodeInitializer(
     localSynchronizerNode: Option[LocalSynchronizerNode],
-    extraSynchronizerNodes: Map[String, ExtraSynchronizerNode],
     joiningConfig: Option[SvOnboardingConfig.JoinWithKey],
     participantId: ParticipantId,
     requiredDars: Seq[UploadablePackage],
@@ -85,7 +77,6 @@ class JoiningNodeInitializer(
     override protected val storage: Storage,
     override val loggerFactory: NamedLoggerFactory,
     override protected val retryProvider: RetryProvider,
-    override protected val spliceInstanceNamesConfig: SpliceInstanceNamesConfig,
 )(implicit
     ec: ExecutionContextExecutor,
     httpClient: HttpClient,
@@ -132,9 +123,6 @@ class JoiningNodeInitializer(
       // Set manualConnect = true to avoid any issues with interrupted SV onboardings.
       // This is changed to false after SV onboarding completes.
       manualConnect = true,
-      timeTracker = DomainTimeTrackerConfig(
-        minObservationDuration = config.timeTrackerMinObservationDuration
-      ),
     )
     for {
       (dsoPartyId, darUploads) <- (
@@ -204,7 +192,7 @@ class JoiningNodeInitializer(
         if (dsoPartyIsAuthorized) {
           logger.info("DSO party is authorized to our participant.")
           for {
-            _ <- SetupUtil.grantSvUserRightActAsDso(
+            _ <- SetupUtil.grantSvUserRightReadAsDso(
               svAutomation.connection,
               config.ledgerApiUser,
               svStore.key.dsoParty,
@@ -214,7 +202,6 @@ class JoiningNodeInitializer(
                 svStore,
                 dsoStore,
                 localSynchronizerNode,
-                extraSynchronizerNodes,
                 upgradesConfig,
               )
             _ <- svStore.domains.waitForDomainConnection(config.domains.global.alias)
@@ -253,24 +240,7 @@ class JoiningNodeInitializer(
         config.domains.global.alias,
         config => if (config.manualConnect) Some(config.copy(manualConnect = false)) else None,
       )
-      cantonIdentifierConfig = config.cantonIdentifierConfig.getOrElse(
-        SvCantonIdentifierConfig.default(config)
-      )
-      _ <- localSynchronizerNode.traverse(lsn =>
-        SynchronizerNodeInitializer.initializeLocalCantonNodesWithNewIdentities(
-          cantonIdentifierConfig,
-          lsn,
-          clock,
-          loggerFactory,
-          retryProvider,
-        )
-      )
-      _ <- onboard(
-        decentralizedSynchronizerId,
-        dsoAutomation,
-        svAutomation,
-        Some(withSvStore),
-      )
+      _ <- onboard(decentralizedSynchronizerId, dsoAutomation, svAutomation, Some(withSvStore))
     } yield {
       (
         decentralizedSynchronizerId,
@@ -288,7 +258,6 @@ class JoiningNodeInitializer(
       dsoAutomationService: SvDsoAutomationService,
       svSvAutomationService: SvSvAutomationService,
       withSvStore: Option[WithSvStore],
-      skipTrafficReconciliationTriggers: Boolean = false,
   ): Future[Unit] = {
     val dsoStore = dsoAutomationService.store
     val dsoPartyId = dsoStore.key.dsoParty
@@ -315,7 +284,7 @@ class JoiningNodeInitializer(
       // submission rights.
       _ <- (
         waitForSvParticipantToHaveSubmissionRights(dsoPartyId, decentralizedSynchronizer),
-        waitForDsoSvRole(dsoStore),
+        waitForDsoMembership(dsoStore),
         waitUntilCometBftNodeIsValidator,
         SetupUtil.ensureDsoPartyMetadataAnnotation(
           svSvAutomationService.connection,
@@ -345,22 +314,17 @@ class JoiningNodeInitializer(
           // Finally, fully onboard the sequencer and mediator
           _ <-
             localSynchronizerNode.onboardLocalSequencerIfRequired(svConnection.map(_._2))
-          // For domain migrations, the traffic triggers have already been registered earlier and so we skip that step here.
-          _ = if (!skipTrafficReconciliationTriggers)
-            dsoAutomationService.registerTrafficReconciliationTriggers()
+          _ = dsoAutomationService.registerPostSequencerInitTriggers()
           _ <- localSynchronizerNode.initializeLocalMediatorIfRequired(
             decentralizedSynchronizer
           )
-          _ = checkTrafficReconciliationTriggersStarted(dsoAutomationService)
-          _ <- waitForSvToObtainUnlimitedTraffic(localSynchronizerNode, decentralizedSynchronizer)
-          _ = dsoAutomationService.registerPostUnlimitedTrafficTriggers()
         } yield ()
       }
       _ <- synchronizerNodeReconciler
         .reconcileSynchronizerNodeConfigIfRequired(
           localSynchronizerNode,
           decentralizedSynchronizer,
-          OnboardedAfterDelay,
+          Onboarded,
           config.domainMigrationId,
         )
       _ <- checkIsOnboardedAndStartSvNamespaceMembershipTrigger(
@@ -445,50 +409,6 @@ class JoiningNodeInitializer(
             else
               throw Status.FAILED_PRECONDITION.withDescription(description).asRuntimeException()
         }
-      },
-      logger,
-    )
-  }
-
-  private def checkTrafficReconciliationTriggersStarted(service: SvDsoAutomationService): Unit = {
-    val unlimitedTrafficTrigger = service.trigger[SvOnboardingUnlimitedTrafficTrigger]
-    val trafficReconciliationTrigger =
-      service.trigger[ReconcileSequencerLimitWithMemberTrafficTrigger]
-    if (!unlimitedTrafficTrigger.isHealthy || !trafficReconciliationTrigger.isHealthy)
-      throw new RuntimeException("Traffic triggers not started")
-  }
-
-  private def waitForSvToObtainUnlimitedTraffic(
-      localSynchronizerNode: LocalSynchronizerNode,
-      synchronizerId: DomainId,
-  ) = {
-    val description = "SV nodes have been granted unlimited traffic"
-    retryProvider.getValueWithRetries(
-      RetryFor.WaitingOnInitDependency,
-      "unlimited_traffic",
-      description,
-      for {
-        mediatorId <- localSynchronizerNode.mediatorAdminConnection.getMediatorId
-        participantTrafficState <- participantAdminConnection.getParticipantTrafficState(
-          synchronizerId
-        )
-        mediatorTrafficState <- localSynchronizerNode.sequencerAdminConnection
-          .getSequencerTrafficControlState(mediatorId)
-      } yield {
-        val unlimitedTraffic = NonNegativeLong.maxValue
-        if (participantTrafficState.extraTrafficPurchased != unlimitedTraffic)
-          throw Status.FAILED_PRECONDITION
-            .withDescription(
-              show"SV participant $participantId does not have unlimited traffic on synchronizer $synchronizerId"
-            )
-            .asRuntimeException()
-        if (mediatorTrafficState.extraTrafficLimit != unlimitedTraffic)
-          throw Status.FAILED_PRECONDITION
-            .withDescription(
-              show"SV mediator $participantId does not have unlimited traffic on synchronizer $synchronizerId"
-            )
-            .asRuntimeException()
-        ()
       },
       logger,
     )
@@ -603,7 +523,7 @@ class JoiningNodeInitializer(
                 publicKey,
                 privateKey_,
               )
-              _ <- addConfirmedSvToDso()
+              _ <- addConfirmedMemberToDso()
             } yield ()
           case Left(reason) => sys.error(s"Failed parsing provided keys: $reason")
         }
@@ -615,7 +535,7 @@ class JoiningNodeInitializer(
           dsoStore.lookupSvOnboardingConfirmedByParty(dsoStore.key.svParty)
         )
 
-      def addConfirmedSvToDso(): Future[Unit] = {
+      def addConfirmedMemberToDso(): Future[Unit] = {
         val dsoStore = dsoStoreWithIngestion.store
         for {
           // Wait on the DSO store to make sure that we atomically see either the SvOnboardingConfirmed contract
@@ -623,8 +543,8 @@ class JoiningNodeInitializer(
           _ <- waitForSvOnboardingConfirmedInDsoStore()
           _ <- retryProvider.retry(
             RetryFor.WaitingOnInitDependency,
-            "add_dso_sv",
-            "add sv to Dso",
+            "add_dso_member",
+            "add member to Dso",
             for {
               (dsoRules, amuletRules, openMiningRounds, svOnboardingConfirmedOpt) <- (
                 dsoStore.getDsoRules(),
@@ -634,23 +554,23 @@ class JoiningNodeInitializer(
                   dsoStore.key.svParty
                 ),
               ).tupled
-              svIsSv = dsoRules.payload.svs.asScala
+              svIsDsoMember = dsoRules.payload.svs.asScala
                 .contains(dsoStore.key.svParty.toProtoPrimitive)
               _ <- svOnboardingConfirmedOpt match {
                 case None =>
-                  if (svIsSv) {
-                    logger.info(s"SV is already part of the DSO")
+                  if (svIsDsoMember) {
+                    logger.info(s"SV is already a member of the DSO")
                     Future.unit
                   } else {
                     val msg =
-                      "SV is not part of the DSO but there is also no confirmed onboarding, giving up"
+                      "SV is not a member of the DSO but there is also no confirmed onboarding, giving up"
                     logger.error(msg)
                     Future.failed(Status.INTERNAL.withDescription(msg).asRuntimeException())
                   }
                 case Some(confirmed) =>
-                  if (svIsSv) {
+                  if (svIsDsoMember) {
                     logger.info(
-                      "SvOnboardingConfirmed exists but SV is already part of the DSO"
+                      "SvOnboardingConfirmed exists but SV is already a member of the DSO"
                     )
                     Future.unit
                   } else {
@@ -720,24 +640,23 @@ class JoiningNodeInitializer(
                 // We need to wait for the ledger API server to see the party otherwise the
                 // grantUserRights call will fail.
                 _ <- initConnection.waitForPartyOnLedgerApi(svStore.key.dsoParty)
-                _ <- SetupUtil.grantSvUserRightActAsDso(
-                  svStoreWithIngestion.connection,
+                _ <- svStoreWithIngestion.connection.grantUserRights(
                   config.ledgerApiUser,
-                  svStore.key.dsoParty,
+                  Seq.empty,
+                  Seq(svStore.key.dsoParty),
                 )
                 _ = logger.info(s"granted ${config.ledgerApiUser} readAs rights for dsoParty")
                 dsoAutomation = newSvDsoAutomationService(
                   svStore,
                   dsoStore,
                   localSynchronizerNode,
-                  extraSynchronizerNodes,
                   upgradesConfig,
                 )
                 _ <- dsoAutomation.store.domains.waitForDomainConnection(
                   config.domains.global.alias
                 )
                 withDsoStore = new WithDsoStore(dsoAutomation)
-                _ <- withDsoStore.addConfirmedSvToDso()
+                _ <- withDsoStore.addConfirmedMemberToDso()
               } yield dsoAutomation
             case Left(reason) => sys.error(s"Failed parsing provided keys: $reason")
           }
@@ -872,22 +791,22 @@ class JoiningNodeInitializer(
       svConnection.getDsoInfo().map(_.dsoParty).andThen(_ => svConnection.close())
     }
 
-  private def waitForDsoSvRole(dsoStore: SvDsoStore): Future[Unit] = {
+  private def waitForDsoMembership(dsoStore: SvDsoStore): Future[Unit] = {
     val svParty = dsoStore.key.svParty
     retryProvider.waitUntil(
       RetryFor.WaitingOnInitDependency,
       "dso_membership",
-      show"DsoRules are visible and list $svParty as an sv",
+      show"DsoRules are visible and list $svParty as a member",
       for {
         dsoRules <- dsoStore.lookupDsoRules()
         _ <- dsoRules match {
           case Some(c) =>
-            if (SvApp.isSvParty(dsoStore.key.svParty, c.contract)) {
+            if (SvApp.isDsoMemberParty(dsoStore.key.svParty, c.contract)) {
               Future.successful(())
             } else {
               throw Status.FAILED_PRECONDITION
                 .withDescription(
-                  show"DsoRules found but $svParty is not an sv"
+                  show"DsoRules found but $svParty is not a member"
                 )
                 .asRuntimeException()
             }

@@ -9,7 +9,6 @@ import com.daml.ledger.api.v2.command_submission_service.{SubmitRequest, SubmitR
 import com.digitalasset.canton.ledger.client.LedgerClient
 import com.digitalasset.canton.ledger.client.configuration.CommandClientConfiguration
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
-import com.digitalasset.canton.tracing.TraceContext
 
 import scala.concurrent.Future
 
@@ -34,18 +33,18 @@ final class CommandClient(
   def submitSingleCommand(
       submitRequest: SubmitRequest,
       token: Option[String] = None,
-  )(implicit traceContext: TraceContext): Future[SubmitResponse] =
+  ): Future[SubmitResponse] =
     submit(token)(submitRequest)
 
   private def submit(
       token: Option[String]
-  )(submitRequest: SubmitRequest)(implicit traceContext: TraceContext): Future[SubmitResponse] = {
+  )(submitRequest: SubmitRequest): Future[SubmitResponse] = {
     noTracingLogger.debug(
       "Invoking grpc-submission on commandId={}",
       submitRequest.commands.map(_.commandId).getOrElse("no-command-id"),
     )
     LedgerClient
-      .stubWithTracing(commandSubmissionService, token)
+      .stub(commandSubmissionService, token)
       .submit(submitRequest)
   }
 }

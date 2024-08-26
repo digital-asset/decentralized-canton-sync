@@ -72,11 +72,9 @@ class ScanTxLogOwnerExpireLockIntegrationTest
             .commands()
             .asScala
             .toSeq,
-          disclosedContracts = DisclosedContracts
-            .forTesting(
-              openRound
-            )
-            .toLedgerApiDisclosedContracts,
+          disclosedContracts = DisclosedContracts(
+            openRound
+          ).toLedgerApiDisclosedContracts,
         )
     }
   }

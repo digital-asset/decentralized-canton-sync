@@ -4,8 +4,6 @@ import * as React from 'react';
 import { AuthConfig, TestAuthConfig, Login, useUserState } from 'common-frontend';
 import { Outlet } from 'react-router-dom';
 
-import { config } from '../utils';
-
 interface AuthCheckProps {
   authConfig: AuthConfig;
   testAuthConfig?: TestAuthConfig;
@@ -18,11 +16,7 @@ const AuthCheck: React.FC<AuthCheckProps> = ({ authConfig, testAuthConfig }) => 
     return <Outlet />;
   } else {
     return (
-      <Login
-        title={config.spliceInstanceNames.nameServiceName}
-        authConfig={authConfig}
-        testAuthConfig={testAuthConfig}
-      />
+      <Login title="Canton Name Service" authConfig={authConfig} testAuthConfig={testAuthConfig} />
     );
   }
 };

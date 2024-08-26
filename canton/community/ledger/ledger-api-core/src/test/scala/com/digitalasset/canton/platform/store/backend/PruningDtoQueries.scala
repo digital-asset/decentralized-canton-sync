@@ -3,11 +3,10 @@
 
 package com.digitalasset.canton.platform.store.backend
 
-import anorm.SqlParser.long
+import anorm.SqlParser.{long, str}
 import anorm.{RowParser, ~}
-import com.digitalasset.canton.platform.store.backend.Conversions.offset
 import com.digitalasset.canton.platform.store.backend.common.ComposableQuery.SqlStringInterpolation
-import com.digitalasset.canton.platform.store.backend.common.SimpleSqlExtensions.*
+import com.digitalasset.canton.platform.store.backend.common.SimpleSqlAsVectorOf.*
 
 import java.sql.Connection
 
@@ -30,8 +29,8 @@ object PruningDto {
   final case class FilterAssign(seqId: Long, party: Long)
   final case class FilterUnassign(seqId: Long, party: Long)
 
-  final case class TxMeta(offset: Long)
-  final case class Completion(offset: Long)
+  final case class TxMeta(offset: String)
+  final case class Completion(offset: String)
 
 }
 class PruningDtoQueries {
@@ -39,8 +38,7 @@ class PruningDtoQueries {
   private def seqIdParser[T](f: Long => T): RowParser[T] = long("event_sequential_id").map(f)
   private def idFilterParser[T](f: (Long, Long) => T): RowParser[T] =
     long("event_sequential_id") ~ long("party_id") map { case seqId ~ partyId => f(seqId, partyId) }
-  private def offsetParser[T](f: Long => T): RowParser[T] =
-    offset("ledger_offset").map(_.toLong) map (f)
+  private def offsetParser[T](f: String => T): RowParser[T] = str("ledger_offset") map (f)
 
   def eventCreate(implicit c: Connection): Seq[EventCreate] =
     SQL"SELECT event_sequential_id FROM lapi_events_create ORDER BY event_sequential_id"

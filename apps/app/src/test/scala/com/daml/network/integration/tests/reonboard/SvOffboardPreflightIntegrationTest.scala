@@ -14,7 +14,7 @@ import com.digitalasset.canton.integration.BaseEnvironmentDefinition
 import com.digitalasset.canton.util.FutureInstances.*
 import org.openqa.selenium.support.ui.Select
 import org.openqa.selenium.{By, Keys}
-import org.scalatest.time.{Minutes, Span}
+import org.scalatest.time.{Minute, Span}
 
 import java.time.format.DateTimeFormatter
 import java.time.{Instant, ZoneOffset}
@@ -38,14 +38,14 @@ class SvOffboardPreflightIntegrationTest
       this.getClass.getSimpleName
     )
 
-  override implicit val patienceConfig: PatienceConfig = PatienceConfig(scaled(Span(5, Minutes)))
+  override implicit val patienceConfig: PatienceConfig = PatienceConfig(scaled(Span(1, Minute)))
 
   private val svRunbookName = "DA-Helm-Test-Node"
   private val walletUrl = s"https://wallet.sv.${sys.env("NETWORK_APPS_ADDRESS")}/"
   private val svUsername = s"admin@sv-dev.com"
   private val svPassword = sys.env(s"SV_DEV_NET_WEB_UI_PASSWORD");
 
-  "The SV can log in to their wallet and tap" in { implicit env =>
+  "The SV can log in to their wallet and tap" in { _ =>
     withFrontEnd("sv") { implicit webDriver =>
       actAndCheck(
         s"Logging in to wallet at ${walletUrl}", {
@@ -82,8 +82,8 @@ class SvOffboardPreflightIntegrationTest
         val dropDownAction = new Select(webDriver.findElement(By.id("display-actions")))
         dropDownAction.selectByValue("SRARC_OffboardSv")
 
-        val dropDownSv = new Select(webDriver.findElement(By.id("display-members")))
-        dropDownSv.selectByVisibleText(svRunbookName)
+        val dropDownMember = new Select(webDriver.findElement(By.id("display-members")))
+        dropDownMember.selectByVisibleText(svRunbookName)
 
         click on "tab-panel-in-progress"
         val previousVoteRequestsInProgress = find(id("sv-voting-in-progress-table-body"))

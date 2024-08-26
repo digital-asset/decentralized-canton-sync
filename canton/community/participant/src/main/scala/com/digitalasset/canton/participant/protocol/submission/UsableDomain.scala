@@ -6,17 +6,16 @@ package com.digitalasset.canton.participant.protocol.submission
 import cats.data.EitherT
 import cats.syntax.bifunctor.*
 import cats.syntax.parallel.*
+import com.daml.lf.transaction.TransactionVersion
 import com.daml.nonempty.NonEmpty
-import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
-import com.digitalasset.canton.lifecycle.FutureUnlessShutdownImpl.AbortedDueToShutdownException
 import com.digitalasset.canton.participant.protocol.submission.TransactionTreeFactory.PackageUnknownTo
 import com.digitalasset.canton.topology.client.TopologySnapshot
 import com.digitalasset.canton.topology.{DomainId, ParticipantId}
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.EitherTUtil
+import com.digitalasset.canton.util.FutureInstances.*
 import com.digitalasset.canton.version.{DamlLfVersionToProtocolVersions, ProtocolVersion}
 import com.digitalasset.canton.{LfPackageId, LfPartyId}
-import com.digitalasset.daml.lf.transaction.TransactionVersion
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -35,7 +34,6 @@ object UsableDomain {
 
     val packageVetted: EitherT[Future, UnknownPackage, Unit] =
       resolveParticipantsAndCheckPackagesVetted(domainId, snapshot, requiredPackagesByParty)
-        .failOnShutdownTo(AbortedDueToShutdownException("Usable domain checking"))
     val partiesConnected: EitherT[Future, MissingActiveParticipant, Unit] =
       checkConnectedParties(domainId, snapshot, requiredPackagesByParty.keySet)
     val compatibleProtocolVersion: EitherT[Future, UnsupportedMinimumProtocolVersion, Unit] =
@@ -65,10 +63,7 @@ object UsableDomain {
 
   private def unknownPackages(snapshot: TopologySnapshot)(
       participantIdAndRequiredPackages: (ParticipantId, Set[LfPackageId])
-  )(implicit
-      ec: ExecutionContext,
-      tc: TraceContext,
-  ): FutureUnlessShutdown[List[PackageUnknownTo]] = {
+  )(implicit ec: ExecutionContext, tc: TraceContext): Future[List[PackageUnknownTo]] = {
     val (participantId, required) = participantIdAndRequiredPackages
     snapshot.findUnvettedPackagesOrDependencies(participantId, required).value.map {
       case Right(notVetted) =>
@@ -126,21 +121,19 @@ object UsableDomain {
   )(implicit
       ec: ExecutionContext,
       tc: TraceContext,
-  ): EitherT[FutureUnlessShutdown, UnknownPackage, Unit] =
-    resolveParticipants(snapshot, requiredPackagesByParty)
-      .mapK(FutureUnlessShutdown.outcomeK)
-      .flatMap(
-        checkPackagesVetted(domainId, snapshot, _)
-      )
+  ): EitherT[Future, UnknownPackage, Unit] =
+    resolveParticipants(snapshot, requiredPackagesByParty).flatMap(
+      checkPackagesVetted(domainId, snapshot, _)
+    )
 
-  private def checkPackagesVetted(
+  def checkPackagesVetted(
       domainId: DomainId,
       snapshot: TopologySnapshot,
       requiredPackages: Map[ParticipantId, Set[LfPackageId]],
   )(implicit
       ec: ExecutionContext,
       traceContext: TraceContext,
-  ): EitherT[FutureUnlessShutdown, UnknownPackage, Unit] =
+  ): EitherT[Future, UnknownPackage, Unit] =
     EitherT(
       requiredPackages.toList
         .parFlatTraverse(unknownPackages(snapshot))

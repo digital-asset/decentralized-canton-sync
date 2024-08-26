@@ -13,7 +13,7 @@ import com.daml.network.sv.store.SvDsoStore
 import com.digitalasset.canton.DomainAlias
 import com.digitalasset.canton.config.RequireTypes.NonNegativeInt
 import com.digitalasset.canton.topology.DomainId
-import com.digitalasset.canton.topology.transaction.DomainParametersState
+import com.digitalasset.canton.topology.transaction.DomainParametersStateX
 import com.digitalasset.canton.tracing.TraceContext
 import io.opentelemetry.api.trace.Tracer
 import org.apache.pekko.stream.Materializer
@@ -83,7 +83,7 @@ final class DecentralizedSynchronizerMigrationTrigger(
 
   private def ensureDomainIsPaused(
       decentralizedSynchronizerId: DomainId
-  )(implicit tc: TraceContext): Future[TopologyResult[DomainParametersState]] = for {
+  )(implicit tc: TraceContext): Future[TopologyResult[DomainParametersStateX]] = for {
     id <- participantAdminConnection.getId()
     domainParamsTopologyResult <- participantAdminConnection
       .ensureDomainParameters(

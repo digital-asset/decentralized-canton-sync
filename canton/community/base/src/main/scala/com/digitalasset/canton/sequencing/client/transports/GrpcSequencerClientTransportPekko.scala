@@ -62,9 +62,20 @@ class GrpcSequencerClientTransportPekko(
 
   override type SubscriptionError = GrpcSequencerSubscriptionError
 
-  override def subscribe(subscriptionRequest: SubscriptionRequest)(implicit
+  override def subscribe(request: SubscriptionRequest)(implicit
       traceContext: TraceContext
-  ): SequencerSubscriptionPekko[SubscriptionError] = {
+  ): SequencerSubscriptionPekko[SubscriptionError] =
+    subscribeInternal(request, requiresAuthentication = true)
+
+  override def subscribeUnauthenticated(request: SubscriptionRequest)(implicit
+      traceContext: TraceContext
+  ): SequencerSubscriptionPekko[SubscriptionError] =
+    subscribeInternal(request, requiresAuthentication = false)
+
+  private def subscribeInternal(
+      subscriptionRequest: SubscriptionRequest,
+      requiresAuthentication: Boolean,
+  )(implicit traceContext: TraceContext): SequencerSubscriptionPekko[SubscriptionError] = {
 
     val subscriptionRequestP = subscriptionRequest.toProtoV30
 
@@ -122,7 +133,9 @@ class GrpcSequencerClientTransportPekko(
       )
     }
 
-    val subscriber = sequencerServiceClient.subscribeVersioned _
+    val subscriber =
+      if (requiresAuthentication) sequencerServiceClient.subscribeVersioned _
+      else sequencerServiceClient.subscribeUnauthenticatedVersioned _
 
     mkSubscription(subscriber)(SubscriptionResponse.fromVersionedProtoV30(protocolVersion)(_)(_))
   }
@@ -153,7 +166,7 @@ class GrpcSequencerClientTransportPekko(
       .unwrap
     logger.debug("Received a message from the sequencer.")
     fromProto(subscriptionResponseP, traceContext).map { response =>
-      OrdinarySequencedEvent(response.signedSequencedEvent)(
+      OrdinarySequencedEvent(response.signedSequencedEvent, response.trafficState)(
         response.traceContext
       )
     }

@@ -13,10 +13,11 @@ import com.digitalasset.canton.admin.pruning.v30.LocatePruningTimestamp
 import com.digitalasset.canton.config.RequireTypes.PositiveInt
 import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.domain.mediator.admin.gprc.{
-  InitializeMediatorRequest,
-  InitializeMediatorResponse,
+  InitializeMediatorRequestX,
+  InitializeMediatorResponseX,
 }
 import com.digitalasset.canton.mediator.admin.v30
+import com.digitalasset.canton.protocol.StaticDomainParameters
 import com.digitalasset.canton.sequencing.{SequencerConnectionValidation, SequencerConnections}
 import com.digitalasset.canton.topology.DomainId
 import io.grpc.ManagedChannel
@@ -24,7 +25,7 @@ import io.grpc.ManagedChannel
 import scala.concurrent.Future
 
 object EnterpriseMediatorAdministrationCommands {
-  abstract class BaseMediatorInitializationCommand[Req, Rep, Res]
+  abstract class BaseMediatorXInitializationCommand[Req, Rep, Res]
       extends GrpcAdminCommand[Req, Rep, Res] {
     override type Svc = v30.MediatorInitializationServiceGrpc.MediatorInitializationServiceStub
     override def createService(
@@ -42,19 +43,21 @@ object EnterpriseMediatorAdministrationCommands {
       v30.MediatorAdministrationServiceGrpc.stub(channel)
   }
 
-  final case class Initialize(
+  final case class InitializeX(
       domainId: DomainId,
+      domainParameters: StaticDomainParameters,
       sequencerConnections: SequencerConnections,
       validation: SequencerConnectionValidation,
-  ) extends BaseMediatorInitializationCommand[
+  ) extends BaseMediatorXInitializationCommand[
         v30.InitializeMediatorRequest,
         v30.InitializeMediatorResponse,
         Unit,
       ] {
     override def createRequest(): Either[String, v30.InitializeMediatorRequest] =
       Right(
-        InitializeMediatorRequest(
+        InitializeMediatorRequestX(
           domainId,
+          domainParameters,
           sequencerConnections,
           validation,
         ).toProtoV30
@@ -68,7 +71,7 @@ object EnterpriseMediatorAdministrationCommands {
     override def handleResponse(
         response: v30.InitializeMediatorResponse
     ): Either[String, Unit] =
-      InitializeMediatorResponse
+      InitializeMediatorResponseX
         .fromProtoV30(response)
         .leftMap(err => s"Failed to deserialize response: $err")
         .map(_ => ())

@@ -61,7 +61,7 @@ class ReceiveSvRewardCouponTrigger(
       )
       rewardState <- OptionT(store.lookupSvRewardState(svInfo.name))
       openRounds <- OptionT.liftF(store.getOpenMiningRoundTriple())
-      lastReceivedForOpt = svLastReceivedFor(rewardState.payload)
+      lastReceivedForOpt = memberLastReceivedFor(rewardState.payload)
       firstOpenNotClaimed <- OptionT.fromOption[Future](
         openRounds.toSeq
           .filter(round =>
@@ -78,7 +78,7 @@ class ReceiveSvRewardCouponTrigger(
     )
   }
 
-  private def svLastReceivedFor(rewardState: SvRewardState): Option[Long] = {
+  private def memberLastReceivedFor(rewardState: SvRewardState): Option[Long] = {
     // -1 is the value set in DsoRules_ConfirmSvOnboarding for new SVs
     Option(rewardState.state.lastRoundCollected.number.longValue()).filter(_ > -1)
   }
@@ -88,7 +88,7 @@ class ReceiveSvRewardCouponTrigger(
   ): Future[TaskOutcome] = {
     val ReceiveSvRewardCouponTrigger.Task(dsoRules, svRewardWeight, rewardState, unclaimedRound) =
       task
-    val lastReceivedForOpt = svLastReceivedFor(rewardState.payload)
+    val lastReceivedForOpt = memberLastReceivedFor(rewardState.payload)
     lastReceivedForOpt match {
       case None =>
         logger.info(
@@ -149,8 +149,6 @@ object ReceiveSvRewardCouponTrigger {
       round: OpenMiningRoundContract,
   ) extends PrettyPrinting {
     import com.daml.network.util.PrettyInstances.*
-    import com.digitalasset.canton.participant.pretty.Implicits.prettyContractId
-
     override def pretty: Pretty[this.type] =
       prettyOfClass(
         param("dsoRulesCid", _.dsoRules.contractId),

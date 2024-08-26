@@ -264,7 +264,7 @@ trait WalletTestUtil extends TestCommon with AnsTestUtil {
       participantClient: ParticipantClientReference,
       userId: String,
       signatories: Seq[PartyId],
-      acceptedPayment: ContractWithState[
+      acceptedPayment: Contract[
         paymentCodegen.AcceptedAppPayment.ContractId,
         paymentCodegen.AcceptedAppPayment,
       ],
@@ -275,7 +275,7 @@ trait WalletTestUtil extends TestCommon with AnsTestUtil {
     val tc =
       sv1ScanBackend.getTransferContextWithInstances(now, Some(acceptedPayment.payload.round))
     val appTc = tc.toUnfeaturedAppTransferContext()
-    val disclosure = DisclosedContracts.forTesting(tc.amuletRules, tc.latestOpenMiningRound)
+    val disclosure = DisclosedContracts(tc.amuletRules, tc.latestOpenMiningRound)
     participantClient.ledger_api_extensions.commands.submitWithResult(
       userId = userId,
       actAs = signatories,
@@ -300,7 +300,7 @@ trait WalletTestUtil extends TestCommon with AnsTestUtil {
     val now = env.environment.clock.now
     val tc = sv1ScanBackend.getTransferContextWithInstances(now)
     val appTc = tc.toUnfeaturedAppTransferContext()
-    val disclosure = DisclosedContracts.forTesting(tc.amuletRules, tc.latestOpenMiningRound)
+    val disclosure = DisclosedContracts(tc.amuletRules, tc.latestOpenMiningRound)
     participantClient.ledger_api_extensions.commands.submitWithResult(
       userId = userId,
       actAs = Seq(userParty),
@@ -328,7 +328,7 @@ trait WalletTestUtil extends TestCommon with AnsTestUtil {
     val tc =
       sv1ScanBackend.getTransferContextWithInstances(now, Some(acceptedPayment.payload.round))
     val appTc = tc.toUnfeaturedAppTransferContext()
-    val disclosure = DisclosedContracts.forTesting(tc.amuletRules, tc.latestOpenMiningRound)
+    val disclosure = DisclosedContracts(tc.amuletRules, tc.latestOpenMiningRound)
     participantClient.ledger_api_extensions.commands
       .submitWithResult(
         userId = userId,
@@ -354,7 +354,7 @@ trait WalletTestUtil extends TestCommon with AnsTestUtil {
     val now = env.environment.clock.now
     val tc = sv1ScanBackend.getTransferContextWithInstances(now)
     val appTc = tc.toUnfeaturedAppTransferContext()
-    val disclosure = DisclosedContracts.forTesting(tc.amuletRules, tc.latestOpenMiningRound)
+    val disclosure = DisclosedContracts(tc.amuletRules, tc.latestOpenMiningRound)
     participantClient.ledger_api_extensions.commands.submitWithResult(
       userId = userId,
       actAs = Seq(userParty),
@@ -380,7 +380,7 @@ trait WalletTestUtil extends TestCommon with AnsTestUtil {
     val now = env.environment.clock.now
     val tc = sv1ScanBackend.getTransferContextWithInstances(now, Some(payment.payload.round))
     val appTc = tc.toUnfeaturedAppTransferContext()
-    val disclosure = DisclosedContracts.forTesting(tc.amuletRules, tc.latestOpenMiningRound)
+    val disclosure = DisclosedContracts(tc.amuletRules, tc.latestOpenMiningRound)
     participantClient.ledger_api_extensions.commands.submitWithResult(
       userId = userId,
       actAs = Seq(userParty, senderParty),
@@ -404,7 +404,7 @@ trait WalletTestUtil extends TestCommon with AnsTestUtil {
     val now = env.environment.clock.now
     val tc = sv1ScanBackend.getTransferContextWithInstances(now)
     val appTc = tc.toUnfeaturedAppTransferContext()
-    val disclosure = DisclosedContracts.forTesting(tc.amuletRules, tc.latestOpenMiningRound)
+    val disclosure = DisclosedContracts(tc.amuletRules, tc.latestOpenMiningRound)
     participantClient.ledger_api_extensions.commands.submitWithResult(
       userId = userId,
       actAs = Seq(userParty),
@@ -437,7 +437,7 @@ trait WalletTestUtil extends TestCommon with AnsTestUtil {
     )
   }
   protected def expectedDsoAns(implicit env: SpliceTestConsoleEnvironment): String = {
-    expectedAns(dsoParty, DsoAnsResolver.dsoAnsName(ansAcronym))
+    expectedAns(dsoParty, DsoAnsResolver.dsoAnsName)
   }
 
   protected def createAnsEntry(
@@ -445,8 +445,8 @@ trait WalletTestUtil extends TestCommon with AnsTestUtil {
       entryName: String,
       wallet: WalletAppClientReference,
       tapAmount: BigDecimal = 5.0,
-      entryUrl: String = testEntryUrl,
-      entryDescription: String = testEntryDescription,
+      entryUrl: String = "https://ans-dir-url.com",
+      entryDescription: String = "Sample CNS Entry Description",
   )(implicit
       env: SpliceTestConsoleEnvironment
   ): Unit = {
@@ -477,8 +477,8 @@ trait WalletTestUtil extends TestCommon with AnsTestUtil {
   protected def requestAnsEntry(
       ansExternalApp: AnsExternalAppReference,
       entryName: String,
-      entryUrl: String = testEntryUrl,
-      entryDescription: String = testEntryDescription,
+      entryUrl: String = "https://ans-dir-url.com",
+      entryDescription: String = "Sample CNS Entry Description",
   ) = {
     // TODO(#8300) global domain can be disconnected and reconnected after config of sequencer connections changed
     retryCommandSubmission(
@@ -761,14 +761,16 @@ trait WalletTestUtil extends TestCommon with AnsTestUtil {
       userId: String,
       userParty: PartyId,
   )(implicit env: SpliceTestConsoleEnvironment) = {
+    val entryUrl = "https://ans-dir-url.com"
+    val entryDescription = "Sample CNS Entry Description"
     val ansRules = sv1ScanBackend.getAnsRules()
     val update = ansRules.contractId.exerciseAnsRules_RequestEntry(
       entryName,
-      testEntryUrl,
-      testEntryDescription,
+      entryUrl,
+      entryDescription,
       userParty.toProtoPrimitive,
     )
-    val disclosure = DisclosedContracts.forTesting(ansRules)
+    val disclosure = DisclosedContracts(ansRules)
 
     clue("request a ans entry from ansRules contract") {
       val result = participantClientWithAdminToken.ledger_api_extensions.commands.submitWithResult(
@@ -1005,8 +1007,8 @@ trait WalletTestUtil extends TestCommon with AnsTestUtil {
   protected def requestEntry(
       refs: DynamicUserRefs,
       entryName: String,
-      entryUrl: String = testEntryUrl,
-      entryDescription: String = testEntryDescription,
+      entryUrl: String = "https://ans-dir-url.com",
+      entryDescription: String = "Sample CNS Entry Description",
   )(implicit env: SpliceTestConsoleEnvironment) = {
     val ansRules = sv1ScanBackend.getAnsRules()
 
@@ -1022,7 +1024,7 @@ trait WalletTestUtil extends TestCommon with AnsTestUtil {
         actAs = Seq(refs.userParty),
         readAs = Seq.empty,
         update = cmd,
-        disclosedContracts = DisclosedContracts.forTesting(ansRules).toLedgerApiDisclosedContracts,
+        disclosedContracts = DisclosedContracts(ansRules).toLedgerApiDisclosedContracts,
       )
       .exerciseResult
       .requestCid
@@ -1031,8 +1033,8 @@ trait WalletTestUtil extends TestCommon with AnsTestUtil {
   protected def requestAndPayForEntry(
       refs: DynamicUserRefs,
       entryName: String,
-      entryUrl: String = testEntryUrl,
-      entryDescription: String = testEntryDescription,
+      entryUrl: String = "https://ans-dir-url.com",
+      entryDescription: String = "Sample CNS Entry Description",
   )(implicit env: SpliceTestConsoleEnvironment) = {
     // for paying the ans entry initial payment.
     refs.wallet.tap(5.0)
@@ -1174,7 +1176,7 @@ trait WalletTestUtil extends TestCommon with AnsTestUtil {
           .asScala
           .toSeq,
         disclosedContracts =
-          DisclosedContracts.forTesting(amuletRules, openRound).toLedgerApiDisclosedContracts,
+          DisclosedContracts(amuletRules, openRound).toLedgerApiDisclosedContracts,
       )
     }
 }

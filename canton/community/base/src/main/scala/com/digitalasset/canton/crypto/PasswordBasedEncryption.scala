@@ -47,7 +47,7 @@ object PasswordBasedEncrypted extends HasVersionedMessageCompanion[PasswordBased
 
   val supportedProtoVersions: SupportedProtoVersions = SupportedProtoVersions(
     ProtoVersion(30) -> ProtoCodec(
-      ProtocolVersion.v31,
+      ProtocolVersion.v30,
       supportedProtoVersion(v30.PasswordBasedEncrypted)(fromProtoV30),
       _.toProtoV30.toByteString,
     )

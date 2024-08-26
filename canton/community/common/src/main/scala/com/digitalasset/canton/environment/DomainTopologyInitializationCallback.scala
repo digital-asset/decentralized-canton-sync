@@ -4,13 +4,14 @@
 package com.digitalasset.canton.environment
 
 import cats.data.EitherT
-import com.digitalasset.canton.sequencing.client.SequencerClient
+import com.digitalasset.canton.sequencing.client.transports.SequencerClientTransport
+import com.digitalasset.canton.sequencing.protocol.TopologyStateForInitRequest
 import com.digitalasset.canton.topology.client.DomainTopologyClientWithInit
 import com.digitalasset.canton.topology.processing.{EffectiveTime, SequencedTime}
-import com.digitalasset.canton.topology.store.StoredTopologyTransactions.GenericStoredTopologyTransactions
-import com.digitalasset.canton.topology.store.TopologyStore
+import com.digitalasset.canton.topology.store.StoredTopologyTransactionsX.GenericStoredTopologyTransactionsX
 import com.digitalasset.canton.topology.store.TopologyStoreId.DomainStore
-import com.digitalasset.canton.topology.transaction.{DomainTrustCertificate, MediatorDomainState}
+import com.digitalasset.canton.topology.store.TopologyStoreX
+import com.digitalasset.canton.topology.transaction.{DomainTrustCertificateX, MediatorDomainStateX}
 import com.digitalasset.canton.topology.{MediatorId, Member, ParticipantId}
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.version.ProtocolVersion
@@ -20,37 +21,43 @@ import scala.concurrent.{ExecutionContext, Future}
 trait DomainTopologyInitializationCallback {
   def callback(
       topologyClient: DomainTopologyClientWithInit,
-      sequencerClient: SequencerClient,
+      clientTransport: SequencerClientTransport,
       protocolVersion: ProtocolVersion,
   )(implicit
       executionContext: ExecutionContext,
       traceContext: TraceContext,
-  ): EitherT[Future, String, GenericStoredTopologyTransactions]
+  ): EitherT[Future, String, GenericStoredTopologyTransactionsX]
 }
 
 class StoreBasedDomainTopologyInitializationCallback(
     member: Member,
-    topologyStore: TopologyStore[DomainStore],
+    topologyStore: TopologyStoreX[DomainStore],
 ) extends DomainTopologyInitializationCallback {
   override def callback(
       topologyClient: DomainTopologyClientWithInit,
-      sequencerClient: SequencerClient,
+      transport: SequencerClientTransport,
       protocolVersion: ProtocolVersion,
   )(implicit
       executionContext: ExecutionContext,
       traceContext: TraceContext,
-  ): EitherT[Future, String, GenericStoredTopologyTransactions] = {
+  ): EitherT[Future, String, GenericStoredTopologyTransactionsX] = {
     for {
-      topologyTransactions <- sequencerClient.downloadTopologyStateForInit()
-
-      _ <- EitherT.right(topologyStore.bootstrap(topologyTransactions))
+      response <- transport.downloadTopologyStateForInit(
+        TopologyStateForInitRequest(
+          member,
+          protocolVersion,
+        )
+      )
+      _ <- EitherT.liftF(
+        topologyStore.bootstrap(response.topologyTransactions.value)
+      )
 
       timestampsFromOnboardingTransactions <- member match {
         case participantId @ ParticipantId(_) =>
-          val fromOnboardingTransaction = topologyTransactions.result
+          val fromOnboardingTransaction = response.topologyTransactions.value.result
             .dropWhile(storedTx =>
               !storedTx
-                .selectMapping[DomainTrustCertificate]
+                .selectMapping[DomainTrustCertificateX]
                 .exists(dtc =>
                   dtc.mapping.participantId == participantId && !dtc.transaction.isProposal
                 )
@@ -64,10 +71,10 @@ class StoreBasedDomainTopologyInitializationCallback(
             )
           )
         case mediatorId @ MediatorId(_) =>
-          val fromOnboardingTransaction = topologyTransactions.result
+          val fromOnboardingTransaction = response.topologyTransactions.value.result
             .dropWhile(storedTx =>
               !storedTx
-                .selectMapping[MediatorDomainState]
+                .selectMapping[MediatorDomainStateX]
                 .exists(mds =>
                   mds.mapping.allMediatorsInGroup
                     .contains(mediatorId) && !mds.transaction.isProposal
@@ -96,7 +103,7 @@ class StoreBasedDomainTopologyInitializationCallback(
           updateTopologyClientHead(topologyClient, sequenced, effective)
         }
     } yield {
-      topologyTransactions
+      response.topologyTransactions.value
     }
   }
 

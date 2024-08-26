@@ -3,6 +3,7 @@
 
 package com.digitalasset.canton.platform.store.backend
 
+import com.daml.lf.data.Ref
 import com.digitalasset.canton.ledger.api.domain.UserRight.{CanActAs, CanReadAs, ParticipantAdmin}
 import com.digitalasset.canton.ledger.api.domain.{
   IdentityProviderConfig,
@@ -11,7 +12,6 @@ import com.digitalasset.canton.ledger.api.domain.{
   UserRight,
 }
 import com.digitalasset.canton.platform.store.backend.localstore.UserManagementStorageBackend
-import com.digitalasset.daml.lf.data.Ref
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.{Inside, OptionValues}

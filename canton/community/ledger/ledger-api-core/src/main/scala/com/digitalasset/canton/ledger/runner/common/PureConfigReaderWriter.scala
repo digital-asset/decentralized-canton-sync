@@ -4,9 +4,10 @@
 package com.digitalasset.canton.ledger.runner.common
 
 import com.daml.jwt.JwtTimestampLeeway
+import com.daml.lf.data.Ref
 import com.daml.ports.Port
-import com.daml.tls.TlsVersion.TlsVersion
-import com.daml.tls.{TlsConfiguration, TlsVersion}
+import com.digitalasset.canton.ledger.api.tls.TlsVersion.TlsVersion
+import com.digitalasset.canton.ledger.api.tls.{TlsConfiguration, TlsVersion}
 import com.digitalasset.canton.ledger.runner.common.OptConfigValue.{
   optConvertEnabled,
   optProductHint,
@@ -18,13 +19,12 @@ import com.digitalasset.canton.platform.config.{
   CommandServiceConfig,
   IdentityProviderManagementConfig,
   IndexServiceConfig,
-  PartyManagementServiceConfig,
   TransactionFlatStreamsConfig,
   TransactionTreeStreamsConfig,
   UserManagementServiceConfig,
 }
-import com.digitalasset.canton.platform.indexer.IndexerConfig
 import com.digitalasset.canton.platform.indexer.ha.HaConfig
+import com.digitalasset.canton.platform.indexer.{IndexerConfig, PackageMetadataViewConfig}
 import com.digitalasset.canton.platform.store.DbSupport.{
   ConnectionPoolConfig,
   DataSourceProperties,
@@ -32,7 +32,6 @@ import com.digitalasset.canton.platform.store.DbSupport.{
 }
 import com.digitalasset.canton.platform.store.backend.postgresql.PostgresDataSourceConfig
 import com.digitalasset.canton.platform.store.backend.postgresql.PostgresDataSourceConfig.SynchronousCommitValue
-import com.digitalasset.daml.lf.data.Ref
 import io.netty.handler.ssl.ClientAuth
 import pureconfig.configurable.{genericMapReader, genericMapWriter}
 import pureconfig.error.CannotConvert
@@ -116,12 +115,6 @@ class PureConfigReaderWriter(secure: Boolean = true) {
   implicit val userManagementServiceConfigConvert: ConfigConvert[UserManagementServiceConfig] =
     deriveConvert[UserManagementServiceConfig]
 
-  implicit val partyManagementServiceConfigHint: ProductHint[PartyManagementServiceConfig] =
-    ProductHint[PartyManagementServiceConfig](allowUnknownKeys = false)
-
-  implicit val partyManagementServiceConfigConvert: ConfigConvert[PartyManagementServiceConfig] =
-    deriveConvert[PartyManagementServiceConfig]
-
   implicit val identityProviderManagementConfigHint: ProductHint[IdentityProviderManagementConfig] =
     ProductHint[IdentityProviderManagementConfig](allowUnknownKeys = false)
 
@@ -184,6 +177,12 @@ class PureConfigReaderWriter(secure: Boolean = true) {
 
   implicit val participantIdWriter: ConfigWriter[Ref.ParticipantId] =
     ConfigWriter.toString[Ref.ParticipantId](_.toString)
+
+  implicit val packageMetadataViewConfigHint: ProductHint[PackageMetadataViewConfig] =
+    ProductHint[PackageMetadataViewConfig](allowUnknownKeys = false)
+
+  implicit val packageMetadataViewConfigConvert: ConfigConvert[PackageMetadataViewConfig] =
+    deriveConvert[PackageMetadataViewConfig]
 
   implicit val indexerConfigHint: ProductHint[IndexerConfig] =
     ProductHint[IndexerConfig](allowUnknownKeys = false)

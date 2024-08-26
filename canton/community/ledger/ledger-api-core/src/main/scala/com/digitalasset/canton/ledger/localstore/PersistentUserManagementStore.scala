@@ -3,6 +3,8 @@
 
 package com.digitalasset.canton.ledger.localstore
 
+import com.daml.lf.data.Ref
+import com.daml.lf.data.Ref.UserId
 import com.daml.metrics.DatabaseMetrics
 import com.digitalasset.canton.concurrent.DirectExecutionContext
 import com.digitalasset.canton.ledger.api.domain
@@ -20,19 +22,17 @@ import com.digitalasset.canton.ledger.localstore.api.{UserManagementStore, UserU
 import com.digitalasset.canton.ledger.localstore.utils.LocalAnnotationsUtils
 import com.digitalasset.canton.logging.LoggingContextWithTrace.implicitExtractTraceContext
 import com.digitalasset.canton.logging.{LoggingContextWithTrace, NamedLoggerFactory, NamedLogging}
-import com.digitalasset.canton.metrics.LedgerApiServerMetrics
+import com.digitalasset.canton.metrics.Metrics
 import com.digitalasset.canton.platform.store.DbSupport
 import com.digitalasset.canton.platform.store.backend.localstore.UserManagementStorageBackend
 import com.digitalasset.canton.tracing.TraceContext
-import com.digitalasset.daml.lf.data.Ref
-import com.digitalasset.daml.lf.data.Ref.UserId
 
 import java.sql.Connection
 import scala.concurrent.{ExecutionContext, Future}
 
 class PersistentUserManagementStore(
     dbSupport: DbSupport,
-    metrics: LedgerApiServerMetrics,
+    metrics: Metrics,
     timeProvider: TimeProvider,
     maxRightsPerUser: Int,
     val loggerFactory: NamedLoggerFactory,
@@ -415,7 +415,7 @@ object PersistentUserManagementStore {
 
   def cached(
       dbSupport: DbSupport,
-      metrics: LedgerApiServerMetrics,
+      metrics: Metrics,
       timeProvider: TimeProvider,
       cacheExpiryAfterWriteInSeconds: Int,
       maxCacheSize: Int,

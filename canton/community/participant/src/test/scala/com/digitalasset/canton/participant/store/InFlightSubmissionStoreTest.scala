@@ -52,7 +52,7 @@ trait InFlightSubmissionStoreTest extends AsyncWordSpec with BaseTest {
     completionInfo,
     TransactionSubmissionTrackingData.CauseWithTemplate(
       SequencerErrors
-        .SubmissionRequestRefused("Some invalid batch")
+        .SubmissionRequestMalformed("Some invalid batch")
         .rpcStatusWithoutLoggingContext()
     ),
     DomainId.tryFromString("da::default"),

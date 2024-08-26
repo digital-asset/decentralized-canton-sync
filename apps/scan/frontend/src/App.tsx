@@ -40,7 +40,9 @@ const Providers: React.FC<React.PropsWithChildren> = ({ children }) => {
   return (
     <QueryClientProvider client={queryClient}>
       <ReactQueryDevtools initialIsOpen={false} />
-      <ScanClientProvider url={config.services.scan.url}>{children}</ScanClientProvider>
+      <ScanClientProvider url={config.services.scan.url}>
+        <HelmetProvider>{children}</HelmetProvider>
+      </ScanClientProvider>
     </QueryClientProvider>
   );
 };
@@ -68,7 +70,6 @@ const App: React.FC = () => (
       <Helmet>
         <title>{pageTitle}</title>
         <meta name="description" content={pageTitle} />
-        <link rel="icon" href={config.spliceInstanceNames.networkFaviconUrl} />
       </Helmet>
       <CssBaseline />
       <Providers>

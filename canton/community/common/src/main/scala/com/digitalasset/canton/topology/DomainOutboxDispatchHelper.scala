@@ -17,10 +17,10 @@ import com.digitalasset.canton.lifecycle.{
 }
 import com.digitalasset.canton.logging.NamedLogging
 import com.digitalasset.canton.logging.pretty.PrettyPrinting
-import com.digitalasset.canton.protocol.messages.TopologyTransactionsBroadcast
-import com.digitalasset.canton.topology.store.{TopologyStore, TopologyStoreId}
-import com.digitalasset.canton.topology.transaction.SignedTopologyTransaction
-import com.digitalasset.canton.topology.transaction.SignedTopologyTransaction.GenericSignedTopologyTransaction
+import com.digitalasset.canton.protocol.messages.TopologyTransactionsBroadcastX
+import com.digitalasset.canton.topology.store.{TopologyStoreId, TopologyStoreX}
+import com.digitalasset.canton.topology.transaction.SignedTopologyTransactionX
+import com.digitalasset.canton.topology.transaction.SignedTopologyTransactionX.GenericSignedTopologyTransactionX
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.FutureInstances.*
 import com.digitalasset.canton.util.retry.RetryUtil.AllExnRetryable
@@ -30,76 +30,48 @@ import com.digitalasset.canton.version.ProtocolVersion
 import scala.concurrent.duration.*
 import scala.concurrent.{ExecutionContext, Future}
 
-trait DomainOutboxDispatchHelper extends NamedLogging {
+trait DomainOutboxDispatchStoreSpecific extends NamedLogging {
   protected def domainId: DomainId
-
   protected def memberId: Member
-
   protected def protocolVersion: ProtocolVersion
-
   protected def crypto: Crypto
 
-  protected def convertTransactions(transactions: Seq[GenericSignedTopologyTransaction])(implicit
-      ec: ExecutionContext,
-      traceContext: TraceContext,
-  ): EitherT[FutureUnlessShutdown, String, Seq[GenericSignedTopologyTransaction]]
+  protected def topologyTransaction(tx: GenericSignedTopologyTransactionX): PrettyPrinting
 
   protected def filterTransactions(
-      transactions: Seq[GenericSignedTopologyTransaction],
-      predicate: GenericSignedTopologyTransaction => Future[Boolean],
-  )(implicit
-      executionContext: ExecutionContext
-  ): Future[Seq[GenericSignedTopologyTransaction]] =
-    transactions.parFilterA(tx => predicate(tx))
-
-  protected def topologyTransaction(
-      tx: GenericSignedTopologyTransaction
-  ): PrettyPrinting = tx.transaction
+      transactions: Seq[GenericSignedTopologyTransactionX],
+      predicate: GenericSignedTopologyTransactionX => Future[Boolean],
+  )(implicit executionContext: ExecutionContext): Future[Seq[GenericSignedTopologyTransactionX]]
 
   protected def onlyApplicable(
-      transactions: Seq[GenericSignedTopologyTransaction]
-  ): Future[Seq[GenericSignedTopologyTransaction]] = {
-    def notAlien(tx: GenericSignedTopologyTransaction): Boolean = {
-      val mapping = tx.mapping
-      mapping match {
-        // TODO(#14048) add filter criteria here
-        case _ => true
-      }
-    }
+      transactions: Seq[GenericSignedTopologyTransactionX]
+  ): Future[Seq[GenericSignedTopologyTransactionX]]
 
-    def domainRestriction(tx: GenericSignedTopologyTransaction): Boolean =
-      tx.mapping.restrictedToDomain.forall(_ == domainId)
+  protected def convertTransactions(transactions: Seq[GenericSignedTopologyTransactionX])(implicit
+      ec: ExecutionContext,
+      traceContext: TraceContext,
+  ): EitherT[Future, String, Seq[GenericSignedTopologyTransactionX]]
 
-    Future.successful(
-      transactions.filter(x => notAlien(x) && domainRestriction(x))
-    )
-  }
+  protected def isFailedState(response: TopologyTransactionsBroadcastX.State): Boolean
 
-  protected def isFailedState(response: TopologyTransactionsBroadcast.State): Boolean =
-    response == TopologyTransactionsBroadcast.State.Failed
+  protected def isExpectedState(state: TopologyTransactionsBroadcastX.State): Boolean
 
-  def isExpectedState(state: TopologyTransactionsBroadcast.State): Boolean = state match {
-    case TopologyTransactionsBroadcast.State.Failed => false
-    case TopologyTransactionsBroadcast.State.Accepted => true
-  }
 }
 
-trait StoreBasedDomainOutboxDispatchHelper extends DomainOutboxDispatchHelper {
+trait StoreBasedDomainOutboxDispatchHelperX extends DomainOutboxDispatchHelperX {
 
-  def authorizedStore: TopologyStore[TopologyStoreId.AuthorizedStore]
+  def authorizedStore: TopologyStoreX[TopologyStoreId.AuthorizedStore]
   override protected def convertTransactions(
-      transactions: Seq[GenericSignedTopologyTransaction]
+      transactions: Seq[GenericSignedTopologyTransactionX]
   )(implicit
       ec: ExecutionContext,
       traceContext: TraceContext,
-  ): EitherT[FutureUnlessShutdown, /*DomainRegistryError*/ String, Seq[
-    GenericSignedTopologyTransaction
-  ]] = {
+  ): EitherT[Future, /*DomainRegistryError*/ String, Seq[GenericSignedTopologyTransactionX]] = {
     transactions
       .parTraverse { tx =>
         if (tx.transaction.isEquivalentTo(protocolVersion)) {
           // Transaction already in the correct version, nothing to do here
-          EitherT.rightT[FutureUnlessShutdown, String](tx)
+          EitherT.rightT[Future, String](tx)
         } else {
           // First try to find if the topology transaction already exists in the correct version in the topology store
           OptionT(
@@ -108,13 +80,12 @@ trait StoreBasedDomainOutboxDispatchHelper extends DomainOutboxDispatchHelper {
               tx.transaction,
               protocolVersion,
             )
-          ).mapK(FutureUnlessShutdown.outcomeK)
+          )
             .map(_.transaction)
             .toRight("")
             .leftFlatMap { _ =>
               // We did not find a topology transaction with the correct version, so we try to convert and resign
-              SignedTopologyTransaction
-                .asVersion(tx, protocolVersion)(crypto)
+              SignedTopologyTransactionX.asVersion(tx, protocolVersion)(crypto)
             }
         }
       }
@@ -122,32 +93,73 @@ trait StoreBasedDomainOutboxDispatchHelper extends DomainOutboxDispatchHelper {
 
 }
 
-trait QueueBasedDomainOutboxDispatchHelper extends DomainOutboxDispatchHelper {
+trait QueueBasedDomainOutboxDispatchHelperX extends DomainOutboxDispatchHelperX {
   override protected def convertTransactions(
-      transactions: Seq[GenericSignedTopologyTransaction]
+      transactions: Seq[GenericSignedTopologyTransactionX]
   )(implicit
       ec: ExecutionContext,
       traceContext: TraceContext,
-  ): EitherT[FutureUnlessShutdown, /*DomainRegistryError*/ String, Seq[
-    GenericSignedTopologyTransaction
-  ]] = {
+  ): EitherT[Future, /*DomainRegistryError*/ String, Seq[GenericSignedTopologyTransactionX]] = {
     transactions
       .parTraverse { tx =>
         if (tx.transaction.isEquivalentTo(protocolVersion)) {
           // Transaction already in the correct version, nothing to do here
-          EitherT.rightT[FutureUnlessShutdown, String](tx)
+          EitherT.rightT[Future, String](tx)
         } else {
-          SignedTopologyTransaction
-            .asVersion(tx, protocolVersion)(crypto)
+          SignedTopologyTransactionX.asVersion(tx, protocolVersion)(crypto)
         }
       }
   }
 }
 
-trait DomainOutboxDispatch extends NamedLogging with FlagCloseable {
-  this: DomainOutboxDispatchHelper =>
+// TODO(#15161) collapse with base trait
+trait DomainOutboxDispatchHelperX extends DomainOutboxDispatchStoreSpecific {
 
-  protected def targetStore: TopologyStore[TopologyStoreId.DomainStore]
+  override protected def filterTransactions(
+      transactions: Seq[GenericSignedTopologyTransactionX],
+      predicate: GenericSignedTopologyTransactionX => Future[Boolean],
+  )(implicit
+      executionContext: ExecutionContext
+  ): Future[Seq[GenericSignedTopologyTransactionX]] =
+    transactions.parFilterA(tx => predicate(tx))
+
+  override protected def topologyTransaction(
+      tx: GenericSignedTopologyTransactionX
+  ): PrettyPrinting = tx.transaction
+
+  override protected def onlyApplicable(
+      transactions: Seq[GenericSignedTopologyTransactionX]
+  ): Future[Seq[GenericSignedTopologyTransactionX]] = {
+    def notAlien(tx: GenericSignedTopologyTransactionX): Boolean = {
+      val mapping = tx.mapping
+      mapping match {
+        // TODO(#14048) add filter criteria here
+        case _ => true
+      }
+    }
+
+    def domainRestriction(tx: GenericSignedTopologyTransactionX): Boolean =
+      tx.mapping.restrictedToDomain.forall(_ == domainId)
+
+    Future.successful(
+      transactions.filter(x => notAlien(x) && domainRestriction(x))
+    )
+  }
+
+  override protected def isFailedState(response: TopologyTransactionsBroadcastX.State): Boolean =
+    response == TopologyTransactionsBroadcastX.State.Failed
+
+  override def isExpectedState(state: TopologyTransactionsBroadcastX.State): Boolean = state match {
+    case TopologyTransactionsBroadcastX.State.Failed => false
+    case TopologyTransactionsBroadcastX.State.Accepted => true
+  }
+
+}
+
+trait DomainOutboxDispatch extends NamedLogging with FlagCloseable {
+  this: DomainOutboxDispatchStoreSpecific =>
+
+  protected def targetStore: TopologyStoreX[TopologyStoreId.DomainStore]
   protected def handle: RegisterTopologyTransactionHandle
 
   // register handle close task
@@ -159,23 +171,23 @@ trait DomainOutboxDispatch extends NamedLogging with FlagCloseable {
   })(TraceContext.empty)
 
   protected def notAlreadyPresent(
-      transactions: Seq[GenericSignedTopologyTransaction]
+      transactions: Seq[GenericSignedTopologyTransactionX]
   )(implicit
       traceContext: TraceContext,
       ec: ExecutionContext,
-  ): Future[Seq[GenericSignedTopologyTransaction]] = {
-    val doesNotAlreadyExistPredicate = (tx: GenericSignedTopologyTransaction) =>
+  ): Future[Seq[GenericSignedTopologyTransactionX]] = {
+    val doesNotAlreadyExistPredicate = (tx: GenericSignedTopologyTransactionX) =>
       targetStore.providesAdditionalSignatures(tx)
     filterTransactions(transactions, doesNotAlreadyExistPredicate)
   }
 
   protected def dispatch(
       domain: DomainAlias,
-      transactions: Seq[GenericSignedTopologyTransaction],
+      transactions: Seq[GenericSignedTopologyTransactionX],
   )(implicit
       traceContext: TraceContext,
       executionContext: ExecutionContext,
-  ): EitherT[FutureUnlessShutdown, String, Seq[TopologyTransactionsBroadcast.State]] =
+  ): EitherT[FutureUnlessShutdown, String, Seq[TopologyTransactionsBroadcastX.State]] =
     if (transactions.isEmpty) EitherT.rightT(Seq.empty)
     else {
       implicit val success = retry.Success.always

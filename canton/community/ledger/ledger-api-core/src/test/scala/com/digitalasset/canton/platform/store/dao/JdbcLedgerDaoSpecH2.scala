@@ -12,6 +12,7 @@ final class JdbcLedgerDaoSpecH2
     with Matchers
     with JdbcLedgerDaoSuite
     with JdbcLedgerDaoBackendH2Database
+    with JdbcLedgerDaoPackagesSpec
     with JdbcLedgerDaoActiveContractsSpec
     with JdbcLedgerDaoCompletionsSpec
     with JdbcLedgerDaoContractsSpec

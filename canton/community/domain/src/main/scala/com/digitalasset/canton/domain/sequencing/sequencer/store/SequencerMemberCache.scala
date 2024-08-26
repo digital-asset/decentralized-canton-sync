@@ -3,13 +3,14 @@
 
 package com.digitalasset.canton.domain.sequencing.sequencer.store
 
-import com.digitalasset.canton.topology.Member
+import com.digitalasset.canton.topology.{Member, UnauthenticatedMemberId}
 import com.digitalasset.canton.tracing.{TraceContext, Traced}
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-/** Read through async cache with no eviction (as members should be immutable).
+/** Read through async cache with no eviction (as members should be immutable, except for unauthenticated members
+  * that can be evicted when they get unregistered).
   * Members will only be cached if entries are found.
   */
 class SequencerMemberCache(populate: Traced[Member] => Future[Option[RegisteredMember]])(implicit
@@ -36,5 +37,10 @@ class SequencerMemberCache(populate: Traced[Member] => Future[Option[RegisteredM
     cache.getIfPresent(member).fold(lookupFromStore)(result => Future.successful(Option(result)))
   }
 
-  def invalidate(member: Member): Unit = cache.invalidate(member)
+  /** Evicts an unauthenticated member from the cache. Used when unregistering unauthenticated members.
+    * @param member member to evict from the cache
+    */
+  def evict(member: UnauthenticatedMemberId): Unit = {
+    cache.invalidate(member)
+  }
 }

@@ -5,11 +5,10 @@ package com.digitalasset.canton.util
 
 import com.digitalasset.canton.lifecycle.UnlessShutdown.{AbortedDueToShutdown, Outcome}
 import com.digitalasset.canton.lifecycle.{FutureUnlessShutdown, UnlessShutdown}
-import com.digitalasset.canton.logging.{LogEntry, SuppressionRule}
+import com.digitalasset.canton.logging.LogEntry
 import com.digitalasset.canton.{BaseTest, HasExecutionContext, config}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.wordspec.AsyncWordSpec
-import org.slf4j.event.Level
 
 import java.util.concurrent.atomic.AtomicBoolean
 import scala.concurrent.{Future, Promise}
@@ -25,7 +24,7 @@ class SimpleExecutionQueueTest
     closing = config.NonNegativeDuration.ofSeconds(1),
   )
 
-  private class MockTask(name: String) {
+  class MockTask(name: String) {
     val started = new AtomicBoolean(false)
     private val promise: Promise[UnlessShutdown[String]] = Promise[UnlessShutdown[String]]()
 
@@ -41,27 +40,7 @@ class SimpleExecutionQueueTest
     def fail(): Unit = promise.failure(new RuntimeException(s"mocked failure for $name"))
   }
 
-  /*
-  Fail a task and captures the warning coming from subsequent tasks that will not be run.
-   */
-  private def failTask(task: MockTask, notRunTasks: Seq[String]): Unit = {
-    loggerFactory.assertLogsSeq(SuppressionRule.Level(Level.ERROR))(
-      task.fail(),
-      LogEntry.assertLogSeq(
-        notRunTasks.map { notRunTask =>
-          (
-            _.errorMessage shouldBe s"Task '$notRunTask' will not run because of failure of previous task",
-            "taks does not run",
-          )
-        },
-        Seq.empty,
-      ),
-    )
-  }
-
-  private def simpleExecutionQueueTests(
-      mk: () => SimpleExecutionQueue
-  ): Unit = {
+  def simpleExecutionQueueTests(mk: () => SimpleExecutionQueue): Unit = {
 
     "only run one future at a time" in {
       val queue = mk()
@@ -78,9 +57,10 @@ class SimpleExecutionQueueTest
         _ <- task1Result.failOnShutdown
         _ = task1.started.get() shouldBe true
         // queue one while running
-        task3Result = queue.executeUS(task3.run(), "Task3").failOnShutdown
-        _ = task2.complete()
-        _ <- task2Result.failOnShutdown("aborted due to shutdown.")
+        task3Result = queue.executeUnderFailuresUS(task3.run(), "Task3").failOnShutdown
+        // check that if a task fails subsequent tasks will still be run
+        _ = task2.fail()
+        _ <- task2Result.failed
         _ = task2.started.get() shouldBe true
         _ = task3.complete()
         _ <- task3Result
@@ -95,28 +75,23 @@ class SimpleExecutionQueueTest
       val task4 = new MockTask("task4")
       val task1Result = queue.executeUS(task1.run(), "Task1").failOnShutdown
       val task2Result = queue.executeUS(task2.run(), "Task2").failOnShutdown
-      val task3Result = queue.executeUS(task3.run(), "Task3").failOnShutdown
+      val task3Result = queue.executeUnderFailuresUS(task3.run(), "Task3").failOnShutdown
       val task4Result = queue.executeUS(task4.run(), "Task4").failOnShutdown
 
-      failTask(task1, Seq("Task2", "Task3", "Task4"))
-
+      task1.fail()
       task3.complete()
-
-      // Propagated to all subsequent tasks
-      val expectedFailure = "mocked failure for task1"
-
       for {
         task2Res <- task2Result.failed
         _ = task2.started.get() shouldBe false
-        _ = task2Res.getMessage shouldBe expectedFailure
+        _ = task2Res.getMessage shouldBe "mocked failure for task1"
         task4Res <- task4Result.failed
         _ = task4.started.get() shouldBe false
-        _ = task4Res.getMessage shouldBe expectedFailure
+        _ = task4Res.getMessage shouldBe "mocked failure for task1"
         task1Res <- task1Result.failed
-        _ = task1Res.getMessage shouldBe expectedFailure
-        task3Res <- task3Result.failed
+        _ = task1Res.getMessage shouldBe "mocked failure for task1"
+        task3Res <- task3Result
       } yield {
-        task3Res.getMessage shouldBe expectedFailure
+        task3Res shouldBe "task3"
       }
     }
 
@@ -126,19 +101,18 @@ class SimpleExecutionQueueTest
       val task2 = new MockTask("task2")
       val task3 = new MockTask("task3")
       val task1Result = queue.executeUS(task1.run(), "Task1")
-      val task2Result = queue.executeUS(task2.run(), "Task2")
+      val task2Result = queue.executeUnderFailuresUS(task2.run(), "Task2")
       val task3Result = queue.executeUS(task3.run(), "Task3")
 
-      failTask(task1, Seq("Task2", "Task3"))
-
+      task1.fail()
       task2.complete()
       for {
-        task1Res <- task1Result.failed.failOnShutdown("aborted due to shutdown.")
-        task2Res <- task2Result.failed.failOnShutdown("aborted due to shutdown.")
-        task3Res <- task3Result.failed.failOnShutdown("aborted due to shutdown.")
+        task1Res <- task1Result.failed
+        task2Res <- task2Result.failOnShutdown
+        task3Res <- task3Result.failed
       } yield {
         task1Res.getMessage shouldBe "mocked failure for task1"
-        task2Res.getMessage shouldBe "mocked failure for task1"
+        task2Res shouldBe "task2"
         task3Res.getMessage shouldBe "mocked failure for task1"
       }
     }
@@ -152,7 +126,7 @@ class SimpleExecutionQueueTest
       flush0.isCompleted shouldBe false
       task1.fail()
       for {
-        _ <- task1Result.failed.failOnShutdown("aborted due to shutdown.")
+        _ <- task1Result.failed
         _ <- queue.flush()
         _ <- flush0
       } yield {
@@ -185,6 +159,7 @@ class SimpleExecutionQueueTest
         task3.started.get() shouldBe false
         task3res shouldBe UnlessShutdown.AbortedDueToShutdown
       }
+
     }
 
     "not run new tasks if the queue is shutdown" in {
@@ -297,6 +272,7 @@ class SimpleExecutionQueueTest
           task1Result.unwrap.futureValue shouldBe AbortedDueToShutdown
         }
       }
+
     }
 
     "list the outstanding tasks" in {
@@ -307,34 +283,28 @@ class SimpleExecutionQueueTest
       val task4 = new MockTask("task4")
 
       val task1Result = queue.executeUS(task1.run(), "Task1")
-      val task2Result = queue.executeUS(task2.run(), "Task2")
+      val task2Result = queue.executeUnderFailuresUS(task2.run(), "Task2")
       val task3Result = queue.executeUS(task3.run(), "Task3")
-      val task4Result = queue.executeUS(task4.run(), "Task4")
+      val task4Result = queue.executeUnderFailuresUS(task4.run(), "Task4")
 
-      val queue0 = queue.queued
-      task1.complete()
-      val queue1 = queue.queued
-      failTask(task2, Seq("Task3", "Task4"))
-
+      queue.queued shouldBe Seq("sentinel (completed)", "Task1", "Task2", "Task3", "Task4")
+      task1.fail()
       for {
-        _ <- task1Result.failOnShutdown
-        queue2 = queue.queued
-        _ = task3.complete()
-        _ <- task2Result.failed.failOnShutdown("aborted due to shutdown.")
-        _ <- task3Result.failed.failOnShutdown("aborted due to shutdown.")
+        _ <- task1Result.failed
+        queue1 = queue.queued
+        _ = task2.complete()
+        _ <- task2Result.failOnShutdown
+        _ <- task3Result.failed
         queue3 = queue.queued
         _ = task4.complete()
-        _ <- task4Result.failed.failOnShutdown("aborted due to shutdown.")
+        _ <- task4Result.failOnShutdown
         queue4 = queue.queued
       } yield {
-        queue0 shouldBe Seq("sentinel (completed)", "Task1", "Task2", "Task3", "Task4")
         queue1 shouldBe Seq("Task1 (completed)", "Task2", "Task3", "Task4")
-
-        // After task2 failure, all tasks removed from the queue
-        queue2 shouldBe Seq("Task4 (completed)")
-        queue3 shouldBe Seq("Task4 (completed)")
+        queue3 shouldBe Seq("Task3 (completed)", "Task4")
         queue4 shouldBe Seq("Task4 (completed)")
       }
+
     }
   }
 
@@ -347,7 +317,6 @@ class SimpleExecutionQueueTest
           queueTimeouts,
           loggerFactory,
           logTaskTiming = false,
-          crashOnFailure = false,
         )
       )
     }
@@ -360,7 +329,6 @@ class SimpleExecutionQueueTest
           queueTimeouts,
           loggerFactory,
           logTaskTiming = true,
-          crashOnFailure = false,
         )
       )
     }

@@ -6,23 +6,24 @@ package com.digitalasset.canton.platform.apiserver.services
 import com.daml.grpc.adapter.ExecutionSequencerFactory
 import com.daml.ledger.api.v2.participant_offset.ParticipantOffset
 import com.daml.ledger.api.v2.state_service.*
+import com.daml.ledger.api.v2.transaction_filter.TransactionFilter
 import com.daml.tracing.Telemetry
 import com.digitalasset.canton.ledger.api.ValidationLogger
 import com.digitalasset.canton.ledger.api.grpc.{GrpcApiService, StreamingServiceLifecycleManagement}
 import com.digitalasset.canton.ledger.api.validation.{FieldValidator, TransactionFilterValidator}
 import com.digitalasset.canton.ledger.error.groups.RequestValidationErrors
-import com.digitalasset.canton.ledger.participant.state.WriteService
-import com.digitalasset.canton.ledger.participant.state.index.{
+import com.digitalasset.canton.ledger.participant.state.index.v2.{
   IndexActiveContractsService as ACSBackend,
   IndexTransactionsService,
 }
+import com.digitalasset.canton.ledger.participant.state.v2.ReadService
 import com.digitalasset.canton.logging.LoggingContextWithTrace.{
   implicitExtractTraceContext,
   withEnrichedLoggingContext,
 }
 import com.digitalasset.canton.logging.TracedLoggerOps.TracedLoggerOps
 import com.digitalasset.canton.logging.{LoggingContextWithTrace, NamedLoggerFactory, NamedLogging}
-import com.digitalasset.canton.metrics.LedgerApiServerMetrics
+import com.digitalasset.canton.metrics.Metrics
 import com.digitalasset.canton.platform.ApiOffset
 import com.digitalasset.canton.topology.transaction.ParticipantPermission as TopologyParticipantPermission
 import com.digitalasset.canton.tracing.TraceContext
@@ -35,9 +36,9 @@ import scala.concurrent.{ExecutionContext, Future}
 
 final class ApiStateService(
     acsService: ACSBackend,
-    writeService: WriteService,
+    readService: ReadService,
     txService: IndexTransactionsService,
-    metrics: LedgerApiServerMetrics,
+    metrics: Metrics,
     telemetry: Telemetry,
     val loggerFactory: NamedLoggerFactory,
 )(implicit
@@ -59,7 +60,7 @@ final class ApiStateService(
 
       val result = for {
         filters <- TransactionFilterValidator.validate(
-          request.getFilter
+          TransactionFilter(request.getFilter.filtersByParty)
         )
         activeAtO <- FieldValidator.optionalString(request.activeAtOffset)(str =>
           ApiOffset.fromString(str).left.map { errorMsg =>
@@ -109,8 +110,8 @@ final class ApiStateService(
       .fold(
         t => Future.failed(ValidationLogger.logFailureWithTrace(logger, request, t)),
         party =>
-          writeService
-            .getConnectedDomains(WriteService.ConnectedDomainRequest(party))
+          readService
+            .getConnectedDomains(ReadService.ConnectedDomainRequest(party))
             .map(response =>
               GetConnectedDomainsResponse(
                 response.connectedDomains.flatMap { connectedDomain =>

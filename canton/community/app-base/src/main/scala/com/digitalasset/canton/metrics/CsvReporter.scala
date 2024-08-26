@@ -56,9 +56,10 @@ class CsvReporter(config: MetricsReporterConfig.Csv, val loggerFactory: NamedLog
       lock.synchronized {
         if (running.get()) {
           val ts = CantonTimestamp.now()
-          MetricValue.allFromMetricData(metrics.asScala).foreach { case (value, metadata) =>
-            writeRow(ts, value, metadata)
+          val converted = metrics.asScala.flatMap { data =>
+            MetricValue.fromMetricData(data).map { value => (value, data) }
           }
+          converted.foreach { case (value, metadata) => writeRow(ts, value, metadata) }
         }
       }
     }

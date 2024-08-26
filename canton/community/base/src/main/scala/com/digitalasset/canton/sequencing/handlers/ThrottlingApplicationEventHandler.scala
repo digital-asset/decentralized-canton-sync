@@ -4,7 +4,7 @@
 package com.digitalasset.canton.sequencing.handlers
 
 import com.digitalasset.canton.config.RequireTypes.PositiveInt
-import com.digitalasset.canton.discard.Implicits.DiscardOps
+import com.digitalasset.canton.lifecycle.UnlessShutdown
 import com.digitalasset.canton.metrics.SequencerClientMetrics
 import com.digitalasset.canton.sequencing.ApplicationHandler
 import com.digitalasset.canton.sequencing.protocol.Envelope
@@ -12,6 +12,7 @@ import com.digitalasset.canton.util.Thereafter.syntax.*
 
 import java.util.concurrent.{ArrayBlockingQueue, BlockingQueue}
 import scala.concurrent.{ExecutionContext, blocking}
+import scala.util.Success
 
 object ThrottlingApplicationEventHandler {
 
@@ -48,13 +49,13 @@ object ThrottlingApplicationEventHandler {
             metrics.handler.actualInFlightEventBatches.dec()
           }
         }
-        .thereafterSuccessOrFailure(
-          _ => (), {
-            // don't forget to unblock other threads on shutdown or exception of the outer future such that we don't block other threads
+        .thereafter {
+          case Success(UnlessShutdown.Outcome(_)) =>
+          // don't forget to unblock other threads on shutdown or exception of the outer future such that we don't block other threads
+          case _ =>
             queue.remove().discard
             metrics.handler.actualInFlightEventBatches.dec()
-          },
-        )
+        }
     }
   }
 }

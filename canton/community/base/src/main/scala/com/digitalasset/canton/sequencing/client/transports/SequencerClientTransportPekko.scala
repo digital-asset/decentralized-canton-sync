@@ -22,6 +22,10 @@ trait SequencerClientTransportPekko extends SequencerClientTransportCommon {
       traceContext: TraceContext
   ): SequencerSubscriptionPekko[SubscriptionError]
 
+  def subscribeUnauthenticated(request: SubscriptionRequest)(implicit
+      traceContext: TraceContext
+  ): SequencerSubscriptionPekko[SubscriptionError]
+
   /** The transport can decide which errors will cause the sequencer client to not try to reestablish a subscription */
   def subscriptionRetryPolicyPekko: SubscriptionErrorRetryPolicyPekko[SubscriptionError]
 }

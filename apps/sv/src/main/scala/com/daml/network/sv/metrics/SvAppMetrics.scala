@@ -3,15 +3,13 @@
 
 package com.daml.network.sv.metrics
 
-import com.daml.metrics.api.MetricHandle.LabeledMetricsFactory
 import com.daml.network.BaseSpliceMetrics
-import com.digitalasset.canton.metrics.DbStorageHistograms
+import com.digitalasset.canton.metrics.CantonLabeledMetricsFactory
 
 /** Modelled after [[com.digitalasset.canton.domain.metrics.DomainMetrics]].
   *
   * This is only a bare-bones implementation so the code compiles so far.
   */
 class SvAppMetrics(
-    metricsFactory: LabeledMetricsFactory,
-    storageHistograms: DbStorageHistograms,
-) extends BaseSpliceMetrics("sv", metricsFactory, storageHistograms) {}
+    metricsFactory: CantonLabeledMetricsFactory
+) extends BaseSpliceMetrics("sv", metricsFactory) {}

@@ -4,10 +4,10 @@
 package com.digitalasset.canton.topology.processing
 
 import com.daml.nameof.NameOf.functionFullName
+import com.digitalasset.canton.DiscardOps
 import com.digitalasset.canton.concurrent.FutureSupervisor
 import com.digitalasset.canton.config.ProcessingTimeout
 import com.digitalasset.canton.data.CantonTimestamp
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.lifecycle.{
   FlagCloseable,
   FutureUnlessShutdown,
@@ -17,8 +17,8 @@ import com.digitalasset.canton.lifecycle.{
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.protocol.DynamicDomainParameters
 import com.digitalasset.canton.time.*
-import com.digitalasset.canton.topology.store.{TopologyStore, TopologyStoreId}
-import com.digitalasset.canton.topology.transaction.DomainParametersState
+import com.digitalasset.canton.topology.store.{TopologyStoreId, TopologyStoreX}
+import com.digitalasset.canton.topology.transaction.DomainParametersStateX
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.{ErrorUtil, FutureUtil}
 
@@ -250,9 +250,9 @@ object TopologyTimestampPlusEpsilonTracker {
     *                    Normally, it's the timestamp of the last message that was successfully
     *                    processed before the one that will be passed first.
     */
-  def initialize(
+  def initializeX(
       tracker: TopologyTimestampPlusEpsilonTracker,
-      store: TopologyStore[TopologyStoreId.DomainStore],
+      store: TopologyStoreX[TopologyStoreId.DomainStore],
       processorTs: CantonTimestamp,
   )(implicit
       traceContext: TraceContext,
@@ -266,7 +266,7 @@ object TopologyTimestampPlusEpsilonTracker {
       store
         .findUpcomingEffectiveChanges(processorTs)
         .map(_.collect {
-          case tdc: TopologyStore.Change.TopologyDelay
+          case tdc: TopologyStoreX.Change.TopologyDelay
               // filter anything out that might be replayed
               if tdc.sequenced.value <= processorTs =>
             tdc
@@ -292,12 +292,12 @@ object TopologyTimestampPlusEpsilonTracker {
   } yield eff
 
   def epsilonForTimestamp(
-      store: TopologyStore[TopologyStoreId.DomainStore],
+      store: TopologyStoreX[TopologyStoreId.DomainStore],
       asOfExclusive: CantonTimestamp,
   )(implicit
       traceContext: TraceContext,
       executionContext: ExecutionContext,
-  ): FutureUnlessShutdown[TopologyStore.Change.TopologyDelay] = {
+  ): FutureUnlessShutdown[TopologyStoreX.Change.TopologyDelay] = {
     FutureUnlessShutdown
       .outcomeF(
         store
@@ -305,7 +305,7 @@ object TopologyTimestampPlusEpsilonTracker {
             asOf = asOfExclusive,
             asOfInclusive = false,
             isProposal = false,
-            types = Seq(DomainParametersState.code),
+            types = Seq(DomainParametersStateX.code),
             filterUid = None,
             filterNamespace = None,
           )
@@ -313,15 +313,15 @@ object TopologyTimestampPlusEpsilonTracker {
       .map { txs =>
         txs.result
           .map(x => (x.mapping, x))
-          .collectFirst { case (change: DomainParametersState, tx) =>
-            TopologyStore.Change.TopologyDelay(
+          .collectFirst { case (change: DomainParametersStateX, tx) =>
+            TopologyStoreX.Change.TopologyDelay(
               tx.sequenced,
               tx.validFrom,
               change.parameters.topologyChangeDelay,
             )
           }
           .getOrElse(
-            TopologyStore.Change.TopologyDelay(
+            TopologyStoreX.Change.TopologyDelay(
               SequencedTime(CantonTimestamp.MinValue),
               EffectiveTime(CantonTimestamp.MinValue),
               DynamicDomainParameters.topologyChangeDelayIfAbsent,

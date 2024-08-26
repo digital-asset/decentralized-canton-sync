@@ -48,7 +48,7 @@ import com.daml.network.util.{
 import com.digitalasset.canton.concurrent.FutureSupervisor
 import com.digitalasset.canton.crypto.Fingerprint
 import com.digitalasset.canton.data.CantonTimestamp
-import com.daml.metrics.api.noop.NoOpMetricsFactory
+import com.digitalasset.canton.metrics.CantonLabeledMetricsFactory.NoOpMetricsFactory
 import com.digitalasset.canton.resource.DbStorage
 import com.digitalasset.canton.topology.*
 import com.digitalasset.canton.tracing.TraceContext
@@ -813,8 +813,8 @@ abstract class ScanStoreTest
 
       "return the sum over all traffic contracts for the member" in {
         val namespace = Namespace(Fingerprint.tryCreate(s"dummy"))
-        val goodMember = ParticipantId(UniqueIdentifier.tryCreate("good", namespace))
-        val badMember = MediatorId(UniqueIdentifier.tryCreate("bad", namespace))
+        val goodMember = ParticipantId(Identifier.tryCreate("good"), namespace)
+        val badMember = MediatorId(Identifier.tryCreate("bad"), namespace)
         val goodContracts = (1 to 3).map(n => memberTraffic(goodMember, n.toLong))
         val badContracts = (4 to 6).map(n => memberTraffic(badMember, n.toLong))
         for {
@@ -1428,7 +1428,7 @@ trait AmuletTransferUtil { self: StoreTest =>
 
   def dsoRules(
       party: PartyId,
-      svs: java.util.Map[String, dsorulesCodegen.SvInfo] = Collections.emptyMap(),
+      members: java.util.Map[String, dsorulesCodegen.SvInfo] = Collections.emptyMap(),
       epoch: Long = 123,
   ) = {
     val templateId = dsorulesCodegen.DsoRules.TEMPLATE_ID
@@ -1436,7 +1436,7 @@ trait AmuletTransferUtil { self: StoreTest =>
     val template = new dsorulesCodegen.DsoRules(
       dsoParty.toProtoPrimitive,
       epoch,
-      svs,
+      members,
       Collections.emptyMap(),
       party.toProtoPrimitive,
       new dsorulesCodegen.DsoRulesConfig(

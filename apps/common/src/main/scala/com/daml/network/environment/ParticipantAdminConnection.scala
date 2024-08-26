@@ -3,12 +3,7 @@
 
 package com.daml.network.environment
 
-import cats.implicits.catsSyntaxParallelTraverse_
 import com.daml.network.admin.api.client.GrpcClientMetrics
-import com.daml.network.environment.ParticipantAdminConnection.{
-  HasParticipantId,
-  IMPORT_ACS_WORKFLOW_ID_PREFIX,
-}
 import com.daml.network.util.UploadablePackage
 import com.digitalasset.canton.admin.api.client.commands.{
   ParticipantAdminCommands,
@@ -21,16 +16,12 @@ import com.digitalasset.canton.health.admin.data.{NodeStatus, ParticipantStatus}
 import com.digitalasset.canton.logging.NamedLoggerFactory
 import com.digitalasset.canton.participant.domain.DomainConnectionConfig
 import com.digitalasset.canton.sequencing.SequencerConnectionValidation
-import com.digitalasset.canton.topology.{DomainId, NodeIdentity, ParticipantId, PartyId}
 import com.digitalasset.canton.topology.store.TopologyStoreId
+import com.digitalasset.canton.topology.{DomainId, NodeIdentity, ParticipantId, PartyId}
 import com.digitalasset.canton.tracing.TraceContext
+import com.digitalasset.canton.traffic.MemberTrafficStatus
 import com.digitalasset.canton.util.ShowUtil.*
-import com.digitalasset.canton.DomainAlias
-import com.digitalasset.canton.admin.participant.v30.{DarDescription, ExportAcsResponse}
-import com.digitalasset.canton.config.RequireTypes.PositiveInt
-import com.digitalasset.canton.discard.Implicits.DiscardOps
-import com.digitalasset.canton.sequencing.protocol.TrafficState
-import com.digitalasset.canton.util.FutureInstances.parallelFuture
+import com.digitalasset.canton.{DiscardOps, DomainAlias}
 import com.google.protobuf.ByteString
 import io.grpc.Status
 import io.opentelemetry.api.trace.Tracer
@@ -38,6 +29,11 @@ import io.opentelemetry.api.trace.Tracer
 import java.nio.file.{Files, Path}
 import java.time.Instant
 import scala.concurrent.{ExecutionContextExecutor, Future, Promise}
+import ParticipantAdminConnection.{HasParticipantId, IMPORT_ACS_WORKFLOW_ID_PREFIX}
+import com.digitalasset.canton.admin.participant.v30.{DarDescription, ExportAcsResponse}
+import com.digitalasset.canton.config.RequireTypes.PositiveInt
+
+import java.util.concurrent.atomic.AtomicBoolean
 
 /** Connection to the subset of the Canton admin API that we rely
   * on in our own applications.
@@ -56,14 +52,8 @@ class ParticipantAdminConnection(
       grpcClientMetrics,
       retryProvider,
     )
-    with HasParticipantId
-    with StatusAdminConnection {
+    with HasParticipantId {
   override val serviceName = "Canton Participant Admin API"
-
-  override protected type Status = ParticipantStatus
-
-  override protected def getStatusRequest: StatusAdminCommands.GetStatus[ParticipantStatus] =
-    new StatusAdminCommands.GetStatus(ParticipantStatus.fromProtoV30)
 
   private val hashOps = new HashOps {
     override def defaultHashAlgorithm = HashAlgorithm.Sha256
@@ -81,7 +71,7 @@ class ParticipantAdminConnection(
   def isNodeInitialized()(implicit traceContext: TraceContext): Future[Boolean] =
     runCmd(participantStatusCommand).map {
       case NodeStatus.Failure(_) => false
-      case NodeStatus.NotInitialized(_, _) => false
+      case NodeStatus.NotInitialized(_) => false
       case NodeStatus.Success(_) => true
     }
 
@@ -253,7 +243,7 @@ class ParticipantAdminConnection(
 
   def getParticipantTrafficState(
       domainId: DomainId
-  )(implicit traceContext: TraceContext): Future[TrafficState] = {
+  )(implicit traceContext: TraceContext): Future[MemberTrafficStatus] = {
     runCmd(
       ParticipantAdminCommands.TrafficControl.GetTrafficControlState(domainId)
     )
@@ -361,28 +351,6 @@ class ParticipantAdminConnection(
       }
     } yield configModified
 
-  def modifyOrRegisterDomainConnectionConfig(
-      config: DomainConnectionConfig,
-      f: DomainConnectionConfig => Option[DomainConnectionConfig],
-      retryFor: RetryFor,
-  )(implicit traceContext: TraceContext): Future[Boolean] =
-    for {
-      configO <- lookupDomainConnectionConfig(config.domain)
-      needsReconnect <- configO match {
-        case Some(config) =>
-          modifyDomainConnectionConfig(
-            config.domain,
-            f,
-          )
-        case None =>
-          logger.info(s"Domain ${config.domain} is new, registering")
-          ensureDomainRegisteredAndConnected(
-            config,
-            retryFor,
-          ).map(_ => false)
-      }
-    } yield needsReconnect
-
   def modifyDomainConnectionConfigAndReconnect(
       domain: DomainAlias,
       f: DomainConnectionConfig => Option[DomainConnectionConfig],
@@ -398,30 +366,15 @@ class ParticipantAdminConnection(
         } else Future.unit
     } yield ()
 
-  def modifyOrRegisterDomainConnectionConfigAndReconnect(
-      config: DomainConnectionConfig,
-      f: DomainConnectionConfig => Option[DomainConnectionConfig],
-      retryFor: RetryFor,
-  )(implicit traceContext: TraceContext): Future[Unit] =
-    for {
-      configModified <- modifyOrRegisterDomainConnectionConfig(config, f, retryFor)
-      _ <-
-        if (configModified) {
-          logger.info(
-            s"reconnect to the domain ${config.domain} for new sequencer configuration to take effect"
-          )
-          reconnectDomain(config.domain)
-        } else Future.unit
-    } yield ()
-
   def uploadDarFiles(
       pkgs: Seq[UploadablePackage],
       retryFor: RetryFor,
   )(implicit
       traceContext: TraceContext
   ): Future[Unit] =
-    pkgs.parTraverse_(
-      uploadDarFile(_, retryFor)
+    // TODO(#5141): allow limit parallel upload once Canton deals with concurrent uploads
+    pkgs.foldLeft(Future.unit)((previous, dar) =>
+      previous.flatMap(_ => uploadDarFile(dar, retryFor))
     )
 
   def uploadDarFileLocally(
@@ -465,6 +418,7 @@ class ParticipantAdminConnection(
     runCmd(
       ParticipantAdminCommands.Package.ListDars(limit)
     )
+
   private def uploadDarLocally(
       path: String,
       darFile: => ByteString,
@@ -473,28 +427,27 @@ class ParticipantAdminConnection(
       traceContext: TraceContext
   ): Future[Unit] = {
     val darHash = hashOps.digest(HashPurpose.DarIdentifier, darFile)
-    for {
-      _ <- retryProvider
-        .ensureThatO(
-          retryFor,
-          "upload_dar_locally",
-          s"DAR file $path with hash $darHash has been uploaded.",
-          lookupDar(darHash).map(_.map(_ => ())),
-          runCmd(
-            ParticipantAdminCommands.Package
-              .UploadDar(
-                Some(path),
-                vetAllPackages = true,
-                synchronizeVetting = false,
-                logger,
-                Some(darFile),
-              )
-          ).map(_ => ()),
-          logger,
-        )
-    } yield ()
+    retryProvider
+      .ensureThatO(
+        retryFor,
+        "upload_dar_locally",
+        s"DAR file $path with hash $darHash has been uploaded.",
+        lookupDar(darHash).map(_.map(_ => ())),
+        runCmd(
+          ParticipantAdminCommands.Package
+            .UploadDar(
+              Some(path),
+              vetAllPackages = true,
+              synchronizeVetting = false,
+              logger,
+              Some(darFile),
+            )
+        ).map(_ => ()),
+        logger,
+      )
   }
 
+  private val inProgressUpload = new AtomicBoolean(false)
   private def uploadDarFileInternal(
       path: String,
       darFile: => ByteString,
@@ -503,8 +456,14 @@ class ParticipantAdminConnection(
       traceContext: TraceContext
   ): Future[Unit] = {
     val darHash = hashOps.digest(HashPurpose.DarIdentifier, darFile)
-    for {
-      _ <- retryProvider
+    if (!inProgressUpload.compareAndSet(false, true)) {
+      Future.failed(
+        Status.INVALID_ARGUMENT
+          .withDescription("Cannot upload multiple DARs concurrently")
+          .asRuntimeException()
+      )
+    } else {
+      retryProvider
         .ensureThatO(
           retryFor,
           "upload_dar",
@@ -523,7 +482,8 @@ class ParticipantAdminConnection(
           ).map(_ => ()),
           logger,
         )
-    } yield ()
+        .andThen(_ => inProgressUpload.set(false))
+    }
   }
 
   def ensureInitialPartyToParticipant(

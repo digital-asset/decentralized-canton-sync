@@ -12,13 +12,11 @@ import com.digitalasset.canton.config.RequireTypes.PositiveInt
 import com.digitalasset.canton.crypto.*
 import com.digitalasset.canton.crypto.provider.symbolic.SymbolicCrypto
 import com.digitalasset.canton.data.CantonTimestamp
-import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
 import com.digitalasset.canton.logging.NamedLoggerFactory
 import com.digitalasset.canton.protocol.ExampleTransactionFactory
 import com.digitalasset.canton.protocol.messages.{EnvelopeContent, InformeeMessage}
 import com.digitalasset.canton.sequencing.SequencerAggregator.MessageAggregationConfig
 import com.digitalasset.canton.sequencing.protocol.*
-import com.digitalasset.canton.sequencing.traffic.TrafficReceipt
 import com.digitalasset.canton.sequencing.{
   OrdinarySerializedEvent,
   SequencerAggregator,
@@ -36,7 +34,7 @@ import org.scalatest.Assertions.fail
 import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
 import org.scalatest.time.{Seconds, Span}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class SequencedEventTestFixture(
     loggerFactory: NamedLoggerFactory,
@@ -49,23 +47,22 @@ class SequencedEventTestFixture(
   def fixtureTraceContext: TraceContext = traceContext
 
   private lazy val factory: ExampleTransactionFactory = new ExampleTransactionFactory()()(
-    executionContext,
-    traceContext,
+    executionContext
   )
 
   lazy val defaultDomainId: DomainId = DefaultTestIdentities.domainId
   lazy val subscriberId: ParticipantId = ParticipantId("participant1-id")
-  lazy val sequencerAlice: SequencerId = DefaultTestIdentities.sequencerId
+  lazy val sequencerAlice: SequencerId = DefaultTestIdentities.sequencerIdX
   lazy val subscriberCryptoApi: DomainSyncCryptoClient =
-    TestingIdentityFactory(loggerFactory).forOwnerAndDomain(subscriberId, defaultDomainId)
+    TestingIdentityFactoryX(loggerFactory).forOwnerAndDomain(subscriberId, defaultDomainId)
   private lazy val sequencerCryptoApi: DomainSyncCryptoClient =
-    TestingIdentityFactory(loggerFactory).forOwnerAndDomain(sequencerAlice, defaultDomainId)
+    TestingIdentityFactoryX(loggerFactory).forOwnerAndDomain(sequencerAlice, defaultDomainId)
   lazy val updatedCounter: Long = 42L
   val sequencerBob: SequencerId = SequencerId(
-    UniqueIdentifier.tryCreate("da2", namespace)
+    UniqueIdentifier(Identifier.tryCreate("da2"), namespace)
   )
   val sequencerCarlos: SequencerId = SequencerId(
-    UniqueIdentifier.tryCreate("da3", namespace)
+    UniqueIdentifier(Identifier.tryCreate("da3"), namespace)
   )
   implicit val actorSystem: ActorSystem = ActorSystem(
     classOf[SequencedEventTestFixture].getSimpleName
@@ -77,36 +74,36 @@ class SequencedEventTestFixture(
   private val carlos = ParticipantId(UniqueIdentifier.tryCreate("participant", "carlos"))
   private val signatureAlice = SymbolicCrypto.signature(
     ByteString.copyFromUtf8("signatureAlice1"),
-    alice.fingerprint,
+    alice.uid.namespace.fingerprint,
   )
   private val signatureBob = SymbolicCrypto.signature(
     ByteString.copyFromUtf8("signatureBob1"),
-    bob.fingerprint,
+    bob.uid.namespace.fingerprint,
   )
   private val signatureCarlos = SymbolicCrypto.signature(
     ByteString.copyFromUtf8("signatureCarlos1"),
-    carlos.fingerprint,
+    carlos.uid.namespace.fingerprint,
   )
   lazy val aliceEvents: Seq[OrdinarySerializedEvent] = (1 to 5).map(s =>
     createEvent(
       timestamp = CantonTimestamp.Epoch.plusSeconds(s.toLong),
       counter = updatedCounter + s.toLong,
       signatureOverride = Some(signatureAlice),
-    ).onShutdown(throw new RuntimeException("failed to create alice event")).futureValue
+    ).futureValue
   )
   lazy val bobEvents: Seq[OrdinarySerializedEvent] = (1 to 5).map(s =>
     createEvent(
       timestamp = CantonTimestamp.Epoch.plusSeconds(s.toLong),
       counter = updatedCounter + s.toLong,
       signatureOverride = Some(signatureBob),
-    ).onShutdown(throw new RuntimeException("failed to create bob event")).futureValue
+    ).futureValue
   )
   lazy val carlosEvents: Seq[OrdinarySerializedEvent] = (1 to 5).map(s =>
     createEvent(
       timestamp = CantonTimestamp.Epoch.plusSeconds(s.toLong),
       counter = updatedCounter + s.toLong,
       signatureOverride = Some(signatureCarlos),
-    ).onShutdown(throw new RuntimeException("failed to create carlos event")).futureValue
+    ).futureValue
   )
 
   def mkAggregator(
@@ -137,6 +134,7 @@ class SequencedEventTestFixture(
       syncCryptoApi: DomainSyncCryptoClient = subscriberCryptoApi
   )(implicit executionContext: ExecutionContext): SequencedEventValidatorImpl = {
     new SequencedEventValidatorImpl(
+      unauthenticated = false,
       defaultDomainId,
       testedProtocolVersion,
       syncCryptoApi,
@@ -152,7 +150,7 @@ class SequencedEventTestFixture(
       counter: Long = updatedCounter,
       timestamp: CantonTimestamp = CantonTimestamp.Epoch,
       topologyTimestamp: Option[CantonTimestamp] = None,
-  ): FutureUnlessShutdown[OrdinarySerializedEvent] = {
+  ): Future[OrdinarySerializedEvent] = {
     import cats.syntax.option.*
     val message = {
       val fullInformeeTree = factory.MultipleRootsAndViewNestings.fullInformeeTree
@@ -174,15 +172,15 @@ class SequencedEventTestFixture(
       Batch(List(envelope), testedProtocolVersion),
       topologyTimestamp,
       testedProtocolVersion,
-      Option.empty[TrafficReceipt],
     )
 
     for {
       sig <- signatureOverride
-        .map(FutureUnlessShutdown.pure)
+        .map(Future.successful)
         .getOrElse(sign(deliver.getCryptographicEvidence, deliver.timestamp))
     } yield OrdinarySequencedEvent(
-      SignedContent(deliver, sig, None, testedProtocolVersion)
+      SignedContent(deliver, sig, None, testedProtocolVersion),
+      None,
     )(traceContext)
   }
 
@@ -192,7 +190,7 @@ class SequencedEventTestFixture(
       customSerialization: Option[ByteString] = None,
       messageIdO: Option[MessageId] = None,
       topologyTimestampO: Option[CantonTimestamp] = None,
-  )(implicit executionContext: ExecutionContext): FutureUnlessShutdown[OrdinarySerializedEvent] = {
+  )(implicit executionContext: ExecutionContext): Future[OrdinarySerializedEvent] = {
     val event =
       SequencerTestUtils.mockDeliverClosedEnvelope(
         counter = counter,
@@ -207,17 +205,18 @@ class SequencedEventTestFixture(
         event.timestamp,
       )
     } yield OrdinarySequencedEvent(
-      SignedContent(event, signature, None, testedProtocolVersion)
+      SignedContent(event, signature, None, testedProtocolVersion),
+      None,
     )(traceContext)
   }
 
-  def ts(offset: Int): CantonTimestamp = CantonTimestamp.Epoch.plusSeconds(offset.toLong)
+  def ts(offset: Int) = CantonTimestamp.Epoch.plusSeconds(offset.toLong)
 
   def sign(bytes: ByteString, timestamp: CantonTimestamp)(implicit
       executionContext: ExecutionContext
-  ): FutureUnlessShutdown[Signature] =
+  ): Future[Signature] =
     for {
-      cryptoApi <- FutureUnlessShutdown.outcomeF(sequencerCryptoApi.snapshot(timestamp))
+      cryptoApi <- sequencerCryptoApi.snapshot(timestamp)
       signature <- cryptoApi
         .sign(hash(bytes))
         .value

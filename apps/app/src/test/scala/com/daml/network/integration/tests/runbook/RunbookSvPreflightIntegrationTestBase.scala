@@ -85,7 +85,7 @@ abstract class RunbookSvPreflightIntegrationTestBase
     }
   }
 
-  "The SV can log in to their wallet" in { implicit env =>
+  "The SV can log in to their wallet" in { _ =>
     withFrontEnd("sv") { implicit webDriver =>
       actAndCheck(
         s"Logging in to wallet at ${walletUrl}", {
@@ -238,8 +238,7 @@ abstract class RunbookSvPreflightIntegrationTestBase
   "The CNS UI is working" in { implicit env =>
     val ansUrl = s"https://cns.sv.${sys.env("NETWORK_APPS_ADDRESS")}"
     val svPassword = sys.env(s"SV_DEV_NET_WEB_UI_PASSWORD");
-    val ansName =
-      s"da-test-${Random.alphanumeric.take(10).mkString.toLowerCase}.unverified.$ansAcronym"
+    val ansName = s"da-test-${Random.alphanumeric.take(10).mkString.toLowerCase}.unverified.cns"
 
     withFrontEnd("sv") { implicit webDriver =>
       def login(): Unit = {
@@ -267,7 +266,6 @@ abstract class RunbookSvPreflightIntegrationTestBase
           "1.0000000000",
           "USD",
           "90 days",
-          ansAcronym,
         )
         clue(s"Reserved ANS name can be looked up via scan") {
           val svScanClient = scancl("svTestScan")

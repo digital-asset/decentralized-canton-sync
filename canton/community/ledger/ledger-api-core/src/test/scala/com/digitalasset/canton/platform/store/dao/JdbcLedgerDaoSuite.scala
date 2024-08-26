@@ -3,28 +3,24 @@
 
 package com.digitalasset.canton.platform.store.dao
 
-import com.digitalasset.canton.data.Offset
+import com.daml.daml_lf_dev.DamlLf
+import com.daml.lf.archive.{DarParser, Decode}
+import com.daml.lf.crypto.Hash
+import com.daml.lf.data.Ref.{Identifier, PackageName, Party}
+import com.daml.lf.data.Time.Timestamp
+import com.daml.lf.data.{FrontStack, ImmArray, Ref, Time}
+import com.daml.lf.language.LanguageVersion
+import com.daml.lf.transaction.*
+import com.daml.lf.transaction.test.{NodeIdTransactionBuilder, TransactionBuilder}
+import com.daml.lf.value.Value.{ContractId, ContractInstance, ValueText, VersionedContractInstance}
+import com.daml.lf.value.Value as LfValue
 import com.digitalasset.canton.ledger.api.domain.TemplateFilter
-import com.digitalasset.canton.ledger.participant.state
+import com.digitalasset.canton.ledger.offset.Offset
+import com.digitalasset.canton.ledger.participant.state.index.v2
+import com.digitalasset.canton.ledger.participant.state.v2 as state
 import com.digitalasset.canton.logging.LoggingContextWithTrace
 import com.digitalasset.canton.platform.store.entries.LedgerEntry
-import com.digitalasset.canton.testing.utils.TestModels
-import com.digitalasset.canton.util.JarResourceUtils
-import com.digitalasset.daml.lf.archive.{DamlLf, DarParser, Decode}
-import com.digitalasset.daml.lf.crypto.Hash
-import com.digitalasset.daml.lf.data.Ref.{Identifier, PackageId, PackageName, PackageVersion, Party}
-import com.digitalasset.daml.lf.data.Time.Timestamp
-import com.digitalasset.daml.lf.data.{FrontStack, ImmArray, Ref, Time}
-import com.digitalasset.daml.lf.language.LanguageVersion
-import com.digitalasset.daml.lf.transaction.*
-import com.digitalasset.daml.lf.transaction.test.{NodeIdTransactionBuilder, TransactionBuilder}
-import com.digitalasset.daml.lf.value.Value.{
-  ContractId,
-  ContractInstance,
-  ValueText,
-  VersionedContractInstance,
-}
-import com.digitalasset.daml.lf.value.Value as LfValue
+import com.digitalasset.canton.testing.utils.{TestModels, TestResourceUtils}
 import org.apache.pekko.stream.scaladsl.Sink
 import org.scalatest.{AsyncTestSuite, OptionValues}
 
@@ -32,7 +28,6 @@ import java.util.UUID
 import java.util.concurrent.atomic.{AtomicLong, AtomicReference}
 import scala.concurrent.Future
 import scala.language.implicitConversions
-import scala.math.Ordering.Implicits.infixOrderingOps
 import scala.util.chaining.*
 
 private[dao] trait JdbcLedgerDaoSuite extends JdbcLedgerDaoBackend with OptionValues {
@@ -45,24 +40,27 @@ private[dao] trait JdbcLedgerDaoSuite extends JdbcLedgerDaoBackend with OptionVa
     new AtomicReference[Option[Offset]](Option.empty)
 
   protected final val nextOffset: () => Offset = {
-    val counter = new AtomicLong(1)
+    val base = BigInt(1) << 32
+    val counter = new AtomicLong(0)
     () => {
-      Offset.fromLong(counter.getAndIncrement())
+      Offset.fromByteArray((base + counter.getAndIncrement()).toByteArray)
     }
   }
 
-  private[this] lazy val dar =
+  protected final implicit class OffsetToLong(offset: Offset) {
+    def toLong: Long = BigInt(offset.toByteArray).toLong
+  }
+
+  private[this] val dar =
     TestModels.com_daml_ledger_test_ModelTestDar_path
-      .pipe(JarResourceUtils.resourceFileFromJar)
-      .pipe(DarParser.assertReadArchiveFromFile)
+      .pipe(TestResourceUtils.resourceFileFromJar)
+      .pipe(DarParser.assertReadArchiveFromFile(_))
 
-  protected final lazy val packageMap =
-    dar.all.map { archive => archive.getHash -> archive }.toMap
+  private val now = Timestamp.now()
 
+  protected final val packages: List[(DamlLf.Archive, v2.PackageDetails)] =
+    dar.all.map(dar => dar -> v2.PackageDetails(dar.getSerializedSize.toLong, now, None))
   private val testPackageId: Ref.PackageId = Ref.PackageId.assertFromString(dar.main.getHash)
-  override def loadPackage: PackageId => Future[Option[DamlLf.Archive]] = pkgId =>
-    Future.successful(packageMap.get(pkgId))
-
   protected val testLanguageVersion: LanguageVersion =
     Decode.assertDecodeArchive(dar.main)._2.languageVersion
 
@@ -75,7 +73,7 @@ private[dao] trait JdbcLedgerDaoSuite extends JdbcLedgerDaoBackend with OptionVa
   protected final val defaultAppId = "default-app-id"
   protected final val defaultWorkflowId = "default-workflow-id"
 
-  // Note: *identifiers* and *values* defined below MUST correspond to community/ledger/ledger-common-dars/src/main/daml/model/Test.daml
+  // Note: *identifiers* and *values* defined below MUST correspond to //test-common/src/main/daml/model/Test.daml
   // This is because some tests request values in verbose mode, which requires filling in missing type information,
   // which in turn requires loading Daml-LF packages with valid Daml-LF types that correspond to the Daml-LF values.
   //
@@ -92,13 +90,12 @@ private[dao] trait JdbcLedgerDaoSuite extends JdbcLedgerDaoBackend with OptionVa
 
   protected final val someTemplateId = testIdentifier("ParameterShowcase")
   protected final val somePackageName = PackageName.assertFromString("pkg-name")
-  protected final val somePackageVersion = PackageVersion.assertFromString("1.0")
   protected final val someTemplateIdFilter =
     TemplateFilter(someTemplateId, includeCreatedEventBlob = false)
   protected final val someValueText = LfValue.ValueText("some text")
   protected final val someValueInt = LfValue.ValueInt64(1)
   protected final val someValueNumeric =
-    LfValue.ValueNumeric(com.digitalasset.daml.lf.data.Numeric.assertFromString("1.1"))
+    LfValue.ValueNumeric(com.daml.lf.data.Numeric.assertFromString("1.1"))
   protected final val someNestedOptionalInteger = LfValue.ValueRecord(
     None,
     ImmArray(
@@ -168,16 +165,6 @@ private[dao] trait JdbcLedgerDaoSuite extends JdbcLedgerDaoBackend with OptionVa
     ImmArray(None -> LfValue.ValueParty(alice)),
   )
 
-  protected final val otherTemplateId2 = testIdentifier("DummyFactory")
-  protected final val otherTemplateId3 = testIdentifier("DummyContractFactory")
-  protected final val otherTemplateId4 = testIdentifier("DummyWithParam")
-
-  protected final val otherTemplateId5 = testIdentifier("DummyWithAnnotation")
-  protected final val otherContractArgument5 = LfValue.ValueRecord(
-    None,
-    ImmArray(None -> LfValue.ValueParty(alice), None -> someValueText),
-  )
-
   private[dao] def store(
       completionInfo: Option[state.CompletionInfo],
       tx: LedgerEntry.Transaction,
@@ -222,20 +209,16 @@ private[dao] trait JdbcLedgerDaoSuite extends JdbcLedgerDaoBackend with OptionVa
       key: Option[GlobalKeyWithMaintainers] = None,
       templateId: Identifier = someTemplateId,
       contractArgument: LfValue = someContractArgument,
-      // PackageVersion is populated only for LF version > 2.1
-      packageVersion: Option[Ref.PackageVersion] = None,
-      transactionVersion: TransactionVersion = TransactionVersion.V31,
   ): Node.Create =
     Node.Create(
       coid = absCid,
       templateId = templateId,
       packageName = somePackageName,
-      packageVersion = packageVersion,
       arg = contractArgument,
       signatories = signatories,
       stakeholders = stakeholders,
       keyOpt = key,
-      version = transactionVersion,
+      version = txVersion,
     )
 
   protected final def exerciseNode(
@@ -359,7 +342,7 @@ private[dao] trait JdbcLedgerDaoSuite extends JdbcLedgerDaoBackend with OptionVa
       maintainers: Set[Party]
   ): GlobalKeyWithMaintainers = {
     val aTextValue = ValueText(scala.util.Random.nextString(10))
-    GlobalKeyWithMaintainers.assertBuild(someTemplateId, aTextValue, maintainers, somePackageName)
+    GlobalKeyWithMaintainers.assertBuild(someTemplateId, aTextValue, maintainers)
   }
 
   protected final def createAndStoreContract(
@@ -641,7 +624,7 @@ private[dao] trait JdbcLedgerDaoSuite extends JdbcLedgerDaoBackend with OptionVa
       commandId,
       None,
       Some(submissionId),
-      None,
+      Some(TransactionNodeStatistics(entry.transaction)),
     )
 
   protected final def store(
@@ -682,10 +665,9 @@ private[dao] trait JdbcLedgerDaoSuite extends JdbcLedgerDaoBackend with OptionVa
         stakeholders = Set(party),
         keyOpt = Some(
           GlobalKeyWithMaintainers
-            .assertBuild(someTemplateId, someContractKey(party, key), Set(party), somePackageName)
+            .assertBuild(someTemplateId, someContractKey(party, key), Set(party))
         ),
         version = txVersion,
-        packageVersion = Option.when(txVersion > TransactionVersion.V31)(somePackageVersion),
       )
     )
     nextOffset() ->
@@ -728,7 +710,7 @@ private[dao] trait JdbcLedgerDaoSuite extends JdbcLedgerDaoBackend with OptionVa
         exerciseResult = Some(LfValue.ValueUnit),
         keyOpt = maybeKey.map(k =>
           GlobalKeyWithMaintainers
-            .assertBuild(someTemplateId, someContractKey(party, k), Set(party), somePackageName)
+            .assertBuild(someTemplateId, someContractKey(party, k), Set(party))
         ),
         byKey = false,
         version = txVersion,
@@ -760,7 +742,7 @@ private[dao] trait JdbcLedgerDaoSuite extends JdbcLedgerDaoBackend with OptionVa
         templateId = someTemplateId,
         packageName = somePackageName,
         key = GlobalKeyWithMaintainers
-          .assertBuild(someTemplateId, someContractKey(party, key), Set(party), somePackageName),
+          .assertBuild(someTemplateId, someContractKey(party, key), Set(party)),
         result = result,
         version = txVersion,
       )

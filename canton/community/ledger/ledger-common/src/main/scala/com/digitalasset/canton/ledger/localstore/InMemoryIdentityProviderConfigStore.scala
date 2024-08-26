@@ -3,7 +3,7 @@
 
 package com.digitalasset.canton.ledger.localstore
 
-import com.digitalasset.canton.discard.Implicits.DiscardOps
+import com.daml.scalautil.Statement.discard
 import com.digitalasset.canton.ledger.api.domain
 import com.digitalasset.canton.ledger.api.domain.{IdentityProviderConfig, IdentityProviderId}
 import com.digitalasset.canton.ledger.localstore.api.{
@@ -52,7 +52,7 @@ class InMemoryIdentityProviderConfigStore(
     for {
       _ <- checkIdExists(id)
     } yield {
-      state.remove(id).discard
+      discard(state.remove(id))
     }
   }
 
@@ -77,7 +77,7 @@ class InMemoryIdentityProviderConfigStore(
         .copy(issuer = update.issuerUpdate.getOrElse(currentState.issuer))
         .copy(jwksUrl = update.jwksUrlUpdate.getOrElse(currentState.jwksUrl))
         .copy(audience = update.audienceUpdate.getOrElse(currentState.audience))
-      state.put(update.identityProviderId, updatedValue).discard
+      discard(state.put(update.identityProviderId, updatedValue))
       updatedValue
     }
   }

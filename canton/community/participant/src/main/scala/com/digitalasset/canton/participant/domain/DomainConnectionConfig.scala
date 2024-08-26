@@ -131,7 +131,7 @@ object DomainConnectionConfig
     with HasVersionedMessageCompanionDbHelpers[DomainConnectionConfig] {
   val supportedProtoVersions: SupportedProtoVersions = SupportedProtoVersions(
     ProtoVersion(30) -> ProtoCodec(
-      ProtocolVersion.v31,
+      ProtocolVersion.v30,
       supportedProtoVersion(v30.DomainConnectionConfig)(fromProtoV30),
       _.toProtoV30.toByteString,
     )
@@ -183,7 +183,7 @@ object DomainConnectionConfig
     for {
       alias <- DomainAlias
         .create(domainAlias)
-        .leftMap(err => InvariantViolation(s"DomainConnectionConfig.domain_alias", err))
+        .leftMap(err => InvariantViolation(s"DomainConnectionConfig.DomainAlias: $err"))
       sequencerConnections <- ProtoConverter
         .required("sequencerConnections", sequencerConnectionsPO)
         .flatMap(SequencerConnections.fromProtoV30)

@@ -4,11 +4,10 @@
 package com.digitalasset.canton.domain.mediator.store
 
 import cats.data.EitherT
-import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
 import com.digitalasset.canton.tracing.TraceContext
 
 import java.util.concurrent.atomic.AtomicReference
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class InMemoryMediatorDomainConfigurationStore(implicit executionContext: ExecutionContext)
     extends MediatorDomainConfigurationStore {
@@ -16,14 +15,12 @@ class InMemoryMediatorDomainConfigurationStore(implicit executionContext: Execut
 
   override def fetchConfiguration(implicit
       traceContext: TraceContext
-  ): EitherT[FutureUnlessShutdown, MediatorDomainConfigurationStoreError, Option[
-    MediatorDomainConfiguration
-  ]] =
+  ): EitherT[Future, MediatorDomainConfigurationStoreError, Option[MediatorDomainConfiguration]] =
     EitherT.pure(currentConfiguration.get())
 
   override def saveConfiguration(configuration: MediatorDomainConfiguration)(implicit
       traceContext: TraceContext
-  ): EitherT[FutureUnlessShutdown, MediatorDomainConfigurationStoreError, Unit] = {
+  ): EitherT[Future, MediatorDomainConfigurationStoreError, Unit] = {
     currentConfiguration.set(Some(configuration))
     EitherT.pure(())
   }

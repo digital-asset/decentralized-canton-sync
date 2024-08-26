@@ -6,8 +6,6 @@ package com.digitalasset.canton.sequencing.authentication.grpc
 import cats.data.EitherT
 import cats.implicits.*
 import com.daml.nonempty.NonEmpty
-import com.digitalasset.canton.lifecycle.UnlessShutdown.AbortedDueToShutdown
-import com.digitalasset.canton.lifecycle.{FutureUnlessShutdown, UnlessShutdown}
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.networking.Endpoint
 import com.digitalasset.canton.sequencing.authentication.{
@@ -15,7 +13,7 @@ import com.digitalasset.canton.sequencing.authentication.{
   AuthenticationTokenManagerConfig,
 }
 import com.digitalasset.canton.time.Clock
-import com.digitalasset.canton.topology.{DomainId, Member}
+import com.digitalasset.canton.topology.{AuthenticatedMember, DomainId, UnauthenticatedMemberId}
 import com.digitalasset.canton.tracing.TraceContext
 import com.google.common.annotations.VisibleForTesting
 import io.grpc.ForwardingClientCall.SimpleForwardingClientCall
@@ -25,7 +23,7 @@ import io.grpc.internal.GrpcAttributes
 import io.grpc.stub.AbstractStub
 
 import java.util.concurrent.Executor
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 /** Provides call credentials and an interceptor to generate a token for outgoing requests and add the token to the call
@@ -33,7 +31,7 @@ import scala.util.control.NonFatal
   */
 private[grpc] class SequencerClientTokenAuthentication(
     domainId: DomainId,
-    member: Member,
+    member: AuthenticatedMember,
     tokenManagerPerEndpoint: NonEmpty[Map[Endpoint, AuthenticationTokenManager]],
     protected val loggerFactory: NamedLoggerFactory,
 )(implicit executionContext: ExecutionContext)
@@ -86,13 +84,9 @@ private[grpc] class SequencerClientTokenAuthentication(
                 .withCause(ex)
             )
         }
-        .unwrap
         .foreach {
-          case AbortedDueToShutdown =>
-            applier.fail(Status.ABORTED.withDescription("Aborted due to shutdown."))
-          case UnlessShutdown.Outcome(Left(errorStatus)) => applier.fail(errorStatus)
-          case UnlessShutdown.Outcome(Right(token)) =>
-            applier.apply(generateMetadata(token, maybeEndpoint))
+          case Left(errorStatus) => applier.fail(errorStatus)
+          case Right(token) => applier.apply(generateMetadata(token, maybeEndpoint))
         }
     }
 
@@ -160,21 +154,15 @@ private[grpc] class SequencerClientTokenAuthentication(
 object SequencerClientTokenAuthentication {
   def apply(
       domainId: DomainId,
-      member: Member,
+      authenticatedMember: AuthenticatedMember,
       obtainTokenPerEndpoint: NonEmpty[
-        Map[
-          Endpoint,
-          TraceContext => EitherT[FutureUnlessShutdown, Status, AuthenticationTokenWithExpiry],
-        ]
+        Map[Endpoint, TraceContext => EitherT[Future, Status, AuthenticationTokenWithExpiry]]
       ],
       isClosed: => Boolean,
       tokenManagerConfig: AuthenticationTokenManagerConfig,
       clock: Clock,
       loggerFactory: NamedLoggerFactory,
-  )(implicit
-      executionContext: ExecutionContext,
-      traceContext: TraceContext,
-  ): SequencerClientAuthentication = {
+  )(implicit executionContext: ExecutionContext): SequencerClientAuthentication = {
     val tokenManagerPerEndpoint = obtainTokenPerEndpoint.transform { case (_, obtainToken) =>
       new AuthenticationTokenManager(
         obtainToken,
@@ -186,12 +174,38 @@ object SequencerClientTokenAuthentication {
     }
     new SequencerClientTokenAuthentication(
       domainId,
-      member,
+      authenticatedMember,
       tokenManagerPerEndpoint,
       loggerFactory,
     )
   }
 
+}
+
+class SequencerClientNoAuthentication(domainId: DomainId, member: UnauthenticatedMemberId)
+    extends SequencerClientAuthentication {
+
+  private val metadata: Metadata = {
+    val metadata = new Metadata()
+    metadata.put(Constant.MEMBER_ID_METADATA_KEY, member.toProtoPrimitive)
+    metadata.put(Constant.DOMAIN_ID_METADATA_KEY, domainId.toProtoPrimitive)
+    metadata
+  }
+
+  override def apply[S <: AbstractStub[S]](client: S): S =
+    client.withCallCredentials(callCredentials)
+
+  @VisibleForTesting
+  private[grpc] val callCredentials: CallCredentials = new CallCredentials {
+    override def applyRequestMetadata(
+        requestInfo: CallCredentials.RequestInfo,
+        appExecutor: Executor,
+        applier: CallCredentials.MetadataApplier,
+    ): Unit = applier.apply(metadata)
+    override def thisUsesUnstableApi(): Unit = {
+      // yes, we know - cheers grpc
+    }
+  }
 }
 
 trait SequencerClientAuthentication {

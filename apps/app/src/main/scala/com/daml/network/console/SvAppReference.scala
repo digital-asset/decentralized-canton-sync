@@ -28,7 +28,7 @@ import com.daml.network.sv.migration.{DomainDataSnapshot, SynchronizerNodeIdenti
 import com.daml.network.util.Contract
 import com.digitalasset.canton.console.{BaseInspection, Help}
 import com.digitalasset.canton.health.admin.data.NodeStatus
-import com.digitalasset.canton.topology.{DomainId, ParticipantId, PartyId}
+import com.digitalasset.canton.topology.{ParticipantId, PartyId}
 import com.digitalasset.canton.tracing.TraceContext
 import org.apache.pekko.actor.ActorSystem
 
@@ -404,18 +404,6 @@ class SvAppBackendReference(
       httpCommand(HttpSvSoftDomainMigrationPocAppClient.InitializeSynchronizer(domainIdPrefix))
     }
 
-  def reconcileSynchronizerDamlState(domainIdPrefix: String): Unit =
-    consoleEnvironment.run {
-      httpCommand(
-        HttpSvSoftDomainMigrationPocAppClient.ReconcileSynchronizerDamlState(domainIdPrefix)
-      )
-    }
-
-  def signDsoPartyToParticipant(domainIdPrefix: String): Unit =
-    consoleEnvironment.run {
-      httpCommand(HttpSvSoftDomainMigrationPocAppClient.SignDsoPartyToParticipant(domainIdPrefix))
-    }
-
   /** Remote participant this sv app is configured to interact with. */
   lazy val participantClient =
     new ParticipantClientReference(
@@ -431,19 +419,4 @@ class SvAppBackendReference(
       s"remote participant for `$name`, with admin token",
       config.participantClient.participantClientConfigWithAdminToken,
     )
-
-  def sequencerClient(domainId: DomainId): SequencerClientReference = {
-    val synchronizerConfig = config.synchronizerNodes.get(domainId.uid.identifier.str) match {
-      case Some(synchronizer) => synchronizer
-      case None =>
-        config.localSynchronizerNode.getOrElse(
-          throw new RuntimeException("No sequencer admin connection configured for SV App")
-        )
-    }
-    new SequencerClientReference(
-      consoleEnvironment,
-      s"sequencer client for $name for domain $domainId",
-      synchronizerConfig.sequencer.toCantonConfig,
-    )
-  }
 }

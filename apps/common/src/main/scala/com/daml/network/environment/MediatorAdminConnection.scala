@@ -11,10 +11,11 @@ import com.digitalasset.canton.admin.api.client.commands.{
 import com.digitalasset.canton.config.{ApiLoggingConfig, ClientConfig}
 import com.digitalasset.canton.logging.NamedLoggerFactory
 import com.digitalasset.canton.health.admin.data.{MediatorNodeStatus, NodeStatus}
+import com.digitalasset.canton.protocol.StaticDomainParameters
 import com.digitalasset.canton.sequencing.{
   SequencerConnection,
-  SequencerConnections,
   SequencerConnectionValidation,
+  SequencerConnections,
 }
 import com.digitalasset.canton.topology.{DomainId, MediatorId, NodeIdentity}
 import com.digitalasset.canton.tracing.TraceContext
@@ -38,26 +39,30 @@ class MediatorAdminConnection(
       loggerFactory,
       grpcClientMetrics,
       retryProvider,
-    )
-    with StatusAdminConnection {
+    ) {
 
   override val serviceName = "Canton Mediator Admin API"
 
-  override protected type Status = MediatorNodeStatus
-
-  override protected def getStatusRequest: StatusAdminCommands.GetStatus[MediatorNodeStatus] =
+  private val mediatorStatusCommand =
     new StatusAdminCommands.GetStatus(MediatorNodeStatus.fromProtoV30)
+
+  def getStatus(implicit traceContext: TraceContext): Future[NodeStatus[MediatorNodeStatus]] =
+    runCmd(
+      mediatorStatusCommand
+    )
 
   def getMediatorId(implicit traceContext: TraceContext): Future[MediatorId] =
     getId().map(MediatorId(_))
 
   def initialize(
       domainId: DomainId,
+      domainParameters: StaticDomainParameters,
       sequencerConnection: SequencerConnection,
   )(implicit traceContext: TraceContext): Future[Unit] =
     runCmd(
-      EnterpriseMediatorAdministrationCommands.Initialize(
+      EnterpriseMediatorAdministrationCommands.InitializeX(
         domainId,
+        domainParameters,
         SequencerConnections.single(sequencerConnection),
         // TODO(#10985) Consider enabling this.
         SequencerConnectionValidation.Disabled,
@@ -69,7 +74,7 @@ class MediatorAdminConnection(
   override def isNodeInitialized()(implicit traceContext: TraceContext): Future[Boolean] = {
     getStatus.map {
       case NodeStatus.Failure(_) => false
-      case NodeStatus.NotInitialized(_, _) => false
+      case NodeStatus.NotInitialized(_) => false
       case NodeStatus.Success(_) => true
     }
   }

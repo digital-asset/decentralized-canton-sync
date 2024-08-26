@@ -44,13 +44,13 @@ import com.digitalasset.canton.config.CantonRequireTypes.InstanceName
 import com.digitalasset.canton.config.ConfigErrors.CantonConfigError
 import com.digitalasset.canton.config.*
 import com.digitalasset.canton.config.RequireTypes.NonNegativeNumeric
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.logging.{ErrorLoggingContext, NamedLoggerFactory, TracedLogger}
 import com.digitalasset.canton.participant.config.{
   CommunityParticipantConfig,
   RemoteParticipantConfig,
 }
 import com.digitalasset.canton.tracing.TraceContext
+import com.digitalasset.canton.version.ProtocolVersion
 import com.typesafe.config.{Config, ConfigRenderOptions}
 import org.slf4j.{Logger, LoggerFactory}
 import pureconfig.generic.FieldCoproductHint
@@ -65,8 +65,12 @@ import scala.util.Try
 import scala.util.control.NoStackTrace
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path}
-import com.digitalasset.canton.domain.mediator.RemoteMediatorConfig
-import com.digitalasset.canton.domain.sequencing.config.RemoteSequencerConfig
+import com.digitalasset.canton.DiscardOps
+import com.digitalasset.canton.domain.mediator.{CommunityMediatorNodeXConfig, RemoteMediatorConfig}
+import com.digitalasset.canton.domain.sequencing.config.{
+  CommunitySequencerNodeXConfig,
+  RemoteSequencerConfig,
+}
 import com.digitalasset.canton.topology.PartyId
 
 case class SpliceConfig(
@@ -120,7 +124,9 @@ case class SpliceConfig(
         features.enablePreviewCommands,
         parameters.nonStandardConfig,
         validatorConfig.sequencerClient,
+        devVersionSupport = false,
         dontWarnOnDeprecatedPV = false,
+        initialProtocolVersion = ProtocolVersion.latest,
         dbMigrateAndStart = true,
         batchingConfig = validatorConfig.parameters.batching,
       )
@@ -160,7 +166,9 @@ case class SpliceConfig(
         features.enablePreviewCommands,
         parameters.nonStandardConfig,
         svConfig.sequencerClient,
+        devVersionSupport = false,
         dontWarnOnDeprecatedPV = false,
+        initialProtocolVersion = ProtocolVersion.latest,
         dbMigrateAndStart = true,
         batchingConfig = new BatchingConfig(),
       )
@@ -199,7 +207,9 @@ case class SpliceConfig(
         features.enablePreviewCommands,
         parameters.nonStandardConfig,
         scanConfig.sequencerClient,
+        devVersionSupport = false,
         dontWarnOnDeprecatedPV = false,
+        initialProtocolVersion = ProtocolVersion.latest,
         dbMigrateAndStart = true,
         batchingConfig = new BatchingConfig(),
       )
@@ -238,7 +248,9 @@ case class SpliceConfig(
         features.enablePreviewCommands,
         parameters.nonStandardConfig,
         splitwellConfig.sequencerClient,
+        devVersionSupport = false,
         dontWarnOnDeprecatedPV = false,
+        initialProtocolVersion = ProtocolVersion.latest,
         dbMigrateAndStart = true,
         batchingConfig = new BatchingConfig(),
       )
@@ -280,11 +292,15 @@ case class SpliceConfig(
 
   // TODO(#736): we want to remove these mediator configs
 
-  override def mediators: Map[InstanceName, MediatorNodeConfigType] = Map.empty
+  override type MediatorNodeXConfigType = CommunityMediatorNodeXConfig
+
+  override def mediators: Map[InstanceName, MediatorNodeXConfigType] = Map.empty
 
   override def remoteMediators: Map[InstanceName, RemoteMediatorConfig] = Map.empty
 
-  override def sequencers: Map[InstanceName, SequencerNodeConfigType] = Map.empty
+  override type SequencerNodeXConfigType = CommunitySequencerNodeXConfig
+
+  override def sequencers: Map[InstanceName, SequencerNodeXConfigType] = Map.empty
 
   override def remoteSequencers: Map[InstanceName, RemoteSequencerConfig] = Map.empty
 }
@@ -412,11 +428,6 @@ object SpliceConfig {
       deriveReader[SvBootstrapDumpConfig.Gcp]
     implicit val svBootstrapDumpConfigReader: ConfigReader[SvBootstrapDumpConfig] =
       deriveReader[SvBootstrapDumpConfig]
-    implicit val svCantonIdentifierConfigReader: ConfigReader[SvCantonIdentifierConfig] =
-      deriveReader[SvCantonIdentifierConfig]
-    implicit val validatorCantonIdentifierConfigReader
-        : ConfigReader[ValidatorCantonIdentifierConfig] =
-      deriveReader[ValidatorCantonIdentifierConfig]
     implicit val svOnboardingConfigHint: FieldCoproductHint[SvOnboardingConfig] =
       new FieldCoproductHint[SvOnboardingConfig]("type")
     implicit val initialAnsConfigReader: ConfigReader[InitialAnsConfig] =
@@ -461,8 +472,6 @@ object SpliceConfig {
       deriveReader[SvDecentralizedSynchronizerConfig]
     implicit val svSynchronizerConfigReader: ConfigReader[SvSynchronizerConfig] =
       deriveReader[SvSynchronizerConfig]
-    implicit val spliceInstanceNamesConfigReader: ConfigReader[SpliceInstanceNamesConfig] =
-      deriveReader[SpliceInstanceNamesConfig]
     implicit val backupDumpConfigHint: FieldCoproductHint[PeriodicBackupDumpConfig] =
       new FieldCoproductHint[PeriodicBackupDumpConfig]("type")
     implicit val backupDumpConfigDirectoryReader: ConfigReader[BackupDumpConfig.Directory] =
@@ -494,13 +503,6 @@ object SpliceConfig {
             sv1NodeHasSynchronizerConfig,
             (),
             ConfigValidationFailed("SV1 must always specify a domain config"),
-          )
-          _ <- Either.cond(
-            conf.synchronizerNodes.isEmpty || conf.supportsSoftDomainMigrationPoc,
-            (),
-            ConfigValidationFailed(
-              "synchronizerNodes must be empty unless supportsSoftDomainMigrationPoc is set to true"
-            ),
           )
           _ <- Either.cond(
             conf.legacyMigrationId.forall(_ == conf.domainMigrationId - 1L),
@@ -711,11 +713,6 @@ object SpliceConfig {
       deriveWriter[SvBootstrapDumpConfig.Gcp]
     implicit val svBootstrapDumpConfigWriter: ConfigWriter[SvBootstrapDumpConfig] =
       deriveWriter[SvBootstrapDumpConfig]
-    implicit val svCantonIdentifierConfigWriter: ConfigWriter[SvCantonIdentifierConfig] =
-      deriveWriter[SvCantonIdentifierConfig]
-    implicit val validatorCantonIdentifierConfigWriter
-        : ConfigWriter[ValidatorCantonIdentifierConfig] =
-      deriveWriter[ValidatorCantonIdentifierConfig]
     implicit val svOnboardingConfigHint: FieldCoproductHint[SvOnboardingConfig] =
       new FieldCoproductHint[SvOnboardingConfig]("type")
     implicit val initialAnsConfigWriter: ConfigWriter[InitialAnsConfig] =
@@ -750,8 +747,6 @@ object SpliceConfig {
       deriveWriter[SvScanConfig]
     implicit val svSynchronizerNodeConfig: ConfigWriter[SvSynchronizerNodeConfig] =
       deriveWriter[SvSynchronizerNodeConfig]
-    implicit val spliceInstanceNamesConfigWriter: ConfigWriter[SpliceInstanceNamesConfig] =
-      deriveWriter[SpliceInstanceNamesConfig]
     implicit val svDecentralizedSynchronizerConfigWriter
         : ConfigWriter[SvDecentralizedSynchronizerConfig] =
       deriveWriter[SvDecentralizedSynchronizerConfig]

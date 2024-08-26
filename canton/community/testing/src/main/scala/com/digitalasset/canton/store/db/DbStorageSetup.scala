@@ -7,7 +7,6 @@ import com.daml.nameof.NameOf.functionFullName
 import com.digitalasset.canton.config.CommunityDbConfig.{H2, Postgres}
 import com.digitalasset.canton.config.*
 import com.digitalasset.canton.data.CantonTimestamp
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.lifecycle.{FlagCloseable, HasCloseContext}
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.metrics.CommonMockMetrics
@@ -290,14 +289,13 @@ object DbStorageSetup {
       loggerFactory: NamedLoggerFactory,
       migrationMode: MigrationMode = MigrationMode.Standard,
       mkDbConfig: DbBasicConfig => DbConfig with PostgresDbConfig = _.toPostgresDbConfig,
-      forceTestContainer: Boolean = false,
   )(implicit ec: ExecutionContext): PostgresDbStorageSetup = {
 
     val isCI = sys.env.contains("CI")
     val isMachine = sys.env.contains("MACHINE")
-    val useTestContainerByForce = sys.env.contains("DB_FORCE_TEST_CONTAINER") || forceTestContainer
+    val forceTestContainer = sys.env.contains("DB_FORCE_TEST_CONTAINER")
 
-    if (!useTestContainerByForce && (isCI && !isMachine))
+    if (!forceTestContainer && (isCI && !isMachine))
       new PostgresCISetup(migrationMode, mkDbConfig, loggerFactory).initialized()
     else new PostgresTestContainerSetup(migrationMode, mkDbConfig, loggerFactory).initialized()
   }

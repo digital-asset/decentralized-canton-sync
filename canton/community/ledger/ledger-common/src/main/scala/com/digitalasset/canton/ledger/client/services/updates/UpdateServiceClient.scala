@@ -14,7 +14,6 @@ import com.daml.ledger.api.v2.update_service.{
   GetUpdatesResponse,
 }
 import com.digitalasset.canton.ledger.client.LedgerClient
-import com.digitalasset.canton.tracing.TraceContext
 import org.apache.pekko.NotUsed
 import org.apache.pekko.stream.scaladsl.Source
 
@@ -27,7 +26,7 @@ class UpdateServiceClient(service: UpdateServiceStub)(implicit
       verbose: Boolean = false,
       end: Option[ParticipantOffset] = None,
       token: Option[String] = None,
-  )(implicit traceContext: TraceContext): Source[GetUpdatesResponse, NotUsed] = {
+  ): Source[GetUpdatesResponse, NotUsed] = {
     ClientAdapter
       .serverStreaming(
         GetUpdatesRequest(
@@ -36,7 +35,7 @@ class UpdateServiceClient(service: UpdateServiceStub)(implicit
           filter = Some(filter),
           verbose = verbose,
         ),
-        LedgerClient.stubWithTracing(service, token).getUpdates,
+        LedgerClient.stub(service, token).getUpdates,
       )
   }
 
@@ -46,7 +45,7 @@ class UpdateServiceClient(service: UpdateServiceStub)(implicit
       verbose: Boolean = false,
       end: Option[ParticipantOffset] = None,
       token: Option[String] = None,
-  )(implicit traceContext: TraceContext): Source[GetUpdateTreesResponse, NotUsed] = {
+  ): Source[GetUpdateTreesResponse, NotUsed] = {
     ClientAdapter
       .serverStreaming(
         GetUpdatesRequest(
@@ -55,7 +54,7 @@ class UpdateServiceClient(service: UpdateServiceStub)(implicit
           filter = Some(filter),
           verbose = verbose,
         ),
-        LedgerClient.stubWithTracing(service, token).getUpdateTrees,
+        LedgerClient.stub(service, token).getUpdateTrees,
       )
   }
 

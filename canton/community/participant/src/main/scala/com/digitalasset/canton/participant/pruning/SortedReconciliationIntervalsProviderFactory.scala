@@ -9,7 +9,6 @@ import com.digitalasset.canton.concurrent.FutureSupervisor
 import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.participant.sync.SyncDomainPersistentStateManager
-import com.digitalasset.canton.store.CursorPrehead.SequencerCounterCursorPrehead
 import com.digitalasset.canton.topology.DomainId
 import com.digitalasset.canton.topology.client.StoreBasedDomainTopologyClient
 import com.digitalasset.canton.topology.processing.{ApproximateTime, EffectiveTime}
@@ -23,8 +22,8 @@ class SortedReconciliationIntervalsProviderFactory(
     val loggerFactory: NamedLoggerFactory,
 )(implicit ec: ExecutionContext)
     extends NamedLogging {
-  def get(domainId: DomainId, sequencerCounterCursorPrehead: Option[SequencerCounterCursorPrehead])(
-      implicit traceContext: TraceContext
+  def get(domainId: DomainId)(implicit
+      traceContext: TraceContext
   ): EitherT[Future, String, SortedReconciliationIntervalsProvider] =
     for {
       syncDomainPersistentState <- EitherT.fromEither[Future](
@@ -39,7 +38,10 @@ class SortedReconciliationIntervalsProviderFactory(
         )
       )
 
-      subscriptionTs = sequencerCounterCursorPrehead.fold(CantonTimestamp.MinValue)(_.timestamp)
+      subscriptionTs <- EitherT.liftF(
+        syncDomainPersistentState.sequencerCounterTrackerStore.preheadSequencerCounter
+          .map(_.fold(CantonTimestamp.MinValue)(_.timestamp))
+      )
       topologyFactory <- syncDomainPersistentStateManager
         .topologyFactoryFor(domainId)
         .toRight(s"Can not obtain topology factory for ${domainId}")

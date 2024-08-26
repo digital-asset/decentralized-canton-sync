@@ -16,21 +16,15 @@ import com.digitalasset.canton.config.{
   TestingConfigInternal,
 }
 import com.digitalasset.canton.crypto.provider.symbolic.SymbolicCrypto
-import com.digitalasset.canton.crypto.{HashPurpose, Nonce, SyncCryptoApi}
+import com.digitalasset.canton.crypto.{HashPurpose, Nonce}
 import com.digitalasset.canton.data.CantonTimestamp
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.domain.api.v30
 import com.digitalasset.canton.domain.api.v30.SequencerAuthenticationServiceGrpc.SequencerAuthenticationService
 import com.digitalasset.canton.domain.metrics.SequencerTestMetrics
-import com.digitalasset.canton.domain.sequencing.config.SequencerParameters
+import com.digitalasset.canton.domain.sequencing.SequencerParameters
 import com.digitalasset.canton.domain.sequencing.sequencer.Sequencer
 import com.digitalasset.canton.domain.sequencing.sequencer.errors.CreateSubscriptionError
-import com.digitalasset.canton.lifecycle.{
-  AsyncOrSyncCloseable,
-  FutureUnlessShutdown,
-  Lifecycle,
-  SyncCloseable,
-}
+import com.digitalasset.canton.lifecycle.{AsyncOrSyncCloseable, Lifecycle, SyncCloseable}
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.metrics.CommonMockMetrics
 import com.digitalasset.canton.networking.Endpoint
@@ -43,16 +37,21 @@ import com.digitalasset.canton.protocol.{
   TestDomainParameters,
   v30 as protocolV30,
 }
-import com.digitalasset.canton.sequencing.*
 import com.digitalasset.canton.sequencing.authentication.AuthenticationToken
 import com.digitalasset.canton.sequencing.client.*
 import com.digitalasset.canton.sequencing.protocol.*
+import com.digitalasset.canton.sequencing.{
+  ApplicationHandler,
+  GrpcSequencerConnection,
+  OrdinaryApplicationHandler,
+  SequencerConnections,
+  SerializedEventOrErrorHandler,
+}
 import com.digitalasset.canton.serialization.HasCryptographicEvidence
 import com.digitalasset.canton.store.memory.{InMemorySendTrackerStore, InMemorySequencedEventStore}
 import com.digitalasset.canton.time.{DomainTimeTracker, SimClock}
 import com.digitalasset.canton.topology.*
 import com.digitalasset.canton.topology.client.{DomainTopologyClient, TopologySnapshot}
-import com.digitalasset.canton.topology.store.TopologyStateForInitializationService
 import com.digitalasset.canton.tracing.{TraceContext, TracingConfig}
 import com.digitalasset.canton.util.PekkoUtil
 import com.digitalasset.canton.version.{
@@ -89,9 +88,9 @@ final case class Env(loggerFactory: NamedLoggerFactory)(implicit
   val sequencer = mock[Sequencer]
   private val participant = ParticipantId("testing")
   private val domainId = DefaultTestIdentities.domainId
-  private val sequencerId = DefaultTestIdentities.daSequencerId
+  private val sequencerId = DefaultTestIdentities.sequencerId
   private val cryptoApi =
-    TestingTopology()
+    TestingTopologyX()
       .withSimpleParticipants(participant)
       .build()
       .forOwnerAndDomain(participant, domainId)
@@ -100,25 +99,13 @@ final case class Env(loggerFactory: NamedLoggerFactory)(implicit
   def timeouts = DefaultProcessingTimeouts.testing
   private val futureSupervisor = FutureSupervisor.Noop
   private val topologyClient = mock[DomainTopologyClient]
-  private val mockDomainTopologyManager = mock[DomainTopologyManager]
   private val mockTopologySnapshot = mock[TopologySnapshot]
   private val confirmationRequestsMaxRate =
     DynamicDomainParameters.defaultConfirmationRequestsMaxRate
   private val maxRequestSize = DynamicDomainParameters.defaultMaxRequestSize
-  private val topologyStateForInitializationService = mock[TopologyStateForInitializationService]
 
   when(topologyClient.currentSnapshotApproximation(any[TraceContext]))
     .thenReturn(mockTopologySnapshot)
-  when(topologyClient.headSnapshot(any[TraceContext]))
-    .thenReturn(mockTopologySnapshot)
-  when(mockTopologySnapshot.timestamp).thenReturn(CantonTimestamp.Epoch)
-  when(
-    mockTopologySnapshot.trafficControlParameters(
-      any[ProtocolVersion],
-      anyBoolean,
-    )(any[TraceContext])
-  )
-    .thenReturn(FutureUnlessShutdown.pure(None))
   when(
     mockTopologySnapshot.findDynamicDomainParametersOrDefault(
       any[ProtocolVersion],
@@ -158,7 +145,7 @@ final case class Env(loggerFactory: NamedLoggerFactory)(implicit
     override def lookupCurrentMember(): Option[Member] = None
   }
   private val params = new SequencerParameters {
-    override def maxConfirmationRequestsBurstFactor: PositiveDouble = PositiveDouble.tryCreate(0.1)
+    override def maxBurstFactor: PositiveDouble = PositiveDouble.tryCreate(0.1)
     override def processingTimeouts: ProcessingTimeout = timeouts
   }
   private val service =
@@ -176,16 +163,15 @@ final case class Env(loggerFactory: NamedLoggerFactory)(implicit
       sequencerSubscriptionFactory,
       domainParamsLookup,
       params,
-      mockDomainTopologyManager,
-      topologyStateForInitializationService,
+      None,
       BaseTest.testedProtocolVersion,
+      enableBroadcastOfUnauthenticatedMessages = false,
     )
   private val connectService = new GrpcSequencerConnectService(
     domainId = domainId,
     sequencerId = sequencerId,
     staticDomainParameters = BaseTest.defaultStaticDomainParameters,
     cryptoApi = cryptoApi,
-    domainTopologyManager = mockDomainTopologyManager,
     loggerFactory = loggerFactory,
   )
 
@@ -264,8 +250,7 @@ final case class Env(loggerFactory: NamedLoggerFactory)(implicit
         LoggingConfig(),
         loggerFactory,
         ProtocolVersionCompatibility.supportedProtocolsParticipant(
-          includeAlphaVersions = BaseTest.testedProtocolVersion.isAlpha,
-          includeBetaVersions = BaseTest.testedProtocolVersion.isBeta,
+          includeUnstableVersions = BaseTest.testedProtocolVersion.isUnstable,
           release = ReleaseVersion.current,
         ),
         Some(BaseTest.testedProtocolVersion),
@@ -277,9 +262,8 @@ final case class Env(loggerFactory: NamedLoggerFactory)(implicit
           override def signRequest[A <: HasCryptographicEvidence](
               request: A,
               hashPurpose: HashPurpose,
-              snapshot: Option[SyncCryptoApi],
           )(implicit ec: ExecutionContext, traceContext: TraceContext)
-              : EitherT[FutureUnlessShutdown, String, SignedContent[A]] =
+              : EitherT[Future, String, SignedContent[A]] =
             EitherT.rightT(
               SignedContent(
                 request,
@@ -298,9 +282,9 @@ final case class Env(loggerFactory: NamedLoggerFactory)(implicit
 
   override def close(): Unit =
     Lifecycle.close(
-      client,
       service,
       Lifecycle.toCloseableServer(server, logger, "test"),
+      client,
       executionSequencerFactory,
       Lifecycle.toCloseableActorSystem(actorSystem, logger, timeouts),
     )(logger)
@@ -385,18 +369,21 @@ class GrpcSequencerIntegrationTest
     }
 
     "send from the client gets a message to the sequencer" in { env =>
+      import cats.implicits.*
+
       val anotherParticipant = ParticipantId("another")
 
       when(env.sequencer.sendAsync(any[SubmissionRequest])(anyTraceContext))
-        .thenReturn(EitherT.pure[FutureUnlessShutdown, SendAsyncError](()))
+        .thenReturn(EitherT.pure[Future, SendAsyncError](()))
       when(env.sequencer.sendAsyncSigned(any[SignedContent[SubmissionRequest]])(anyTraceContext))
-        .thenReturn(EitherT.pure[FutureUnlessShutdown, SendAsyncError](()))
+        .thenReturn(EitherT.pure[Future, SendAsyncError](()))
 
       val result = for {
         response <- env.client
           .sendAsync(
             Batch
               .of(testedProtocolVersion, (MockProtocolMessage, Recipients.cc(anotherParticipant))),
+            SendType.Other,
             None,
           )
           .value

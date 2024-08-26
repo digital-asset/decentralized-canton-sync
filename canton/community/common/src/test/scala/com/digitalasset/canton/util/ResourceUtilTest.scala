@@ -7,7 +7,6 @@ import cats.data.EitherT
 import com.digitalasset.canton.{BaseTest, HasExecutionContext}
 import org.scalatest.wordspec.AnyWordSpec
 
-import java.util.concurrent.atomic.AtomicInteger
 import scala.concurrent.Future
 
 class ResourceUtilTest extends AnyWordSpec with BaseTest with HasExecutionContext {
@@ -222,25 +221,6 @@ class ResourceUtilTest extends AnyWordSpec with BaseTest with HasExecutionContex
         exception shouldBe TestException("Something happened")
         exception
           .getSuppressed()(0) shouldBe TestException("Something happened when closing")
-      }
-
-      "create a resource only once" in {
-        val counter = new AtomicInteger(0)
-
-        def newResource() = new AutoCloseable {
-
-          // Increment the counter when the resource is created
-          counter.incrementAndGet()
-
-          override def close(): Unit = ()
-        }
-
-        ResourceUtil
-          .withResourceEitherT(newResource())(_ => EitherTUtil.unit[String])
-          .value
-          .futureValue
-
-        counter.get() shouldBe 1
       }
 
     }

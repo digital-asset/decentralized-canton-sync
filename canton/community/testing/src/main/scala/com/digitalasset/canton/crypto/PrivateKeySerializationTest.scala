@@ -3,28 +3,29 @@
 
 package com.digitalasset.canton.crypto
 
-import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
-import com.digitalasset.canton.{BaseTest, HasExecutionContext}
+import com.digitalasset.canton.BaseTest
 import org.scalatest.wordspec.AsyncWordSpec
 
-trait PrivateKeySerializationTest extends AsyncWordSpec with BaseTest with HasExecutionContext {
+import scala.concurrent.Future
+
+trait PrivateKeySerializationTest extends BaseTest { this: AsyncWordSpec =>
 
   def privateKeySerializerProvider(
       supportedSigningKeySchemes: Set[SigningKeyScheme],
-      supportedEncryptionKeySpecs: Set[EncryptionKeySpec],
-      newCrypto: => FutureUnlessShutdown[Crypto],
+      supportedEncryptionKeySchemes: Set[EncryptionKeyScheme],
+      newCrypto: => Future[Crypto],
   ): Unit = {
 
     s"Serialize and deserialize a private key via protobuf" should {
 
-      forAll(supportedEncryptionKeySpecs) { encryptionKeySpec =>
-        s"for a $encryptionKeySpec encryption private key" in {
+      forAll(supportedEncryptionKeySchemes) { encryptionKeyScheme =>
+        s"for a $encryptionKeyScheme encryption private key" in {
           for {
             crypto <- newCrypto
             cryptoPrivateStore = crypto.cryptoPrivateStore.toExtended
               .valueOrFail("crypto private store does not implement all necessary methods")
             publicKey <- crypto.privateCrypto
-              .generateEncryptionKey(encryptionKeySpec)
+              .generateEncryptionKey(encryptionKeyScheme)
               .valueOrFail("generate enc key")
             privateKey <- cryptoPrivateStore
               .decryptionKey(publicKey.id)
@@ -34,7 +35,7 @@ trait PrivateKeySerializationTest extends AsyncWordSpec with BaseTest with HasEx
             keyP = privateKey.toProtoVersioned(testedProtocolVersion)
             key2 = EncryptionPrivateKey.fromProtoVersioned(keyP).valueOrFail("serialize key")
           } yield privateKey shouldEqual key2
-        }.failOnShutdown
+        }
       }
 
       forAll(supportedSigningKeySchemes) { signingKeyScheme =>
@@ -56,7 +57,7 @@ trait PrivateKeySerializationTest extends AsyncWordSpec with BaseTest with HasEx
               .fromProtoVersioned(privateKeyP)
               .valueOrFail("serialize key")
           } yield privateKey shouldEqual privateKey2
-        }.failOnShutdown
+        }
       }
     }
   }

@@ -126,7 +126,6 @@ class SplitwellApp(
       store,
       ledgerClient,
       scanConnection,
-      config.supportsSoftDomainMigrationPoc,
       retryProvider,
       loggerFactory,
     )

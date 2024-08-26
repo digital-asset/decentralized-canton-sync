@@ -6,11 +6,13 @@ package com.digitalasset.canton.integration
 import com.daml.ledger.api.v2.transaction.TreeEvent.Kind.{Created, Exercised}
 import com.daml.ledger.api.v2.transaction.{TransactionTree as TransactionTreeV2, TreeEvent}
 import com.daml.ledger.api.v2.value.Value
-import com.digitalasset.canton.DomainAlias
 import com.digitalasset.canton.concurrent.Threading
 import com.digitalasset.canton.console.{InstanceReference, LocalParticipantReference}
 import com.digitalasset.canton.participant.admin.inspection.SyncStateInspection
+import com.digitalasset.canton.participant.sync.{LedgerSyncEvent, TimestampedEvent}
 import com.digitalasset.canton.tracing.TraceContext
+import com.digitalasset.canton.util.ShowUtil.*
+import com.digitalasset.canton.{DomainAlias, LfTimestamp}
 import org.scalatest.exceptions.TestFailedException
 
 import scala.annotation.tailrec
@@ -42,7 +44,7 @@ object IntegrationTestUtilities {
   ): GrabbedCounts = {
     implicit val traceContext: TraceContext = TraceContext.empty
     val pcsCount = pr.findContracts(domain, None, None, None, limit = limit).length
-    val acceptedTransactionCount = pr.acceptedTransactionCount(domain)
+    val acceptedTransactionCount = pr.findAcceptedTransactions(Some(domain)).length
     mkGrabCounts(pcsCount, acceptedTransactionCount, limit)
   }
 
@@ -70,11 +72,7 @@ object IntegrationTestUtilities {
   ): GrabbedCounts = {
     val pcsCount = participant.testing.pcs_search(domainAlias, limit = limit).length
     val acceptedTransactionCount =
-      Integer.min(
-        participant.testing.state_inspection
-          .acceptedTransactionCount(domainAlias)(TraceContext.empty),
-        limit,
-      )
+      participant.testing.transaction_search(Some(domainAlias), limit = limit).length
     mkGrabCounts(pcsCount, acceptedTransactionCount, limit)
   }
 
@@ -86,8 +84,29 @@ object IntegrationTestUtilities {
     GrabbedCounts(contracts, events)
   }
 
-  def assertIncreasingRecordTime(pr: LocalParticipantReference): Unit =
-    pr.testing.state_inspection.verifyLapiStoreIntegrity()(TraceContext.empty)
+  def assertIncreasingRecordTime(
+      domain: DomainAlias,
+      pr: LocalParticipantReference,
+  ): Unit =
+    assertIncreasingRecordTime(domain, alias => pr.testing.event_search(alias))
+
+  def assertIncreasingRecordTime(
+      domain: DomainAlias,
+      events: Option[DomainAlias] => Seq[(String, TimestampedEvent)],
+  ): Unit = {
+    def assertIsSorted(s: Seq[(LfTimestamp, LedgerSyncEvent)]): Unit =
+      s.sliding(2).collect { case Seq(x, y) =>
+        assert(
+          x._1 <= y._1,
+          show"events ${x._2} and ${y._2} in event log for domain ${domain.unwrap.singleQuoted} not ordered by record time",
+        )
+      }
+
+    val eventsWithRecordTime = events(Some(domain)).map { case (_offset, event) =>
+      (event.timestamp.toLf, event.event)
+    }
+    assertIsSorted(eventsWithRecordTime)
+  }
 
   def extractSubmissionResult(tree: TransactionTreeV2): Value.Sum = {
     require(

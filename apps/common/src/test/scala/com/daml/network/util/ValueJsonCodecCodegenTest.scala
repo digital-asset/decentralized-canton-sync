@@ -1,6 +1,7 @@
 package com.daml.network.util
 
 import com.daml.ledger.javaapi.data as JavaApi
+import com.daml.lf.data.Time.Timestamp
 import com.daml.network.codegen.java.splice.{
   amulet as amuletCodegen,
   amuletrules as amuletrulesCodegen,
@@ -9,7 +10,6 @@ import com.daml.network.codegen.java.splice.{
   validatorlicense as validatorlicenseCodegen,
 }
 import com.daml.network.store.{StoreErrors, StoreTest}
-import com.digitalasset.daml.lf.data.Time.Timestamp
 
 import java.util.Optional
 

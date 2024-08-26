@@ -10,7 +10,7 @@ import com.digitalasset.canton.domain.sequencing.sequencer.{SequencerConfig, Seq
 import com.digitalasset.canton.sequencing.client.SequencerClientConfig
 
 abstract class SequencerNodeConfigCommon(
-    override val init: SequencerNodeInitConfig,
+    override val init: SequencerNodeInitConfigCommon,
     val publicApi: PublicServerConfig,
     override val adminApi: AdminServerConfig,
     override val storage: StorageConfig,

@@ -24,7 +24,7 @@ class WalletFrontendIntegrationTest
 
     "tap" should {
 
-      def onboardAndTapTest(damlUser: String)(implicit env: SpliceTestConsoleEnvironment) = {
+      def onboardAndTapTest(damlUser: String) = {
         withFrontEnd("alice") { implicit webDriver =>
           actAndCheck(
             "User logs in", {

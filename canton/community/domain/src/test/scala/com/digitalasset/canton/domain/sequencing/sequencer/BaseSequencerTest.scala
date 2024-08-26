@@ -8,33 +8,36 @@ import com.digitalasset.canton.config.ProcessingTimeout
 import com.digitalasset.canton.config.RequireTypes.{NonNegativeLong, PositiveInt}
 import com.digitalasset.canton.crypto.{HashPurpose, Signature}
 import com.digitalasset.canton.data.CantonTimestamp
-import com.digitalasset.canton.domain.sequencing.sequencer.Sequencer.RegisterError
 import com.digitalasset.canton.domain.sequencing.sequencer.errors.{
   CreateSubscriptionError,
-  SequencerError,
+  RegisterMemberError,
+  SequencerWriteError,
 }
-import com.digitalasset.canton.domain.sequencing.sequencer.traffic.TimestampSelector.TimestampSelector
-import com.digitalasset.canton.domain.sequencing.sequencer.traffic.{
-  SequencerRateLimitError,
-  SequencerTrafficStatus,
-}
+import com.digitalasset.canton.domain.sequencing.sequencer.traffic.SequencerTrafficStatus
 import com.digitalasset.canton.health.HealthListener
-import com.digitalasset.canton.health.admin.data.{SequencerAdminStatus, SequencerHealthStatus}
+import com.digitalasset.canton.health.admin.data.SequencerHealthStatus
 import com.digitalasset.canton.lifecycle.{FlagCloseable, FutureUnlessShutdown}
 import com.digitalasset.canton.resource.Storage
 import com.digitalasset.canton.scheduler.PruningScheduler
-import com.digitalasset.canton.sequencing.client.SequencerClientSend
+import com.digitalasset.canton.sequencing.client.SequencerClient
 import com.digitalasset.canton.sequencing.protocol.*
-import com.digitalasset.canton.sequencing.traffic.TrafficControlErrors
 import com.digitalasset.canton.serialization.ProtocolVersionedMemoizedEvidence
-import com.digitalasset.canton.time.{DomainTimeTracker, SimClock}
+import com.digitalasset.canton.time.SimClock
 import com.digitalasset.canton.topology.DefaultTestIdentities.{
+  domainManager,
   participant1,
   participant2,
-  sequencerId,
+  sequencerIdX,
 }
-import com.digitalasset.canton.topology.{Member, SequencerId, UniqueIdentifier}
+import com.digitalasset.canton.topology.{
+  DomainMember,
+  Member,
+  SequencerId,
+  UnauthenticatedMemberId,
+  UniqueIdentifier,
+}
 import com.digitalasset.canton.tracing.TraceContext
+import com.digitalasset.canton.traffic.TrafficControlErrors
 import com.digitalasset.canton.{BaseTest, SequencerCounter}
 import com.google.protobuf.ByteString
 import org.apache.pekko.Done
@@ -61,9 +64,9 @@ class BaseSequencerTest extends AsyncWordSpec with BaseTest {
     SubmissionRequest.tryCreate(
       from,
       messageId,
+      isRequest = true,
       mkBatch(to),
       CantonTimestamp.MaxValue,
-      None,
       None,
       None,
       testedProtocolVersion,
@@ -71,8 +74,12 @@ class BaseSequencerTest extends AsyncWordSpec with BaseTest {
 
   private implicit val materializer: Materializer = mock[Materializer] // not used
 
+  private val unauthenticatedMemberId =
+    UniqueIdentifier.fromProtoPrimitive_("unm1::default").map(new UnauthenticatedMemberId(_)).value
+
   class StubSequencer(existingMembers: Set[Member])
       extends BaseSequencer(
+        domainManager,
         loggerFactory,
         None,
         new SimClock(CantonTimestamp.Epoch, loggerFactory),
@@ -93,26 +100,24 @@ class BaseSequencerTest extends AsyncWordSpec with BaseTest {
         .Set[Member]() // we're using the scalatest serial execution context so don't need a concurrent collection
     override protected def sendAsyncInternal(submission: SubmissionRequest)(implicit
         traceContext: TraceContext
-    ): EitherT[FutureUnlessShutdown, SendAsyncError, Unit] =
-      EitherT.pure[FutureUnlessShutdown, SendAsyncError](())
+    ): EitherT[Future, SendAsyncError, Unit] =
+      EitherT.pure[Future, SendAsyncError](())
     override protected def sendAsyncSignedInternal(
         signedSubmission: SignedContent[SubmissionRequest]
     )(implicit
         traceContext: TraceContext
-    ): EitherT[FutureUnlessShutdown, SendAsyncError, Unit] =
-      EitherT.pure[FutureUnlessShutdown, SendAsyncError](())
+    ): EitherT[Future, SendAsyncError, Unit] =
+      EitherT.pure[Future, SendAsyncError](())
     override def isRegistered(member: Member)(implicit
         traceContext: TraceContext
     ): Future[Boolean] =
       Future.successful(existingMembers.contains(member))
-
-    override def registerMemberInternal(member: Member, timestamp: CantonTimestamp)(implicit
+    override def registerMember(member: Member)(implicit
         traceContext: TraceContext
-    ): EitherT[Future, RegisterError, Unit] = {
+    ): EitherT[Future, SequencerWriteError[RegisterMemberError], Unit] = {
       newlyRegisteredMembers.add(member)
       EitherT.pure(())
     }
-
     override def readInternal(member: Member, offset: SequencerCounter)(implicit
         traceContext: TraceContext
     ): EitherT[Future, CreateSubscriptionError, Sequencer.EventSource] =
@@ -121,6 +126,9 @@ class BaseSequencerTest extends AsyncWordSpec with BaseTest {
           .viaMat(KillSwitches.single)(Keep.right)
           .mapMaterializedValue(_ -> Future.successful(Done))
       )
+    override def acknowledge(member: Member, timestamp: CantonTimestamp)(implicit
+        traceContext: TraceContext
+    ): Future[Unit] = ???
 
     override protected def acknowledgeSignedInternal(
         signedAcknowledgeRequest: SignedContent[AcknowledgeRequest]
@@ -142,30 +150,27 @@ class BaseSequencerTest extends AsyncWordSpec with BaseTest {
     override def pruningScheduler: Option[PruningScheduler] = ???
     override def snapshot(timestamp: CantonTimestamp)(implicit
         traceContext: TraceContext
-    ): EitherT[Future, SequencerError, SequencerSnapshot] =
+    ): EitherT[Future, String, SequencerSnapshot] =
       ???
-    override protected val localSequencerMember: Member = sequencerId
+    override protected val localSequencerMember: DomainMember = sequencerIdX
     override protected def disableMemberInternal(member: Member)(implicit
         traceContext: TraceContext
     ): Future[Unit] = Future.unit
     override protected def healthInternal(implicit
         traceContext: TraceContext
     ): Future[SequencerHealthStatus] = Future.successful(SequencerHealthStatus(isActive = true))
-
-    override def adminStatus: SequencerAdminStatus = ???
     override private[sequencing] def firstSequencerCounterServeableForSequencer: SequencerCounter =
       ???
-    override def trafficStatus(members: Seq[Member], selector: TimestampSelector)(implicit
+    override def trafficStatus(members: Seq[Member])(implicit
         traceContext: TraceContext
     ): FutureUnlessShutdown[SequencerTrafficStatus] = ???
 
     override protected def timeouts: ProcessingTimeout = ProcessingTimeout()
-    override def setTrafficPurchased(
+    override def setTrafficBalance(
         member: Member,
         serial: PositiveInt,
-        totalTrafficPurchased: NonNegativeLong,
-        sequencerClient: SequencerClientSend,
-        domainTimeTracker: DomainTimeTracker,
+        totalTrafficBalance: NonNegativeLong,
+        sequencerClient: SequencerClient,
     )(implicit
         traceContext: TraceContext
     ): EitherT[
@@ -174,15 +179,10 @@ class BaseSequencerTest extends AsyncWordSpec with BaseTest {
       CantonTimestamp,
     ] = ???
 
-    override def getTrafficStateAt(member: Member, timestamp: CantonTimestamp)(implicit
+    override def trafficStates(implicit
         traceContext: TraceContext
-    ): EitherT[FutureUnlessShutdown, SequencerRateLimitError.TrafficNotFound, Option[
-      TrafficState
-    ]] =
-      EitherT.pure(Some(TrafficState.empty(timestamp)))
-
-    override def isEnabled(member: Member)(implicit traceContext: TraceContext): Future[Boolean] =
-      Future.successful(existingMembers.contains(member))
+    ): FutureUnlessShutdown[Map[Member, TrafficState]] =
+      FutureUnlessShutdown.pure(Map.empty)
   }
 
   Seq(("sendAsync", false), ("sendAsyncSigned", true)).foreach { case (name, useSignedSend) =>
@@ -194,15 +194,43 @@ class BaseSequencerTest extends AsyncWordSpec with BaseTest {
       else sequencer.sendAsync(submission)
 
     name should {
+      "topology manager sends should automatically register all unknown members" in {
+        val sequencer = new StubSequencer(existingMembers = Set(participant1))
+        val request = submission(from = domainManager, to = Set(participant1, participant2))
 
-      "sends should not auto register" in {
+        for {
+          _ <- send(sequencer)(request).value
+        } yield sequencer.newlyRegisteredMembers should contain only participant2
+      }
+
+      "sends from an unauthenticated member should auto register this member" in {
+        val sequencer = new StubSequencer(existingMembers = Set(participant1))
+        val request =
+          submission(from = unauthenticatedMemberId, to = Set(participant1, participant2))
+        for {
+          _ <- send(sequencer)(request).value
+        } yield sequencer.newlyRegisteredMembers should contain only unauthenticatedMemberId
+      }
+
+      "sends from anyone else should not auto register" in {
         val sequencer = new StubSequencer(existingMembers = Set(participant1))
         val request = submission(from = participant1, to = Set(participant1, participant2))
 
         for {
-          _ <- send(sequencer)(request).value.failOnShutdown
+          _ <- send(sequencer)(request).value
         } yield sequencer.newlyRegisteredMembers shouldBe empty
       }
+    }
+  }
+
+  "read" should {
+    "read from an unauthenticated member should auto register this member" in {
+      val sequencer = new StubSequencer(existingMembers = Set(participant1))
+      for {
+        _ <- sequencer
+          .read(unauthenticatedMemberId, SequencerCounter(0))
+          .value
+      } yield sequencer.newlyRegisteredMembers should contain only unauthenticatedMemberId
     }
   }
 
@@ -233,7 +261,7 @@ class BaseSequencerTest extends AsyncWordSpec with BaseTest {
       val sequencer = new StubSequencer(Set(participant1))
       for {
         _ <- sequencer.disableMember(participant1).valueOrFail("Can disable regular member")
-        err <- sequencer.disableMember(sequencerId).leftOrFail("Fail to disable local sequencer")
+        err <- sequencer.disableMember(sequencerIdX).leftOrFail("Fail to disable local sequencer")
         _ <- sequencer
           .disableMember(SequencerId(UniqueIdentifier.tryFromProtoPrimitive("seq::other")))
           .valueOrFail("Can disable other sequencer")

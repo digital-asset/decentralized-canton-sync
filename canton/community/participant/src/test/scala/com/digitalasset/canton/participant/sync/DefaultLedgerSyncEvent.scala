@@ -4,17 +4,10 @@
 package com.digitalasset.canton.participant.sync
 
 import com.digitalasset.canton.data.CantonTimestamp
-import com.digitalasset.canton.{LedgerParticipantId, LfPartyId}
 
 object DefaultLedgerSyncEvent {
   def dummyStateUpdate(
       timestamp: CantonTimestamp = CantonTimestamp.Epoch
   ): LedgerSyncEvent =
-    LedgerSyncEvent.PartyAddedToParticipant(
-      party = LfPartyId.assertFromString("someparty"),
-      displayName = "someparty",
-      participantId = LedgerParticipantId.assertFromString("someparticipant"),
-      recordTime = timestamp.toLf,
-      submissionId = None,
-    )
+    LedgerSyncEvent.PublicPackageUpload(List.empty, None, timestamp.toLf, None)
 }

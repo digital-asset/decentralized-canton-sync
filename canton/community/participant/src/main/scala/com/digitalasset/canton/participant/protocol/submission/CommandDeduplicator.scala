@@ -8,8 +8,8 @@ import cats.data.EitherT
 import cats.syntax.either.*
 import cats.syntax.functorFilter.*
 import com.digitalasset.canton.LedgerSubmissionId
-import com.digitalasset.canton.data.{CantonTimestamp, DeduplicationPeriod}
-import com.digitalasset.canton.ledger.participant.state.ChangeId
+import com.digitalasset.canton.data.CantonTimestamp
+import com.digitalasset.canton.ledger.api.DeduplicationPeriod
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.participant.protocol.submission.CommandDeduplicator.{
   AlreadyExists,
@@ -21,7 +21,6 @@ import com.digitalasset.canton.participant.store.CommandDeduplicationStore.Offse
 import com.digitalasset.canton.participant.store.*
 import com.digitalasset.canton.participant.sync.UpstreamOffsetConvert
 import com.digitalasset.canton.participant.{GlobalOffset, LedgerSyncOffset}
-import com.digitalasset.canton.platform.indexer.parallel.PostPublishData
 import com.digitalasset.canton.time.Clock
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.EitherTUtil
@@ -32,7 +31,7 @@ import scala.concurrent.{ExecutionContext, Future}
   *
   * All method calls should be coordinated by the [[InFlightSubmissionTracker]].
   * In particular, `checkDeduplication` must not be called concurrently with
-  * `processPublications` for the same [[com.digitalasset.canton.ledger.participant.state.ChangeId]]s.
+  * `processPublications` for the same [[com.digitalasset.canton.ledger.participant.state.v2.ChangeId]]s.
   */
 trait CommandDeduplicator {
 
@@ -43,23 +42,17 @@ trait CommandDeduplicator {
       traceContext: TraceContext
   ): Future[Unit]
 
-  /** Register the publication of the events in the [[com.digitalasset.canton.participant.store.CommandDeduplicationStore]] */
-  def processPublications(
-      publications: Vector[PostPublishData]
-  )(implicit
-      traceContext: TraceContext
-  ): Future[Unit]
-
   /** Perform deduplication for the given [[com.digitalasset.canton.participant.protocol.submission.ChangeIdHash]]
-    * and [[com.digitalasset.canton.data.DeduplicationPeriod]].
+    * and [[com.digitalasset.canton.ledger.api.DeduplicationPeriod]].
     *
     * @param changeIdHash The change ID hash of the submission to be deduplicated
     * @param deduplicationPeriod The deduplication period specified with the submission
-    * @return The [[canton.data.DeduplicationPeriod.DeduplicationOffset]]
-    *         to be included in the command completion's [[com.digitalasset.canton.ledger.participant.state.CompletionInfo]].
-    *         Canton always returns a [[com.digitalasset.canton.data.DeduplicationPeriod.DeduplicationOffset]]
+    *
+    * @return The [[com.digitalasset.canton.ledger.api.DeduplicationPeriod.DeduplicationOffset]]
+    *         to be included in the command completion's [[com.digitalasset.canton.ledger.participant.state.v2.CompletionInfo]].
+    *         Canton always returns a [[com.digitalasset.canton.ledger.api.DeduplicationPeriod.DeduplicationOffset]]
     *         because it cannot meet the record time requirements for the other kinds of
-    *         [[com.digitalasset.canton.data.DeduplicationPeriod]]s.
+    *         [[com.digitalasset.canton.ledger.api.DeduplicationPeriod]]s.
     */
   def checkDuplication(changeIdHash: ChangeIdHash, deduplicationPeriod: DeduplicationPeriod)(
       implicit traceContext: TraceContext
@@ -117,27 +110,6 @@ class CommandDeduplicatorImpl(
     }
     store.value.storeDefiniteAnswers(offsetsAndCompletionInfos)
   }
-
-  override def processPublications(
-      publications: Vector[PostPublishData]
-  )(implicit traceContext: TraceContext): Future[Unit] =
-    store.value.storeDefiniteAnswers(
-      publications.map(publication =>
-        (
-          ChangeId(
-            applicationId = publication.applicationId,
-            commandId = publication.commandId,
-            actAs = publication.actAs,
-          ),
-          DefiniteAnswerEvent(
-            offset = GlobalOffset.tryFromLong(publication.offset.toLong),
-            publicationTime = publication.publicationTime,
-            submissionIdO = publication.submissionId,
-          )(publication.traceContext),
-          publication.accepted,
-        )
-      )
-    )
 
   override def checkDuplication(
       changeIdHash: ChangeIdHash,

@@ -1,80 +1,19 @@
 package com.daml.network.integration.tests
 
-import com.daml.metrics.api.noop.NoOpMetricsFactory
-import com.daml.network.admin.api.client.{DamlGrpcClientMetrics, GrpcClientMetrics}
-import com.daml.network.automation.{AmuletConfigReassignmentTrigger, AssignTrigger}
-import com.daml.network.codegen.java.splice.amuletconfig.AmuletConfig
-import com.daml.network.codegen.java.splice.amuletrules.AmuletRules_AddFutureAmuletConfigSchedule
-import com.daml.network.codegen.java.splice.decentralizedsynchronizer.AmuletDecentralizedSynchronizerConfig
-import com.daml.network.codegen.java.splice.dsorules.actionrequiringconfirmation.{
-  ARC_AmuletRules,
-  ARC_DsoRules,
-}
-import com.daml.network.codegen.java.splice.dsorules.amuletrules_actionrequiringconfirmation.CRARC_AddFutureAmuletConfigSchedule
-import com.daml.network.codegen.java.splice.dso.decentralizedsynchronizer.{
-  DsoDecentralizedSynchronizerConfig,
-  SynchronizerState,
-  SynchronizerConfig as DamlSynchronizerConfig,
-}
-import com.daml.network.codegen.java.splice.dsorules.dsorules_actionrequiringconfirmation.SRARC_SetConfig
-import com.daml.network.codegen.java.splice.dsorules.{DsoRulesConfig, DsoRules_SetConfig}
-import com.daml.network.codegen.java.splice.splitwell as splitwellCodegen
-import com.daml.network.codegen.java.splice.wallet.payment as walletCodegen
-import com.daml.network.config.{ConfigTransforms, SynchronizerConfig}
-import com.daml.network.console.SvAppBackendReference
-import com.daml.network.environment.{
-  MediatorAdminConnection,
-  RetryProvider,
-  SequencerAdminConnection,
-}
+import com.daml.network.config.ConfigTransforms
 import com.daml.network.integration.EnvironmentDefinition
-import com.daml.network.integration.tests.SpliceTests.{
-  IntegrationTest,
-  SpliceTestConsoleEnvironment,
-}
+import com.daml.network.integration.tests.SpliceTests.IntegrationTest
 import com.daml.network.scan.config.ScanSynchronizerConfig
-import com.daml.network.splitwell.admin.api.client.commands.HttpSplitwellAppClient
-import com.daml.network.splitwell.automation.AcceptedAppPaymentRequestsTrigger
-import com.daml.network.splitwell.config.SplitwellDomains
-import com.daml.network.store.MultiDomainAcsStore.ContractState
 import com.daml.network.sv.LocalSynchronizerNode
-import com.daml.network.util.{
-  Codec,
-  ConfigScheduleUtil,
-  SplitwellTestUtil,
-  TriggerTestUtil,
-  UpdateHistoryComparator,
-  WalletTestUtil,
-}
-import com.digitalasset.canton.concurrent.FutureSupervisor
-import com.digitalasset.canton.{DomainAlias, SequencerAlias}
-import com.digitalasset.canton.config.RequireTypes.NonNegativeLong
+import com.digitalasset.canton.DomainAlias
 import com.digitalasset.canton.config.CantonRequireTypes.InstanceName
-import com.digitalasset.canton.config.{ClientConfig, NonNegativeDuration, ProcessingTimeout}
-import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.participant.domain.DomainConnectionConfig
 import com.digitalasset.canton.sequencing.SequencerConnections
-import com.digitalasset.canton.topology.{DomainId, UniqueIdentifier}
-import com.digitalasset.canton.topology.store.TopologyStoreId
 
-import java.time.temporal.ChronoUnit
-import scala.concurrent.duration.DurationInt
-import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
 
-class SoftDomainMigrationTopologySetupIntegrationTest
-    extends IntegrationTest
-    with ConfigScheduleUtil
-    with SplitwellTestUtil
-    with TriggerTestUtil
-    with WalletTestUtil
-    with UpdateHistoryComparator {
-
-  // Does not currently handle multiple synchronizers.
-  override def runUpdateHistorySanityCheck = false
-
-  private val splitwellDarPath = "daml/splitwell/.daml/dist/splitwell-current.dar"
+class SoftDomainMigrationTopologySetupIntegrationTest extends IntegrationTest {
 
   override def environmentDefinition =
     EnvironmentDefinition
@@ -113,459 +52,42 @@ class SoftDomainMigrationTopologySetupIntegrationTest
               supportsSoftDomainMigrationPoc = true,
             )
           }(conf),
-        (_, conf) =>
-          ConfigTransforms.updateAllValidatorAppConfigs_(c =>
-            c.copy(
-              supportsSoftDomainMigrationPoc = true
-            )
-          )(conf),
-        (_, conf) =>
-          ConfigTransforms.updateAutomationConfig(ConfigTransforms.ConfigurableApp.Sv)(
-            _.withResumedTrigger[AmuletConfigReassignmentTrigger]
-              .withResumedTrigger[AssignTrigger]
-          )(conf),
-        (_, conf) =>
-          // At least for now we test the impact of soft domain migrations on an app
-          // running on the global synchronizer not on a separate synchronizer
-          ConfigTransforms.updateAllSplitwellAppConfigs_(c => {
-            c.copy(
-              domains = c.domains.copy(
-                splitwell = SplitwellDomains(
-                  SynchronizerConfig(DomainAlias.tryCreate("global-global-domain")),
-                  Seq.empty,
-                )
-              ),
-              supportsSoftDomainMigrationPoc = true,
-            )
-          })(conf),
       )
-      .withAdditionalSetup(implicit env => {
-        aliceValidatorBackend.participantClient.upload_dar_unless_exists(splitwellDarPath)
-        bobValidatorBackend.participantClient.upload_dar_unless_exists(splitwellDarPath)
-      })
 
   "SVs can bootstrap new domain" in { implicit env =>
-    implicit val ec: ExecutionContext = env.executionContext
-    val ledgerBeginSv1 = sv1Backend.participantClient.ledger_api.state.end()
-    val (alice, bob) = onboardAliceAndBob()
     env.scans.local should have size 4
     val prefix = "global-domain-new"
-    clue("DSO info has 4 synchronizer nodes") {
-      eventually() {
-        val dsoInfo = sv1Backend.getDsoInfo()
-        dsoInfo.svNodeStates.values.flatMap(
-          _.payload.state.synchronizerNodes.asScala.values.flatMap(_.scan.toScala)
-        ) should have size 4
-      }
-    }
-    clue("All synchronizer nodes are initialized") {
-      env.svs.local.foreach { sv =>
-        waitForSynchronizerInitialized(sv)
-      }
-    }
-    // Enough time that the voting flow can go through
-    val scheduledTime = env.environment.clock.now.plus(java.time.Duration.ofSeconds(30)).toInstant
-    val amuletConfig =
-      sv1ScanBackend.getAmuletRules().payload.configSchedule.initialValue
-    val existingDomainId =
-      Codec.tryDecode(Codec.DomainId)(amuletConfig.decentralizedSynchronizer.activeSynchronizer)
-    val newDomainId = DomainId(UniqueIdentifier.tryCreate(prefix, existingDomainId.uid.namespace))
-    val newAmuletConfig =
-      new AmuletConfig(
-        amuletConfig.transferConfig,
-        amuletConfig.issuanceCurve,
-        new AmuletDecentralizedSynchronizerConfig(
-          new com.daml.network.codegen.java.da.set.types.Set(
-            (amuletConfig.decentralizedSynchronizer.requiredSynchronizers.map.asScala.toMap + (newDomainId.toProtoPrimitive -> com.daml.ledger.javaapi.data.Unit
-              .getInstance())).asJava
-          ),
-          newDomainId.toProtoPrimitive,
-          amuletConfig.decentralizedSynchronizer.fees,
-        ),
-        amuletConfig.tickDuration,
-        amuletConfig.packageConfig,
-      )
-
-    // tap before the migration
-    aliceWalletClient.tap(100)
-
-    val group = "group1"
-    val groupKey = HttpSplitwellAppClient.GroupKey(
-      group,
-      alice,
-    )
-    clue("Setup splitwell") {
-      Seq((aliceSplitwellClient, alice), (bobSplitwellClient, bob)).foreach {
-        case (splitwell, party) =>
-          createSplitwellInstalls(splitwell, party)
-      }
-      actAndCheck("create 'group1'", aliceSplitwellClient.requestGroup(group))(
-        "Alice sees 'group1'",
-        _ => aliceSplitwellClient.listGroups() should have size 1,
-      )
-
-      // Wait for the group contract to be visible to Alice's Ledger API
-      aliceSplitwellClient.ledgerApi.ledger_api_extensions.acs
-        .awaitJava(splitwellCodegen.Group.COMPANION)(alice)
-
-      val (_, invite) = actAndCheck(
-        "create a generic invite for 'group1'",
-        aliceSplitwellClient.createGroupInvite(
-          group
-        ),
-      )(
-        "alice observes the invite",
-        _ => aliceSplitwellClient.listGroupInvites().loneElement.toAssignedContract.value,
-      )
-
-      actAndCheck("bob asks to join 'group1'", bobSplitwellClient.acceptInvite(invite))(
-        "Alice sees the accepted invite",
-        _ => aliceSplitwellClient.listAcceptedGroupInvites(group) should not be empty,
-      )
-
-      actAndCheck(
-        "bob joins 'group1'",
-        inside(aliceSplitwellClient.listAcceptedGroupInvites(group)) { case Seq(accepted) =>
-          aliceSplitwellClient.joinGroup(accepted.contractId)
-        },
-      )(
-        "bob is in 'group1'",
-        _ => {
-          bobSplitwellClient.listGroups() should have size 1
-          aliceSplitwellClient.listAcceptedGroupInvites(group) should be(empty)
-        },
-      )
-
-    }
-
-    val (_, voteRequest) = actAndCheck(
-      "Creating amulet config vote request",
-      eventuallySucceeds() {
-        sv1Backend.createVoteRequest(
-          sv1Backend.getDsoInfo().svParty.toProtoPrimitive,
-          new ARC_AmuletRules(
-            new CRARC_AddFutureAmuletConfigSchedule(
-              new AmuletRules_AddFutureAmuletConfigSchedule(
-                new com.daml.network.codegen.java.da.types.Tuple2(
-                  scheduledTime,
-                  newAmuletConfig,
-                )
-              )
-            )
-          ),
-          "url",
-          "description",
-          sv1Backend.getDsoInfo().dsoRules.payload.config.voteRequestTimeout,
-        )
-      },
-    )("amulet config vote request has been created", _ => sv1Backend.listVoteRequests().loneElement)
-
-    clue(s"sv2-4 accept amulet config vote request") {
-      Seq(sv2Backend, sv3Backend, sv4Backend).map(sv =>
-        eventuallySucceeds() {
-          sv.castVote(
-            voteRequest.contractId,
-            true,
-            "url",
-            "description",
-          )
-        }
-      )
-    }
-
     eventually() {
-      sv1ScanBackend.getAmuletRules().payload.configSchedule.futureValues should not be empty
+      val dsoInfo = sv1Backend.getDsoInfo()
+      dsoInfo.svNodeStates.values.flatMap(
+        _.payload.state.synchronizerNodes.asScala.values.flatMap(_.scan.toScala)
+      ) should have size 4
     }
-
-    val dsoRules = sv1Backend.getDsoInfo().dsoRules
-
-    clue("Bootstrap new domain") {
-      clue("Sign bootstrapping state") {
-        val signed = env.svs.local.map { sv =>
-          Future { sv.signSynchronizerBootstrappingState(prefix) }
-        }
-        signed.foreach(_.futureValue)
-      }
-      clue("Initialize synchronizer nodes") {
-        val initialized = env.svs.local.map { sv =>
-          Future { sv.initializeSynchronizer(prefix) }
-        }
-        initialized.foreach(_.futureValue)
-      }
-      clue("New synchronizer is registered in DsoRules config") {
-        val (_, dsoRulesVoteRequest) = actAndCheck(
-          "Creating dso rules config vote request",
-          eventuallySucceeds() {
-            sv1Backend.createVoteRequest(
-              sv1Backend.getDsoInfo().svParty.toProtoPrimitive,
-              new ARC_DsoRules(
-                new SRARC_SetConfig(
-                  new DsoRules_SetConfig(
-                    new DsoRulesConfig(
-                      dsoRules.payload.config.numUnclaimedRewardsThreshold,
-                      dsoRules.payload.config.numMemberTrafficContractsThreshold,
-                      dsoRules.payload.config.actionConfirmationTimeout,
-                      dsoRules.payload.config.svOnboardingRequestTimeout,
-                      dsoRules.payload.config.svOnboardingConfirmedTimeout,
-                      dsoRules.payload.config.voteRequestTimeout,
-                      dsoRules.payload.config.dsoDelegateInactiveTimeout,
-                      dsoRules.payload.config.synchronizerNodeConfigLimits,
-                      dsoRules.payload.config.maxTextLength,
-                      new DsoDecentralizedSynchronizerConfig(
-                        (dsoRules.payload.config.decentralizedSynchronizer.synchronizers.asScala.toMap + (newDomainId.toProtoPrimitive -> new DamlSynchronizerConfig(
-                          SynchronizerState.DS_OPERATIONAL,
-                          // Keep the cometbft state empty, we don't support bootstrapping the new domain with cometbft.
-                          "",
-                          dsoRules.payload.config.decentralizedSynchronizer.synchronizers.values.loneElement.acsCommitmentReconciliationInterval,
-                        ))).asJava,
-                        newDomainId.toProtoPrimitive,
-                        newDomainId.toProtoPrimitive,
-                      ),
-                      dsoRules.payload.config.nextScheduledSynchronizerUpgrade,
-                    )
-                  )
-                )
-              ),
-              "url",
-              "description",
-              sv1Backend.getDsoInfo().dsoRules.payload.config.voteRequestTimeout,
-            )
-          },
-        )(
-          "dsorules config vote request has been created",
-          _ => sv1Backend.listVoteRequests().loneElement,
-        )
-        clue(s"sv2-4 accept dsorules config vote request") {
-          Seq(sv2Backend, sv3Backend, sv4Backend).map(sv =>
-            eventuallySucceeds() {
-              sv.castVote(
-                dsoRulesVoteRequest.contractId,
-                true,
-                "url",
-                "description",
-              )
-            }
-          )
-        }
-      }
-      clue("Reconcile Daml synchronizer state") {
-        val reconciled = env.svs.local.map { sv =>
-          Future { sv.reconcileSynchronizerDamlState(prefix) }
-        }
-        reconciled.foreach(_.futureValue)
-      }
+    env.svs.local.foreach { sv =>
+      sv.signSynchronizerBootstrappingState(prefix)
+    }
+    env.svs.local.foreach { sv =>
+      sv.initializeSynchronizer(prefix)
     }
     val domainAlias = DomainAlias.tryCreate(prefix)
-    clue("SV participants connect to new domain") {
-      env.svs.local.map { sv =>
-        val participant = sv.participantClient
-        val connection =
-          LocalSynchronizerNode.toSequencerConnection(
-            sv.config.synchronizerNodes(prefix).sequencer.internalApi,
-            SequencerAlias.tryCreate(sv.config.onboarding.value.name),
-          )
-        participant.domains.register_with_config(
-          DomainConnectionConfig(
-            domainAlias,
-            SequencerConnections.single(connection),
-          ),
-          handshakeOnly = false,
-        )
-        val domainId = participant.domains.id_of(domainAlias)
-        participant.health.ping(
-          participant.id,
-          domainId = Some(domainId),
-        )
-      }
-    }
-    clue("Sign DSO PartToParticipant mapping") {
-      env.svs.local.foreach { sv =>
-        sv.signDsoPartyToParticipant(prefix)
-      }
-    }
-
-    // Ensure that the scheduled time has passed.
-    // This is mainly to avoid putting a stupidly large time in the eventually below.
-    env.environment.clock
-      .scheduleAt(
-        _ => (),
-        CantonTimestamp.assertFromInstant(scheduledTime.plus(500, ChronoUnit.MILLIS)),
-      )
-      .unwrap
-      .futureValue
-
-    eventually() {
-      sv1ScanBackend.getAmuletRules().state shouldBe ContractState.Assigned(newDomainId)
-      val (openRounds, issuingRounds) = sv1ScanBackend.getOpenAndIssuingMiningRounds()
-      forAll(openRounds) { round =>
-        round.state shouldBe ContractState.Assigned(newDomainId)
-      }
-      forAll(issuingRounds) { round =>
-        round.state shouldBe ContractState.Assigned(newDomainId)
-      }
-    }
-
-    p2pTransfer(
-      aliceWalletClient,
-      bobWalletClient,
-      bob,
-      42.0,
-    )
-
-    val aliceAmulets = aliceWalletClient.list().amulets
-    aliceAmulets should not be empty
-    forAll(aliceAmulets) {
-      _.contract.state shouldBe ContractState.Assigned(newDomainId)
-    }
-
-    // Eventually to allow merging to also reassign
-    // any other contracts.
-    eventually() {
-      val bobAmulets = bobWalletClient.list().amulets
-      bobAmulets should not be empty
-      forAll(bobAmulets) {
-        _.contract.state shouldBe ContractState.Assigned(newDomainId)
-      }
-    }
-
-    clue("Alice validator tops up its traffic on new domain") {
-      eventually() {
-        aliceValidatorBackend.participantClient.traffic_control
-          .traffic_state(newDomainId)
-          .extraTrafficPurchased shouldBe >(NonNegativeLong.zero)
-      }
-    }
-    clue("All SV participants have unlimited traffic on new domain") {
-      eventually() {
-        env.svs.local.foreach { sv =>
-          val participantId = sv.participantClient.id
-          clue(s"participant $participantId has unlimited traffic on new domain") {
-            sv1Backend
-              .sequencerClient(newDomainId)
-              .traffic_control
-              .last_traffic_state_update_of_members(
-                Seq(participantId)
-              )
-              .trafficStates
-              .values
-              .loneElement
-              .extraTrafficPurchased shouldBe NonNegativeLong.maxValue
-          }
-        }
-      }
-    }
-    clue("All mediators have unlimited traffic on new domain") {
-      eventually() {
-        val mediatorState = sv1Backend.participantClient.topology.mediators
-          .list(filterStore = TopologyStoreId.DomainStore(newDomainId).filterName)
-          .loneElement
-        val mediators = mediatorState.item.active.forgetNE
-        mediators should have size 4
-        forAll(mediators) { mediator =>
-          sv1Backend
-            .sequencerClient(newDomainId)
-            .traffic_control
-            .last_traffic_state_update_of_members(
-              Seq(mediator)
-            )
-            .trafficStates
-            .values
-            .loneElement
-            .extraTrafficPurchased shouldBe NonNegativeLong.maxValue
-        }
-      }
-    }
-
-    val (_, paymentRequest) =
-      actAndCheck(
-        "alice initiates transfer",
-        aliceSplitwellClient.initiateTransfer(
-          groupKey,
-          Seq(
-            new walletCodegen.ReceiverAmuletAmount(
-              bob.toProtoPrimitive,
-              BigDecimal(10.0).bigDecimal,
+    env.svs.local.foreach { sv =>
+      val participant = sv.participantClient
+      participant.domains.register_with_config(
+        DomainConnectionConfig(
+          domainAlias,
+          SequencerConnections.single(
+            LocalSynchronizerNode.toSequencerConnection(
+              sv.config.synchronizerNodes(prefix).sequencer.internalApi
             )
           ),
         ),
-      )(
-        "alice sees payment request",
-        _ => {
-          aliceWalletClient.listAppPaymentRequests().loneElement
-        },
+        handshakeOnly = false,
       )
-
-    splitwellBackend.splitwellAutomation
-      .trigger[AcceptedAppPaymentRequestsTrigger]
-      .pause()
-      .futureValue
-    actAndCheck(
-      "Alice accepts payment request",
-      aliceWalletClient.acceptAppPaymentRequest(paymentRequest.contractId),
-    )(
-      "alice observers accepted app payment request",
-      _ => {
-        aliceWalletClient.listAcceptedAppPayments().loneElement.state shouldBe ContractState
-          .Assigned(newDomainId)
-      },
-    )
-    splitwellBackend.splitwellAutomation.trigger[AcceptedAppPaymentRequestsTrigger].resume()
-    eventually() {
-      aliceWalletClient.listAcceptedAppPayments() shouldBe empty
-      val balanceUpdates = aliceSplitwellClient.listBalanceUpdates(groupKey)
-      balanceUpdates.loneElement.state shouldBe ContractState.Assigned(newDomainId)
+      val domainId = participant.domains.id_of(domainAlias)
+      participant.health.ping(
+        participant.id,
+        domainId = Some(domainId),
+      )
     }
-
-    clue("Compare Scan UpdateHistory to the ledger API") {
-      eventually() {
-        compareHistoryViaScanApi(
-          ledgerBeginSv1,
-          sv1Backend,
-          scancl("sv1ScanClient"),
-        )
-      }
-    }
-
-  }
-
-  def waitForSynchronizerInitialized(
-      sv: SvAppBackendReference
-  )(implicit env: SpliceTestConsoleEnvironment): Unit = {
-    import env.environment.scheduler
-    import env.executionContext
-    val grpcClientMetrics: GrpcClientMetrics = new DamlGrpcClientMetrics(
-      NoOpMetricsFactory,
-      "testing",
-    )
-    val retryProvider = new RetryProvider(
-      loggerFactory,
-      ProcessingTimeout(),
-      new FutureSupervisor.Impl(NonNegativeDuration.tryFromDuration(10.seconds)),
-      NoOpMetricsFactory,
-    )
-    val loggerFactoryWithKey = loggerFactory.append("synchronizer", sv.name)
-    val sequencerAdminConnection = new SequencerAdminConnection(
-      ClientConfig(port = sv.config.localSynchronizerNode.value.sequencer.adminApi.port),
-      env.environment.config.monitoring.logging.api,
-      loggerFactoryWithKey,
-      grpcClientMetrics,
-      retryProvider,
-    )
-    val mediatorAdminConnection = new MediatorAdminConnection(
-      ClientConfig(port = sv.config.localSynchronizerNode.value.mediator.adminApi.port),
-      env.environment.config.monitoring.logging.api,
-      loggerFactoryWithKey,
-      grpcClientMetrics,
-      retryProvider,
-    )
-
-    eventually() {
-      sequencerAdminConnection.isNodeInitialized().futureValue shouldBe true
-      mediatorAdminConnection.isNodeInitialized().futureValue shouldBe true
-    }
-
-    sequencerAdminConnection.close()
-    mediatorAdminConnection.close()
-    retryProvider.close()
   }
 }

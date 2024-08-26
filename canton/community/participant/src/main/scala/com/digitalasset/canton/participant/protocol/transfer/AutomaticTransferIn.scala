@@ -5,9 +5,7 @@ package com.digitalasset.canton.participant.protocol.transfer
 
 import cats.data.*
 import cats.syntax.bifunctor.*
-import com.digitalasset.canton.LfPartyId
 import com.digitalasset.canton.data.{CantonTimestamp, TransferSubmitterMetadata}
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.error.{BaseCantonError, MediatorError}
 import com.digitalasset.canton.logging.ErrorLoggingContext
 import com.digitalasset.canton.participant.protocol.transfer.TransferInValidation.NoTransferData
@@ -21,6 +19,7 @@ import com.digitalasset.canton.topology.transaction.ParticipantPermission
 import com.digitalasset.canton.tracing.{TraceContext, Traced}
 import com.digitalasset.canton.util.{EitherTUtil, MonadUtil}
 import com.digitalasset.canton.version.Transfer.SourceProtocolVersion
+import com.digitalasset.canton.{DiscardOps, LfPartyId}
 import org.slf4j.event.Level
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -29,7 +28,6 @@ private[participant] object AutomaticTransferIn {
   def perform(
       id: TransferId,
       targetDomain: TargetDomainId,
-      staticDomainParameters: StaticDomainParameters,
       transferCoordination: TransferCoordination,
       stakeholders: Set[LfPartyId],
       transferOutSubmitterMetadata: TransferSubmitterMetadata,
@@ -58,7 +56,7 @@ private[participant] object AutomaticTransferIn {
     def performAutoInOnce: EitherT[Future, TransferProcessorError, com.google.rpc.status.Status] = {
       for {
         targetIps <- transferCoordination
-          .getTimeProofAndSnapshot(targetDomain, staticDomainParameters)
+          .getTimeProofAndSnapshot(targetDomain)
           .map(_._2)
           .onShutdown(Left(DomainNotReady(targetDomain.unwrap, "Shutdown of time tracker")))
         possibleSubmittingParties <- EitherT.right(hostedStakeholders(targetIps.ipsSnapshot))
@@ -94,7 +92,7 @@ private[participant] object AutomaticTransferIn {
             TraceContext.empty
           )
         TransferInProcessingSteps.SubmissionResult(completionF) = submissionResult
-        status <- EitherT.right(completionF)
+        status <- EitherT.liftF(completionF)
       } yield status
     }
 
@@ -142,7 +140,6 @@ private[participant] object AutomaticTransferIn {
             for {
               _ <- transferCoordination.awaitTimestamp(
                 targetDomain.unwrap,
-                staticDomainParameters,
                 exclusivityLimit,
                 waitForEffectiveTime = false,
                 Future.successful(logger.debug(s"Automatic transfer-in triggered immediately")),
@@ -168,11 +165,7 @@ private[participant] object AutomaticTransferIn {
     }
 
     for {
-      targetIps <- transferCoordination.cryptoSnapshot(
-        targetDomain.unwrap,
-        staticDomainParameters,
-        t0,
-      )
+      targetIps <- transferCoordination.cryptoSnapshot(targetDomain.unwrap, t0)
       targetSnapshot = targetIps.ipsSnapshot
 
       targetDomainParameters <- EitherT(

@@ -3,102 +3,75 @@
 
 package com.digitalasset.canton.crypto.store.memory
 
-import cats.data.OptionT
+import cats.data.EitherT
 import cats.syntax.either.*
 import com.digitalasset.canton.crypto.store.{CryptoPublicStore, CryptoPublicStoreError}
 import com.digitalasset.canton.crypto.{KeyName, *}
-import com.digitalasset.canton.discard.Implicits.DiscardOps
-import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
-import com.digitalasset.canton.logging.pretty.Pretty
-import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.tracing.TraceContext
-import com.digitalasset.canton.util.{ErrorUtil, TrieMapUtil}
+import com.digitalasset.canton.util.TrieMapUtil
 
 import scala.collection.concurrent.TrieMap
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
-class InMemoryCryptoPublicStore(override protected val loggerFactory: NamedLoggerFactory)(
-    override implicit val ec: ExecutionContext
-) extends CryptoPublicStore
-    with NamedLogging {
+class InMemoryCryptoPublicStore(override implicit val ec: ExecutionContext)
+    extends CryptoPublicStore {
 
   private val storedSigningKeyMap: TrieMap[Fingerprint, SigningPublicKeyWithName] = TrieMap.empty
   private val storedEncryptionKeyMap: TrieMap[Fingerprint, EncryptionPublicKeyWithName] =
     TrieMap.empty
 
-  private def errorKeyDuplicate[K <: PublicKeyWithName: Pretty](
+  private def errorKeyDuplicate[K <: PublicKeyWithName](
       keyId: Fingerprint,
       oldKey: K,
       newKey: K,
   ): CryptoPublicStoreError =
-    CryptoPublicStoreError.KeyAlreadyExists(keyId, oldKey, newKey)
+    CryptoPublicStoreError.KeyAlreadyExists(keyId, oldKey.name.map(_.unwrap))
 
   override protected def writeSigningKey(key: SigningPublicKey, name: Option[KeyName])(implicit
       traceContext: TraceContext
-  ): FutureUnlessShutdown[Unit] = {
-    FutureUnlessShutdown.wrap {
-      TrieMapUtil
-        .insertIfAbsent(
-          storedSigningKeyMap,
-          key.id,
-          SigningPublicKeyWithName(key, name),
-          errorKeyDuplicate[SigningPublicKeyWithName] _,
-        )
-        .valueOr { err =>
-          ErrorUtil.invalidState(
-            s"Existing public key for ${key.id} is different than inserted key: $err"
-          )
-        }
-    }
+  ): EitherT[Future, CryptoPublicStoreError, Unit] = {
+    TrieMapUtil
+      .insertIfAbsent(
+        storedSigningKeyMap,
+        key.id,
+        SigningPublicKeyWithName(key, name),
+        errorKeyDuplicate[SigningPublicKeyWithName] _,
+      )
+      .toEitherT
   }
 
   override def readSigningKey(signingKeyId: Fingerprint)(implicit
       traceContext: TraceContext
-  ): OptionT[FutureUnlessShutdown, SigningPublicKeyWithName] =
-    OptionT.fromOption(storedSigningKeyMap.get(signingKeyId))
+  ): EitherT[Future, CryptoPublicStoreError, Option[SigningPublicKeyWithName]] =
+    EitherT.rightT(storedSigningKeyMap.get(signingKeyId))
 
   override def readEncryptionKey(encryptionKeyId: Fingerprint)(implicit
       traceContext: TraceContext
-  ): OptionT[FutureUnlessShutdown, EncryptionPublicKeyWithName] =
-    OptionT.fromOption(storedEncryptionKeyMap.get(encryptionKeyId))
+  ): EitherT[Future, CryptoPublicStoreError, Option[EncryptionPublicKeyWithName]] =
+    EitherT.rightT(storedEncryptionKeyMap.get(encryptionKeyId))
 
   override protected def writeEncryptionKey(key: EncryptionPublicKey, name: Option[KeyName])(
       implicit traceContext: TraceContext
-  ): FutureUnlessShutdown[Unit] = {
-    FutureUnlessShutdown.wrap {
-      TrieMapUtil
-        .insertIfAbsent(
-          storedEncryptionKeyMap,
-          key.id,
-          EncryptionPublicKeyWithName(key, name),
-          errorKeyDuplicate[EncryptionPublicKeyWithName] _,
-        )
-        .valueOr { _ =>
-          ErrorUtil.invalidState(
-            s"Existing public key for ${key.id} is different than inserted key"
-          )
-        }
-    }
+  ): EitherT[Future, CryptoPublicStoreError, Unit] = {
+    TrieMapUtil
+      .insertIfAbsent(
+        storedEncryptionKeyMap,
+        key.id,
+        EncryptionPublicKeyWithName(key, name),
+        errorKeyDuplicate[EncryptionPublicKeyWithName] _,
+      )
+      .toEitherT
   }
 
   override private[store] def listSigningKeys(implicit
       traceContext: TraceContext
-  ): FutureUnlessShutdown[Set[SigningPublicKeyWithName]] =
-    FutureUnlessShutdown.pure(storedSigningKeyMap.values.toSet)
+  ): EitherT[Future, CryptoPublicStoreError, Set[SigningPublicKeyWithName]] =
+    EitherT.rightT(storedSigningKeyMap.values.toSet)
 
   override private[store] def listEncryptionKeys(implicit
       traceContext: TraceContext
-  ): FutureUnlessShutdown[Set[EncryptionPublicKeyWithName]] =
-    FutureUnlessShutdown.pure(storedEncryptionKeyMap.values.toSet)
-
-  override private[crypto] def deleteKey(
-      keyId: Fingerprint
-  )(implicit traceContext: TraceContext): FutureUnlessShutdown[Unit] = {
-    storedSigningKeyMap.remove(keyId).discard
-    storedEncryptionKeyMap.remove(keyId).discard
-    FutureUnlessShutdown.unit
-  }
+  ): EitherT[Future, CryptoPublicStoreError, Set[EncryptionPublicKeyWithName]] =
+    EitherT.rightT(storedEncryptionKeyMap.values.toSet)
 
   override def close(): Unit = ()
-
 }

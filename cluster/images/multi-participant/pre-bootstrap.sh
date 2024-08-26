@@ -19,7 +19,7 @@ function write_participant_config() {
 
     cat <<EOF >> /app/app.conf
 canton.participants.participant_$index = {
-    init.auto-init=false
+    init.auto-init=\${?CANTON_PARTICIPANT_AUTO_INIT}
 
     monitoring.grpc-health-server {
         address = "0.0.0.0"
@@ -76,6 +76,9 @@ canton.participants.participant_$index = {
     }
 
     parameters {
+        dev-version-support = yes
+        initial-protocol-version = 30
+        use-new-traffic-control = true
         # tune the synchronisation protocols contract store cache
         caching {
             contract-store {

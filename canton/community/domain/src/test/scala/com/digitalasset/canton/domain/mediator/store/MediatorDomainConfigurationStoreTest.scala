@@ -6,6 +6,7 @@ package com.digitalasset.canton.domain.mediator.store
 import com.daml.nameof.NameOf.functionFullName
 import com.daml.nonempty.NonEmpty
 import com.digitalasset.canton.config.RequireTypes.Port
+import com.digitalasset.canton.crypto.Fingerprint
 import com.digitalasset.canton.networking.Endpoint
 import com.digitalasset.canton.resource.DbStorage
 import com.digitalasset.canton.sequencing.{GrpcSequencerConnection, SequencerConnections}
@@ -27,7 +28,7 @@ trait MediatorDomainConfigurationStoreTest {
       for {
         config <- valueOrFail(store.fetchConfiguration)("fetchConfiguration")
       } yield config shouldBe None
-    }.failOnShutdown("Unexpected shutdown.")
+    }
 
     "when set returns set value" in {
       val store = mkStore
@@ -38,6 +39,7 @@ trait MediatorDomainConfigurationStoreTest {
         SequencerAlias.Default,
       )
       val originalConfig = MediatorDomainConfiguration(
+        Fingerprint.tryCreate("fingerprint"),
         DefaultTestIdentities.domainId,
         defaultStaticDomainParameters,
         SequencerConnections.single(connection),
@@ -47,7 +49,7 @@ trait MediatorDomainConfigurationStoreTest {
         _ <- valueOrFail(store.saveConfiguration(originalConfig))("saveConfiguration")
         persistedConfig <- valueOrFail(store.fetchConfiguration)("fetchConfiguration").map(_.value)
       } yield persistedConfig shouldBe originalConfig
-    }.failOnShutdown("Unexpected shutdown.")
+    }
 
     "supports updating the config" in {
       val store = mkStore
@@ -63,6 +65,7 @@ trait MediatorDomainConfigurationStoreTest {
         SequencerAlias.Default,
       )
       val originalConfig = MediatorDomainConfiguration(
+        Fingerprint.tryCreate("fingerprint"),
         DefaultTestIdentities.domainId,
         defaultParams,
         SequencerConnections.single(connection),
@@ -84,7 +87,7 @@ trait MediatorDomainConfigurationStoreTest {
           .map(_.value)
       } yield persistedConfig2 shouldBe updatedConfig
 
-    }.failOnShutdown("Unexpected shutdown.")
+    }
   }
 }
 

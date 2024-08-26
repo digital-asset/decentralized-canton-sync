@@ -4,6 +4,7 @@
 package com.digitalasset.canton.participant.protocol.submission
 
 import cats.data.EitherT
+import com.daml.lf.transaction.TransactionErrors.KeyInputError
 import com.digitalasset.canton.*
 import com.digitalasset.canton.crypto.{Salt, SaltSeed}
 import com.digitalasset.canton.data.{
@@ -12,8 +13,7 @@ import com.digitalasset.canton.data.{
   TransactionView,
   ViewPosition,
 }
-import com.digitalasset.canton.ledger.participant.state.SubmitterInfo
-import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
+import com.digitalasset.canton.ledger.participant.state.v2.SubmitterInfo
 import com.digitalasset.canton.logging.pretty.{Pretty, PrettyPrinting}
 import com.digitalasset.canton.participant.protocol.submission.TransactionTreeFactory.{
   SerializableContractOfId,
@@ -22,11 +22,10 @@ import com.digitalasset.canton.participant.protocol.submission.TransactionTreeFa
 import com.digitalasset.canton.participant.store.ContractLookup
 import com.digitalasset.canton.protocol.WellFormedTransaction.{WithSuffixes, WithoutSuffixes}
 import com.digitalasset.canton.protocol.*
-import com.digitalasset.canton.sequencing.protocol.MediatorGroupRecipient
+import com.digitalasset.canton.sequencing.protocol.MediatorsOfDomain
 import com.digitalasset.canton.topology.ParticipantId
 import com.digitalasset.canton.topology.client.TopologySnapshot
 import com.digitalasset.canton.tracing.TraceContext
-import com.digitalasset.daml.lf.transaction.TransactionErrors.KeyInputError
 
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
@@ -41,8 +40,9 @@ trait TransactionTreeFactory {
   def createTransactionTree(
       transaction: WellFormedTransaction[WithoutSuffixes],
       submitterInfo: SubmitterInfo,
+      confirmationPolicy: ConfirmationPolicy,
       workflowId: Option[WorkflowId],
-      mediator: MediatorGroupRecipient,
+      mediator: MediatorsOfDomain,
       transactionSeed: SaltSeed,
       transactionUuid: UUID,
       topologySnapshot: TopologySnapshot,
@@ -52,7 +52,7 @@ trait TransactionTreeFactory {
       validatePackageVettings: Boolean,
   )(implicit
       traceContext: TraceContext
-  ): EitherT[FutureUnlessShutdown, TransactionTreeConversionError, GenTransactionTree]
+  ): EitherT[Future, TransactionTreeConversionError, GenTransactionTree]
 
   /** Reconstructs a transaction view from a reinterpreted action description,
     * using the supplied salts.
@@ -63,7 +63,8 @@ trait TransactionTreeFactory {
   def tryReconstruct(
       subaction: WellFormedTransaction[WithoutSuffixes],
       rootPosition: ViewPosition,
-      mediator: MediatorGroupRecipient,
+      confirmationPolicy: ConfirmationPolicy,
+      mediator: MediatorsOfDomain,
       submittingParticipantO: Option[ParticipantId],
       salts: Iterable[Salt],
       transactionUuid: UUID,

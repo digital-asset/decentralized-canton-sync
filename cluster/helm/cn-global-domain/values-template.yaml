@@ -40,6 +40,8 @@ metrics:
   release: prometheus-grafana-monitoring
   interval: 30s
 
+disableAutoInit: true
+
 # k8s affinity for all deployed pods (optional)
 # affinity:
 

@@ -18,13 +18,15 @@ trait StandaloneCanton extends PostgresAroundEach with NamedLogging with Process
       s"participant_extra_$dbsSuffix",
       s"participant_splitwell_$dbsSuffix",
     ) ++
-      (1 to 4).flatMap(index =>
-        Seq(
-          s"participant_sv${index}_${dbsSuffix}",
-          s"sequencer_sv${index}_${dbsSuffix}",
-          s"mediator_sv${index}_${dbsSuffix}",
+      (1 to 4)
+        .map(index =>
+          Seq(
+            s"participant_sv${index}_${dbsSuffix}",
+            s"sequencer_sv${index}_${dbsSuffix}",
+            s"mediator_sv${index}_${dbsSuffix}",
+          )
         )
-      )
+        .flatten
   }
 
   def withCantonSvNodes[A](
@@ -39,6 +41,7 @@ trait StandaloneCanton extends PostgresAroundEach with NamedLogging with Process
       sv4: Boolean = true,
       participants: Boolean = true,
       sequencersMediators: Boolean = true,
+      autoInit: Boolean = true,
       overrideSvDbsSuffix: Option[String] = None,
       overrideSequencerDriverDbSuffix: Option[String] = None,
       portsRange: Option[Int] = None,
@@ -103,7 +106,8 @@ trait StandaloneCanton extends PostgresAroundEach with NamedLogging with Process
       (extraEnv ++
         (1 to 4).map(adminUserEnv(_)).flatten ++
         portsEnv ++
-        dbNamesEnv) ++ extraParticipantsEnvMap.toList
+        dbNamesEnv :+
+        ("AUTO_INIT_ALL" -> autoInit.toString)) ++ extraParticipantsEnvMap.toList
 
     logger.debug(
       s"""

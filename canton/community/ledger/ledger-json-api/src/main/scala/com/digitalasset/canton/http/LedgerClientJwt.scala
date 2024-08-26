@@ -24,7 +24,7 @@ import com.daml.ledger.api.v2.participant_offset.ParticipantOffset.Value.Boundar
 import com.daml.ledger.api.v2.transaction.Transaction
 import com.daml.ledger.api.v2.transaction_filter.TransactionFilter
 import com.daml.ledger.api.v2.update_service.GetUpdatesResponse.Update
-import com.digitalasset.daml.lf.data.Ref
+import com.daml.lf.data.Ref
 import com.daml.logging.LoggingContextOf
 import com.digitalasset.canton.http.LedgerClientJwt.Grpc
 import com.digitalasset.canton.http.util.Logging.{InstanceUUID, RequestID}
@@ -42,7 +42,7 @@ import com.digitalasset.canton.ledger.client.services.state.StateServiceClient
 import com.digitalasset.canton.ledger.client.services.updates.UpdateServiceClient
 import com.digitalasset.canton.ledger.service.Grpc.StatusEnvelope
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
-import com.digitalasset.canton.tracing.TraceContext
+import com.digitalasset.canton.tracing.NoTracing
 import com.google.protobuf
 import com.google.rpc.Code
 import scalaz.syntax.tag.*
@@ -50,7 +50,9 @@ import scalaz.{-\/, OneAnd, \/}
 
 import scala.concurrent.{Future, ExecutionContext as EC}
 
-final case class LedgerClientJwt(loggerFactory: NamedLoggerFactory) extends NamedLogging {
+final case class LedgerClientJwt(loggerFactory: NamedLoggerFactory)
+    extends NamedLogging
+    with NoTracing {
   import Grpc.Category.*
   import LedgerClientJwt.*
   import LedgerClientRequestTimeLogger.*
@@ -61,18 +63,17 @@ final case class LedgerClientJwt(loggerFactory: NamedLoggerFactory) extends Name
       client: DamlLedgerClient
   )(implicit ec: EC): SubmitAndWaitForTransaction =
     (jwt, req) =>
-      implicit traceContext =>
-        implicit lc => {
-          logFuture(SubmitAndWaitForTransactionLog) {
-            client.v2.commandService
-              .deprecatedSubmitAndWaitForTransactionForJsonApi(req, token = bearer(jwt))
-          }
-            .requireHandling(submitErrors)
+      implicit lc => {
+        logFuture(SubmitAndWaitForTransactionLog) {
+          client.v2.commandService
+            .deprecatedSubmitAndWaitForTransactionForJsonApi(req, token = bearer(jwt))
         }
+          .requireHandling(submitErrors)
+      }
 
   def submitAndWaitForTransactionTree(
       client: DamlLedgerClient
-  )(implicit ec: EC, traceContext: TraceContext): SubmitAndWaitForTransactionTree =
+  )(implicit ec: EC): SubmitAndWaitForTransactionTree =
     (jwt, req) =>
       implicit lc => {
         logFuture(SubmitAndWaitForTransactionTreeLog) {
@@ -83,9 +84,7 @@ final case class LedgerClientJwt(loggerFactory: NamedLoggerFactory) extends Name
       }
 
   // TODO(#13364) test this function with a token or do not pass the token to getActiveContractsSource if it is not needed
-  def getActiveContracts(client: DamlLedgerClient)(implicit
-      traceContext: TraceContext
-  ): GetActiveContracts =
+  def getActiveContracts(client: DamlLedgerClient): GetActiveContracts =
     (jwt, filter, verbose) =>
       implicit lc => {
         log(GetActiveContractsLog) {
@@ -99,9 +98,7 @@ final case class LedgerClientJwt(loggerFactory: NamedLoggerFactory) extends Name
         }
       }
 
-  def getCreatesAndArchivesSince(
-      client: DamlLedgerClient
-  )(implicit traceContext: TraceContext): GetCreatesAndArchivesSince =
+  def getCreatesAndArchivesSince(client: DamlLedgerClient): GetCreatesAndArchivesSince =
     (jwt, filter, offset, terminates) => { implicit lc =>
       {
         val end = terminates.toOffset
@@ -127,9 +124,7 @@ final case class LedgerClientJwt(loggerFactory: NamedLoggerFactory) extends Name
       }
     }
 
-  def getByContractId(
-      client: DamlLedgerClient
-  )(implicit ec: EC, traceContext: TraceContext): GetContractByContractId = {
+  def getByContractId(client: DamlLedgerClient)(implicit ec: EC): GetContractByContractId = {
     (jwt, contractId, requestingParties) =>
       { implicit lc =>
         logFuture(GetContractByContractIdLog) {
@@ -176,13 +171,12 @@ final case class LedgerClientJwt(loggerFactory: NamedLoggerFactory) extends Name
   // TODO(#13303): Replace all occurrences of EC for logging purposes in this file
   //  (preferrably with DirectExecutionContext)
   def listKnownParties(client: DamlLedgerClient)(implicit
-      ec: EC,
-      traceContext: TraceContext,
+      ec: EC
   ): ListKnownParties =
-    (jwt, pageToken, pageSize) =>
+    jwt =>
       implicit lc => {
         logFuture(ListKnownPartiesLog) {
-          client.partyManagementClient.listKnownParties(bearer(jwt), pageToken, pageSize)
+          client.partyManagementClient.listKnownParties(bearer(jwt))
         }
           .requireHandling { case Code.PERMISSION_DENIED =>
             PermissionDenied
@@ -190,8 +184,7 @@ final case class LedgerClientJwt(loggerFactory: NamedLoggerFactory) extends Name
       }
 
   def getParties(client: DamlLedgerClient)(implicit
-      ec: EC,
-      traceContext: TraceContext,
+      ec: EC
   ): GetParties =
     (jwt, partyIds) =>
       implicit lc => {
@@ -204,8 +197,7 @@ final case class LedgerClientJwt(loggerFactory: NamedLoggerFactory) extends Name
       }
 
   def allocateParty(client: DamlLedgerClient)(implicit
-      ec: EC,
-      traceContext: TraceContext,
+      ec: EC
   ): AllocateParty =
     (jwt, identifierHint, displayName) =>
       implicit lc => {
@@ -219,8 +211,7 @@ final case class LedgerClientJwt(loggerFactory: NamedLoggerFactory) extends Name
       }
 
   def listPackages(client: DamlLedgerClient)(implicit
-      ec: EC,
-      traceContext: TraceContext,
+      ec: EC
   ): ListPackages =
     jwt =>
       implicit lc => {
@@ -231,8 +222,7 @@ final case class LedgerClientJwt(loggerFactory: NamedLoggerFactory) extends Name
       }
 
   def getPackage(client: DamlLedgerClient)(implicit
-      ec: EC,
-      traceContext: TraceContext,
+      ec: EC
   ): GetPackage =
     (jwt, packageId) =>
       implicit lc => {
@@ -243,8 +233,7 @@ final case class LedgerClientJwt(loggerFactory: NamedLoggerFactory) extends Name
       }
 
   def uploadDar(client: DamlLedgerClient)(implicit
-      ec: EC,
-      traceContext: TraceContext,
+      ec: EC
   ): UploadDarFile =
     (jwt, byteString) =>
       implicit lc => {
@@ -255,8 +244,7 @@ final case class LedgerClientJwt(loggerFactory: NamedLoggerFactory) extends Name
       }
 
   def getMeteringReport(client: DamlLedgerClient)(implicit
-      ec: EC,
-      traceContext: TraceContext,
+      ec: EC
   ): GetMeteringReport =
     (jwt, request) =>
       implicit lc => {
@@ -268,9 +256,7 @@ final case class LedgerClientJwt(loggerFactory: NamedLoggerFactory) extends Name
 
   private def logFuture[T, C](
       requestLog: RequestLog
-  )(
-      block: => Future[T]
-  )(implicit ec: EC, lc: LoggingContextOf[C], traceContext: TraceContext): Future[T] = if (
+  )(block: => Future[T])(implicit ec: EC, lc: LoggingContextOf[C]): Future[T] = if (
     logger.underlying.isDebugEnabled
   ) {
     val start = System.nanoTime()
@@ -282,9 +268,7 @@ final case class LedgerClientJwt(loggerFactory: NamedLoggerFactory) extends Name
 
   private def log[T, C](
       requestLog: RequestLog
-  )(block: => T)(implicit lc: LoggingContextOf[C], traceContext: TraceContext): T = if (
-    logger.underlying.isDebugEnabled
-  ) {
+  )(block: => T)(implicit lc: LoggingContextOf[C]): T = if (logger.underlying.isDebugEnabled) {
     val start = System.nanoTime()
     val result = block
     logger.debug(s"${logMessage(start, requestLog)}, ${lc.makeString}")
@@ -303,7 +287,7 @@ object LedgerClientJwt {
     (
         Jwt,
         SubmitAndWaitRequest,
-    ) => TraceContext => LoggingContextOf[InstanceUUID with RequestID] => EFuture[
+    ) => LoggingContextOf[InstanceUUID with RequestID] => EFuture[
       SubmitError,
       SubmitAndWaitForTransactionResponse,
     ]
@@ -354,13 +338,9 @@ object LedgerClientJwt {
   //    ) => LoggingContextOf[InstanceUUID] => EFuture[PermissionDenied, GetEventsByContractKeyResponse]
 
   type ListKnownParties =
-    (
-      Jwt,
-      String,
-      Int,
-    ) => LoggingContextOf[InstanceUUID with RequestID] => EFuture[PermissionDenied, (List[
+    Jwt => LoggingContextOf[InstanceUUID with RequestID] => EFuture[PermissionDenied, List[
       domainPartyDetails
-    ], String)]
+    ]]
 
   type GetParties =
     (

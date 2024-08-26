@@ -51,7 +51,7 @@ class UntypedVersionedMessageTest extends AnyWordSpec with BaseTest {
 }
 
 object UntypedVersionedMessageTest {
-  def parseNew(bytes: ByteString): ParsingResult[Message] = Message.fromTrustedByteString(bytes)
+  def parseNew(bytes: ByteString): ParsingResult[Message] = Message.fromByteString(bytes)
   def parseOld(bytes: ByteString): ParsingResult[Message] = {
     def fromProtoVersioned(dummyMessageP: VersionedDummyMessage): Either[FieldNotSet, Message] =
       dummyMessageP.version match {
@@ -78,7 +78,7 @@ object UntypedVersionedMessageTest {
   object Message extends HasVersionedMessageCompanion[Message] {
     val supportedProtoVersions: SupportedProtoVersions = SupportedProtoVersions(
       ProtoVersion(30) -> ProtoCodec(
-        ProtocolVersion.v31,
+        ProtocolVersion.v30,
         supportedProtoVersion(DummyMessage)(fromProtoV30),
         _.toProtoV30.toByteString,
       )

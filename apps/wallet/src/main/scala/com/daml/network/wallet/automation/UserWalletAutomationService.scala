@@ -36,7 +36,6 @@ class UserWalletAutomationService(
     ledgerClient: SpliceLedgerClient,
     decentralizedSynchronizer: GetTargetDomain,
     automationConfig: AutomationConfig,
-    supportsSoftDomainMigrationPoc: Boolean,
     clock: Clock,
     domainTimeSync: DomainTimeSynchronization,
     domainUnpausedSync: DomainUnpausedSynchronization,
@@ -99,35 +98,35 @@ class UserWalletAutomationService(
     )
   }
 
-  if (!supportsSoftDomainMigrationPoc) {
-    registerTrigger(
-      new UnassignTrigger.Template(
-        triggerContext,
-        store,
-        connection,
-        decentralizedSynchronizer,
-        store.key.endUserParty,
-        paymentCodegen.AppPaymentRequest.COMPANION,
-      )
+  registerTrigger(
+    new UnassignTrigger.Template(
+      triggerContext,
+      store,
+      connection,
+      decentralizedSynchronizer,
+      store.key.endUserParty,
+      paymentCodegen.AppPaymentRequest.COMPANION,
     )
-    registerTrigger(
-      new TransferFollowTrigger(
-        triggerContext,
-        store,
-        connection,
-        store.key.endUserParty,
-        implicit tc =>
-          scanConnection.getAmuletRulesWithState() flatMap { amuletRules =>
-            amuletRules.toAssignedContract map { amuletRules =>
-              store
-                .listLaggingAmuletRulesFollowers(amuletRules.domain)
-                .map(_ map (FollowTask(amuletRules, _)))
-            } getOrElse Future.successful(Seq.empty)
-          },
-      )
+  )
+
+  registerTrigger(new AssignTrigger(triggerContext, store, connection, store.key.endUserParty))
+
+  registerTrigger(
+    new TransferFollowTrigger(
+      triggerContext,
+      store,
+      connection,
+      store.key.endUserParty,
+      implicit tc =>
+        scanConnection.getAmuletRulesWithState() flatMap { amuletRules =>
+          amuletRules.toAssignedContract map { amuletRules =>
+            store
+              .listLaggingAmuletRulesFollowers(amuletRules.domain)
+              .map(_ map (FollowTask(amuletRules, _)))
+          } getOrElse Future.successful(Seq.empty)
+        },
     )
-    registerTrigger(new AssignTrigger(triggerContext, store, connection, store.key.endUserParty))
-  }
+  )
 
   walletSweep.foreach { config =>
     registerTrigger(
@@ -154,8 +153,6 @@ class UserWalletAutomationService(
       )
     )
   }
-
-  registerTrigger(new AmuletMetricsTrigger(triggerContext, store, scanConnection))
 }
 
 object UserWalletAutomationService extends AutomationServiceCompanion {
@@ -183,6 +180,5 @@ object UserWalletAutomationService extends AutomationServiceCompanion {
       aTrigger[TransferFollowTrigger],
       aTrigger[WalletSweepTrigger],
       aTrigger[AutoAcceptTransferOffersTrigger],
-      aTrigger[AmuletMetricsTrigger],
     )
 }

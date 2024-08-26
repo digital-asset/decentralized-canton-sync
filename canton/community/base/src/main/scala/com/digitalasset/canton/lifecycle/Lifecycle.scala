@@ -116,7 +116,7 @@ object Lifecycle extends NoTracing {
       )
     }
 
-    override def toString: String = s"ManagedChannel ($name, $channel)"
+    override def toString: String = s"ManagedChannel ($name)"
   }
 
   class CloseableServer(val server: Server, logger: TracedLogger, name: String)

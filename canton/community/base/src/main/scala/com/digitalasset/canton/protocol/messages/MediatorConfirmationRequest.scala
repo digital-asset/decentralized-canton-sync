@@ -4,11 +4,12 @@
 package com.digitalasset.canton.protocol.messages
 
 import com.digitalasset.canton.LfPartyId
+import com.digitalasset.canton.config.RequireTypes.NonNegativeInt
 import com.digitalasset.canton.crypto.Signature
-import com.digitalasset.canton.data.{ViewConfirmationParameters, ViewPosition, ViewType}
+import com.digitalasset.canton.data.{Informee, ViewPosition, ViewType}
 import com.digitalasset.canton.protocol.RootHash
 import com.digitalasset.canton.protocol.messages.ProtocolMessage.ProtocolMessageContentCast
-import com.digitalasset.canton.sequencing.protocol.MediatorGroupRecipient
+import com.digitalasset.canton.sequencing.protocol.MediatorsOfDomain
 import com.digitalasset.canton.topology.ParticipantId
 
 import java.util.UUID
@@ -16,18 +17,22 @@ import java.util.UUID
 trait MediatorConfirmationRequest extends UnsignedProtocolMessage {
   def requestUuid: UUID
 
-  def mediator: MediatorGroupRecipient
+  def mediator: MediatorsOfDomain
 
-  def informeesAndConfirmationParamsByViewPosition: Map[ViewPosition, ViewConfirmationParameters]
+  def informeesAndThresholdByViewPosition: Map[ViewPosition, (Set[Informee], NonNegativeInt)]
 
   def allInformees: Set[LfPartyId] =
-    informeesAndConfirmationParamsByViewPosition.flatMap {
-      case (_, ViewConfirmationParameters(informees, _)) =>
+    informeesAndThresholdByViewPosition
+      .flatMap { case (_, (informees, _)) =>
         informees
-    }.toSet
+      }
+      .map(_.party)
+      .toSet
 
   /** Determines whether the mediator may disclose informees as part of its result message. */
   def informeesArePublic: Boolean
+
+  def minimumThreshold(informees: Set[Informee]): NonNegativeInt
 
   /** Returns the hash that all [[com.digitalasset.canton.protocol.messages.RootHashMessage]]s of the request batch should contain.
     */

@@ -15,7 +15,7 @@ import com.daml.network.integration.tests.SpliceTests.{
   SpliceTestConsoleEnvironment,
 }
 import com.daml.network.sv.automation.singlesv.LocalSequencerConnectionsTrigger
-import com.daml.network.sv.automation.singlesv.offboarding.{
+import com.daml.network.sv.automation.singlesv.membership.offboarding.{
   SvOffboardingMediatorTrigger,
   SvOffboardingSequencerTrigger,
 }
@@ -59,7 +59,6 @@ class SvOffboardingIntegrationTest
             .withPausedTrigger[LocalSequencerConnectionsTrigger]
         )(config)
       )
-      .withCantonNodeNameSuffix("SvOffboarding")
       .withManualStart
 
   "Off-boarding SV4 updates the topology states" in { implicit env =>

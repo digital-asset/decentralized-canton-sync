@@ -13,7 +13,6 @@ import com.digitalasset.canton.platform.store.backend.{
   ParameterStorageBackend,
   StorageBackendFactory,
 }
-import com.digitalasset.canton.platform.store.interning.MockStringInterning
 import com.digitalasset.canton.tracing.NoTracing
 import org.scalatest.Assertion
 import org.scalatest.concurrent.Eventually
@@ -72,8 +71,7 @@ trait IndexerStabilitySpec
             DataSourceStorageBackend.DataSourceConfig(jdbcUrl),
             loggerFactory,
           )
-          val parameterStorageBackend =
-            factory.createParameterStorageBackend(new MockStringInterning)
+          val parameterStorageBackend = factory.createParameterStorageBackend
           val integrityStorageBackend = factory.createIntegrityStorageBackend
           val connection = dataSource.getConnection()
 
@@ -117,7 +115,7 @@ trait IndexerStabilitySpec
           Threading.sleep(1000L)
 
           // Verify the integrity of the index database
-          integrityStorageBackend.onlyForTestingVerifyIntegrity()(connection)
+          integrityStorageBackend.verifyIntegrity()(connection)
           logger.info(s"Integrity of the index database was checked")
 
           connection.close()

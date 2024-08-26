@@ -29,7 +29,6 @@ import com.daml.network.store.MultiDomainAcsStore.QueryResult
 import com.daml.network.sv.store.SvDsoStore
 import com.daml.network.sv.util.AnsUtil
 import com.daml.network.util.AssignedContract
-import com.daml.network.config.SpliceInstanceNamesConfig
 import com.digitalasset.canton.tracing.TraceContext
 import io.opentelemetry.api.trace.Tracer
 import cats.implicits.catsSyntaxApplicativeId
@@ -40,7 +39,6 @@ import scala.concurrent.{ExecutionContext, Future}
 class AnsSubscriptionInitialPaymentTrigger(
     override protected val context: TriggerContext,
     dsoStore: SvDsoStore,
-    spliceInstanceNamesConfig: SpliceInstanceNamesConfig,
     connection: SpliceLedgerConnection,
 )(implicit
     ec: ExecutionContext,
@@ -80,14 +78,12 @@ class AnsSubscriptionInitialPaymentTrigger(
               )
               val entryUrl = ansContext.payload.url
               val entryDescription = ansContext.payload.description
-              val ansUtil =
-                new AnsUtil(spliceInstanceNamesConfig.nameServiceNameAcronym.toLowerCase())
 
-              if (!ansUtil.isValidEntryName(entryName)) {
+              if (!AnsUtil.isValidEntryName(entryName)) {
                 confirmToReject(s"entry name ($entryName) is not valid")
-              } else if (!ansUtil.isValidEntryUrl(entryUrl)) {
+              } else if (!AnsUtil.isValidEntryUrl(entryUrl)) {
                 confirmToReject(s"entry url ($entryUrl) is not valid")
-              } else if (!ansUtil.isValidEntryDescription(entryDescription)) {
+              } else if (!AnsUtil.isValidEntryDescription(entryDescription)) {
                 confirmToReject(s"entry description ($entryDescription) is not valid")
               } else {
                 dsoStore

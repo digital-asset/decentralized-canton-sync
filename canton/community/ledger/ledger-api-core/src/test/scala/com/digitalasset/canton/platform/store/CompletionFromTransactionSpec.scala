@@ -4,9 +4,9 @@
 package com.digitalasset.canton.platform.store
 
 import com.daml.ledger.api.v2.completion.Completion.DeduplicationPeriod
+import com.daml.lf.data.Time
 import com.digitalasset.canton.TestEssentials
-import com.digitalasset.canton.data.Offset
-import com.digitalasset.daml.lf.data.Time
+import com.digitalasset.canton.ledger.offset.Offset
 import com.google.protobuf.duration.Duration
 import com.google.protobuf.timestamp.Timestamp
 import com.google.rpc.status.Status
@@ -77,7 +77,7 @@ class CompletionFromTransactionSpec
 
           val checkpoint = completionStream.checkpoint.value
           checkpoint.recordTime shouldBe Some(Timestamp(Instant.EPOCH))
-          checkpoint.offset shouldBe ""
+          checkpoint.offset shouldBe a[Some[_]]
 
           val completion = completionStream.completion.toList.head
           completion.commandId shouldBe "commandId"
@@ -118,7 +118,7 @@ class CompletionFromTransactionSpec
       val status = Status.of(io.grpc.Status.Code.INTERNAL.value(), "message", Seq.empty)
       val completionStream = CompletionFromTransaction.rejectedCompletion(
         Time.Timestamp.Epoch,
-        Offset.fromLong(2L),
+        Offset.beforeBegin,
         "commandId",
         status,
         "applicationId",
@@ -129,7 +129,7 @@ class CompletionFromTransactionSpec
 
       val checkpoint = completionStream.checkpoint.value
       checkpoint.recordTime shouldBe Some(Timestamp(Instant.EPOCH))
-      checkpoint.offset shouldBe Offset.fromLong(2L).toHexString
+      checkpoint.offset shouldBe a[Some[_]]
 
       val completion = completionStream.completion.toList.head
       completion.commandId shouldBe "commandId"

@@ -7,11 +7,11 @@ import cats.data.OptionT
 import cats.syntax.foldable.*
 import cats.syntax.parallel.*
 import com.daml.metrics.api.MetricsContext
+import com.digitalasset.canton.LedgerTransactionId
 import com.digitalasset.canton.concurrent.{DirectExecutionContext, FutureSupervisor}
 import com.digitalasset.canton.config.ProcessingTimeout
 import com.digitalasset.canton.config.RequireTypes.{NonNegativeInt, NonNegativeLong}
 import com.digitalasset.canton.data.CantonTimestamp
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.lifecycle.{
   AsyncCloseable,
   AsyncOrSyncCloseable,
@@ -30,14 +30,19 @@ import com.digitalasset.canton.participant.event.RecordOrderPublisher.{
   PendingPublish,
 }
 import com.digitalasset.canton.participant.metrics.ParticipantMetrics
+import com.digitalasset.canton.participant.store.EventLogId.{
+  DomainEventLogId,
+  ParticipantEventLogId,
+}
 import com.digitalasset.canton.participant.store.MultiDomainEventLog.*
 import com.digitalasset.canton.participant.store.{
   EventLogId,
   MultiDomainEventLog,
   ParticipantEventLog,
   SingleDimensionEventLog,
+  TransferStore,
 }
-import com.digitalasset.canton.participant.sync.TimestampedEvent.EventId
+import com.digitalasset.canton.participant.sync.TimestampedEvent.{EventId, TransactionEventId}
 import com.digitalasset.canton.participant.sync.{
   LedgerSyncEvent,
   SyncDomainPersistentStateLookup,
@@ -51,8 +56,10 @@ import com.digitalasset.canton.participant.{
 }
 import com.digitalasset.canton.pekkostreams.dispatcher.Dispatcher
 import com.digitalasset.canton.pekkostreams.dispatcher.SubSource.RangeSource
+import com.digitalasset.canton.protocol.TargetDomainId
 import com.digitalasset.canton.store.IndexedStringStore
 import com.digitalasset.canton.time.Clock
+import com.digitalasset.canton.topology.DomainId
 import com.digitalasset.canton.tracing.{TraceContext, Traced}
 import com.digitalasset.canton.util.FutureInstances.*
 import com.digitalasset.canton.util.ShowUtil.*
@@ -75,7 +82,7 @@ class InMemoryMultiDomainEventLog(
     byEventId: NamedLoggingContext => EventId => OptionT[Future, (EventLogId, LocalOffset)],
     clock: Clock,
     metrics: ParticipantMetrics,
-    exitOnFatalFailures: Boolean,
+    override val transferStoreFor: TargetDomainId => Either[String, TransferStore],
     override val indexedStringStore: IndexedStringStore,
     override protected val timeouts: ProcessingTimeout,
     futureSupervisor: FutureSupervisor,
@@ -124,11 +131,10 @@ class InMemoryMultiDomainEventLog(
     futureSupervisor,
     timeouts,
     loggerFactory,
-    crashOnFailure = exitOnFatalFailures,
   )
 
   // Must run sequentially
-  private def publishInternal(data: PublicationData) = Future {
+  private def publishInternal(data: PublicationData) = {
     implicit val traceContext: TraceContext = data.traceContext
     val PublicationData(id, event, inFlightReference) = data
     val localOffset = event.localOffset
@@ -183,18 +189,28 @@ class InMemoryMultiDomainEventLog(
       )
       entriesRef.set(newEntries)
 
-      dispatcher.signalNewHead(nextOffset.toNonNegative) // new end index is inclusive
-      val deduplicationInfo = DeduplicationInfo.fromTimestampedEvent(event)
-      val publication = OnPublish.Publication(
-        nextOffset,
-        publicationTime,
-        inFlightReference,
-        deduplicationInfo,
-        event.event,
-      )
-      notifyOnPublish(Seq(publication))
+      val notifyTransferF: Future[Unit] = event.event match {
+        case transfer: LedgerSyncEvent.TransferEvent if transfer.isTransferringParticipant =>
+          notifyOnPublishTransfer(Seq((transfer, nextOffset)))
 
-      metrics.updatesPublished.mark(event.eventSize.toLong)(MetricsContext.Empty)
+        case _ => Future.unit
+      }
+
+      notifyTransferF.map { _ =>
+        dispatcher.signalNewHead(nextOffset.toNonNegative) // new end index is inclusive
+        val deduplicationInfo = DeduplicationInfo.fromTimestampedEvent(event)
+        val publication = OnPublish.Publication(
+          nextOffset,
+          publicationTime,
+          inFlightReference,
+          deduplicationInfo,
+          event.event,
+        )
+        notifyOnPublish(Seq(publication))
+
+        metrics.updatesPublished.mark(event.eventSize.toLong)(MetricsContext.Empty)
+      }
+
     } else {
       ErrorUtil.internalError(
         new IllegalArgumentException(
@@ -359,6 +375,14 @@ class InMemoryMultiDomainEventLog(
       }
       .map(_.toMap)
   }
+
+  override def lookupTransactionDomain(
+      transactionId: LedgerTransactionId
+  )(implicit traceContext: TraceContext): OptionT[Future, DomainId] =
+    byEventId(namedLoggingContext)(TransactionEventId(transactionId)).subflatMap {
+      case (DomainEventLogId(id), _localOffset) => Some(id.item)
+      case (ParticipantEventLogId(_), _localOffset) => None
+    }
 
   override def lastLocalOffsetBeforeOrAt(
       eventLogId: EventLogId,
@@ -531,7 +555,7 @@ class InMemoryMultiDomainEventLog(
   override def reportMaxEventAgeMetric(oldestEventTimestamp: Option[CantonTimestamp]): Unit =
     MetricsHelper.updateAgeInHoursGauge(
       clock,
-      metrics.pruning.maxEventAge,
+      metrics.pruning.prune.maxEventAge,
       oldestEventTimestamp,
     )
 }
@@ -542,10 +566,10 @@ object InMemoryMultiDomainEventLog extends HasLoggerName {
       participantEventLog: ParticipantEventLog,
       clock: Clock,
       timeouts: ProcessingTimeout,
+      transferStoreFor: TargetDomainId => Either[String, TransferStore],
       indexedStringStore: IndexedStringStore,
       metrics: ParticipantMetrics,
       futureSupervisor: FutureSupervisor,
-      exitOnFatalFailures: Boolean,
       loggerFactory: NamedLoggerFactory,
   )(implicit executionContext: ExecutionContext): InMemoryMultiDomainEventLog = {
 
@@ -564,7 +588,7 @@ object InMemoryMultiDomainEventLog extends HasLoggerName {
       byEventId(allEventLogs),
       clock,
       metrics,
-      exitOnFatalFailures = exitOnFatalFailures,
+      transferStoreFor,
       indexedStringStore,
       timeouts,
       futureSupervisor,

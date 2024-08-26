@@ -17,7 +17,6 @@ import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.Thereafter.syntax.*
 import com.digitalasset.canton.util.{DelayUtil, LoggerUtil}
 import com.google.rpc.status.Status
-import io.grpc.Context
 
 import scala.concurrent.duration.*
 import scala.concurrent.{ExecutionContext, Future}
@@ -90,6 +89,7 @@ class CommandSubmitterWithRetry(
     val commandId = commands.commandId
     val deadline: CantonTimestamp = clock.now.plus(timeout.toJava)
     def go(): FutureUnlessShutdown[CommandResult] = {
+      traceContext.context.makeCurrent()
       abortIfClosing("submit-with-retry", futureSupervisor) {
         logger.debug(s"Submitting command=${commandId} to command service")
         commandServiceClient
@@ -130,7 +130,7 @@ class CommandSubmitterWithRetry(
             FutureUnlessShutdown.pure(CommandResult.Success(result.updateId))
         }
     }
-    Context.current().fork().call(() => go())
+    go()
   }
 
   override protected def closeAsync(): Seq[AsyncOrSyncCloseable] = Nil

@@ -11,7 +11,7 @@ import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.participant.store.SyncDomainPersistentState
 import com.digitalasset.canton.protocol.ContractIdSyntax.orderingLfContractId
 import com.digitalasset.canton.protocol.{LfContractId, SerializableContract}
-import com.digitalasset.canton.topology.client.DomainTopologyClient
+import com.digitalasset.canton.topology.client.{DomainTopologyClient, TopologySnapshot}
 import com.digitalasset.canton.topology.{DomainId, ParticipantId, PartyId}
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.MonadUtil
@@ -132,7 +132,7 @@ private[inspection] object AcsInspection {
           .map(Some(_))
 
       case None =>
-        EitherT.right[Error](getCurrentSnapshot(state))
+        EitherT.liftF[Future, Error, MaybeSnapshot](getCurrentSnapshot(state))
     }
 
     maybeSnapshotET.map(
@@ -193,12 +193,12 @@ private[inspection] object AcsInspection {
       traceContext: TraceContext,
   ): EitherT[Future, String, Unit] = {
     for {
-      topologySnapshot <- EitherT.right[String](
+      topologySnapshot <- EitherT.liftF[Future, String, TopologySnapshot](
         topologyClient.awaitSnapshot(snapshotTs)
       )
 
       hostedStakeholders <-
-        EitherT.right[String](
+        EitherT.liftF[Future, String, Seq[LfPartyId]](
           topologySnapshot
             .hostedOn(allStakeholders, participantId)
             .map(_.keysIterator.toSeq)
@@ -234,7 +234,7 @@ private[inspection] object AcsInspection {
 
     for {
       batch <- state.contractStore
-        .lookupManyExistingUncached(cids)
+        .lookupManyUncached(cids)
         .leftMap(missingContract => Error.InconsistentSnapshot(domainId, missingContract))
 
       contractsWithTransferCounter = batch.zip(transferCounters)

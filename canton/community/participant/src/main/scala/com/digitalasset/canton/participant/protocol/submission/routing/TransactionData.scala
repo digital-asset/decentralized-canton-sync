@@ -6,15 +6,15 @@ package com.digitalasset.canton.participant.protocol.submission.routing
 import cats.data.EitherT
 import cats.syntax.either.*
 import cats.syntax.traverse.*
-import com.digitalasset.canton.ledger.participant.state.SubmitterInfo
+import com.daml.lf.data.Ref.Party
+import com.daml.lf.engine.Blinding
+import com.digitalasset.canton.ledger.participant.state.v2.SubmitterInfo
 import com.digitalasset.canton.participant.sync.TransactionRoutingError
 import com.digitalasset.canton.participant.sync.TransactionRoutingError.MalformedInputErrors
 import com.digitalasset.canton.protocol.{LfContractId, LfVersionedTransaction}
 import com.digitalasset.canton.topology.DomainId
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.{LfPackageId, LfPartyId}
-import com.digitalasset.daml.lf.data.Ref.Party
-import com.digitalasset.daml.lf.engine.Blinding
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -44,7 +44,7 @@ private[routing] object TransactionData {
       domainStateProvider: DomainStateProvider,
       contractRoutingParties: Map[LfContractId, Set[Party]],
       disclosedContracts: Seq[LfContractId],
-      prescribedDomainIdO: Option[DomainId],
+      prescribedDomainId: Option[DomainId],
   )(implicit
       ec: ExecutionContext,
       traceContext: TraceContext,
@@ -66,7 +66,7 @@ private[routing] object TransactionData {
       requiredPackagesPerParty = Blinding.partyPackages(transaction),
       submitters = submitters,
       inputContractsDomainData = contractsDomainData,
-      prescribedDomainO = prescribedDomainIdO,
+      prescribedDomainO = prescribedDomainId,
     )
   }
 
@@ -76,7 +76,7 @@ private[routing] object TransactionData {
       domainStateProvider: DomainStateProvider,
       contractRoutingParties: Map[LfContractId, Set[Party]],
       disclosedContracts: Seq[LfContractId],
-      prescribedDomainO: Option[DomainId],
+      submitterDomainId: Option[DomainId],
   )(implicit
       ec: ExecutionContext,
       traceContext: TraceContext,
@@ -98,7 +98,7 @@ private[routing] object TransactionData {
         domainStateProvider,
         contractRoutingParties,
         disclosedContracts,
-        prescribedDomainO,
+        submitterDomainId,
       )
     } yield transactionData
   }

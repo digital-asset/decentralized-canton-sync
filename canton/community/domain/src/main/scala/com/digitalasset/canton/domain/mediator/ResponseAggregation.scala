@@ -10,12 +10,7 @@ import cats.syntax.parallel.*
 import com.daml.nonempty.NonEmpty
 import com.digitalasset.canton.LfPartyId
 import com.digitalasset.canton.config.RequireTypes.{NonNegativeInt, PositiveInt}
-import com.digitalasset.canton.data.{
-  CantonTimestamp,
-  Quorum,
-  ViewConfirmationParameters,
-  ViewPosition,
-}
+import com.digitalasset.canton.data.{CantonTimestamp, ConfirmingParty, Informee, ViewPosition}
 import com.digitalasset.canton.domain.mediator.MediatorVerdict.MediatorApprove
 import com.digitalasset.canton.domain.mediator.ResponseAggregation.ViewState
 import com.digitalasset.canton.error.MediatorError
@@ -46,7 +41,6 @@ import scala.concurrent.{ExecutionContext, Future}
 final case class ResponseAggregation[VKEY](
     override val requestId: RequestId,
     override val request: MediatorConfirmationRequest,
-    timeout: CantonTimestamp,
     override val version: CantonTimestamp,
     state: Either[MediatorVerdict, Map[VKEY, ViewState]],
 )(val requestTraceContext: TraceContext)(implicit val viewKeyOps: ViewKey[VKEY])
@@ -66,18 +60,6 @@ final case class ResponseAggregation[VKEY](
         verdict.toVerdict(protocolVersion),
       )(requestTraceContext)
     }
-
-  private def quorumsSatisfied(
-      quorums: Seq[Quorum]
-  ): Boolean =
-    quorums.forall(_.threshold.unwrap == 0)
-
-  private def quorumsCanBeSatisfied(
-      quorums: Seq[Quorum]
-  ): Boolean =
-    quorums.forall(quorum =>
-      quorum.threshold.unwrap <= quorum.confirmers.map { case (_, weight) => weight.unwrap }.sum
-    )
 
   /** Record the additional confirmation response received. */
   override def validateAndProgress(
@@ -144,16 +126,15 @@ final case class ResponseAggregation[VKEY](
         )
       ),
     )
-    val ViewState(consortiumVoting, quorumsState, rejections) =
+    val ViewState(pendingConfirmingParties, consortiumVoting, distanceToThreshold, rejections) =
       stateOfView
-    val pendingConfirmingParties = ViewConfirmationParameters.confirmersIdsFromQuorums(quorumsState)
     val (newlyResponded, _) =
-      pendingConfirmingParties.partition(party => authorizedParties.contains(party))
+      pendingConfirmingParties.partition(cp => authorizedParties.contains(cp.party))
 
     loggingContext.debug(
       show"$requestId($keyName $viewKey): Received verdict $localVerdict for pending parties $newlyResponded by participant $sender. "
     )
-    val alreadyResponded = authorizedParties -- newlyResponded
+    val alreadyResponded = authorizedParties -- newlyResponded.map(_.party)
     // Because some of the responders might have had some other participant already confirmed on their behalf
     // we ignore those responders
     if (alreadyResponded.nonEmpty)
@@ -169,42 +150,30 @@ final case class ResponseAggregation[VKEY](
         case LocalApprove() =>
           val consortiumVotingUpdated =
             newlyResponded.foldLeft(consortiumVoting)((votes, confirmingParty) => {
-              votes + (confirmingParty -> votes(confirmingParty).approveBy(sender))
+              votes + (confirmingParty.party -> votes(confirmingParty.party).approveBy(sender))
             })
-          val newlyRespondedFullVotes = newlyResponded.filter(consortiumVotingUpdated(_).isApproved)
+          val newlyRespondedFullVotes = newlyResponded.filter { case ConfirmingParty(party, _) =>
+            consortiumVotingUpdated(party).isApproved
+          }
           loggingContext.debug(
             show"$requestId($keyName $viewKey): Received an approval (or reached consortium thresholds) for parties: $newlyRespondedFullVotes"
           )
+          val contribution = newlyRespondedFullVotes.foldLeft(0)(_ + _.weight.unwrap)
           val stillPending = pendingConfirmingParties -- newlyRespondedFullVotes
           if (newlyRespondedFullVotes.isEmpty) {
             loggingContext.debug(
               show"$requestId($keyName $viewKey): Awaiting approvals or additional votes for consortiums for $stillPending"
             )
           }
-
-          def updateQuorumsStateWithThresholdUpdate: Seq[Quorum] =
-            quorumsState.map { quorum =>
-              val contribution = quorum.confirmers
-                .filter { case (pId, _) => newlyRespondedFullVotes.contains(pId) }
-                .foldLeft(0) { case (acc, (_, weight)) =>
-                  acc + weight.unwrap
-                }
-              // if all thresholds in the list are 0 then all quorums have been met.
-              val updatedThreshold = NonNegativeInt
-                .create(quorum.threshold.unwrap - contribution)
-                .getOrElse(NonNegativeInt.zero)
-              val updatedConfirmers = quorum.confirmers -- newlyRespondedFullVotes
-              Quorum(updatedConfirmers, updatedThreshold)
-            }
-
           val nextViewState = ViewState(
+            stillPending,
             consortiumVotingUpdated,
-            updateQuorumsStateWithThresholdUpdate,
+            distanceToThreshold - contribution,
             rejections,
           )
           val nextStatesOfViews = statesOfViews + (viewKey -> nextViewState)
           Either.cond(
-            nextStatesOfViews.values.exists(viewState => !quorumsSatisfied(viewState.quorumsState)),
+            nextStatesOfViews.values.exists(_.distanceToThreshold > 0),
             nextStatesOfViews,
             MediatorApprove,
           )
@@ -222,21 +191,17 @@ final case class ResponseAggregation[VKEY](
               show"$requestId($keyName $viewKey): Received a rejection (or reached consortium thresholds) for parties: $newRejectionsFullVotes"
             )
             val nextRejections =
-              NonEmpty(List, newRejectionsFullVotes -> rejection, rejections*)
-
-            def updateQuorumsStateWithoutThresholdUpdate(): Seq[Quorum] =
-              quorumsState.map { quorum =>
-                val updatedConfirmers = quorum.confirmers -- newRejectionsFullVotes
-                Quorum(updatedConfirmers, quorum.threshold)
-              }
-
+              NonEmpty(List, (newRejectionsFullVotes -> rejection), rejections*)
+            val stillPending =
+              pendingConfirmingParties.filterNot(cp => newRejectionsFullVotes.contains(cp.party))
             val nextViewState = ViewState(
+              stillPending,
               consortiumVotingUpdated,
-              updateQuorumsStateWithoutThresholdUpdate(),
+              distanceToThreshold,
               nextRejections,
             )
             Either.cond(
-              quorumsCanBeSatisfied(nextViewState.quorumsState),
+              nextViewState.distanceToThreshold <= nextViewState.totalAvailableWeight,
               statesOfViews + (viewKey -> nextViewState),
               // TODO(#5337): Don't discard the rejection reasons of the other views.
               MediatorVerdict.ParticipantReject(nextRejections),
@@ -247,8 +212,9 @@ final case class ResponseAggregation[VKEY](
               show"$requestId($keyName $viewKey): Received a rejection, but awaiting more consortium votes for: $pendingConfirmingParties"
             )
             val nextViewState = ViewState(
+              pendingConfirmingParties,
               consortiumVotingUpdated,
-              quorumsState,
+              distanceToThreshold,
               rejections,
             )
             Right(statesOfViews + (viewKey -> nextViewState))
@@ -260,10 +226,9 @@ final case class ResponseAggregation[VKEY](
   def copy(
       requestId: RequestId = requestId,
       request: MediatorConfirmationRequest = request,
-      timeout: CantonTimestamp = timeout,
       version: CantonTimestamp = version,
       state: Either[MediatorVerdict, Map[VKEY, ViewState]] = state,
-  ): ResponseAggregation[VKEY] = ResponseAggregation(requestId, request, timeout, version, state)(
+  ): ResponseAggregation[VKEY] = ResponseAggregation(requestId, request, version, state)(
     requestTraceContext
   )
 
@@ -276,9 +241,8 @@ final case class ResponseAggregation[VKEY](
     case Right(statesOfView) =>
       val unresponsiveParties = statesOfView
         .flatMap { case (_, viewState) =>
-          if (!quorumsSatisfied(viewState.quorumsState))
-            viewState.quorumsState.flatMap(_.confirmers.keys).toSet
-          else Set.empty
+          if (viewState.distanceToThreshold > 0) viewState.pendingConfirmingParties.map(_.party)
+          else Seq.empty
         }
         // Sort and deduplicate the parties so that multiple mediator replicas generate the same rejection reason
         .to(SortedSet)
@@ -301,7 +265,6 @@ final case class ResponseAggregation[VKEY](
   override def pretty: Pretty[ResponseAggregation.this.type] = prettyOfClass(
     param("id", _.requestId),
     param("request", _.request),
-    param("timeout", _.timeout),
     param("version", _.version),
     param("state", _.state),
   )
@@ -338,17 +301,21 @@ object ResponseAggregation {
   }
 
   final case class ViewState(
+      pendingConfirmingParties: Set[ConfirmingParty],
       consortiumVoting: Map[
         LfPartyId,
         ConsortiumVotingState,
-      ],
-      quorumsState: Seq[Quorum],
+      ], // pendingConfirmingParties is always a subset of consortiumVoting.keys()
+      distanceToThreshold: Int,
       rejections: List[(Set[LfPartyId], LocalReject)],
   ) extends PrettyPrinting {
 
+    lazy val totalAvailableWeight: Int = pendingConfirmingParties.map(_.weight.unwrap).sum
+
     override def pretty: Pretty[ViewState] = {
       prettyOfClass(
-        param("quorumsState", _.quorumsState),
+        param("distanceToThreshold", _.distanceToThreshold),
+        param("pendingConfirmingParties", _.pendingConfirmingParties),
         param("consortiumVoting", _.consortiumVoting),
         param("rejections", _.rejections),
       )
@@ -360,7 +327,6 @@ object ResponseAggregation {
   def fromRequest(
       requestId: RequestId,
       request: MediatorConfirmationRequest,
-      timeout: CantonTimestamp,
       topologySnapshot: TopologySnapshot,
   )(implicit
       requestTraceContext: TraceContext,
@@ -368,40 +334,38 @@ object ResponseAggregation {
   ): Future[ResponseAggregation[?]] =
     for {
       initialState <- mkInitialState(
-        request.informeesAndConfirmationParamsByViewPosition,
+        request.informeesAndThresholdByViewPosition,
         topologySnapshot,
       )
     } yield {
       ResponseAggregation[ViewPosition](
         requestId,
         request,
-        timeout,
         requestId.unwrap,
         Right(initialState),
       )(requestTraceContext = requestTraceContext)
     }
 
   private def mkInitialState[K](
-      informeesAndConfirmationParamsByViewPosition: Map[K, ViewConfirmationParameters],
+      informeesAndThresholdByView: Map[K, (Set[Informee], NonNegativeInt)],
       topologySnapshot: TopologySnapshot,
   )(implicit ec: ExecutionContext, tc: TraceContext): Future[Map[K, ViewState]] = {
-    informeesAndConfirmationParamsByViewPosition.toSeq
-      .parTraverse {
-        case (viewKey, viewConfirmationParameters @ ViewConfirmationParameters(_, quorumsState)) =>
-          for {
-            votingThresholds <- topologySnapshot.consortiumThresholds(
-              viewConfirmationParameters.confirmers
-            )
-          } yield {
-            val consortiumVotingState = votingThresholds.map { case (party, threshold) =>
-              party -> ConsortiumVotingState(threshold)
-            }
-            viewKey -> ViewState(
-              consortiumVotingState,
-              quorumsState,
-              rejections = Nil,
-            )
+    informeesAndThresholdByView.toSeq
+      .parTraverse { case (viewKey, (informees, threshold)) =>
+        val confirmingParties = informees.collect { case cp: ConfirmingParty => cp }
+        for {
+          votingThresholds <- topologySnapshot.consortiumThresholds(confirmingParties.map(_.party))
+        } yield {
+          val consortiumVotingState = votingThresholds.map { case (party, threshold) =>
+            (party -> ConsortiumVotingState(threshold))
           }
+          viewKey -> ViewState(
+            confirmingParties,
+            consortiumVotingState,
+            threshold.unwrap,
+            rejections = Nil,
+          )
+        }
       }
       .map(_.toMap)
   }

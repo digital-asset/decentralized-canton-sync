@@ -3,12 +3,17 @@
 
 package com.digitalasset.canton.logging
 
+import com.digitalasset.canton.logging.NamedEventCapturingLogger.eventToString
+import com.digitalasset.canton.util.ErrorUtil
 import com.typesafe.scalalogging.Logger
 import org.scalactic.source
 import org.scalatest.Assertion
 import org.scalatest.matchers.should.Matchers.*
-import org.slf4j.event.Level
+import org.slf4j.event.{Level, SubstituteLoggingEvent}
+import org.slf4j.helpers
 
+import java.time.format.DateTimeFormatter
+import java.time.{Instant, ZoneId, ZonedDateTime}
 import java.util.concurrent.TimeUnit
 import scala.collection.immutable.ListMap
 import scala.jdk.CollectionConverters.*
@@ -20,28 +25,27 @@ class NamedEventCapturingLogger(
     val name: String,
     val properties: ListMap[String, String] = ListMap.empty,
     outputLogger: Option[Logger] = None,
-    skip: LogEntry => Boolean = _ => false,
 ) extends NamedLoggerFactory {
 
-  val eventQueue: java.util.concurrent.BlockingQueue[LogEntry] =
-    new java.util.concurrent.LinkedBlockingQueue[LogEntry]()
+  val eventQueue: java.util.concurrent.BlockingQueue[SubstituteLoggingEvent] =
+    new java.util.concurrent.LinkedBlockingQueue[SubstituteLoggingEvent]()
 
-  private def pollEventQueue(ts: Option[Long]): LogEntry = {
+  private def pollEventQueue(ts: Option[Long]): SubstituteLoggingEvent = {
     val event = ts match {
       case None => eventQueue.poll()
       case Some(millis) => eventQueue.poll(millis, TimeUnit.MILLISECONDS)
     }
     if (event != null) {
       outputLogger.foreach(
-        _.debug(s"Captured ${event.loggerName} ${event.level} ${event.message}")
+        _.debug(s"Captured ${event.getLoggerName} ${event.getLevel} ${event.getMessage}")
       )
     }
     event
   }
 
-  val eventSeq: Seq[LogEntry] = eventQueue.asScala.toSeq
+  val eventSeq: Seq[SubstituteLoggingEvent] = eventQueue.asScala.toSeq
 
-  private val logger = new BufferingLogger(eventQueue, name, skip(_))
+  private val logger = new helpers.SubstituteLogger(name, eventQueue, false)
 
   override def appendUnnamedKey(key: String, value: String): NamedLoggerFactory = this
   override def append(key: String, value: String): NamedLoggerFactory = this
@@ -55,9 +59,7 @@ class NamedEventCapturingLogger(
   ): Boolean = {
     val event = eventQueue.peek()
     if (
-      event != null && event.message == expectedMessage && event.level == expectedLevel && event.throwable == Option(
-        expectedThrowable
-      )
+      event != null && event.getMessage == expectedMessage && event.getLevel == expectedLevel && event.getThrowable == expectedThrowable
     ) {
       pollEventQueue(None)
       true
@@ -83,20 +85,20 @@ class NamedEventCapturingLogger(
     assertNextEvent(
       { event =>
         withClue("Unexpected log message: ") {
-          messageAssertion(event.message)
+          messageAssertion(event.getMessage)
         }
         withClue("Unexpected log level: ") {
-          event.level shouldBe expectedLevel
+          event.getLevel shouldBe expectedLevel
         }
         withClue("Unexpected throwable: ") {
-          event.throwable shouldBe Option(expectedThrowable)
+          event.getThrowable shouldBe expectedThrowable
         }
       },
       timeoutMillis,
     )
 
-  def assertNextEvent(assertion: LogEntry => Assertion, timeoutMillis: Long = 2000)(implicit
-      pos: source.Position
+  def assertNextEvent(assertion: SubstituteLoggingEvent => Assertion, timeoutMillis: Long = 2000)(
+      implicit pos: source.Position
   ): Assertion =
     Option(pollEventQueue(Some(timeoutMillis))) match {
       case None => fail("Missing log event.")
@@ -106,6 +108,41 @@ class NamedEventCapturingLogger(
   def assertNoMoreEvents(timeoutMillis: Long = 0)(implicit pos: source.Position): Assertion =
     Option(eventQueue.poll(timeoutMillis, TimeUnit.MILLISECONDS)) match {
       case None => succeed
-      case Some(event) => fail(s"Unexpected log event: $event")
+      case Some(event) => fail(s"Unexpected log event: ${eventToString(event)}")
     }
+}
+
+object NamedEventCapturingLogger {
+
+  def eventToString(event: SubstituteLoggingEvent): String = {
+
+    val kvs = Option(event.getKeyValuePairs) match {
+      case Some(kvs) => kvs.asScala.mkString("{", ", ", "}")
+      case None => ""
+    }
+
+    val markers = Option(event.getMarkers) match {
+      case Some(markers) => markers.asScala.mkString("[markers](", ", ", ")")
+      case None => ""
+    }
+
+    val args = Option(event.getArgumentArray) match {
+      case Some(args) => args.mkString("[args](", ", ", ")")
+      case None => ""
+    }
+
+    val throwable = Option(event.getThrowable) match {
+      case Some(t) => "\n" + ErrorUtil.messageWithStacktrace(t)
+      case None => ""
+    }
+
+    val t = ZonedDateTime.ofInstant(Instant.ofEpochMilli(event.getTimeStamp), ZoneId.systemDefault)
+    val ts = DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(t)
+    val level = event.getLevel
+    val loggerName = event.getLoggerName
+    val msg = event.getMessage
+
+    s"$ts $level $loggerName - $msg $kvs $markers $args$throwable".trim
+  }
+
 }
