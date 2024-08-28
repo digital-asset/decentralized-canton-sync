@@ -576,7 +576,7 @@ class HttpScanHandler(
               legacyConfig.sequencerId,
               legacyConfig.url,
               nodeState.svName,
-              OffsetDateTime.now,
+              OffsetDateTime.MIN,
             )
             sequencerConfig <- (legacySequencers ++ sequencers).distinct
           } yield sequencerConfig
@@ -996,7 +996,7 @@ class HttpScanHandler(
                     .withDescription("No updates ever happened for a snapshot.")
                     .asRuntimeException()
                 )
-                ._1
+                .update
                 .update
                 .recordTime
             )
