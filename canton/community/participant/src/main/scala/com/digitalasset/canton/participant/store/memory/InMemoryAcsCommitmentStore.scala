@@ -3,17 +3,13 @@
 
 package com.digitalasset.canton.participant.store.memory
 
-import com.daml.nonempty.NonEmpty
-import com.digitalasset.canton.LfPartyId
 import com.digitalasset.canton.data.{CantonTimestamp, CantonTimestampSecond}
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.participant.event.RecordTime
 import com.digitalasset.canton.participant.pruning.{
   SortedReconciliationIntervals,
   SortedReconciliationIntervalsProvider,
 }
-import com.digitalasset.canton.participant.store.AcsCommitmentStore.CommitmentData
 import com.digitalasset.canton.participant.store.{
   AcsCommitmentStore,
   CommitmentQueue,
@@ -28,6 +24,7 @@ import com.digitalasset.canton.store.memory.InMemoryPrunableByTime
 import com.digitalasset.canton.topology.ParticipantId
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.ErrorUtil
+import com.digitalasset.canton.{DiscardOps, LfPartyId}
 import pprint.Tree
 
 import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
@@ -61,23 +58,22 @@ class InMemoryAcsCommitmentStore(protected val loggerFactory: NamedLoggerFactory
   override val queue = new InMemoryCommitmentQueue
 
   override def storeComputed(
-      items: NonEmpty[Seq[AcsCommitmentStore.CommitmentData]]
+      period: CommitmentPeriod,
+      counterParticipant: ParticipantId,
+      commitment: AcsCommitment.CommitmentType,
   )(implicit traceContext: TraceContext): Future[Unit] = {
     blocking {
       computed.synchronized {
-        items.toList.foreach { case item =>
-          val CommitmentData(counterParticipant, period, commitment) = item
-          val oldMap = computed.getOrElse(counterParticipant, Map.empty)
-          val oldCommitment = oldMap.getOrElse(period, commitment)
-          if (oldCommitment != commitment) {
-            ErrorUtil.internalError(
-              new IllegalArgumentException(
-                s"Trying to store $commitment for $period and counter-participant $counterParticipant, but $oldCommitment is already stored"
-              )
+        val oldMap = computed.getOrElse(counterParticipant, Map.empty)
+        val oldCommitment = oldMap.getOrElse(period, commitment)
+        if (oldCommitment != commitment) {
+          ErrorUtil.internalError(
+            new IllegalArgumentException(
+              s"Trying to store $commitment for $period and counter-participant $counterParticipant, but $oldCommitment is already stored"
             )
-          } else {
-            computed.update(counterParticipant, oldMap + (period -> commitment))
-          }
+          )
+        } else {
+          computed.update(counterParticipant, oldMap + (period -> commitment))
         }
       }
     }

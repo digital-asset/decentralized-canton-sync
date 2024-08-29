@@ -15,7 +15,7 @@ import com.daml.network.environment.{
   RetryProvider,
   SpliceLedgerConnection,
 }
-import com.daml.network.sv.SynchronizerNode
+import com.daml.network.sv.LocalSynchronizerNode
 import com.daml.network.sv.onboarding.SynchronizerNodeReconciler.SynchronizerNodeState
 import com.daml.network.sv.store.SvDsoStore
 import com.daml.network.store.DsoRulesStore.DsoRulesWithSvNodeState
@@ -65,7 +65,7 @@ class SynchronizerNodeReconciler(
   }
 
   def reconcileSynchronizerNodeConfigIfRequired(
-      synchronizerNode: Option[SynchronizerNode],
+      localSynchronizerNode: Option[LocalSynchronizerNode],
       domainId: DomainId,
       state: SynchronizerNodeState,
       migrationId: Long,
@@ -74,8 +74,8 @@ class SynchronizerNodeReconciler(
       tc: TraceContext,
   ): Future[Unit] = {
     def setConfigIfRequired() = for {
-      localSequencerConfig <- SvUtil.getSequencerConfig(synchronizerNode, migrationId)
-      localMediatorConfig <- SvUtil.getMediatorConfig(synchronizerNode)
+      localSequencerConfig <- SvUtil.getSequencerConfig(localSynchronizerNode, migrationId)
+      localMediatorConfig <- SvUtil.getMediatorConfig(localSynchronizerNode)
       rulesAndState <- dsoStore.getDsoRulesWithSvNodeState(svParty)
       nodeState = rulesAndState.svNodeState.payload
       // TODO(#4901): do not use default, but reconcile all configured domains
@@ -92,9 +92,7 @@ class SynchronizerNodeReconciler(
         _.legacySequencerConfig.toScala
       )
       shouldMarkSequencerAsOnboarded = state match {
-        case SynchronizerNodeState.OnboardedAfterDelay |
-            SynchronizerNodeState.OnboardedImmediately =>
-          sequencerConfig.exists(_.availableAfter.isEmpty)
+        case SynchronizerNodeState.Onboarded => sequencerConfig.exists(_.availableAfter.isEmpty)
         case SynchronizerNodeState.Onboarding =>
           false
       }
@@ -123,11 +121,11 @@ class SynchronizerNodeReconciler(
             synchronizerNodeConfig.map(_.cometBft).getOrElse(SvUtil.emptyCometBftConfig),
             localSequencerConfig.map { c =>
               val sequencerAvailabilityDelay =
-                synchronizerNode
+                localSynchronizerNode
                   .map(_.sequencerAvailabilityDelay)
                   .getOrElse(
                     sys.error(
-                      "synchronizerNode is not expected to be empty."
+                      "localSynchronizerNode is not expected to be empty."
                     )
                   )
               new SequencerConfig(
@@ -135,10 +133,8 @@ class SynchronizerNodeReconciler(
                 c.sequencerId,
                 c.url,
                 (state match {
-                  case SynchronizerNodeState.OnboardedAfterDelay =>
+                  case SynchronizerNodeState.Onboarded =>
                     Some(clock.now.toInstant.plus(sequencerAvailabilityDelay))
-                  case SynchronizerNodeState.OnboardedImmediately =>
-                    Some(clock.now.toInstant)
                   case SynchronizerNodeState.Onboarding =>
                     None
                 }).toJava,
@@ -230,14 +226,8 @@ object SynchronizerNodeReconciler {
 
   object SynchronizerNodeState {
 
-    /** Onboard after onboarding delay to ensure that the sequencer will not produce tombstones for inflight requests.
-      * This is used for sequencers added to an already functional synchronizer.
-      */
-    case object OnboardedAfterDelay extends SynchronizerNodeState
+    case object Onboarded extends SynchronizerNodeState
 
-    /** Onboard immediately, this is used after soft domain migrations where sequencers can be immediately used.
-      */
-    case object OnboardedImmediately extends SynchronizerNodeState
     case object Onboarding extends SynchronizerNodeState
 
   }

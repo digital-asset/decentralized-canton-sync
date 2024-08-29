@@ -5,7 +5,6 @@ package com.digitalasset.canton.util
 
 import cats.MonadThrow
 import cats.data.EitherT
-import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
@@ -60,11 +59,10 @@ object ResourceUtil {
   ) extends AnyVal {
     def apply[T <: AutoCloseable, V](r: => T)(
         f: T => M[V]
-    )(implicit M: MonadThrow[M], TM: Thereafter[M]): M[V] = {
+    )(implicit M: MonadThrow[M], TM: Thereafter[M], executionContext: ExecutionContext): M[V] = {
       import Thereafter.syntax.*
       import cats.syntax.flatMap.*
-      val resource: T = r
-      MonadThrow[M].fromTry(Try(f(resource))).flatten.thereafter(_ => resource.close())
+      MonadThrow[M].fromTry(Try(f(r))).flatten.thereafter(_ => r.close())
     }
   }
 
@@ -79,12 +77,6 @@ object ResourceUtil {
   def withResourceFuture[T <: AutoCloseable, V](r: => T)(f: T => Future[V])(implicit
       ec: ExecutionContext
   ): Future[V] = {
-    withResourceM(r)(f)
-  }
-
-  def withResourceFutureUS[T <: AutoCloseable, V](r: => T)(f: T => FutureUnlessShutdown[V])(implicit
-      ec: ExecutionContext
-  ): FutureUnlessShutdown[V] = {
     withResourceM(r)(f)
   }
 

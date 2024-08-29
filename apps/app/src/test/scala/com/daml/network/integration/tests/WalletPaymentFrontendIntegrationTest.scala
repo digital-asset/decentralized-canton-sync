@@ -6,7 +6,7 @@ import com.daml.network.environment.EnvironmentImpl
 import com.daml.network.integration.EnvironmentDefinition
 import com.daml.network.integration.tests.SpliceTests.SpliceTestConsoleEnvironment
 import com.daml.network.util.{
-  ContractWithState,
+  Contract,
   SpliceUtil,
   FrontendLoginUtil,
   WalletFrontendTestUtil,
@@ -463,7 +463,7 @@ class WalletPaymentFrontendIntegrationTest
   private def confirmPayment()(implicit
       env: SpliceTestConsoleEnvironment,
       webDriverType: WebDriverType,
-  ): ContractWithState[AcceptedAppPayment.ContractId, AcceptedAppPayment] = {
+  ): Contract[AcceptedAppPayment.ContractId, AcceptedAppPayment] = {
     actAndCheck(
       "Alice clicks on the button to confirm the payment", {
         click on className("payment-accept")

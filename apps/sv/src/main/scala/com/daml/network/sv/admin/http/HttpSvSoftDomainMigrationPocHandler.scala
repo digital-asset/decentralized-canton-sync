@@ -5,48 +5,54 @@ package com.daml.network.sv.admin.http
 
 import com.daml.network.auth.AuthExtractor.TracedUser
 import com.daml.network.config.{Thresholds, NetworkAppClientConfig, SharedSpliceAppParameters}
-import com.daml.network.environment.{ParticipantAdminConnection, RetryFor, RetryProvider}
+import com.daml.network.environment.{
+  MediatorAdminConnection,
+  ParticipantAdminConnection,
+  RetryFor,
+  RetryProvider,
+  SequencerAdminConnection,
+}
 import com.daml.network.environment.TopologyAdminConnection.TopologyTransactionType
 import com.daml.network.http.HttpClient
-import com.daml.network.http.v0.sv_soft_domain_migration_poc as v0
+import com.daml.network.http.v0.{sv_soft_domain_migration_poc as v0}
 import com.daml.network.http.v0.sv_soft_domain_migration_poc.SvSoftDomainMigrationPocResource
 import com.daml.network.store.AppStoreWithIngestion
 import com.daml.network.scan.admin.api.client.SingleScanConnection
 import com.daml.network.scan.config.ScanAppClientConfig
-import com.daml.network.sv.{ExtraSynchronizerNode, LocalSynchronizerNode}
+import com.daml.network.sv.LocalSynchronizerNode
+import com.daml.network.sv.config.SvSynchronizerNodeConfig
+import com.daml.network.sv.metrics.SvAppMetrics
 import com.daml.network.sv.store.SvDsoStore
-import com.daml.network.sv.onboarding.SynchronizerNodeReconciler
 import com.daml.network.util.TemplateJsonDecoder
 import com.daml.nonempty.NonEmpty
-import com.digitalasset.canton.config.{CommunityCryptoConfig, CommunityCryptoProvider}
+import com.digitalasset.canton.config.{ClientConfig, CommunityCryptoConfig, CommunityCryptoProvider}
 import com.digitalasset.canton.config.RequireTypes.{NonNegativeInt, PositiveInt}
 import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.time.Clock
-import com.digitalasset.canton.topology.{DomainId, ForceFlag, ParticipantId, UniqueIdentifier}
+import com.digitalasset.canton.topology.{DomainId, Identifier, UniqueIdentifier}
 import com.digitalasset.canton.topology.processing.{EffectiveTime, SequencedTime}
 import com.digitalasset.canton.topology.store.{
-  StoredTopologyTransaction,
-  StoredTopologyTransactions,
+  StoredTopologyTransactionX,
+  StoredTopologyTransactionsX,
   TimeQuery,
   TopologyStoreId,
 }
-import StoredTopologyTransaction.GenericStoredTopologyTransaction
+import StoredTopologyTransactionX.GenericStoredTopologyTransactionX
 import com.digitalasset.canton.topology.transaction.{
-  DomainParametersState,
-  MediatorDomainState,
-  SequencerDomainState,
-  TopologyMapping,
+  DomainParametersStateX,
+  MediatorDomainStateX,
+  SequencerDomainStateX,
+  TopologyMappingX,
 }
-import com.digitalasset.canton.topology.transaction.SignedTopologyTransaction.GenericSignedTopologyTransaction
+import com.digitalasset.canton.topology.transaction.SignedTopologyTransactionX.GenericSignedTopologyTransactionX
 import com.digitalasset.canton.tracing.{Spanning, TraceContext}
 import io.opentelemetry.api.trace.Tracer
+
 import cats.syntax.either.*
 import cats.syntax.traverse.*
-import com.digitalasset.canton.version.ProtocolVersion
 import io.grpc.Status
 import org.apache.pekko.stream.Materializer
-
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
@@ -55,14 +61,13 @@ import scala.jdk.OptionConverters.*
 class HttpSvSoftDomainMigrationPocHandler(
     dsoStoreWithIngestion: AppStoreWithIngestion[SvDsoStore],
     localSynchronizerNode: Option[LocalSynchronizerNode],
-    synchronizerNodes: Map[String, ExtraSynchronizerNode],
+    synchronizerNodes: Map[String, SvSynchronizerNodeConfig],
     participantAdminConnection: ParticipantAdminConnection,
-    migrationId: Long,
-    legacyMigrationId: Option[Long],
     clock: Clock,
     retryProvider: RetryProvider,
     protected val loggerFactory: NamedLoggerFactory,
     val amuletAppParameters: SharedSpliceAppParameters,
+    metrics: SvAppMetrics,
 )(implicit
     ec: ExecutionContextExecutor,
     mat: Materializer,
@@ -79,8 +84,8 @@ class HttpSvSoftDomainMigrationPocHandler(
   private def getScanUrls()(implicit tc: TraceContext): Future[Seq[String]] = {
     for {
       // TODO(#13301) We should use the internal URL for the SV’s own scan to avoid a loopback requirement
-      dsoRulesWithSvNodeStates <- dsoStore.getDsoRulesWithSvNodeStates()
-    } yield dsoRulesWithSvNodeStates.svNodeStates.values
+      dsoRulesWithMemberNodeStates <- dsoStore.getDsoRulesWithMemberNodeStates()
+    } yield dsoRulesWithMemberNodeStates.svNodeStates.values
       .flatMap(
         _.payload.state.synchronizerNodes.asScala.values
           .flatMap(_.scan.toScala.toList.map(_.publicUrl))
@@ -109,7 +114,7 @@ class HttpSvSoftDomainMigrationPocHandler(
     */
   private def getDecentralizedNamespaceDefinitionTransactions()(implicit
       tc: TraceContext
-  ): Future[Seq[GenericSignedTopologyTransaction]] = for {
+  ): Future[Seq[GenericSignedTopologyTransactionX]] = for {
     decentralizedSynchronizerId <- dsoStore.getAmuletRulesDomain()(tc)
     namespaceDefinitions <- participantAdminConnection.listDecentralizedNamespaceDefinition(
       decentralizedSynchronizerId,
@@ -125,8 +130,8 @@ class HttpSvSoftDomainMigrationPocHandler(
           TopologyStoreId.DomainStore(decentralizedSynchronizerId),
           TimeQuery.Range(None, None),
           includeMappings = Set(
-            TopologyMapping.Code.OwnerToKeyMapping,
-            TopologyMapping.Code.NamespaceDelegation,
+            TopologyMappingX.Code.OwnerToKeyMappingX,
+            TopologyMappingX.Code.NamespaceDelegationX,
           ),
           filterNamespace = Some(namespace),
         )
@@ -135,7 +140,7 @@ class HttpSvSoftDomainMigrationPocHandler(
     decentralizedNamespaceDefinition <- participantAdminConnection.listAllTransactions(
       TopologyStoreId.DomainStore(decentralizedSynchronizerId),
       TimeQuery.Range(None, None),
-      includeMappings = Set(TopologyMapping.Code.DecentralizedNamespaceDefinition),
+      includeMappings = Set(TopologyMappingX.Code.DecentralizedNamespaceDefinitionX),
     )
   } yield (identityTransactions ++ decentralizedNamespaceDefinition).map(_.transaction)
 
@@ -154,8 +159,8 @@ class HttpSvSoftDomainMigrationPocHandler(
           withScanConnection(url)(_.getSynchronizerIdentities(domainIdPrefix))
         }
         domainId = DomainId(
-          UniqueIdentifier.tryCreate(
-            domainIdPrefix,
+          UniqueIdentifier(
+            Identifier.tryCreate(domainIdPrefix),
             dsoStore.key.dsoParty.uid.namespace,
           )
         )
@@ -169,11 +174,11 @@ class HttpSvSoftDomainMigrationPocHandler(
         parameters <- existingSynchronizer.sequencerAdminConnection.getDomainParametersState(
           decentralizedSynchronizerId
         )
-        domainParameters = DomainParametersState(
+        domainParameters = DomainParametersStateX(
           domainId,
           parameters.mapping.parameters,
         )
-        sequencerDomainState = SequencerDomainState
+        sequencerDomainState = SequencerDomainStateX
           .create(
             domainId,
             Thresholds.sequencerConnectionsSizeThreshold(sequencers.size),
@@ -185,7 +190,7 @@ class HttpSvSoftDomainMigrationPocHandler(
               .withDescription(s"Failed to construct SequencerDomainState: $err")
               .asRuntimeException
           )
-        mediatorDomainState = MediatorDomainState
+        mediatorDomainState = MediatorDomainStateX
           .create(
             domainId,
             NonNegativeInt.zero,
@@ -203,7 +208,6 @@ class HttpSvSoftDomainMigrationPocHandler(
         _ <- participantAdminConnection.addTopologyTransactions(
           TopologyStoreId.AuthorizedStore,
           decentralizedNamespaceTxs,
-          ForceFlag.AlienMember,
         )
         signedBy = participantId.uid.namespace.fingerprint
         _ <- retryProvider.ensureThatB(
@@ -244,7 +248,6 @@ class HttpSvSoftDomainMigrationPocHandler(
         _ <- participantAdminConnection.addTopologyTransactions(
           TopologyStoreId.AuthorizedStore,
           synchronizerIdentities.flatMap(_.sequencerIdentityTransactions),
-          ForceFlag.AlienMember,
         )
         _ <- retryProvider.ensureThatB(
           RetryFor.ClientCalls,
@@ -284,7 +287,6 @@ class HttpSvSoftDomainMigrationPocHandler(
         _ <- participantAdminConnection.addTopologyTransactions(
           TopologyStoreId.AuthorizedStore,
           synchronizerIdentities.flatMap(_.mediatorIdentityTransactions),
-          ForceFlag.AlienMember,
         )
         _ <- retryProvider.ensureThatB(
           RetryFor.ClientCalls,
@@ -322,17 +324,43 @@ class HttpSvSoftDomainMigrationPocHandler(
     }
   }
 
+  private def withSequencerAdminConnection[T](
+      config: ClientConfig
+  )(f: SequencerAdminConnection => Future[T]): Future[T] = {
+    val connection = new SequencerAdminConnection(
+      config,
+      amuletAppParameters.loggingConfig.api,
+      loggerFactory,
+      metrics.grpcClientMetrics,
+      retryProvider,
+    )
+    f(connection).andThen { _ => connection.close() }
+  }
+
+  private def withMediatorAdminConnection[T](
+      config: ClientConfig
+  )(f: MediatorAdminConnection => Future[T]): Future[T] = {
+    val connection = new MediatorAdminConnection(
+      config,
+      amuletAppParameters.loggingConfig.api,
+      loggerFactory,
+      metrics.grpcClientMetrics,
+      retryProvider,
+    )
+    f(connection).andThen { _ => connection.close() }
+  }
+
   // Takes a list of (ordered) signed topology transactions and turns them into
   // StoredTopologyTransactions ensuring that only the latest serial has validUntil = None
   private def toStoredTopologyBootstrapTransactions(
-      ts: Seq[GenericSignedTopologyTransaction]
-  ): Seq[GenericStoredTopologyTransaction] =
+      ts: Seq[GenericSignedTopologyTransactionX]
+  ): Seq[GenericStoredTopologyTransactionX] =
     ts.foldRight(
-      (Set.empty[TopologyMapping.MappingHash], Seq.empty[GenericStoredTopologyTransaction])
+      (Set.empty[TopologyMappingX.MappingHash], Seq.empty[GenericStoredTopologyTransactionX])
     ) { case (tx, (newerMappings, acc)) =>
       (
         newerMappings + tx.transaction.mapping.uniqueKey,
-        StoredTopologyTransaction(
+        StoredTopologyTransactionX(
           SequencedTime(CantonTimestamp.MinValue.immediateSuccessor),
           EffectiveTime(CantonTimestamp.MinValue.immediateSuccessor),
           Option.when(newerMappings.contains(tx.transaction.mapping.uniqueKey))(
@@ -353,8 +381,8 @@ class HttpSvSoftDomainMigrationPocHandler(
   ): Future[SvSoftDomainMigrationPocResource.InitializeSynchronizerResponse] = {
     implicit val TracedUser(_, traceContext) = extracted
     val domainId = DomainId(
-      UniqueIdentifier.tryCreate(
-        domainIdPrefix,
+      UniqueIdentifier(
+        Identifier.tryCreate(domainIdPrefix),
         dsoStore.key.dsoParty.uid.namespace,
       )
     )
@@ -400,92 +428,28 @@ class HttpSvSoftDomainMigrationPocHandler(
       )
       staticDomainParameters = node.parameters
         .toStaticDomainParameters(
-          CommunityCryptoConfig(provider = CommunityCryptoProvider.Jce),
-          ProtocolVersion.v31,
+          CommunityCryptoConfig(provider = CommunityCryptoProvider.Tink)
         )
         .valueOr(err =>
           throw new IllegalArgumentException(s"Invalid domain parameters config: $err")
         )
       _ = logger.info(s"Initializing sequencer")
-      _ <- node.sequencerAdminConnection.initializeFromBeginning(
-        StoredTopologyTransactions(
-          bootstrapTransactions
-        ),
-        staticDomainParameters,
+      _ <- withSequencerAdminConnection(node.sequencer.adminApi)(
+        _.initializeFromBeginning(
+          StoredTopologyTransactionsX(
+            bootstrapTransactions
+          ),
+          staticDomainParameters,
+        )
       )
       _ = logger.info(s"Initializing mediator")
-      _ <- node.mediatorAdminConnection.initialize(
-        domainId,
-        LocalSynchronizerNode.toSequencerConnection(node.sequencerPublicApi),
+      _ <- withMediatorAdminConnection(node.mediator.adminApi)(
+        _.initialize(
+          domainId,
+          staticDomainParameters,
+          LocalSynchronizerNode.toSequencerConnection(node.sequencer.internalApi),
+        )
       )
     } yield SvSoftDomainMigrationPocResource.InitializeSynchronizerResponse.OK
-  }
-
-  override def reconcileSynchronizerDamlState(
-      respond: SvSoftDomainMigrationPocResource.ReconcileSynchronizerDamlStateResponse.type
-  )(domainIdPrefix: String)(
-      extracted: TracedUser
-  ): Future[SvSoftDomainMigrationPocResource.ReconcileSynchronizerDamlStateResponse] = {
-    implicit val TracedUser(_, traceContext) = extracted
-    val domainId = DomainId(
-      UniqueIdentifier.tryCreate(
-        domainIdPrefix,
-        dsoStore.key.dsoParty.uid.namespace,
-      )
-    )
-    val synchronizerNodeReconciler = new SynchronizerNodeReconciler(
-      dsoStore,
-      dsoStoreWithIngestion.connection,
-      legacyMigrationId,
-      clock,
-      retryProvider,
-      logger,
-    )
-    val node = synchronizerNodes
-      .get(domainIdPrefix)
-      .getOrElse(
-        throw Status.NOT_FOUND
-          .withDescription(s"No synchronizer node for $domainIdPrefix configured")
-          .asRuntimeException()
-      )
-    synchronizerNodeReconciler
-      .reconcileSynchronizerNodeConfigIfRequired(
-        Some(node),
-        domainId,
-        SynchronizerNodeReconciler.SynchronizerNodeState.OnboardedImmediately,
-        migrationId,
-      )
-      .map(_ => SvSoftDomainMigrationPocResource.ReconcileSynchronizerDamlStateResponse.OK)
-  }
-
-  override def signDsoPartyToParticipant(
-      respond: SvSoftDomainMigrationPocResource.SignDsoPartyToParticipantResponse.type
-  )(domainIdPrefix: String)(
-      extracted: TracedUser
-  ): Future[SvSoftDomainMigrationPocResource.SignDsoPartyToParticipantResponse] = {
-    implicit val TracedUser(_, traceContext) = extracted
-    val domainId = DomainId(
-      UniqueIdentifier.tryCreate(
-        domainIdPrefix,
-        dsoStore.key.dsoParty.uid.namespace,
-      )
-    )
-    for {
-      dsoRules <- dsoStore.getDsoRules()
-      participantIds = dsoRules.payload.svs.values.asScala
-        .map(sv => ParticipantId.tryFromProtoPrimitive(sv.participantId))
-        .toSeq
-      participantId <- participantAdminConnection.getParticipantId()
-      // We resign the PartyToParticipant mapping instead of replaying it to limit the topology
-      // transactions that need to be transferred across protocol versions to the bare minimum.
-      _ <- participantAdminConnection.proposeInitialPartyToParticipant(
-        TopologyStoreId.DomainStore(domainId),
-        dsoStore.key.dsoParty,
-        participantIds,
-        participantId.uid.namespace.fingerprint,
-        Some(domainId),
-        isProposal = true,
-      )
-    } yield SvSoftDomainMigrationPocResource.SignDsoPartyToParticipantResponse.OK
   }
 }

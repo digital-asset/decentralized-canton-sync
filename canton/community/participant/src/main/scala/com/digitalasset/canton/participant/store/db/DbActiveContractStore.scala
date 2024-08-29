@@ -10,6 +10,7 @@ import cats.syntax.functor.*
 import cats.syntax.functorFilter.*
 import cats.syntax.parallel.*
 import cats.syntax.traverse.*
+import com.daml.lf.data.Ref.PackageId
 import com.daml.nameof.NameOf.functionFullName
 import com.daml.nonempty.NonEmpty
 import com.digitalasset.canton.config.CantonRequireTypes.{LengthLimitedString, String100}
@@ -49,7 +50,6 @@ import com.digitalasset.canton.util.FutureInstances.*
 import com.digitalasset.canton.util.{Checked, CheckedT, ErrorUtil, IterableUtil, MonadUtil}
 import com.digitalasset.canton.version.ProtocolVersion
 import com.digitalasset.canton.{RequestCounter, TransferCounter}
-import com.digitalasset.daml.lf.data.Ref.PackageId
 import slick.jdbc.*
 import slick.jdbc.canton.SQLActionBuilder
 
@@ -63,7 +63,7 @@ import scala.concurrent.{ExecutionContext, Future}
   *
   * This database table has the following indexes to support scaling query performance:
   * - CREATE index idx_par_active_contracts_dirty_request_reset ON par_active_contracts (domain_id, request_counter)
-  * used on startup of the SyncDomain to delete all inflight validation requests.
+  * used on startup of the SyncDomain to delete all dirty requests.
   * - CREATE index idx_par_active_contracts_contract_id ON par_active_contracts (contract_id)
   * used in conflict detection for point wise lookup of the contract status.
   * - CREATE index idx_par_active_contracts_ts_domain_id ON par_active_contracts (ts, domain_id)
@@ -141,7 +141,8 @@ class DbActiveContractStore(
     }
 
   override def markContractsCreatedOrAdded(
-      contracts: Seq[(LfContractId, TransferCounter, TimeOfChange)],
+      contracts: Seq[(LfContractId, TransferCounter)],
+      toc: TimeOfChange,
       isCreation: Boolean,
   )(implicit
       traceContext: TraceContext
@@ -154,7 +155,7 @@ class DbActiveContractStore(
       activeContractsData <- CheckedT.fromEitherT(
         EitherT.fromEither[Future](
           ActiveContractsData
-            .create(contracts)
+            .create(protocolVersion, toc, contracts)
             .leftMap(errorMessage => ActiveContractsDataInvariantViolation(errorMessage))
         )
       )
@@ -176,7 +177,7 @@ class DbActiveContractStore(
             activeContractsData.asSeq.parTraverse_ { tc =>
               checkActivationsDeactivationConsistency(
                 tc.contractId,
-                tc.toc,
+                activeContractsData.toc,
               )
             }
           }
@@ -185,7 +186,8 @@ class DbActiveContractStore(
   }
 
   override def purgeOrArchiveContracts(
-      contracts: Seq[(LfContractId, TimeOfChange)],
+      contracts: Seq[LfContractId],
+      toc: TimeOfChange,
       isArchival: Boolean,
   )(implicit
       traceContext: TraceContext
@@ -196,7 +198,7 @@ class DbActiveContractStore(
 
     for {
       _ <- bulkInsert(
-        contracts.map(contract => (contract, operation)).toMap,
+        contracts.map(cid => ((cid, toc), operation)).toMap,
         change = ChangeType.Deactivation,
         operationName = operationName,
       )
@@ -209,7 +211,13 @@ class DbActiveContractStore(
                 "Could not perform additional consistency check because node is shutting down"
               )
             ),
-          ) { contracts.parTraverse_(checkActivationsDeactivationConsistency tupled) }
+          ) {
+            contracts.parTraverse_ { contractId =>
+              for {
+                _ <- checkActivationsDeactivationConsistency(contractId, toc)
+              } yield ()
+            }
+          }
         } else checkedTUnit
     } yield ()
   }

@@ -3,15 +3,13 @@
 
 package com.digitalasset.canton.topology
 
-import com.digitalasset.canton.config.RequireTypes.PositiveInt
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
-import com.digitalasset.canton.topology.transaction.SignedTopologyTransaction.GenericSignedTopologyTransaction
+import com.digitalasset.canton.topology.transaction.SignedTopologyTransactionX.GenericSignedTopologyTransactionX
 import com.digitalasset.canton.tracing.{TraceContext, Traced}
 
 import scala.concurrent.blocking
 
-/** The [[DomainOutboxQueue]] connects a [[DomainTopologyManager]] and a `DomainOutbox`.
+/** The [[DomainOutboxQueue]] connects a [[DomainTopologyManagerX]] and a `DomainOutboxX`.
   * The topology manager enqueues transactions that the domain outbox will pick up and send
   * to the domain to be sequenced and distributed to the nodes in the domain.
   *
@@ -25,14 +23,14 @@ import scala.concurrent.blocking
 class DomainOutboxQueue(val loggerFactory: NamedLoggerFactory) extends NamedLogging {
 
   private val unsentQueue =
-    new scala.collection.mutable.Queue[Traced[GenericSignedTopologyTransaction]]
+    new scala.collection.mutable.Queue[Traced[GenericSignedTopologyTransactionX]]
   private val inProcessQueue =
-    new scala.collection.mutable.Queue[Traced[GenericSignedTopologyTransaction]]
+    new scala.collection.mutable.Queue[Traced[GenericSignedTopologyTransactionX]]
 
   /** To be called by the topology manager whenever new topology transactions have been validated.
     */
   def enqueue(
-      txs: Seq[GenericSignedTopologyTransaction]
+      txs: Seq[GenericSignedTopologyTransactionX]
   )(implicit traceContext: TraceContext): Unit = blocking(synchronized {
     logger.debug(s"enqueuing: $txs")
     unsentQueue.enqueueAll(txs.map(Traced(_))).discard
@@ -45,17 +43,17 @@ class DomainOutboxQueue(val loggerFactory: NamedLoggerFactory) extends NamedLogg
     * @param limit batch size
     * @return the topology transactions that have been marked as pending.
     */
-  def dequeue(limit: PositiveInt)(implicit
+  def dequeue(limit: Int)(implicit
       traceContext: TraceContext
-  ): Seq[GenericSignedTopologyTransaction] = blocking(synchronized {
-    val txs = unsentQueue.take(limit.value).toList
+  ): Seq[GenericSignedTopologyTransactionX] = blocking(synchronized {
+    val txs = unsentQueue.take(limit).toList
     logger.debug(s"dequeuing: $txs")
     require(
       inProcessQueue.isEmpty,
       s"tried to dequeue while pending wasn't empty: ${inProcessQueue.toSeq}",
     )
     inProcessQueue.enqueueAll(txs)
-    unsentQueue.dropInPlace(limit.value)
+    unsentQueue.dropInPlace(limit)
     inProcessQueue.toSeq.map(_.value)
   })
 

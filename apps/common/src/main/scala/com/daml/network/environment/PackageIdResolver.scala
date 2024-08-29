@@ -3,7 +3,7 @@
 
 package com.daml.network.environment
 
-import com.digitalasset.daml.lf.data.Ref.{PackageName, PackageVersion}
+import com.daml.lf.data.Ref.{PackageName, PackageVersion}
 import com.daml.ledger.javaapi.data.{Command, Identifier}
 import com.daml.network.codegen.java.splice
 import com.daml.network.codegen.java.splice.amuletrules.AmuletRules
@@ -250,16 +250,6 @@ object PackageIdResolver {
     val dsoGovernanceVersion =
       PackageVersion.assertFromString(currentConfig.packageConfig.dsoGovernance)
     dsoGovernanceVersion >= DarResources.dsoGovernance_0_1_5.metadata.version
-  }
-
-  def supportsMergeDuplicatedValidatorLicense(
-      now: CantonTimestamp,
-      amuletRules: AmuletRules,
-  ): Boolean = {
-    val currentConfig = AmuletConfigSchedule(amuletRules).getConfigAsOf(now)
-    val dsoGovernanceVersion =
-      PackageVersion.assertFromString(currentConfig.packageConfig.dsoGovernance)
-    dsoGovernanceVersion >= DarResources.dsoGovernance_0_1_8.metadata.version
   }
 
   def supportsLegacySequencerConfig(

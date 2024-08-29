@@ -4,9 +4,7 @@
 package com.digitalasset.canton.participant.protocol.validation
 
 import com.daml.nonempty.NonEmpty
-import com.digitalasset.canton.LfPartyId
 import com.digitalasset.canton.data.*
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.logging.{ErrorLoggingContext, NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.participant.protocol.validation.ExtractUsedAndCreated.{
   CreatedContractPrep,
@@ -20,7 +18,7 @@ import com.digitalasset.canton.topology.client.TopologySnapshot
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.ErrorUtil
 import com.digitalasset.canton.version.ProtocolVersion
-import com.digitalasset.daml.lf.transaction.Versioned
+import com.digitalasset.canton.{DiscardOps, LfPartyId}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -32,7 +30,7 @@ object ExtractUsedAndCreated {
       participant: ViewParticipantData,
       common: ViewCommonData,
   ) {
-    def informees: Set[LfPartyId] = common.viewConfirmationParameters.informees
+    def informees: Set[LfPartyId] = common.informees.map(_.party)
 
     def transientContracts(): Seq[LfContractId] = {
 
@@ -76,7 +74,7 @@ object ExtractUsedAndCreated {
         parties ++= c.maintainers
       }
       data.participant.resolvedKeys.values
-        .collect { case Versioned(_, FreeKey(maintainers)) => maintainers }
+        .collect { case FreeKey(maintainers) => maintainers }
         .foreach(parties ++=)
     }
     parties.result()
@@ -219,11 +217,8 @@ private[validation] class ExtractUsedAndCreated(
 
     (for {
       viewData <- dataViews
-      createdAndHosts <-
-        viewData.participant.createdCore.map { cc =>
-          (cc, hostsAny(cc.contract.metadata.stakeholders))
-        }
-      (created, hosts) = createdAndHosts
+      hosts = hostsAny(viewData.informees)
+      created <- viewData.participant.createdCore
       rolledBack = viewData.participant.rollbackContext.inRollback || created.rolledBack
       contract = created.contract
     } yield {
@@ -286,8 +281,7 @@ private[validation] class ExtractUsedAndCreated(
       inputContracts.consumedOfHostedStakeholders -- maybeCreated.keySet
 
     UsedAndCreatedContracts(
-      witnessed = createdContracts.witnessed,
-      divulged = inputContracts.divulged,
+      witnessedAndDivulged = inputContracts.divulged ++ createdContracts.witnessed,
       checkActivenessTxInputs = checkActivenessTxInputs,
       consumedInputsOfHostedStakeholders = consumedInputsOfHostedStakeholders,
       maybeCreated = maybeCreated,
@@ -298,8 +292,8 @@ private[validation] class ExtractUsedAndCreated(
 
   private def hostsAny(
       parties: IterableOnce[LfPartyId]
-  )(implicit loggingContext: ErrorLoggingContext): Boolean =
-    parties.iterator.exists(party => {
+  )(implicit loggingContext: ErrorLoggingContext): Boolean = {
+    parties.iterator.exists(party =>
       hostedParties.getOrElse(
         party, {
           loggingContext.error(
@@ -308,6 +302,7 @@ private[validation] class ExtractUsedAndCreated(
           false
         },
       )
-    })
+    )
+  }
 
 }

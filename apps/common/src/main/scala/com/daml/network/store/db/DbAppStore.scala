@@ -103,7 +103,5 @@ abstract class DbAppStore(
       enableissue12777Workaround,
     )
 
-  override def close(): Unit = {
-    multiDomainAcsStore.close()
-  }
+  override def close(): Unit = ()
 }

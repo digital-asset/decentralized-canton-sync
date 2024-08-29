@@ -53,7 +53,6 @@ import com.daml.network.validator.config.{
   AppInstance,
   MigrateValidatorPartyConfig,
   ValidatorAppBackendConfig,
-  ValidatorCantonIdentifierConfig,
   ValidatorOnboardingConfig,
 }
 import com.daml.network.validator.domain.DomainConnector
@@ -127,22 +126,13 @@ class ValidatorApp(
     _ <- withParticipantAdminConnection { participantAdminConnection =>
       readRestoreDump match {
         case Some(migrationDump) =>
-          logger.info(
-            "We're restoring from a migration dump, ensuring participant is initialized"
-          )
           val nodeInitializer =
             new NodeInitializer(participantAdminConnection, retryProvider, loggerFactory)
-          nodeInitializer.initializeFromDumpAndWait(
+          nodeInitializer.initializeAndWait(
             migrationDump.participant
           )
         case None =>
-          logger.info(
-            "Ensuring participant is initialized"
-          )
-          val cantonIdentifierConfig =
-            config.cantonIdentifierConfig.getOrElse(ValidatorCantonIdentifierConfig.default(config))
           ParticipantInitializer.ensureParticipantInitializedWithExpectedId(
-            cantonIdentifierConfig.participant,
             participantAdminConnection,
             config.participantBootstrappingDump,
             loggerFactory,
@@ -193,21 +183,10 @@ class ValidatorApp(
               case Some(migrationDump) =>
                 val decentralizedSynchronizerInitializer = new DomainDataRestorer(
                   participantAdminConnection,
-                  config.timeTrackerMinObservationDuration,
                   loggerFactory,
                 )
                 domainConnector.getDecentralizedSynchronizerSequencerConnections.flatMap {
-                  allSequencerConnections =>
-                    val sequencerConnections = allSequencerConnections.values.toSeq match {
-                      case Seq() =>
-                        sys.error("Expected at least one sequencer connection but got 0")
-                      case Seq(connections) => connections
-                      // TODO (#13301) handle this in a cleaner way (or just drop hard domain migration support at some point)
-                      case _ =>
-                        sys.error(
-                          s"Hard domain migrations and soft domain migrations are incompatible, got sequencer connections: $allSequencerConnections"
-                        )
-                    }
+                  sequencerConnections =>
                     appInitStep("Connecting domain and restoring data") {
                       decentralizedSynchronizerInitializer.connectDomainAndRestoreData(
                         connection,
@@ -321,7 +300,7 @@ class ValidatorApp(
                           )
                         }
                       case Some(partyId) =>
-                        val existingHint = partyId.uid.identifier.str
+                        val existingHint = partyId.uid.id.toLengthLimitedString
                         if (existingHint != hint) {
                           throw Status.INVALID_ARGUMENT
                             .withDescription(
@@ -718,7 +697,6 @@ class ValidatorApp(
               validatorTopupConfig,
               config.walletSweep,
               config.autoAcceptTransfers,
-              config.supportsSoftDomainMigrationPoc,
             )
           )
         else {
@@ -733,6 +711,7 @@ class ValidatorApp(
         config.appManager,
         config.domains.global.url.isEmpty,
         config.prevetDuration,
+        config.domains.global.alias,
         config.svValidator,
         clock,
         domainTimeAutomationService.domainTimeSync,
@@ -760,10 +739,11 @@ class ValidatorApp(
         config.svValidator,
         config.sequencerRequestAmplificationPatience,
         config.contactPoint,
-        config.supportsSoftDomainMigrationPoc,
         loggerFactory,
       )
-      domainId <- scanConnection.getAmuletRulesDomain()(traceContext)
+      domainId <- appInitStep(s"Wait for domain connection on ${config.domains.global.alias}") {
+        store.domains.waitForDomainConnection(config.domains.global.alias)
+      }
       _ <- config.appInstances.toList.traverse({ case (name, instance) =>
         appInitStep(s"Set up app instance $name") {
           setupAppInstance(

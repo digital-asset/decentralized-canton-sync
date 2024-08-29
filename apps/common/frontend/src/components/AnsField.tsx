@@ -49,11 +49,6 @@ export const BaseAnsField: React.FC<BaseAnsFieldProps> = ({
   ...props
 }) => {
   const [resolvedPartyId, setResolvedPartyId] = React.useState<string>('');
-  //TODO(#13480): remove this fallback once we have a proper config in all apps
-  const nameServiceAcronym =
-    window.splice_config.spliceInstanceNames?.nameServiceNameAcronym.toLowerCase() || 'cns';
-  const dsoEntryName = `dso.${nameServiceAcronym}`;
-  const filteredAnsEntriesData = ansEntries.data?.filter(entry => entry.name !== dsoEntryName);
 
   useEffect(() => {
     const setPartyAndNotify = (party: string) => {
@@ -87,7 +82,6 @@ export const BaseAnsField: React.FC<BaseAnsFieldProps> = ({
   return (
     <Autocomplete
       freeSolo
-      disablePortal
       id={props.id}
       sx={{ width: 200 }}
       className={props.className}
@@ -99,7 +93,7 @@ export const BaseAnsField: React.FC<BaseAnsFieldProps> = ({
           inputProps={{ ...params.inputProps, 'data-resolved-party-id': resolvedPartyId }}
         />
       )}
-      options={filteredAnsEntriesData || []}
+      options={ansEntries.data || []}
       getOptionLabel={(option: AnsEntry | string) =>
         typeof option === 'string' ? option : option.name
       }

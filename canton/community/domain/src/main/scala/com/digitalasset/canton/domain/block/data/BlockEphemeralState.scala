@@ -9,8 +9,8 @@ import com.digitalasset.canton.domain.sequencing.sequencer.{
   SequencerInitialState,
   SequencerSnapshot,
 }
+import com.digitalasset.canton.domain.sequencing.traffic.TrafficBalance
 import com.digitalasset.canton.logging.{HasLoggerName, NamedLoggingContext}
-import com.digitalasset.canton.sequencing.traffic.{TrafficConsumed, TrafficPurchased}
 import com.digitalasset.canton.util.ErrorUtil
 import com.digitalasset.canton.version.ProtocolVersion
 import slick.jdbc.GetResult
@@ -61,16 +61,14 @@ final case class BlockEphemeralState(
 ) extends HasLoggerName {
   def toSequencerSnapshot(
       protocolVersion: ProtocolVersion,
-      trafficPurchased: Seq[TrafficPurchased],
-      trafficConsumed: Seq[TrafficConsumed],
+      trafficBalances: Seq[TrafficBalance],
   ): SequencerSnapshot =
     state.toSequencerSnapshot(
       latestBlock.lastTs,
       latestBlock.height,
       None,
       protocolVersion,
-      trafficPurchased,
-      trafficConsumed,
+      trafficBalances,
     )
 
   /** Checks that the class invariant holds:
@@ -109,10 +107,11 @@ object BlockEphemeralState {
     )
     BlockEphemeralState(
       block,
-      EphemeralState.fromHeads(
+      EphemeralState(
         initialState.snapshot.heads,
         inFlightAggregations = initialState.snapshot.inFlightAggregations,
         initialState.snapshot.status.toInternal,
+        trafficState = initialState.snapshot.trafficSnapshots.view.mapValues(_.state).toMap,
       ),
     )
   }

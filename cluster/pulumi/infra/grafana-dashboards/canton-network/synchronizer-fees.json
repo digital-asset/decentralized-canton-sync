@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 1751,
+  "id": 300,
   "links": [],
   "panels": [
     {
@@ -106,9 +106,9 @@
             "uid": "prometheus"
           },
           "disableTextWrap": false,
-          "editorMode": "code",
+          "editorMode": "builder",
           "exemplar": false,
-          "expr": "sum by(type) (rate(daml_sequencer_traffic_control_event_delivered_cost_total{namespace=\"$namespace\", job=\"$job\", member=~\"$member\", type=~\".+\"}[$__rate_interval]))",
+          "expr": "sum by(type) (rate(daml_traffic_control_event_delivered_cost_total{namespace=\"$namespace\", job=\"$job\", member=~\"$member\", type=~\".+\"}[$__rate_interval]))",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -236,9 +236,9 @@
             "uid": "prometheus"
           },
           "disableTextWrap": false,
-          "editorMode": "code",
+          "editorMode": "builder",
           "exemplar": false,
-          "expr": "sum by(type) (rate(daml_sequencer_traffic_control_event_rejected_cost_total{namespace=\"$namespace\", job=\"$job\", member=~\"$member\"}[$__rate_interval]))",
+          "expr": "sum by(type) (rate(daml_traffic_control_event_rejected_cost_total{namespace=\"$namespace\", job=\"$job\", member=~\"$member\"}[$__rate_interval]))",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -336,8 +336,8 @@
             "uid": "prometheus"
           },
           "disableTextWrap": false,
-          "editorMode": "code",
-          "expr": "sum by(member) (daml_sequencer_traffic_control_base_traffic_remainder{namespace=\"$namespace\", job=\"$job\", member=~\"$member\", member=~\"(PAR|MED)::.*\"})",
+          "editorMode": "builder",
+          "expr": "sum by(member) (daml_traffic_control_base_traffic_remainder{namespace=\"$namespace\", job=\"$job\", member=~\"$member\", member=~\"(PAR|MED)::.*\"})",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -448,16 +448,16 @@
             "uid": "prometheus"
           },
           "disableTextWrap": false,
-          "editorMode": "code",
+          "editorMode": "builder",
           "exemplar": false,
-          "expr": "sum by(member) (daml_sequencer_traffic_control_extra_traffic_purchased{namespace=\"$namespace\", job=\"$job\", member=~\"$member\", member=~\"PAR::.*\"})",
+          "expr": "sum by(member) (daml_traffic_control_extra_traffic_limit{namespace=\"$namespace\", job=\"$job\", member=~\"$member\", member=~\"PAR::.*\"})",
           "fullMetaSearch": false,
           "hide": true,
           "includeNullMetadata": true,
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
-          "refId": "extra_traffic_purchased",
+          "refId": "extra_traffic_limit",
           "useBackend": false
         },
         {
@@ -466,9 +466,9 @@
             "uid": "prometheus"
           },
           "disableTextWrap": false,
-          "editorMode": "code",
+          "editorMode": "builder",
           "exemplar": false,
-          "expr": "sum by(member) (daml_sequencer_traffic_control_extra_traffic_consumed{namespace=\"$namespace\", job=\"$job\", member=~\"$member\", member=~\"PAR::.*\"})",
+          "expr": "sum by(member) (daml_traffic_control_extra_traffic_consumed{namespace=\"$namespace\", job=\"$job\", member=~\"$member\", member=~\"PAR::.*\"})",
           "fullMetaSearch": false,
           "hide": true,
           "includeNullMetadata": true,
@@ -484,7 +484,7 @@
             "type": "__expr__",
             "uid": "__expr__"
           },
-          "expression": "$extra_traffic_purchased - $extra_traffic_consumed",
+          "expression": "$extra_traffic_limit - $extra_traffic_consumed",
           "hide": false,
           "refId": "extra_traffic_remainder",
           "type": "math"
@@ -492,212 +492,16 @@
       ],
       "title": "Extra Traffic Available By Participant",
       "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 11,
-        "w": 24,
-        "x": 0,
-        "y": 31
-      },
-      "id": 5,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "editorMode": "code",
-          "expr": "sum by (member) (delta(daml_sequencer_traffic_control_extra_traffic_purchased{namespace=\"$namespace\",job=\"$job\",member=~\"$member.*\"}[24h]))",
-          "instant": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Traffic Purchased over the last 24h",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "description": "Rate of wasted traffic i.e. sequenced events that cost traffic but are not delivered in bytes/s summed across all participants matching the filter",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "Bps"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 42
-      },
-      "id": 6,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "disableTextWrap": false,
-          "editorMode": "code",
-          "expr": "sum by (namespace, job, reason) (rate(daml_sequencer_traffic_control_wasted_traffic_total{namespace=~\"$namespace\", member=~\"$member\",member=~\"PAR::.*\"}[$__rate_interval]))",
-          "fullMetaSearch": false,
-          "includeNullMetadata": false,
-          "instant": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "A",
-          "useBackend": false
-        }
-      ],
-      "title": "Rate of Wasted Traffic",
-      "type": "timeseries"
     }
   ],
-  "refresh": "auto",
+  "refresh": "",
   "schemaVersion": 39,
   "tags": [],
   "templating": {
     "list": [
       {
         "current": {
-          "selected": false,
+          "selected": true,
           "text": "sv-1",
           "value": "sv-1"
         },
@@ -705,7 +509,7 @@
           "type": "prometheus",
           "uid": "prometheus"
         },
-        "definition": "label_values(daml_sequencer_traffic_control_event_delivered_cost_total,namespace)",
+        "definition": "label_values(daml_traffic_control_event_delivered_cost_total,namespace)",
         "hide": 0,
         "includeAll": false,
         "label": "Namespace",
@@ -714,7 +518,7 @@
         "options": [],
         "query": {
           "qryType": 1,
-          "query": "label_values(daml_sequencer_traffic_control_event_delivered_cost_total,namespace)",
+          "query": "label_values(daml_traffic_control_event_delivered_cost_total,namespace)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 1,
@@ -726,14 +530,14 @@
       {
         "current": {
           "selected": false,
-          "text": "global-domain-3-sequencer",
-          "value": "global-domain-3-sequencer"
+          "text": "global-domain-0-sequencer",
+          "value": "global-domain-0-sequencer"
         },
         "datasource": {
           "type": "prometheus",
           "uid": "prometheus"
         },
-        "definition": "label_values(daml_sequencer_traffic_control_event_delivered_cost_total,job)",
+        "definition": "label_values(daml_traffic_control_event_delivered_cost_total,job)",
         "hide": 0,
         "includeAll": false,
         "label": "Job",
@@ -742,7 +546,7 @@
         "options": [],
         "query": {
           "qryType": 1,
-          "query": "label_values(daml_sequencer_traffic_control_event_delivered_cost_total,job)",
+          "query": "label_values(daml_traffic_control_event_delivered_cost_total,job)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 1,
@@ -766,7 +570,7 @@
           "type": "prometheus",
           "uid": "prometheus"
         },
-        "definition": "label_values(daml_sequencer_traffic_control_event_delivered_cost_total,member)",
+        "definition": "label_values(daml_traffic_control_event_delivered_cost_total,member)",
         "hide": 0,
         "includeAll": true,
         "label": "Member",
@@ -775,7 +579,7 @@
         "options": [],
         "query": {
           "qryType": 1,
-          "query": "label_values(daml_sequencer_traffic_control_event_delivered_cost_total,member)",
+          "query": "label_values(daml_traffic_control_event_delivered_cost_total,member)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 1,
@@ -794,6 +598,6 @@
   "timezone": "",
   "title": "Synchronizer Fees",
   "uid": "fdnphvrryfq4gf",
-  "version": 1,
+  "version": 3,
   "weekStart": ""
 }

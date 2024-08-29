@@ -6,18 +6,19 @@ package com.digitalasset.canton.platform.store
 import com.daml.ledger.api.v2.checkpoint.Checkpoint
 import com.daml.ledger.api.v2.command_completion_service.CompletionStreamResponse
 import com.daml.ledger.api.v2.completion.Completion
-import com.digitalasset.canton.data.Offset
+import com.daml.ledger.api.v2.participant_offset.ParticipantOffset
+import com.daml.lf.data.Time.Timestamp
 import com.digitalasset.canton.ledger.api.util.TimestampConversion.fromInstant
+import com.digitalasset.canton.ledger.offset.Offset
 import com.digitalasset.canton.platform.ApiOffset.ApiOffsetConverter
 import com.digitalasset.canton.tracing.{SerializableTraceContext, TraceContext}
-import com.digitalasset.daml.lf.data.Time.Timestamp
 import com.google.protobuf.duration.Duration
 import com.google.rpc.status.Status as StatusProto
 import io.grpc.Status
 
 // Turn a stream of transactions into a stream of completions for a given application and set of parties
-object CompletionFromTransaction {
-  val OkStatus = StatusProto.of(Status.Code.OK.value(), "", Seq.empty)
+private[platform] object CompletionFromTransaction {
+  private val OkStatus = StatusProto.of(Status.Code.OK.value(), "", Seq.empty)
   private val RejectionTransactionId = ""
 
   def acceptedCompletion(
@@ -85,10 +86,10 @@ object CompletionFromTransaction {
   private def toApiCheckpoint(recordTime: Timestamp, offset: Offset): Checkpoint =
     Checkpoint.of(
       recordTime = Some(fromInstant(recordTime.toInstant)),
-      offset = offset.toApiString,
+      offset = Some(ParticipantOffset.of(ParticipantOffset.Value.Absolute(offset.toApiString))),
     )
 
-  def toApiCompletion(
+  private[store] def toApiCompletion(
       commandId: String,
       transactionId: String,
       applicationId: String,

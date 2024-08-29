@@ -25,7 +25,6 @@ import io.scalaland.chimney.Transformer
 import slick.jdbc.{GetResult, SetParameter}
 
 import java.time.Duration
-import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.FiniteDuration
 import scala.jdk.DurationConverters.*
@@ -152,21 +151,12 @@ final case class PositiveFiniteDuration private (duration: Duration)
 }
 
 object PositiveFiniteDuration extends RefinedDurationCompanion[PositiveFiniteDuration] {
-  implicit val forgetRefinementJDuration: Transformer[PositiveFiniteDuration, Duration] =
-    _.duration
-  implicit val forgetRefinementFDuration: Transformer[PositiveFiniteDuration, FiniteDuration] =
-    _.toScala
-  implicit val toNonNegativeDurationConfig
-      : Transformer[PositiveFiniteDuration, PositiveFiniteDurationConfig] = _.toConfig
-
   override def create(duration: Duration): Either[String, PositiveFiniteDuration] =
     Either.cond(
       !duration.isNegative && !duration.isZero,
       PositiveFiniteDuration(duration),
       s"Duration should be positive, found: $duration",
     )
-
-  def fromConfig(config: PositiveFiniteDurationConfig) = PositiveFiniteDuration(config.asJava)
 }
 
 final case class NonNegativeFiniteDuration private (duration: Duration)
@@ -203,9 +193,6 @@ object NonNegativeFiniteDuration extends RefinedDurationCompanion[NonNegativeFin
       : Transformer[NonNegativeFiniteDuration, NonNegativeFiniteDurationConfig] = _.toConfig
 
   val Zero: NonNegativeFiniteDuration = NonNegativeFiniteDuration(Duration.ZERO)
-  val MaxValue: NonNegativeFiniteDuration = NonNegativeFiniteDuration(
-    ChronoUnit.FOREVER.getDuration
-  )
 
   override def create(duration: Duration): Either[String, NonNegativeFiniteDuration] =
     Either.cond(
@@ -266,6 +253,7 @@ object PositiveSeconds extends RefinedDurationCompanion[PositiveSeconds] {
   implicit val toPositiveSecondsConfig
       : Transformer[PositiveSeconds, PositiveDurationSecondsConfig] =
     _.toConfig
+
   implicit val getResultPositiveSeconds: GetResult[PositiveSeconds] =
     GetResult(r => tryOfSeconds(r.nextLong()))
 

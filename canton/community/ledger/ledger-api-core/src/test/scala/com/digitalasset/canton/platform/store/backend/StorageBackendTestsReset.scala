@@ -17,7 +17,8 @@ private[backend] trait StorageBackendTestsReset extends Matchers with StorageBac
   it should "start with an empty index" in {
     val identity = executeSql(backend.parameter.ledgerIdentity)
     val end = executeSql(backend.parameter.ledgerEnd)
-    val parties = executeSql(backend.party.knownParties(None, 10))
+    val parties = executeSql(backend.party.knownParties)
+    val packages = executeSql(backend.packageBackend.lfPackages)
     val stringInterningEntries = executeSql(
       backend.stringInterning.loadStringInterningEntries(0, 1000)
     )
@@ -25,32 +26,38 @@ private[backend] trait StorageBackendTestsReset extends Matchers with StorageBac
     identity shouldBe None
     end shouldBe ParameterStorageBackend.LedgerEnd.beforeBegin
     parties shouldBe empty
+    packages shouldBe empty
     stringInterningEntries shouldBe empty
   }
 
   it should "not see any data after advancing the ledger end" in {
     advanceLedgerEndToMakeOldDataVisible()
-    val parties = executeSql(backend.party.knownParties(None, 10))
+    val parties = executeSql(backend.party.knownParties)
+    val packages = executeSql(backend.packageBackend.lfPackages)
 
     parties shouldBe empty
+    packages shouldBe empty
   }
 
   it should "reset everything when using resetAll" in {
     val dtos: Vector[DbDto] = Vector(
       // 1: party allocation
       dtoPartyEntry(offset(1)),
-      // 2: transaction with create node
-      dtoCreate(offset(2), 1L, hashCid("#3")),
+      // 2: package upload
+      dtoPackage(offset(2)),
+      dtoPackageEntry(offset(2)),
+      // 3: transaction with create node
+      dtoCreate(offset(3), 1L, hashCid("#3")),
       DbDto.IdFilterCreateStakeholder(1L, someTemplateId.toString, someParty.toString),
-      dtoCompletion(offset(2)),
-      // 3: transaction with exercise node and retroactive divulgence
-      dtoExercise(offset(3), 2L, true, hashCid("#3")),
       dtoCompletion(offset(3)),
-      // 4: assign event
-      dtoAssign(offset(4), 4L, hashCid("#4")),
+      // 4: transaction with exercise node and retroactive divulgence
+      dtoExercise(offset(4), 2L, true, hashCid("#3")),
+      dtoCompletion(offset(4)),
+      // 5: assign event
+      dtoAssign(offset(5), 4L, hashCid("#4")),
       DbDto.IdFilterAssignStakeholder(4L, someTemplateId.toString, someParty.toString),
-      // 5: unassign event
-      dtoUnassign(offset(5), 5L, hashCid("#5")),
+      // 6: unassign event
+      dtoUnassign(offset(6), 5L, hashCid("#5")),
       DbDto.IdFilterUnassignStakeholder(5L, someTemplateId.toString, someParty.toString),
       // String interning
       DbDto.StringInterningDto(10, "d|x:abc"),
@@ -59,7 +66,7 @@ private[backend] trait StorageBackendTestsReset extends Matchers with StorageBac
     // Initialize and insert some data
     executeSql(backend.parameter.initializeParameters(someIdentityParams, loggerFactory))
     executeSql(ingest(dtos, _))
-    executeSql(updateLedgerEnd(ledgerEnd(4, 3L)))
+    executeSql(updateLedgerEnd(ledgerEnd(5, 3L)))
 
     // queries
     def identity = executeSql(backend.parameter.ledgerIdentity)
@@ -70,16 +77,18 @@ private[backend] trait StorageBackendTestsReset extends Matchers with StorageBac
       executeSql(
         backend.event.transactionStreamingQueries.fetchEventPayloadsTree(
           EventPayloadSourceForTreeTx.Create
-        )(List(1L), Some(Set.empty))
+        )(List(1L), Set.empty)
       ) ++
         executeSql(
           backend.event.transactionStreamingQueries.fetchEventPayloadsTree(
             EventPayloadSourceForTreeTx.Consuming
-          )(List(2L), Some(Set.empty))
+          )(List(2L), Set.empty)
         )
     }
 
-    def parties = executeSql(backend.party.knownParties(None, 10))
+    def parties = executeSql(backend.party.knownParties)
+
+    def packages = executeSql(backend.packageBackend.lfPackages)
 
     def stringInterningEntries = executeSql(
       backend.stringInterning.loadStringInterningEntries(0, 1000)
@@ -87,7 +96,7 @@ private[backend] trait StorageBackendTestsReset extends Matchers with StorageBac
 
     def filterIds = executeSql(
       backend.event.transactionStreamingQueries.fetchIdsOfCreateEventsForStakeholder(
-        stakeholderO = Some(someParty),
+        stakeholder = someParty,
         templateIdO = None,
         startExclusive = 0,
         endInclusive = 1000,
@@ -98,20 +107,20 @@ private[backend] trait StorageBackendTestsReset extends Matchers with StorageBac
     def assignEvents = executeSql(
       backend.event.assignEventBatch(
         eventSequentialIds = List(4),
-        allFilterParties = Some(Set.empty),
+        allFilterParties = Set.empty,
       )
     )
 
     def unassignEvents = executeSql(
       backend.event.unassignEventBatch(
         eventSequentialIds = List(5),
-        allFilterParties = Some(Set.empty),
+        allFilterParties = Set.empty,
       )
     )
 
     def assignIds = executeSql(
       backend.event.fetchAssignEventIdsForStakeholder(
-        stakeholderO = Some(someParty),
+        stakeholder = someParty,
         templateId = None,
         startExclusive = 0L,
         endInclusive = 1000L,
@@ -121,7 +130,7 @@ private[backend] trait StorageBackendTestsReset extends Matchers with StorageBac
 
     def unassignIds = executeSql(
       backend.event.fetchUnassignEventIdsForStakeholder(
-        stakeholderO = Some(someParty),
+        stakeholder = someParty,
         templateId = None,
         startExclusive = 0L,
         endInclusive = 1000L,
@@ -134,6 +143,7 @@ private[backend] trait StorageBackendTestsReset extends Matchers with StorageBac
     end should not be ParameterStorageBackend.LedgerEnd.beforeBegin
     events.size shouldBe 2
     parties should not be empty
+    packages should not be empty
     stringInterningEntries should not be empty
     filterIds should not be empty
     assignEvents should not be empty
@@ -153,6 +163,7 @@ private[backend] trait StorageBackendTestsReset extends Matchers with StorageBac
     advanceLedgerEndToMakeOldDataVisible()
 
     parties shouldBe empty
+    packages shouldBe empty // Note: resetAll() does delete packages
     stringInterningEntries shouldBe empty
     filterIds shouldBe empty
     assignEvents shouldBe empty

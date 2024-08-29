@@ -15,12 +15,12 @@ public final class CompletionStreamRequest {
 
   @NonNull private final List<@NonNull String> parties;
 
-  @NonNull private final String beginExclusive;
+  @NonNull private final ParticipantOffset beginExclusive;
 
   public CompletionStreamRequest(
       @NonNull String applicationId,
       @NonNull List<@NonNull String> parties,
-      @NonNull String beginExclusive) {
+      @NonNull ParticipantOffset beginExclusive) {
     this.applicationId = applicationId;
     this.parties = List.copyOf(parties);
     this.beginExclusive = beginExclusive;
@@ -36,21 +36,23 @@ public final class CompletionStreamRequest {
     return parties;
   }
 
-  public String getBeginExclusive() {
+  public ParticipantOffset getBeginExclusive() {
     return beginExclusive;
   }
 
   public static CompletionStreamRequest fromProto(
       CommandCompletionServiceOuterClass.CompletionStreamRequest request) {
     return new CompletionStreamRequest(
-        request.getApplicationId(), request.getPartiesList(), request.getBeginExclusive());
+        request.getApplicationId(),
+        request.getPartiesList(),
+        ParticipantOffset.fromProto(request.getBeginExclusive()));
   }
 
   public CommandCompletionServiceOuterClass.CompletionStreamRequest toProto() {
     return CommandCompletionServiceOuterClass.CompletionStreamRequest.newBuilder()
         .setApplicationId(applicationId)
         .addAllParties(parties)
-        .setBeginExclusive(beginExclusive)
+        .setBeginExclusive(beginExclusive.toProto())
         .build();
   }
 

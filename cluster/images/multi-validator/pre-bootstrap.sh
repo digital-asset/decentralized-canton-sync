@@ -136,9 +136,6 @@ canton.validator-apps.validator_backend_$index = {
     sv-validator = \${?CN_APP_VALIDATOR_SV_VALIDATOR}
 
     contact-point = \${CN_APP_CONTACT_POINT}
-    canton-identifier-config = {
-      participant = "participant_$index"
-    }
 }
 EOF
 }

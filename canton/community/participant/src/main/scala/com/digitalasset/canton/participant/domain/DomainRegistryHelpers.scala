@@ -3,28 +3,33 @@
 
 package com.digitalasset.canton.participant.domain
 
+import cats.Eval
 import cats.data.EitherT
 import cats.instances.future.*
 import cats.syntax.bifunctor.*
 import cats.syntax.either.*
 import com.daml.grpc.adapter.ExecutionSequencerFactory
+import com.daml.lf.data.Ref.PackageId
 import com.digitalasset.canton.*
 import com.digitalasset.canton.common.domain.SequencerConnectClient
 import com.digitalasset.canton.common.domain.grpc.SequencerInfoLoader.SequencerAggregatedInfo
 import com.digitalasset.canton.concurrent.HasFutureSupervision
-import com.digitalasset.canton.config.{ProcessingTimeout, TestingConfigInternal}
-import com.digitalasset.canton.crypto.SyncCryptoApiProvider
+import com.digitalasset.canton.config.{CryptoConfig, ProcessingTimeout, TestingConfigInternal}
+import com.digitalasset.canton.crypto.{CryptoHandshakeValidator, SyncCryptoApiProvider}
 import com.digitalasset.canton.lifecycle.*
 import com.digitalasset.canton.logging.{ErrorLoggingContext, NamedLogging}
 import com.digitalasset.canton.participant.ParticipantNodeParameters
 import com.digitalasset.canton.participant.domain.DomainRegistryError.HandshakeErrors.DomainIdMismatch
 import com.digitalasset.canton.participant.domain.DomainRegistryHelpers.DomainHandle
 import com.digitalasset.canton.participant.metrics.SyncDomainMetrics
-import com.digitalasset.canton.participant.store.SyncDomainPersistentState
+import com.digitalasset.canton.participant.store.{
+  ParticipantSettingsLookup,
+  SyncDomainPersistentState,
+}
 import com.digitalasset.canton.participant.sync.SyncDomainPersistentStateManager
 import com.digitalasset.canton.participant.topology.{
   LedgerServerPartyNotifier,
-  ParticipantTopologyDispatcher,
+  ParticipantTopologyDispatcherCommon,
   TopologyComponentFactory,
 }
 import com.digitalasset.canton.protocol.StaticDomainParameters
@@ -33,10 +38,9 @@ import com.digitalasset.canton.sequencing.client.*
 import com.digitalasset.canton.time.Clock
 import com.digitalasset.canton.topology.*
 import com.digitalasset.canton.topology.client.DomainTopologyClientWithInit
-import com.digitalasset.canton.topology.store.PackageDependencyResolverUS
 import com.digitalasset.canton.tracing.TraceContext
-import com.digitalasset.canton.util.EitherTUtil
 import com.digitalasset.canton.util.Thereafter.syntax.*
+import com.digitalasset.canton.util.{EitherTUtil, ResourceUtil}
 import com.digitalasset.canton.version.{ProtocolVersion, ProtocolVersionCompatibility}
 import io.opentelemetry.api.trace.Tracer
 import org.apache.pekko.stream.Materializer
@@ -62,14 +66,16 @@ trait DomainRegistryHelpers extends FlagCloseable with NamedLogging { this: HasF
       sequencerAggregatedInfo: SequencerAggregatedInfo,
   )(
       cryptoApiProvider: SyncCryptoApiProvider,
+      cryptoConfig: CryptoConfig,
       clock: Clock,
       testingConfig: TestingConfigInternal,
       recordSequencerInteractions: AtomicReference[Option[RecordingConfig]],
       replaySequencerConfig: AtomicReference[Option[ReplayConfig]],
-      topologyDispatcher: ParticipantTopologyDispatcher,
-      packageDependencyResolver: PackageDependencyResolverUS,
+      topologyDispatcher: ParticipantTopologyDispatcherCommon,
+      packageDependencies: PackageId => EitherT[Future, PackageId, Set[PackageId]],
       partyNotifier: LedgerServerPartyNotifier,
       metrics: DomainAlias => SyncDomainMetrics,
+      participantSettings: Eval[ParticipantSettingsLookup],
   )(implicit
       traceContext: TraceContext
   ): EitherT[FutureUnlessShutdown, DomainRegistryError, DomainHandle] = {
@@ -79,6 +85,11 @@ trait DomainRegistryHelpers extends FlagCloseable with NamedLogging { this: HasF
       indexedDomainId <- EitherT
         .right(syncDomainPersistentStateManager.indexedDomainId(domainId))
         .mapK(FutureUnlessShutdown.outcomeK)
+
+      _ <- CryptoHandshakeValidator
+        .validate(sequencerAggregatedInfo.staticDomainParameters, cryptoConfig)
+        .leftMap(DomainRegistryError.HandshakeErrors.DomainCryptoHandshakeFailed.Error(_))
+        .toEitherT[FutureUnlessShutdown]
 
       _ <- EitherT
         .fromEither[Future](verifyDomainId(config, domainId))
@@ -90,6 +101,7 @@ trait DomainRegistryHelpers extends FlagCloseable with NamedLogging { this: HasF
           config.domain,
           indexedDomainId,
           sequencerAggregatedInfo.staticDomainParameters,
+          participantSettings,
         )
         .mapK(FutureUnlessShutdown.outcomeK)
 
@@ -122,7 +134,7 @@ trait DomainRegistryHelpers extends FlagCloseable with NamedLogging { this: HasF
         performUnlessClosingF("create caching client")(
           topologyFactory.createCachingTopologyClient(
             sequencerAggregatedInfo.staticDomainParameters.protocolVersion,
-            packageDependencyResolver,
+            packageDependencies,
           )
         )
       )
@@ -130,7 +142,7 @@ trait DomainRegistryHelpers extends FlagCloseable with NamedLogging { this: HasF
 
       domainCryptoApi <- EitherT.fromEither[FutureUnlessShutdown](
         cryptoApiProvider
-          .forDomain(domainId, sequencerAggregatedInfo.staticDomainParameters)
+          .forDomain(domainId)
           .toRight(
             DomainRegistryError.DomainRegistryInternalError
               .InvalidState("crypto api for domain is unavailable"): DomainRegistryError
@@ -159,7 +171,7 @@ trait DomainRegistryHelpers extends FlagCloseable with NamedLogging { this: HasF
 
         def ifParticipant[C](configO: Option[C]): Member => Option[C] = {
           case _: ParticipantId => configO
-          case _ => None
+          case _ => None // unauthenticated members don't need it
         }
         SequencerClientFactory(
           domainId,
@@ -201,12 +213,14 @@ trait DomainRegistryHelpers extends FlagCloseable with NamedLogging { this: HasF
             s"Participant is not yet active on domain ${domainId}. Initialising topology"
           )
           for {
-            sequencerConnectClient <- sequencerConnectClient(sequencerAggregatedInfo)
             success <- topologyDispatcher.onboardToDomain(
               domainId,
               config.domain,
-              sequencerConnectClient,
+              config.timeTracker,
+              sequencerAggregatedInfo.sequencerConnections,
+              sequencerClientFactory,
               sequencerAggregatedInfo.staticDomainParameters.protocolVersion,
+              sequencerAggregatedInfo.expectedSequencers,
             )
             _ <- EitherT.cond[FutureUnlessShutdown](
               success,
@@ -224,16 +238,27 @@ trait DomainRegistryHelpers extends FlagCloseable with NamedLogging { this: HasF
           } yield ()
         }
 
+      requestSigner = RequestSigner(
+        domainCryptoApi,
+        sequencerAggregatedInfo.staticDomainParameters.protocolVersion,
+      )
+      _ <- downloadDomainTopologyStateForInitializationIfNeeded(
+        // TODO(i12076): Download topology state from one of the sequencers based on the health
+        sequencerAggregatedInfo.sequencerConnections.default,
+        syncDomainPersistentStateManager,
+        domainId,
+        topologyClient,
+        sequencerClientFactory,
+        requestSigner,
+        partyNotifier,
+        sequencerAggregatedInfo.staticDomainParameters.protocolVersion,
+      )
       sequencerClient <- sequencerClientFactory
         .create(
           participantId,
           persistentState.sequencedEventStore,
           persistentState.sendTrackerStore,
-          RequestSigner(
-            domainCryptoApi,
-            sequencerAggregatedInfo.staticDomainParameters.protocolVersion,
-            loggerFactory,
-          ),
+          requestSigner,
           sequencerAggregatedInfo.sequencerConnections,
           sequencerAggregatedInfo.expectedSequencers,
         )
@@ -241,15 +266,6 @@ trait DomainRegistryHelpers extends FlagCloseable with NamedLogging { this: HasF
           DomainRegistryError.ConnectionErrors.FailedToConnectToSequencer.Error(_)
         )
         .mapK(FutureUnlessShutdown.outcomeK)
-
-      _ <- downloadDomainTopologyStateForInitializationIfNeeded(
-        syncDomainPersistentStateManager,
-        domainId,
-        topologyClient,
-        sequencerClient,
-        partyNotifier,
-        sequencerAggregatedInfo.staticDomainParameters.protocolVersion,
-      )
     } yield DomainHandle(
       domainId,
       config.domain,
@@ -263,15 +279,18 @@ trait DomainRegistryHelpers extends FlagCloseable with NamedLogging { this: HasF
   }
 
   private def downloadDomainTopologyStateForInitializationIfNeeded(
+      sequencerConnection: SequencerConnection,
       syncDomainPersistentStateManager: SyncDomainPersistentStateManager,
       domainId: DomainId,
       topologyClient: DomainTopologyClientWithInit,
-      sequencerClient: SequencerClient,
+      sequencerClientFactory: SequencerClientTransportFactory,
+      requestSigner: RequestSigner,
       partyNotifier: LedgerServerPartyNotifier,
       protocolVersion: ProtocolVersion,
   )(implicit
       ec: ExecutionContextExecutor,
       traceContext: TraceContext,
+      materializer: Materializer,
   ): EitherT[FutureUnlessShutdown, DomainRegistryError, Unit] = {
 
     performUnlessClosingEitherU("check-for-domain-topology-initialization")(
@@ -283,9 +302,26 @@ trait DomainRegistryHelpers extends FlagCloseable with NamedLogging { this: HasF
       case None =>
         EitherT.right[DomainRegistryError](FutureUnlessShutdown.unit)
       case Some(topologyInitializationCallback) =>
-        topologyInitializationCallback
-          .callback(topologyClient, sequencerClient, protocolVersion)
-          .mapK(FutureUnlessShutdown.outcomeK)
+        performUnlessClosingEitherU(
+          name = "sequencer-transport-for-downloading-essential-state"
+        )(
+          sequencerClientFactory
+            .makeTransport(
+              sequencerConnection,
+              participantId,
+              requestSigner,
+            )
+        )
+          .flatMap(transport =>
+            performUnlessClosingEitherU(
+              "downloading-essential-topology-state"
+            )(
+              ResourceUtil.withResourceM(transport)(
+                topologyInitializationCallback
+                  .callback(topologyClient, _, protocolVersion)
+              )
+            )
+          )
           // notify the ledger api server about regular and admin parties contained
           // in the topology snapshot for this domain
           .semiflatMap { storedTopologyTransactions =>

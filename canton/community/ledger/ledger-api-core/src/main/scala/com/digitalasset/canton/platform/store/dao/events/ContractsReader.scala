@@ -3,11 +3,14 @@
 
 package com.digitalasset.canton.platform.store.dao.events
 
+import com.daml.lf.data.Ref.PackageName
+import com.daml.lf.transaction.GlobalKey
+import com.daml.lf.value.Value.VersionedValue
 import com.daml.metrics.Timed
 import com.daml.metrics.api.MetricHandle.Timer
-import com.digitalasset.canton.data.Offset
+import com.digitalasset.canton.ledger.offset.Offset
 import com.digitalasset.canton.logging.{LoggingContextWithTrace, NamedLoggerFactory, NamedLogging}
-import com.digitalasset.canton.metrics.LedgerApiServerMetrics
+import com.digitalasset.canton.metrics.Metrics
 import com.digitalasset.canton.platform.store.backend.ContractStorageBackend
 import com.digitalasset.canton.platform.store.backend.ContractStorageBackend.{
   RawArchivedContract,
@@ -18,10 +21,7 @@ import com.digitalasset.canton.platform.store.dao.events.ContractsReader.*
 import com.digitalasset.canton.platform.store.interfaces.LedgerDaoContractsReader
 import com.digitalasset.canton.platform.store.interfaces.LedgerDaoContractsReader.*
 import com.digitalasset.canton.platform.store.serialization.{Compression, ValueSerializer}
-import com.digitalasset.canton.platform.{Contract, ContractId, *}
-import com.digitalasset.daml.lf.data.Ref.{PackageName, PackageVersion}
-import com.digitalasset.daml.lf.transaction.GlobalKey
-import com.digitalasset.daml.lf.value.Value.VersionedValue
+import com.digitalasset.canton.platform.{Contract, ContractId, Value, *}
 
 import java.io.{ByteArrayInputStream, InputStream}
 import scala.concurrent.{ExecutionContext, Future}
@@ -30,7 +30,7 @@ private[dao] sealed class ContractsReader(
     contractLoader: ContractLoader,
     storageBackend: ContractStorageBackend,
     dispatcher: DbDispatcher,
-    metrics: LedgerApiServerMetrics,
+    metrics: Metrics,
     val loggerFactory: NamedLoggerFactory,
 )(implicit ec: ExecutionContext)
     extends LedgerDaoContractsReader
@@ -70,7 +70,6 @@ private[dao] sealed class ContractsReader(
               contractId = contractId,
               templateId = raw.templateId,
               packageName = raw.packageName,
-              packageVersion = raw.packageVersion,
               createArgument = raw.createArgument,
               createArgumentCompression =
                 Compression.Algorithm.assertLookup(raw.createArgumentCompression),
@@ -89,7 +88,6 @@ private[dao] sealed class ContractsReader(
               GlobalKey.assertBuild(
                 contract.unversioned.template,
                 value.unversioned,
-                contract.unversioned.packageName,
               )
             }
 
@@ -112,7 +110,7 @@ private[dao] object ContractsReader {
   private[dao] def apply(
       contractLoader: ContractLoader,
       dispatcher: DbDispatcher,
-      metrics: LedgerApiServerMetrics,
+      metrics: Metrics,
       storageBackend: ContractStorageBackend,
       loggerFactory: NamedLoggerFactory,
   )(implicit ec: ExecutionContext): ContractsReader = {
@@ -154,7 +152,6 @@ private[dao] object ContractsReader {
       contractId: ContractId,
       templateId: String,
       packageName: String,
-      packageVersion: Option[String],
       createArgument: Array[Byte],
       createArgumentCompression: Compression.Algorithm,
       decompressionTimer: Timer,
@@ -168,9 +165,19 @@ private[dao] object ContractsReader {
     )
     Contract(
       packageName = PackageName.assertFromString(packageName),
-      packageVersion = packageVersion.map(PackageVersion.assertFromString),
       template = Identifier.assertFromString(templateId),
       arg = deserialized,
     )
   }
+
+  private def toContract(
+      templateId: String,
+      packageName: String,
+      createArgument: Value,
+  ): Contract =
+    Contract(
+      packageName = PackageName.assertFromString(packageName),
+      template = Identifier.assertFromString(templateId),
+      arg = createArgument,
+    )
 }

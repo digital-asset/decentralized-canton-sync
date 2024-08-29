@@ -24,10 +24,9 @@ import com.digitalasset.canton.crypto.{
   PrivateKey,
   SigningPrivateKey,
 }
-import com.digitalasset.canton.discard.Implicits.DiscardOps
-import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.tracing.TraceContext
+import com.digitalasset.canton.util.FutureInstances.*
 import com.digitalasset.canton.util.TrieMapUtil
 import com.digitalasset.canton.version.ReleaseProtocolVersion
 import com.google.common.annotations.VisibleForTesting
@@ -70,13 +69,13 @@ class InMemoryCryptoPrivateStore(
 
   private[crypto] def readPrivateKey(keyId: Fingerprint, purpose: KeyPurpose)(implicit
       traceContext: TraceContext
-  ): EitherT[FutureUnlessShutdown, CryptoPrivateStoreError, Option[StoredPrivateKey]] = {
+  ): EitherT[Future, CryptoPrivateStoreError, Option[StoredPrivateKey]] = {
     purpose match {
       case Signing =>
         storedSigningKeyMap
           .get(keyId)
           .parTraverse(pk =>
-            EitherT.rightT[FutureUnlessShutdown, CryptoPrivateStoreError](
+            EitherT.rightT[Future, CryptoPrivateStoreError](
               wrapPrivateKeyInToStored(pk.privateKey, pk.name)
             )
           )
@@ -84,7 +83,7 @@ class InMemoryCryptoPrivateStore(
         storedDecryptionKeyMap
           .get(keyId)
           .parTraverse(pk =>
-            EitherT.rightT[FutureUnlessShutdown, CryptoPrivateStoreError](
+            EitherT.rightT[Future, CryptoPrivateStoreError](
               wrapPrivateKeyInToStored(pk.privateKey, pk.name)
             )
           )
@@ -95,7 +94,7 @@ class InMemoryCryptoPrivateStore(
       key: StoredPrivateKey
   )(implicit
       traceContext: TraceContext
-  ): EitherT[FutureUnlessShutdown, CryptoPrivateStoreError, Unit] = {
+  ): EitherT[Future, CryptoPrivateStoreError, Unit] = {
 
     def parseAndWritePrivateKey[A <: PrivateKey, B <: PrivateKeyWithName](
         pk: A,
@@ -112,11 +111,11 @@ class InMemoryCryptoPrivateStore(
         .toEitherT
 
     val storedKey = key.purpose match {
-      case Signing => SigningPrivateKey.fromTrustedByteString(key.data)
-      case Encryption => EncryptionPrivateKey.fromTrustedByteString(key.data)
+      case Signing => SigningPrivateKey.fromByteString(key.data)
+      case Encryption => EncryptionPrivateKey.fromByteString(key.data)
     }
 
-    val result = for {
+    for {
       res <- storedKey match {
         case Left(parseErr) =>
           EitherT.leftT[Future, Unit](
@@ -146,26 +145,24 @@ class InMemoryCryptoPrivateStore(
           )
       }
     } yield res
-
-    result.mapK(FutureUnlessShutdown.outcomeK)
   }
 
   @VisibleForTesting
   private[canton] def listPrivateKeys(purpose: KeyPurpose, encrypted: Boolean)(implicit
       traceContext: TraceContext
-  ): EitherT[FutureUnlessShutdown, CryptoPrivateStoreError, Set[StoredPrivateKey]] =
+  ): EitherT[Future, CryptoPrivateStoreError, Set[StoredPrivateKey]] =
     (purpose match {
       case Signing =>
         storedSigningKeyMap.values.toSeq
           .parTraverse((x: SigningPrivateKeyWithName) =>
-            EitherT.rightT[FutureUnlessShutdown, CryptoPrivateStoreError](
+            EitherT.rightT[Future, CryptoPrivateStoreError](
               wrapPrivateKeyInToStored(x.privateKey, x.name)
             )
           )
       case Encryption =>
         storedDecryptionKeyMap.values.toSeq
           .parTraverse((x: EncryptionPrivateKeyWithName) =>
-            EitherT.rightT[FutureUnlessShutdown, CryptoPrivateStoreError](
+            EitherT.rightT[Future, CryptoPrivateStoreError](
               wrapPrivateKeyInToStored(x.privateKey, x.name)
             )
           )
@@ -173,9 +170,7 @@ class InMemoryCryptoPrivateStore(
 
   private[crypto] def deletePrivateKey(
       keyId: Fingerprint
-  )(implicit
-      traceContext: TraceContext
-  ): EitherT[FutureUnlessShutdown, CryptoPrivateStoreError, Unit] = {
+  )(implicit traceContext: TraceContext): EitherT[Future, CryptoPrivateStoreError, Unit] = {
     storedSigningKeyMap.remove(keyId).discard
     storedDecryptionKeyMap.remove(keyId).discard
     EitherT.rightT(())
@@ -183,7 +178,7 @@ class InMemoryCryptoPrivateStore(
 
   private[crypto] def replaceStoredPrivateKeys(newKeys: Seq[StoredPrivateKey])(implicit
       traceContext: TraceContext
-  ): EitherT[FutureUnlessShutdown, CryptoPrivateStoreError, Unit] =
+  ): EitherT[Future, CryptoPrivateStoreError, Unit] =
     newKeys
       .parTraverse { newKey =>
         for {
@@ -195,8 +190,8 @@ class InMemoryCryptoPrivateStore(
 
   private[crypto] def encrypted(keyId: Fingerprint)(implicit
       traceContext: TraceContext
-  ): EitherT[FutureUnlessShutdown, CryptoPrivateStoreError, Option[String300]] =
-    EitherT.rightT[FutureUnlessShutdown, CryptoPrivateStoreError](None)
+  ): EitherT[Future, CryptoPrivateStoreError, Option[String300]] =
+    EitherT.rightT[Future, CryptoPrivateStoreError](None)
 
   override def close(): Unit = ()
 }

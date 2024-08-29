@@ -18,7 +18,7 @@ import com.digitalasset.canton.ledger.api.validation.{
   CompletionServiceRequestValidator,
   PartyNameChecker,
 }
-import com.digitalasset.canton.ledger.participant.state.index.IndexCompletionsService
+import com.digitalasset.canton.ledger.participant.state.index.v2.IndexCompletionsService
 import com.digitalasset.canton.logging.LoggingContextWithTrace.implicitExtractTraceContext
 import com.digitalasset.canton.logging.TracedLoggerOps.TracedLoggerOps
 import com.digitalasset.canton.logging.{
@@ -27,14 +27,14 @@ import com.digitalasset.canton.logging.{
   NamedLoggerFactory,
   NamedLogging,
 }
-import com.digitalasset.canton.metrics.LedgerApiServerMetrics
+import com.digitalasset.canton.metrics.Metrics
 import io.grpc.stub.StreamObserver
 import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.scaladsl.Source
 
 final class ApiCommandCompletionService(
     completionsService: IndexCompletionsService,
-    metrics: LedgerApiServerMetrics,
+    metrics: Metrics,
     telemetry: Telemetry,
     val loggerFactory: NamedLoggerFactory,
 )(implicit
@@ -74,14 +74,10 @@ final class ApiCommandCompletionService(
                 s"Received request for completion subscription, ${loggingContextWithTrace
                     .serializeFiltered("parties", "offset")}"
               )
-              val offset = request.offset
+              val offset = request.offset.getOrElse(ParticipantOffset.ParticipantEnd)
 
               completionsService
-                .getCompletions(
-                  ParticipantOffset.fromString(offset),
-                  request.applicationId,
-                  request.parties,
-                )
+                .getCompletions(offset, request.applicationId, request.parties)
                 .via(
                   logger.enrichedDebugStream(
                     "Responding with completions.",

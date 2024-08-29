@@ -8,7 +8,6 @@ import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.participant.metrics.ParticipantTestMetrics
 import com.digitalasset.canton.participant.store.memory.{InMemoryTransferStore, TransferCache}
 import com.digitalasset.canton.participant.store.{ActiveContractStore, TransferStoreTest}
-import com.digitalasset.canton.time.SimClock
 import com.digitalasset.canton.{BaseTest, HasExecutorService, RequestCounter, SequencerCounter}
 import org.scalatest.wordspec.AsyncWordSpec
 
@@ -19,9 +18,8 @@ class NaiveRequestTrackerTest
     with ConflictDetectionHelpers
     with RequestTrackerTest {
 
-  private val clock: SimClock = new SimClock(loggerFactory = loggerFactory)
-
   def mk(
+      rc: RequestCounter,
       sc: SequencerCounter,
       ts: CantonTimestamp,
       acs: ActiveContractStore,
@@ -39,9 +37,9 @@ class NaiveRequestTrackerTest
         loggerFactory,
         checkedInvariant = true,
         parallelExecutionContext,
-        exitOnFatalFailures = true,
         timeouts,
         futureSupervisor,
+        testedProtocolVersion,
       )
 
     new NaiveRequestTracker(
@@ -49,11 +47,9 @@ class NaiveRequestTrackerTest
       ts,
       conflictDetector,
       ParticipantTestMetrics.domain.conflictDetection,
-      exitOnFatalFailures = false,
       timeouts,
       loggerFactory,
       FutureSupervisor.Noop,
-      clock,
     )
   }
 
@@ -64,7 +60,7 @@ class NaiveRequestTrackerTest
   "requests are evicted when they are finalized" in {
     for {
       acs <- mkAcs()
-      rt = mk(SequencerCounter(0), CantonTimestamp.MinValue, acs)
+      rt = mk(RequestCounter(0), SequencerCounter(0), CantonTimestamp.MinValue, acs)
       (cdF, toF) <- enterCR(
         rt,
         RequestCounter(0),
@@ -109,7 +105,7 @@ class NaiveRequestTrackerTest
   "requests are evicted when they time out" in {
     for {
       acs <- mkAcs()
-      rt = mk(SequencerCounter(0), CantonTimestamp.Epoch, acs)
+      rt = mk(RequestCounter(0), SequencerCounter(0), CantonTimestamp.Epoch, acs)
       (cdF, toF) <- enterCR(
         rt,
         RequestCounter(0),

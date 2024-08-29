@@ -11,6 +11,7 @@ import com.digitalasset.canton.config.ProcessingTimeout
 import com.digitalasset.canton.config.RequireTypes.NonNegativeInt
 import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.domain.block.data.EphemeralState.counterToCheckpoint
+import com.digitalasset.canton.domain.block.data.SequencerBlockStore.InvalidTimestamp
 import com.digitalasset.canton.domain.block.data.{
   BlockEphemeralState,
   BlockInfo,
@@ -23,19 +24,17 @@ import com.digitalasset.canton.domain.sequencing.integrations.state.statemanager
   MemberSignedEvents,
   MemberTimestamps,
 }
-import com.digitalasset.canton.domain.sequencing.sequencer.errors.SequencerError
-import com.digitalasset.canton.domain.sequencing.sequencer.errors.SequencerError.BlockNotFound
 import com.digitalasset.canton.domain.sequencing.sequencer.store.CounterCheckpoint
 import com.digitalasset.canton.domain.sequencing.sequencer.{
   InFlightAggregationUpdates,
   InternalSequencerPruningStatus,
 }
 import com.digitalasset.canton.logging.NamedLoggerFactory
-import com.digitalasset.canton.resource.DbStorage.Profile.{H2, Oracle, Postgres}
 import com.digitalasset.canton.resource.IdempotentInsert.insertVerifyingConflicts
 import com.digitalasset.canton.resource.{DbStorage, DbStore}
 import com.digitalasset.canton.sequencing.OrdinarySerializedEvent
-import com.digitalasset.canton.topology.Member
+import com.digitalasset.canton.sequencing.protocol.TrafficState
+import com.digitalasset.canton.topology.{Member, UnauthenticatedMemberId}
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.version.ProtocolVersion
 import com.digitalasset.canton.{SequencerCounter, resource}
@@ -53,10 +52,8 @@ class DbSequencerBlockStore(
     override protected val storage: DbStorage,
     protocolVersion: ProtocolVersion,
     override protected val timeouts: ProcessingTimeout,
-    enableAdditionalConsistencyChecks: Boolean,
     private val checkedInvariant: Option[Member],
     override protected val loggerFactory: NamedLoggerFactory,
-    unifiedSequencer: Boolean,
 )(implicit override protected val executionContext: ExecutionContext)
     extends SequencerBlockStore
     with DbStore {
@@ -77,39 +74,18 @@ class DbSequencerBlockStore(
   override def readHead(implicit traceContext: TraceContext): Future[BlockEphemeralState] =
     storage.query(
       for {
-        blockInfoO <- {
-          if (unifiedSequencer) {
-            for {
-              watermark <- safeWaterMarkDBIO
-              blockInfoO <- watermark match {
-                case Some(watermark) =>
-                  findBlockContainingTimestamp(watermark).flatMap {
-                    case Some(block) => DBIO.successful(Some(block))
-                    case None =>
-                      // WM is ahead of complete blocks, so we pick the latest complete block
-                      readLatestBlockInfo()
-                  }
-                case None =>
-                  // if there's no WM (blank sequencer), we start from the beginning below
-                  DBIO.successful(
-                    None
-                  )
-              }
-            } yield blockInfoO
-          } else {
-            readLatestBlockInfo()
-          }
-        }
+        blockInfoO <- readLatestBlockInfo()
         state <- blockInfoO match {
           case None => DBIO.successful(BlockEphemeralState.empty)
           case Some(blockInfo) =>
             for {
               initialCounters <- initialMemberCountersDBIO
+              initialTrafficState <- initialMemberTrafficStateDBIO
               headState <- sequencerStore.readAtBlockTimestampDBIO(blockInfo.lastTs)
             } yield {
               BlockEphemeralState(
                 blockInfo,
-                mergeWithInitialCounters(headState, initialCounters),
+                mergeWithInitialCountersAndTraffic(headState, initialCounters, initialTrafficState),
               )
             }
         }
@@ -117,34 +93,18 @@ class DbSequencerBlockStore(
       functionFullName,
     )
 
-  private def safeWaterMarkDBIO: DBIOAction[Option[CantonTimestamp], NoStream, Effect.Read] = {
-    val query = storage.profile match {
-      case _: H2 | _: Postgres =>
-        // TODO(#18401): Below only works for a single instance database sequencer
-        sql"select min(watermark_ts) from sequencer_watermarks"
-      case _: Oracle =>
-        sql"select min(watermark_ts) from sequencer_watermarks"
-    }
-    // `min` may return null that is wrapped into None
-    query.as[Option[CantonTimestamp]].headOption.map(_.flatten)
-  }
-
-  private def findBlockContainingTimestamp(
-      timestamp: CantonTimestamp
-  ): DBIOAction[Option[BlockInfo], NoStream, Effect.Read] =
-    (sql"""select height, latest_event_ts, latest_sequencer_event_ts from seq_block_height where latest_event_ts >= $timestamp order by height """ ++ topRow)
-      .as[BlockInfo]
-      .headOption
-
   override def readStateForBlockContainingTimestamp(
       timestamp: CantonTimestamp
-  )(implicit traceContext: TraceContext): EitherT[Future, SequencerError, BlockEphemeralState] =
+  )(implicit traceContext: TraceContext): EitherT[Future, InvalidTimestamp, BlockEphemeralState] =
     EitherT(
       storage.query(
         for {
-          heightAndTimestamp <- findBlockContainingTimestamp(timestamp)
+          heightAndTimestamp <-
+            (sql"""select height, latest_event_ts, latest_sequencer_event_ts from seq_block_height where latest_event_ts >= $timestamp order by height """ ++ topRow)
+              .as[BlockInfo]
+              .headOption
           state <- heightAndTimestamp match {
-            case None => DBIO.successful(Left(BlockNotFound.InvalidTimestamp(timestamp)))
+            case None => DBIO.successful(Left(InvalidTimestamp(timestamp)))
             case Some(block) => readAtBlock(block).map(Right.apply)
           }
         } yield state,
@@ -157,22 +117,27 @@ class DbSequencerBlockStore(
   ): DBIOAction[BlockEphemeralState, NoStream, Effect.Read with Effect.Transactional] = {
     for {
       initialCounters <- initialMemberCountersDBIO
+      initialTraffic <- initialMemberTrafficStateDBIO
       stateAtTimestamp <- sequencerStore.readAtBlockTimestampDBIO(block.lastTs)
     } yield BlockEphemeralState(
       block,
-      mergeWithInitialCounters(stateAtTimestamp, initialCounters),
+      mergeWithInitialCountersAndTraffic(stateAtTimestamp, initialCounters, initialTraffic),
     )
   }
 
-  private def mergeWithInitialCounters(
+  private def mergeWithInitialCountersAndTraffic(
       state: EphemeralState,
       initialCounters: Vector[(Member, SequencerCounter)],
+      initialTrafficState: Vector[(Member, Option[TrafficState])],
   ): EphemeralState =
     state.copy(
       checkpoints = initialCounters.toMap
         .fmap(counterToCheckpoint)
         // only include counters for registered members
-        .filter(c => state.registeredMembers.contains(c._1)) ++ state.checkpoints
+        .filter(c => state.registeredMembers.contains(c._1)) ++ state.checkpoints,
+      trafficState = initialTrafficState.flatMap { case (member, maybeState) =>
+        maybeState.map(member -> _)
+      }.toMap ++ state.trafficState,
     )
 
   override def partialBlockUpdate(
@@ -181,42 +146,30 @@ class DbSequencerBlockStore(
       acknowledgments: MemberTimestamps,
       membersDisabled: Seq[Member],
       inFlightAggregationUpdates: InFlightAggregationUpdates,
+      trafficState: Map[Member, TrafficState],
   )(implicit traceContext: TraceContext): Future[Unit] = {
     val addMember = sequencerStore.addMemberDBIO(_, _)
-    val addEvents = sequencerStore.addEventsDBIO(_)
+    val addEvents = sequencerStore.addEventsDBIO(trafficState)(_)
+    val addAcks = sequencerStore.acknowledgeDBIO _
+    val (unauthenticated, disabledMembers) = membersDisabled.partitionMap {
+      case unauthenticated: UnauthenticatedMemberId => Left(unauthenticated)
+      case other => Right(other)
+    }
     val disableMember = sequencerStore.disableMemberDBIO _
+    val unregisterUnauthenticatedMember = sequencerStore.unregisterUnauthenticatedMember _
 
-    val membersDbio = DBIO
+    val dbio = DBIO
       .seq(
         newMembers.toSeq.map(addMember.tupled) ++
-          membersDisabled.map(disableMember): _*
+          events.map(addEvents) ++
+          acknowledgments.toSeq.map(addAcks.tupled) ++
+          unauthenticated.map(unregisterUnauthenticatedMember) ++
+          Seq(sequencerStore.addInFlightAggregationUpdatesDBIO(inFlightAggregationUpdates)) ++
+          disabledMembers.map(disableMember): _*
       )
       .transactionally
 
-    for {
-      _ <- storage.queryAndUpdate(membersDbio, functionFullName)
-      _ <- {
-        // as an optimization, we run the 3 below in parallel by starting at the same time
-        val acksF = storage.queryAndUpdate(
-          sequencerStore.bulkUpdateAcknowledgementsDBIO(acknowledgments),
-          functionFullName,
-        )
-        val inFlightF = storage.queryAndUpdate(
-          sequencerStore.addInFlightAggregationUpdatesDBIO(inFlightAggregationUpdates),
-          functionFullName,
-        )
-        val eventsF = storage.queryAndUpdate(
-          if (enableAdditionalConsistencyChecks) DBIO.seq(events.map(addEvents)*).transactionally
-          else sequencerStore.bulkInsertEventsDBIO(events),
-          functionFullName,
-        )
-        for {
-          _ <- acksF
-          _ <- inFlightF
-          _ <- eventsF
-        } yield ()
-      }
-    } yield ()
+    storage.queryAndUpdate(dbio, functionFullName)
   }
 
   override def finalizeBlockUpdate(block: BlockInfo)(implicit
@@ -238,7 +191,7 @@ class DbSequencerBlockStore(
       initial: BlockEphemeralState,
       maybeOnboardingTopologyEffectiveTimestamp: Option[CantonTimestamp],
   )(implicit traceContext: TraceContext): Future[Unit] = {
-    val members = initial.state.status.members.toSeq
+    val members = initial.state.status.members
     val updateBlockHeight = updateBlockHeightDBIO(initial.latestBlock)
     val updateLowerBound =
       sequencerStore.saveLowerBoundDBIO(
@@ -247,7 +200,16 @@ class DbSequencerBlockStore(
       )
     val writeInitialCounters = initial.state.checkpoints.toSeq.map {
       case (member, CounterCheckpoint(counter, _, _)) =>
-        upsertMemberInitialState(member, counter)
+        initial.state.trafficState
+          .get(member)
+          .map { memberTrafficState =>
+            upsertMemberInitialStateWithTraffic(
+              member,
+              counter,
+              memberTrafficState,
+            )
+          }
+          .getOrElse(upsertMemberInitialState(member, counter))
     }
     val addMembers =
       members.map(member => sequencerStore.addMemberDBIO(member.member, member.registeredAt))
@@ -276,17 +238,55 @@ class DbSequencerBlockStore(
       traceContext: TraceContext
   ): Future[Option[CantonTimestamp]] = sequencerStore.getInitialTopologySnapshotTimestamp
 
+  private def upsertMemberInitialStateWithTraffic(
+      member: Member,
+      counter: SequencerCounter,
+      trafficState: TrafficState,
+  ): resource.DbStorage.DbAction.All[Unit] = {
+    (storage.profile match {
+      case _: DbStorage.Profile.H2 =>
+        sqlu"""merge into seq_initial_state(member, counter, extra_traffic_remainder, extra_traffic_consumed, base_traffic_remainder, sequenced_timestamp) values
+               ($member, $counter, ${trafficState.extraTrafficRemainder}, ${trafficState.extraTrafficConsumed}, ${trafficState.baseTrafficRemainder}, ${trafficState.timestamp})"""
+      case _: DbStorage.Profile.Postgres =>
+        sqlu"""insert into seq_initial_state(member, counter, extra_traffic_remainder, extra_traffic_consumed, base_traffic_remainder, sequenced_timestamp) values
+                ($member, $counter, ${trafficState.extraTrafficRemainder}, ${trafficState.extraTrafficConsumed}, ${trafficState.baseTrafficRemainder}, ${trafficState.timestamp})
+                 on conflict (member) do update set counter = $counter"""
+      case _: DbStorage.Profile.Oracle =>
+        sqlu"""merge into seq_initial_state inits
+                 using (
+                  select
+                    $member member,
+                    $counter counter,
+                    ${trafficState.extraTrafficRemainder} extra_traffic_remainder,
+                    ${trafficState.extraTrafficConsumed} extra_traffic_consumed,
+                    ${trafficState.baseTrafficRemainder} base_traffic_remainder,
+                    ${trafficState.timestamp} sequenced_timestamp
+                    from dual
+                  ) parameters
+                 on (inits.member = parameters.member)
+                 when matched then update
+                  set inits.counter = parameters.counter,
+                  inits.extra_traffic_remainder = parameters.extra_traffic_remainder,
+                  inits.extra_traffic_consumed = parameters.extra_traffic_consumed,
+                  inits.base_traffic_remainder = parameters.base_traffic_remainder,
+                  inits.sequenced_timestamp = parameters.sequenced_timestamp
+                 when not matched then
+                  insert (member, counter, extra_traffic_remainder, extra_traffic_consumed, base_traffic_remainder, sequenced_timestamp) values (parameters.member, parameters.counter, parameters.extra_traffic_remainder, parameters.extra_traffic_consumed, parameters.base_traffic_remainder, parameters.sequenced_timestamp)
+                  """
+    }).map(_ => ())
+  }
+
   private def upsertMemberInitialState(
       member: Member,
       counter: SequencerCounter,
   ): resource.DbStorage.DbAction.All[Unit] =
     (storage.profile match {
       case _: DbStorage.Profile.H2 =>
-        sqlu"""merge into seq_initial_state as sis using (values ($member, $counter))
-                 mis (member, counter)
+        sqlu"""merge into seq_initial_state as sis using (values ($member, $counter, NULL, NULL, NULL, NULL))
+                 mis (member, counter, extra_traffic_remainder, extra_traffic_consumed, base_traffic_remainder, sequenced_timestamp)
                    on sis.member = mis.member
                    when matched and mis.counter > sis.counter then update set counter = mis.counter
-                   when not matched then insert values(mis.member, mis.counter);"""
+                   when not matched then insert values(mis.member, mis.counter, mis.extra_traffic_remainder, mis.extra_traffic_consumed, mis.base_traffic_remainder, mis.sequenced_timestamp);"""
       case _: DbStorage.Profile.Postgres =>
         sqlu"""insert into seq_initial_state as sis (member, counter) values ($member, $counter)
                  on conflict (member) do update set counter = excluded.counter where sis.counter < excluded.counter"""
@@ -313,10 +313,11 @@ class DbSequencerBlockStore(
         sequencerStore
           .readAtBlockTimestampDBIO(firstBlock.lastTs)
           .zip(initialMemberCountersDBIO)
-          .map { case (state, counters) =>
+          .zip(initialMemberTrafficStateDBIO)
+          .map { case ((state, counters), traffic) =>
             BlockEphemeralState(
               firstBlock,
-              EphemeralState.fromHeads(
+              EphemeralState(
                 counters.toMap.filter { case (member, _) =>
                   // the initial counters query will give us counters for all members, but we just want the ones
                   // that have been registered at or before the timestamp used to compute the state
@@ -324,6 +325,9 @@ class DbSequencerBlockStore(
                 },
                 state.inFlightAggregations,
                 state.status,
+                trafficState = traffic.flatMap { case (member, trafficOpt) =>
+                  trafficOpt.map(member -> _)
+                }.toMap,
               ),
             )
           }
@@ -336,6 +340,10 @@ class DbSequencerBlockStore(
 
   private def initialMemberCountersDBIO =
     sql"select member, counter from seq_initial_state".as[(Member, SequencerCounter)]
+
+  private def initialMemberTrafficStateDBIO =
+    sql"select member, extra_traffic_remainder, extra_traffic_consumed, base_traffic_remainder, sequenced_timestamp from seq_initial_state"
+      .as[(Member, Option[TrafficState])]
 
   private def updateBlockHeightDBIO(block: BlockInfo)(implicit traceContext: TraceContext) =
     insertVerifyingConflicts(

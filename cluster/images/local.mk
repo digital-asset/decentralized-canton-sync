@@ -40,6 +40,7 @@ else
     # Local builds (which may be on an M1) are explicitly constrained
     # to x86.
     platform_opt := --platform=linux/amd64
+    docker_opt := --force
 endif
 
 docker-build := target/docker.id
@@ -100,7 +101,7 @@ $(foreach image,$(images),$(eval $(call DEFINE_PHONY_RULES,$(image))))
 	docker build $(platform_opt) --iidfile $@ $(cache_opt) $(build_arg) -t $$(cat $<) $(@D)/..
 
 %/$(docker-push):  %/$(docker-image-tag) %/$(docker-build)
-	cd $(@D)/.. && docker-push $$(cat $(abspath $<))
+	cd $(@D)/.. && docker-push $$(cat $(abspath $<)) $(docker_opt)
 
 %/$(docker-promote):  %/$(docker-image-tag)
 	cd $(@D)/.. && docker-promote $$(cat $(abspath $<)) $(shell get-docker-image-name $$(basename $$(dirname $(@D))) --artifactory)

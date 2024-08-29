@@ -4,10 +4,9 @@ import com.daml.network.console.{ParticipantClientReference, SvAppBackendReferen
 import com.daml.network.integration.tests.SpliceTests
 import com.digitalasset.canton.config.RequireTypes.PositiveInt
 import com.digitalasset.canton.console.ConsoleMacros
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.logging.{SuppressingLogger, SuppressionRule}
 import com.digitalasset.canton.topology.DomainId
-import com.digitalasset.canton.topology.transaction.DecentralizedNamespaceDefinition
+import com.digitalasset.canton.topology.transaction.DecentralizedNamespaceDefinitionX
 import io.grpc
 import org.slf4j.event.Level
 
@@ -26,7 +25,7 @@ final class ResetDecentralizedNamespace extends ResetTopologyStatePlugin {
   ): Unit = {
     val sv1ParticipantNamespace = sv1.participantClientWithAdminToken.id.uid.namespace
     val decentralizedNamespace =
-      DecentralizedNamespaceDefinition.computeNamespace(Set(sv1ParticipantNamespace))
+      DecentralizedNamespaceDefinitionX.computeNamespace(Set(sv1ParticipantNamespace))
     val store = domainId.filterString
 
     sv1.participantClientWithAdminToken.topology.decentralized_namespaces
@@ -62,7 +61,6 @@ final class ResetDecentralizedNamespace extends ResetTopologyStatePlugin {
                     serial = Some(
                       existingDecentralizedNamespace.context.serial + PositiveInt.one
                     ),
-                    synchronize = None,
                   )
                   .discard,
                 forAll(_)(_.message should include("FAILED_PRECONDITION/SERIAL_MISMATCH")),

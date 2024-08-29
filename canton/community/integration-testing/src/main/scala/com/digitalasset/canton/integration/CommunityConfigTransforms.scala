@@ -12,10 +12,9 @@ import com.digitalasset.canton.config.{
   H2DbConfig,
   StorageConfig,
 }
-import com.digitalasset.canton.domain.mediator.CommunityMediatorNodeConfig
-import com.digitalasset.canton.domain.sequencing.config.CommunitySequencerNodeConfig
+import com.digitalasset.canton.domain.mediator.CommunityMediatorNodeXConfig
+import com.digitalasset.canton.domain.sequencing.config.CommunitySequencerNodeXConfig
 import com.digitalasset.canton.participant.config.CommunityParticipantConfig
-import com.digitalasset.canton.version.{ParticipantProtocolVersion, ProtocolVersion}
 import com.typesafe.config.{Config, ConfigValueFactory}
 import monocle.macros.syntax.lens.*
 
@@ -72,114 +71,46 @@ object CommunityConfigTransforms {
         .focus(_.participants)
         .modify(_.map { case (pName, pConfig) => (pName, update(pName.unwrap, pConfig)) })
 
-  def updateAllSequencerConfigs(
-      update: (String, CommunitySequencerNodeConfig) => CommunitySequencerNodeConfig
+  def updateAllSequencerXConfigs(
+      update: (String, CommunitySequencerNodeXConfig) => CommunitySequencerNodeXConfig
   ): CommunityConfigTransform =
     _.focus(_.sequencers)
       .modify(_.map { case (sName, sConfig) => (sName, update(sName.unwrap, sConfig)) })
 
-  def updateAllSequencerConfigs_(
-      update: CommunitySequencerNodeConfig => CommunitySequencerNodeConfig
+  def updateAllSequencerXConfigs_(
+      update: CommunitySequencerNodeXConfig => CommunitySequencerNodeXConfig
   ): CommunityConfigTransform =
-    updateAllSequencerConfigs((_, config) => update(config))
+    updateAllSequencerXConfigs((_, config) => update(config))
 
-  def updateAllMediatorConfigs_(
-      update: CommunityMediatorNodeConfig => CommunityMediatorNodeConfig
+  def updateAllMediatorXConfigs_(
+      update: CommunityMediatorNodeXConfig => CommunityMediatorNodeXConfig
   ): CommunityConfigTransform =
-    updateAllMediatorConfigs((_, config) => update(config))
+    updateAllMediatorXConfigs((_, config) => update(config))
 
-  def updateAllMediatorConfigs(
-      update: (String, CommunityMediatorNodeConfig) => CommunityMediatorNodeConfig
+  def updateAllMediatorXConfigs(
+      update: (String, CommunityMediatorNodeXConfig) => CommunityMediatorNodeXConfig
   ): CommunityConfigTransform =
     cantonConfig =>
       cantonConfig
         .focus(_.mediators)
         .modify(_.map { case (pName, pConfig) => (pName, update(pName.unwrap, pConfig)) })
 
+  def updateAllParticipantXConfigs(
+      update: (String, CommunityParticipantConfig) => CommunityParticipantConfig
+  ): CommunityConfigTransform =
+    cantonConfig =>
+      cantonConfig
+        .focus(_.participants)
+        .modify(_.map { case (pName, pConfig) => (pName, update(pName.unwrap, pConfig)) })
+
   def uniqueH2DatabaseNames: CommunityConfigTransform = {
-    updateAllSequencerConfigs { case (nodeName, cfg) =>
+    updateAllSequencerXConfigs { case (nodeName, cfg) =>
       cfg.focus(_.storage).modify(CommunityConfigTransforms.withUniqueDbName(nodeName, _))
-    } compose updateAllMediatorConfigs { case (nodeName, cfg) =>
+    } compose updateAllMediatorXConfigs { case (nodeName, cfg) =>
       cfg.focus(_.storage).modify(CommunityConfigTransforms.withUniqueDbName(nodeName, _))
-    } compose updateAllParticipantConfigs { case (nodeName, cfg) =>
+    } compose updateAllParticipantXConfigs { case (nodeName, cfg) =>
       cfg.focus(_.storage).modify(CommunityConfigTransforms.withUniqueDbName(nodeName, _))
     }
-  }
-
-  def setNonStandardConfig(enable: Boolean): CommunityConfigTransform =
-    _.focus(_.parameters.nonStandardConfig).replace(enable)
-
-  def setGlobalAlphaVersionSupport(enable: Boolean): CommunityConfigTransform =
-    _.focus(_.parameters.alphaVersionSupport).replace(enable)
-
-  def setGlobalBetaVersionSupport(enable: Boolean): CommunityConfigTransform =
-    _.focus(_.parameters.betaVersionSupport).replace(enable)
-
-  def updateAllParticipantConfigs_(
-      update: CommunityParticipantConfig => CommunityParticipantConfig
-  ): CommunityConfigTransform =
-    updateAllParticipantConfigs((_, participantConfig) => update(participantConfig))
-
-  def setAlphaVersionSupport(enable: Boolean): Seq[CommunityConfigTransform] = Seq(
-    setNonStandardConfig(enable),
-    setGlobalAlphaVersionSupport(enable),
-    updateAllParticipantConfigs_(
-      _.focus(_.parameters.alphaVersionSupport)
-        .replace(enable)
-    ),
-  )
-
-  def setBetaSupport(enable: Boolean): Seq[CommunityConfigTransform] =
-    Seq(
-      setGlobalBetaVersionSupport(enable),
-      updateAllParticipantConfigs_(
-        _.focus(_.parameters.BetaVersionSupport)
-          .replace(enable)
-      ),
-    )
-
-  lazy val enableAlphaVersionSupport: Seq[CommunityConfigTransform] = setAlphaVersionSupport(true)
-
-  lazy val dontWarnOnDeprecatedPV = Seq(
-    updateAllSequencerConfigs_(
-      _.focus(_.parameters.dontWarnOnDeprecatedPV).replace(true)
-    ),
-    updateAllMediatorConfigs_(
-      _.focus(_.parameters.dontWarnOnDeprecatedPV).replace(true)
-    ),
-    updateAllParticipantConfigs_(
-      _.focus(_.parameters.dontWarnOnDeprecatedPV).replace(true)
-    ),
-  )
-
-  def updateAllInitialProtocolVersion(pv: ProtocolVersion): Seq[CommunityConfigTransform] = Seq(
-    updateAllParticipantConfigs_(
-      _.focus(_.parameters.initialProtocolVersion).replace(ParticipantProtocolVersion(pv))
-    ),
-    updateAllParticipantConfigs_(
-      _.focus(_.parameters.initialProtocolVersion).replace(ParticipantProtocolVersion(pv))
-    ),
-  )
-
-  def setProtocolVersion(pv: ProtocolVersion): Seq[CommunityConfigTransform] = {
-    def configTransformsWhen(predicate: Boolean)(transforms: => Seq[CommunityConfigTransform]) =
-      if (predicate) transforms else Seq()
-
-    val enableAlpha = configTransformsWhen(pv.isAlpha)(enableAlphaVersionSupport)
-    val enableBeta = configTransformsWhen(pv.isBeta)(setBetaSupport(true))
-
-    val deprecatedPVWarning = if (pv.isDeprecated) dontWarnOnDeprecatedPV else Seq()
-
-    val updateParticipants = Seq(
-      updateAllParticipantConfigs_(
-        _.focus(_.parameters.minimumProtocolVersion)
-          .replace(Some(ParticipantProtocolVersion(pv)))
-      )
-    )
-
-    val updateInitialProtocolVersion = updateAllInitialProtocolVersion(pv)
-
-    updateParticipants ++ enableAlpha ++ enableBeta ++ deprecatedPVWarning ++ updateInitialProtocolVersion
   }
 
   def uniquePorts: CommunityConfigTransform = {
@@ -194,7 +125,15 @@ object CommunityConfigTransforms {
         .replace(nextPort.some)
     }
 
-    val sequencerUpdate = updateAllSequencerConfigs_(
+    val participantXUpdate = updateAllParticipantXConfigs { case (_, config) =>
+      config
+        .focus(_.ledgerApi.internalPort)
+        .replace(nextPort.some)
+        .focus(_.adminApi.internalPort)
+        .replace(nextPort.some)
+    }
+
+    val sequencerXUpdate = updateAllSequencerXConfigs_(
       _.focus(_.publicApi.internalPort)
         .replace(nextPort.some)
         .focus(_.adminApi.internalPort)
@@ -203,13 +142,13 @@ object CommunityConfigTransforms {
         .modify(_.map(_.copy(internalPort = nextPort.some)))
     )
 
-    val mediatorUpdate = updateAllMediatorConfigs_(
+    val mediatorXUpdate = updateAllMediatorXConfigs_(
       _.focus(_.adminApi.internalPort)
         .replace(nextPort.some)
         .focus(_.monitoring.grpcHealthServer)
         .modify(_.map(_.copy(internalPort = nextPort.some)))
     )
 
-    participantUpdate compose sequencerUpdate compose mediatorUpdate
+    participantUpdate compose sequencerXUpdate compose mediatorXUpdate compose participantXUpdate
   }
 }

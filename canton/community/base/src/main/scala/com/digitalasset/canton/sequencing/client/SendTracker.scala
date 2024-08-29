@@ -6,25 +6,28 @@ package com.digitalasset.canton.sequencing.client
 import cats.data.EitherT
 import cats.syntax.foldable.*
 import cats.syntax.option.*
-import com.daml.metrics.api.MetricsContext
 import com.daml.metrics.api.MetricsContext.withEmptyMetricsContext
 import com.digitalasset.canton.concurrent.DirectExecutionContext
 import com.digitalasset.canton.config.ProcessingTimeout
 import com.digitalasset.canton.data.CantonTimestamp
-import com.digitalasset.canton.lifecycle.*
+import com.digitalasset.canton.lifecycle.{
+  AsyncCloseable,
+  AsyncOrSyncCloseable,
+  FlagCloseableAsync,
+  FutureUnlessShutdown,
+  SyncCloseable,
+  UnlessShutdown,
+}
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.metrics.SequencerClientMetrics
-import com.digitalasset.canton.sequencing.client.SendResult.{Error, Success, Timeout}
 import com.digitalasset.canton.sequencing.protocol.{
   Deliver,
   DeliverError,
   MessageId,
   SequencedEvent,
 }
-import com.digitalasset.canton.sequencing.traffic.TrafficStateController
 import com.digitalasset.canton.store.SequencedEventStore.OrdinarySequencedEvent
 import com.digitalasset.canton.store.{SavePendingSendError, SendTrackerStore}
-import com.digitalasset.canton.topology.Member
 import com.digitalasset.canton.tracing.{TraceContext, Traced}
 import com.digitalasset.canton.util.MonadUtil
 import com.digitalasset.canton.util.MonadUtil.sequentialTraverse_
@@ -48,18 +51,15 @@ class SendTracker(
     metrics: SequencerClientMetrics,
     protected val loggerFactory: NamedLoggerFactory,
     override val timeouts: ProcessingTimeout,
-    trafficStateController: Option[TrafficStateController],
-    member: Member,
 ) extends NamedLogging
     with FlagCloseableAsync
     with AutoCloseable {
 
-  private implicit val metricsContext: MetricsContext = MetricsContext("sender" -> member.toString)
   private implicit val directExecutionContext: DirectExecutionContext = DirectExecutionContext(
     noTracingLogger
   )
 
-  /** Details of sends in-flight
+  /** Details of sends in flight
     * @param startedAt The time the request was made for calculating the elapsed duration for metrics.
     *                  We use the host clock time for this value and it is only tracked ephemerally
     *                  as the elapsed value will not be useful if the local process restarts during sequencing.
@@ -96,12 +96,7 @@ class SendTracker(
       } yield {
         pendingSends.put(
           messageId,
-          PendingSend(
-            maxSequencingTime,
-            callback,
-            startedAt = Some(Instant.now()),
-            traceContext,
-          ),
+          PendingSend(maxSequencingTime, callback, startedAt = Some(Instant.now()), traceContext),
         ) match {
           case Some(previousMaxSequencingTime) =>
             // if we were able to persist the new message id without issue but found the message id in our in-memory
@@ -241,19 +236,6 @@ class SendTracker(
           logger.error(s"Concurrent modification of pending sends $other / $current")
         None
     }
-
-    // Update the traffic controller with the traffic consumed in the receipt
-    (trafficStateController, resultO) match {
-      case (Some(tsc), Some(UnlessShutdown.Outcome(Success(deliver)))) =>
-        deliver.trafficReceipt.foreach(tsc.updateWithReceipt(_, deliver.timestamp))
-      case (Some(tsc), Some(UnlessShutdown.Outcome(Error(deliverError)))) =>
-        deliverError.trafficReceipt.foreach(tsc.updateWithReceipt(_, deliverError.timestamp))
-      case (Some(tsc), Some(UnlessShutdown.Outcome(Timeout(timestamp)))) =>
-        // Event was not sequenced but we can still advance the base rate at the timestamp
-        tsc.tickStateAt(timestamp)
-      case _ =>
-    }
-
     (removeUnlessTimedOut, current) match {
       // if the sequencedTime is passed and it is more recent than the max-sequencing time of the
       // event, then we will not remove the pending send (it will be picked up later by the handleTimeout method)
@@ -280,11 +262,11 @@ class SendTracker(
       event: SequencedEvent[_]
   )(implicit traceContext: TraceContext): Option[(MessageId, SendResult)] = {
     Option(event) collect {
-      case deliver @ Deliver(_, _, _, Some(messageId), _, _, _) =>
+      case deliver @ Deliver(_, _, _, Some(messageId), _, _) =>
         logger.trace(s"Send [$messageId] was successful")
         (messageId, SendResult.Success(deliver))
 
-      case error @ DeliverError(_, _, _, messageId, reason, _) =>
+      case error @ DeliverError(_, _, _, messageId, reason) =>
         logger.debug(s"Send [$messageId] failed: $reason")
         (messageId, SendResult.Error(error))
     }

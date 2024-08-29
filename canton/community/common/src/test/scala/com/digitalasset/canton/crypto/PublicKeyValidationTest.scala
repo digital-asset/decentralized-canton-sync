@@ -12,16 +12,16 @@ trait PublicKeyValidationTest extends BaseTest with CryptoTestHelper { this: Asy
 
   private def modifyPublicKey(
       publicKey: PublicKey,
-      newFormat: CryptoKeyFormat,
-  ): PublicKey = {
+      newFormat: Option[CryptoKeyFormat],
+      newId: Option[Fingerprint],
+  ): PublicKey =
     publicKey match {
-      case EncryptionPublicKey(_format, key, scheme) =>
-        new EncryptionPublicKey(newFormat, key, scheme)
-      case SigningPublicKey(_format, key, scheme) =>
-        new SigningPublicKey(newFormat, key, scheme)
+      case EncryptionPublicKey(id, format, key, scheme) =>
+        new EncryptionPublicKey(newId.getOrElse(id), newFormat.getOrElse(format), key, scheme)
+      case SigningPublicKey(id, format, key, scheme) =>
+        new SigningPublicKey(newId.getOrElse(id), newFormat.getOrElse(format), key, scheme)
       case _ => fail(s"unsupported key type")
     }
-  }
 
   private def keyValidationTest[K <: PublicKey](
       supportedCryptoKeyFormats: Set[CryptoKeyFormat],
@@ -36,7 +36,7 @@ trait PublicKeyValidationTest extends BaseTest with CryptoTestHelper { this: Asy
         for {
           crypto <- newCrypto
           publicKey <- newPublicKey(crypto)
-          newPublicKeyWithTargetFormat = modifyPublicKey(publicKey, format)
+          newPublicKeyWithTargetFormat = modifyPublicKey(publicKey, Some(format), None)
           validationRes = CryptoKeyValidation.parseAndValidatePublicKey(
             newPublicKeyWithTargetFormat,
             errString => errString,
@@ -51,13 +51,33 @@ trait PublicKeyValidationTest extends BaseTest with CryptoTestHelper { this: Asy
       }
     }
 
+    // with wrong fingerprint
+    s"Validate $name public key with wrong fingerprint" in {
+      val invalidFingerprint = TestFingerprint.generateFingerprint("mock")
+      for {
+        crypto <- newCrypto
+        publicKey <- newPublicKey(crypto)
+        newPublicKeyWithWrongFingerprint = modifyPublicKey(
+          publicKey,
+          None,
+          Some(invalidFingerprint),
+        )
+        validationRes = CryptoKeyValidation.parseAndValidatePublicKey(
+          newPublicKeyWithWrongFingerprint,
+          errString => errString,
+        )
+      } yield validationRes.left.value should fullyMatch regex
+        raw"Failed to deserialize ${publicKey.format} public key: " +
+        raw"KeyParseAndValidateError\(The regenerated fingerprint ${publicKey.fingerprint} does not match the fingerprint of the object: $invalidFingerprint\)"
+    }
+
   }
 
   /** Test public key validation
     */
   def publicKeyValidationProvider(
       supportedSigningKeySchemes: Set[SigningKeyScheme],
-      supportedEncryptionKeySpecs: Set[EncryptionKeySpec],
+      supportedEncryptionKeySchemes: Set[EncryptionKeyScheme],
       supportedCryptoKeyFormats: Set[CryptoKeyFormat],
       newCrypto: => Future[Crypto],
   ): Unit = {
@@ -68,16 +88,16 @@ trait PublicKeyValidationTest extends BaseTest with CryptoTestHelper { this: Asy
           supportedCryptoKeyFormats,
           signingKeyScheme.toString,
           newCrypto,
-          crypto => getSigningPublicKey(crypto, signingKeyScheme).failOnShutdown,
+          crypto => getSigningPublicKey(crypto, signingKeyScheme),
         )
       }
 
-      forAll(supportedEncryptionKeySpecs) { encryptionKeySpec =>
+      forAll(supportedEncryptionKeySchemes) { encryptionKeyScheme =>
         keyValidationTest[EncryptionPublicKey](
           supportedCryptoKeyFormats,
-          encryptionKeySpec.toString,
+          encryptionKeyScheme.toString,
           newCrypto,
-          crypto => getEncryptionPublicKey(crypto, encryptionKeySpec).failOnShutdown,
+          crypto => getEncryptionPublicKey(crypto, encryptionKeyScheme),
         )
       }
     }

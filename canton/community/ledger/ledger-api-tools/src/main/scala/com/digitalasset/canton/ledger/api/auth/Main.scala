@@ -5,7 +5,6 @@ package com.digitalasset.canton.ledger.api.auth
 
 import com.daml.jwt.domain.{DecodedJwt, Jwt}
 import com.daml.jwt.{JwtSigner, KeyUtils}
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import scalaz.syntax.show.*
 
 import java.io.File

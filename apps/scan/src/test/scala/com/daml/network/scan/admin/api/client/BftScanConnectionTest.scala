@@ -9,7 +9,7 @@ import com.daml.network.store.MultiDomainAcsStore.ContractState
 import com.daml.network.util.{SpliceUtil, Contract, ContractWithState}
 import com.digitalasset.canton.concurrent.FutureSupervisor
 import com.digitalasset.canton.config.NonNegativeFiniteDuration
-import com.daml.metrics.api.noop.NoOpMetricsFactory
+import com.digitalasset.canton.metrics.CantonLabeledMetricsFactory.NoOpMetricsFactory
 import com.digitalasset.canton.time.SimClock
 import com.digitalasset.canton.topology.{DomainId, PartyId}
 import com.digitalasset.canton.{BaseTest, HasActorSystem, HasExecutionContext}
@@ -274,18 +274,6 @@ class BftScanConnectionTest
           ) should be(true)
         },
       )
-    }
-
-    "use all available connections on failures" in {
-      val connections = getMockedConnections(n = 4)
-      connections.zipWithIndex.foreach { case (connMock, idx) =>
-        makeMockReturn(connMock, PartyId.tryFromProtoPrimitive(s"whatever::$idx"))
-      }
-      val bft = getBft(connections)
-      bft.getDsoPartyId().failed.map { _ =>
-        connections.foreach(mockConnection => verify(mockConnection, atLeast(1)).getDsoPartyId())
-        succeed
-      }
     }
   }
 

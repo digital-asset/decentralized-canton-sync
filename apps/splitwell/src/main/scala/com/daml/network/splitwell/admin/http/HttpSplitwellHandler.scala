@@ -98,7 +98,7 @@ class HttpSplitwellHandler(
       } yield {
         definitions.ListBalanceUpdatesResponse(
           balanceUpdates
-            .map(_.toHttp)
+            .map(_.contract.toHttp)
             .toVector
         )
       }

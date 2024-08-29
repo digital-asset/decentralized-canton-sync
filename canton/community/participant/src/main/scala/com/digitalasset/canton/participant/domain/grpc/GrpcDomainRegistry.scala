@@ -4,14 +4,15 @@
 package com.digitalasset.canton.participant.domain.grpc
 
 import cats.Eval
+import cats.data.EitherT
 import cats.instances.future.*
-import cats.syntax.either.*
 import com.daml.grpc.adapter.ExecutionSequencerFactory
+import com.daml.lf.data.Ref.PackageId
 import com.digitalasset.canton.*
 import com.digitalasset.canton.common.domain.grpc.SequencerInfoLoader
 import com.digitalasset.canton.concurrent.{FutureSupervisor, HasFutureSupervision}
 import com.digitalasset.canton.config.{CryptoConfig, ProcessingTimeout, TestingConfigInternal}
-import com.digitalasset.canton.crypto.{CryptoHandshakeValidator, SyncCryptoApiProvider}
+import com.digitalasset.canton.crypto.SyncCryptoApiProvider
 import com.digitalasset.canton.lifecycle.*
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.participant.ParticipantNodeParameters
@@ -24,7 +25,7 @@ import com.digitalasset.canton.participant.store.{
 import com.digitalasset.canton.participant.sync.SyncDomainPersistentStateManager
 import com.digitalasset.canton.participant.topology.{
   LedgerServerPartyNotifier,
-  ParticipantTopologyDispatcher,
+  ParticipantTopologyDispatcherCommon,
   TopologyComponentFactory,
 }
 import com.digitalasset.canton.protocol.StaticDomainParameters
@@ -37,13 +38,12 @@ import com.digitalasset.canton.sequencing.{SequencerConnectionValidation, Sequen
 import com.digitalasset.canton.time.Clock
 import com.digitalasset.canton.topology.*
 import com.digitalasset.canton.topology.client.DomainTopologyClientWithInit
-import com.digitalasset.canton.topology.store.PackageDependencyResolverUS
 import com.digitalasset.canton.tracing.TraceContext
 import io.opentelemetry.api.trace.Tracer
 import org.apache.pekko.stream.Materializer
 
 import java.util.concurrent.atomic.AtomicReference
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.{ExecutionContextExecutor, Future}
 
 /** Domain registry used to connect to domains over GRPC
   *
@@ -56,7 +56,7 @@ class GrpcDomainRegistry(
     val participantId: ParticipantId,
     syncDomainPersistentStateManager: SyncDomainPersistentStateManager,
     participantSettings: Eval[ParticipantSettingsLookup],
-    topologyDispatcher: ParticipantTopologyDispatcher,
+    topologyDispatcher: ParticipantTopologyDispatcherCommon,
     cryptoApiProvider: SyncCryptoApiProvider,
     cryptoConfig: CryptoConfig,
     clock: Clock,
@@ -65,7 +65,7 @@ class GrpcDomainRegistry(
     testingConfig: TestingConfigInternal,
     recordSequencerInteractions: AtomicReference[Option[RecordingConfig]],
     replaySequencerConfig: AtomicReference[Option[ReplayConfig]],
-    packageDependencyResolver: PackageDependencyResolverUS,
+    packageDependencies: PackageId => EitherT[Future, PackageId, Set[PackageId]],
     metrics: DomainAlias => SyncDomainMetrics,
     sequencerInfoLoader: SequencerInfoLoader,
     partyNotifier: LedgerServerPartyNotifier,
@@ -125,7 +125,6 @@ class GrpcDomainRegistry(
       info <- sequencerInfoLoader
         .loadAndAggregateSequencerEndpoints(
           config.domain,
-          config.domainId,
           sequencerConnections,
           SequencerConnectionValidation.Active, // only validate active sequencers (not all endpoints)
         )(
@@ -136,11 +135,6 @@ class GrpcDomainRegistry(
         .mapK(
           FutureUnlessShutdown.outcomeK
         )
-
-      _ <- CryptoHandshakeValidator
-        .validate(info.staticDomainParameters, cryptoConfig)
-        .leftMap(DomainRegistryError.HandshakeErrors.DomainCryptoHandshakeFailed.Error(_))
-        .toEitherT[FutureUnlessShutdown]
 
       _ <- aliasManager
         .processHandshake(config.domain, info.domainId)
@@ -155,14 +149,16 @@ class GrpcDomainRegistry(
         info,
       )(
         cryptoApiProvider,
+        cryptoConfig,
         clock,
         testingConfig,
         recordSequencerInteractions,
         replaySequencerConfig,
         topologyDispatcher,
-        packageDependencyResolver,
+        packageDependencies,
         partyNotifier,
         metrics,
+        participantSettings,
       )
     } yield new GrpcDomainHandle(
       domainHandle.domainId,

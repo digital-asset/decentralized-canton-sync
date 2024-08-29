@@ -26,8 +26,8 @@ import com.digitalasset.canton.serialization.ProtoConverter
 import com.digitalasset.canton.serialization.ProtoConverter.ParsingResult
 import com.digitalasset.canton.store.SequencedEventStore.PossiblyIgnoredSequencedEvent.dbTypeOfEvent
 import com.digitalasset.canton.store.SequencedEventStore.*
-import com.digitalasset.canton.store.db.DbSequencedEventStore
 import com.digitalasset.canton.store.db.DbSequencedEventStore.SequencedEventDbType
+import com.digitalasset.canton.store.db.{DbSequencedEventStore, SequencerClientDiscriminator}
 import com.digitalasset.canton.store.memory.InMemorySequencedEventStore
 import com.digitalasset.canton.tracing.{HasTraceContext, SerializableTraceContext, TraceContext}
 import com.digitalasset.canton.version.ProtocolVersion
@@ -79,7 +79,7 @@ trait SequencedEventStore extends PrunableByTime with NamedLogging with AutoClos
     *
     * @return [[ChangeWouldResultInGap]] if there would be a gap between the highest sequencer counter in the store and `from`.
     */
-  def ignoreEvents(fromInclusive: SequencerCounter, toInclusive: SequencerCounter)(implicit
+  def ignoreEvents(from: SequencerCounter, to: SequencerCounter)(implicit
       traceContext: TraceContext
   ): EitherT[Future, ChangeWouldResultInGap, Unit]
 
@@ -87,7 +87,7 @@ trait SequencedEventStore extends PrunableByTime with NamedLogging with AutoClos
     *
     * @return [[ChangeWouldResultInGap]] if deleting empty ignored events between `from` and `to` would result in a gap in sequencer counters.
     */
-  def unignoreEvents(fromInclusive: SequencerCounter, toInclusive: SequencerCounter)(implicit
+  def unignoreEvents(from: SequencerCounter, to: SequencerCounter)(implicit
       traceContext: TraceContext
   ): EitherT[Future, ChangeWouldResultInGap, Unit]
 
@@ -103,7 +103,7 @@ object SequencedEventStore {
 
   def apply[Env <: Envelope[_]](
       storage: Storage,
-      indexedDomain: IndexedDomain,
+      member: SequencerClientDiscriminator,
       protocolVersion: ProtocolVersion,
       timeouts: ProcessingTimeout,
       loggerFactory: NamedLoggerFactory,
@@ -111,13 +111,7 @@ object SequencedEventStore {
     storage match {
       case _: MemoryStorage => new InMemorySequencedEventStore(loggerFactory)
       case dbStorage: DbStorage =>
-        new DbSequencedEventStore(
-          dbStorage,
-          indexedDomain,
-          protocolVersion,
-          timeouts,
-          loggerFactory,
-        )
+        new DbSequencedEventStore(dbStorage, member, protocolVersion, timeouts, loggerFactory)
     }
 
   sealed trait SearchCriterion extends Product with Serializable
@@ -161,6 +155,8 @@ object SequencedEventStore {
       with Serializable {
     def timestamp: CantonTimestamp
 
+    def trafficState: Option[SequencedEventTrafficState]
+
     def counter: SequencerCounter
 
     def underlyingEventBytes: Array[Byte]
@@ -181,7 +177,8 @@ object SequencedEventStore {
         timestamp = timestamp.toProtoPrimitive,
         traceContext = Some(SerializableTraceContext(traceContext).toProtoV30),
         isIgnored = isIgnored,
-        underlying = underlying.map(_.toByteString),
+        underlying = underlying.map(_.toProtoV30),
+        trafficState = trafficState.map(_.toProtoV30),
       )
   }
 
@@ -196,6 +193,7 @@ object SequencedEventStore {
       override val timestamp: CantonTimestamp,
       override val counter: SequencerCounter,
       override val underlying: Option[SignedContent[SequencedEvent[Env]]],
+      override val trafficState: Option[SequencedEventTrafficState],
   )(override val traceContext: TraceContext)
       extends PossiblyIgnoredSequencedEvent[Env] {
 
@@ -211,7 +209,7 @@ object SequencedEventStore {
     override def asIgnoredEvent: IgnoredSequencedEvent[Env] = this
 
     override def asOrdinaryEvent: PossiblyIgnoredSequencedEvent[Env] = underlying match {
-      case Some(event) => OrdinarySequencedEvent(event)(traceContext)
+      case Some(event) => OrdinarySequencedEvent(event, trafficState)(traceContext)
       case None => this
     }
 
@@ -220,6 +218,7 @@ object SequencedEventStore {
         param("timestamp", _.timestamp),
         param("counter", _.counter),
         paramIfDefined("underlying", _.underlying),
+        paramIfDefined("trafficState", _.trafficState),
       )
   }
 
@@ -246,7 +245,8 @@ object SequencedEventStore {
     * It has been signed by the sequencer and contains a trace context.
     */
   final case class OrdinarySequencedEvent[+Env <: Envelope[_]](
-      signedEvent: SignedContent[SequencedEvent[Env]]
+      signedEvent: SignedContent[SequencedEvent[Env]],
+      trafficState: Option[SequencedEventTrafficState],
   )(
       override val traceContext: TraceContext
   ) extends PossiblyIgnoredSequencedEvent[Env] {
@@ -266,12 +266,13 @@ object SequencedEventStore {
     override def underlying: Some[SignedContent[SequencedEvent[Env]]] = Some(signedEvent)
 
     override def asIgnoredEvent: IgnoredSequencedEvent[Env] =
-      IgnoredSequencedEvent(timestamp, counter, Some(signedEvent))(traceContext)
+      IgnoredSequencedEvent(timestamp, counter, Some(signedEvent), trafficState)(traceContext)
 
     override def asOrdinaryEvent: PossiblyIgnoredSequencedEvent[Env] = this
 
     override def pretty: Pretty[OrdinarySequencedEvent[Envelope[_]]] = prettyOfClass(
-      param("signedEvent", _.signedEvent)
+      param("signedEvent", _.signedEvent),
+      paramIfNonEmpty("trafficState", _.trafficState),
     )
   }
 
@@ -303,6 +304,7 @@ object SequencedEventStore {
         traceContextPO,
         isIgnored,
         underlyingPO,
+        trafficStatePO,
       ) = possiblyIgnoredSequencedEventP
 
       val sequencerCounter = SequencerCounter(counter)
@@ -310,7 +312,7 @@ object SequencedEventStore {
       for {
         underlyingO <- underlyingPO.traverse(
           SignedContent
-            .fromByteString(protocolVersion)(_)
+            .fromProtoV30(_)
             .flatMap(
               _.deserializeContent(SequencedEvent.fromByteStringOpen(hashOps, protocolVersion))
             )
@@ -319,10 +321,11 @@ object SequencedEventStore {
         traceContext <- ProtoConverter
           .required("trace_context", traceContextPO)
           .flatMap(SerializableTraceContext.fromProtoV30)
+        trafficStateO <- trafficStatePO.traverse(SequencedEventTrafficState.fromProtoV30)
         possiblyIgnoredSequencedEvent <-
           if (isIgnored) {
             Right(
-              IgnoredSequencedEvent(timestamp, sequencerCounter, underlyingO)(
+              IgnoredSequencedEvent(timestamp, sequencerCounter, underlyingO, trafficStateO)(
                 traceContext.unwrap
               )
             )
@@ -330,7 +333,7 @@ object SequencedEventStore {
             ProtoConverter
               .required("underlying", underlyingO)
               .map(
-                OrdinarySequencedEvent(_)(
+                OrdinarySequencedEvent(_, trafficStateO)(
                   traceContext.unwrap
                 )
               )

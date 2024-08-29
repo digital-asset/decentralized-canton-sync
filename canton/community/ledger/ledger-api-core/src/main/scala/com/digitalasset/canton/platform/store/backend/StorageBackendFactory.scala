@@ -18,10 +18,11 @@ import com.digitalasset.canton.platform.store.interning.StringInterning
 
 trait StorageBackendFactory {
   def createIngestionStorageBackend: IngestionStorageBackend[_]
-  def createParameterStorageBackend(stringInterning: StringInterning): ParameterStorageBackend
+  def createParameterStorageBackend: ParameterStorageBackend
   def createMeteringParameterStorageBackend: MeteringParameterStorageBackend
   def createPartyStorageBackend(ledgerEndCache: LedgerEndCache): PartyStorageBackend
   def createPartyRecordStorageBackend: PartyRecordStorageBackend
+  def createPackageStorageBackend(ledgerEndCache: LedgerEndCache): PackageStorageBackend
   def createCompletionStorageBackend(
       stringInterning: StringInterning,
       loggerFactory: NamedLoggerFactory,
@@ -52,6 +53,7 @@ trait StorageBackendFactory {
   ): ReadStorageBackend =
     ReadStorageBackend(
       partyStorageBackend = createPartyStorageBackend(ledgerEndCache),
+      packageStorageBackend = createPackageStorageBackend(ledgerEndCache),
       completionStorageBackend = createCompletionStorageBackend(stringInterning, loggerFactory),
       contractStorageBackend = createContractStorageBackend(ledgerEndCache, stringInterning),
       eventStorageBackend =
@@ -71,6 +73,7 @@ object StorageBackendFactory {
 
 final case class ReadStorageBackend(
     partyStorageBackend: PartyStorageBackend,
+    packageStorageBackend: PackageStorageBackend,
     completionStorageBackend: CompletionStorageBackend,
     contractStorageBackend: ContractStorageBackend,
     eventStorageBackend: EventStorageBackend,

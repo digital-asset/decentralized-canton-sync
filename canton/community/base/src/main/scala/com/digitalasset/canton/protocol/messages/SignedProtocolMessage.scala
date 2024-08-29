@@ -13,7 +13,6 @@ import com.digitalasset.canton.crypto.{
   SyncCryptoApi,
   SyncCryptoError,
 }
-import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
 import com.digitalasset.canton.logging.pretty.Pretty
 import com.digitalasset.canton.protocol.messages.ProtocolMessage.ProtocolMessageContentCast
 import com.digitalasset.canton.protocol.messages.SignedProtocolMessageContent.SignedMessageContentCast
@@ -58,6 +57,7 @@ case class SignedProtocolMessage[+M <: SignedProtocolMessageContent](
       snapshot: SyncCryptoApi,
       member: Member,
   )(implicit traceContext: TraceContext): EitherT[Future, SignatureCheckError, Unit] =
+    // TODO(#12390) Properly check the signatures, i.e. there shouldn't be multiple signatures from the same member on the same envelope
     ClosedEnvelope.verifySignatures(
       snapshot,
       member,
@@ -122,7 +122,7 @@ object SignedProtocolMessage
 
   val supportedProtoVersions = SupportedProtoVersions(
     ProtoVersion(30) -> VersionedProtoConverter(
-      ProtocolVersion.v31
+      ProtocolVersion.v30
     )(v30.SignedProtocolMessage)(
       supportedProtoVersion(_)(fromProtoV30),
       _.toProtoV30.toByteString,
@@ -157,7 +157,7 @@ object SignedProtocolMessage
   )(implicit
       traceContext: TraceContext,
       ec: ExecutionContext,
-  ): EitherT[FutureUnlessShutdown, SyncCryptoError, SignedProtocolMessage[M]] = {
+  ): EitherT[Future, SyncCryptoError, SignedProtocolMessage[M]] = {
     val typedMessage = TypedSignedProtocolMessageContent(message, protocolVersion)
     for {
       signature <- mkSignature(typedMessage, cryptoApi)
@@ -172,7 +172,7 @@ object SignedProtocolMessage
       cryptoApi: SyncCryptoApi,
   )(implicit
       traceContext: TraceContext
-  ): EitherT[FutureUnlessShutdown, SyncCryptoError, Signature] = {
+  ): EitherT[Future, SyncCryptoError, Signature] = {
     val hashPurpose = HashPurpose.SignedProtocolMessageSignature
     val serialization = typedMessage.getCryptographicEvidence
 
@@ -184,10 +184,7 @@ object SignedProtocolMessage
       message: M,
       cryptoApi: SyncCryptoApi,
       protocolVersion: ProtocolVersion,
-  )(implicit
-      traceContext: TraceContext,
-      ec: ExecutionContext,
-  ): FutureUnlessShutdown[SignedProtocolMessage[M]] =
+  )(implicit traceContext: TraceContext, ec: ExecutionContext): Future[SignedProtocolMessage[M]] =
     signAndCreate(message, cryptoApi, protocolVersion)
       .valueOr(err =>
         throw new IllegalStateException(s"Failed to create signed protocol message: $err")

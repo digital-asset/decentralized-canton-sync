@@ -179,7 +179,7 @@ class SvFrontendIntegrationTest
           sv1Backend.onboardValidator(
             newValidatorParty,
             newSecret,
-            s"${newValidatorParty.uid.identifier}@example.com",
+            s"${newValidatorParty.uid.id}@example.com",
           ),
         )(
           "a new validator row is added",
@@ -1346,13 +1346,13 @@ class SvFrontendIntegrationTest
           },
         )
 
-        val svs: Vector[String] =
+        val members: Vector[String] =
           sv3Backend.getDsoInfo().dsoRules.payload.svs.keySet().asScala.toVector
 
-        val newLeader = svs.head
+        val newLeader = members.head
 
-        sv2Backend.createElectionRequest(sv2Backend.getDsoInfo().svParty.toProtoPrimitive, svs)
-        sv3Backend.createElectionRequest(sv3Backend.getDsoInfo().svParty.toProtoPrimitive, svs)
+        sv2Backend.createElectionRequest(sv2Backend.getDsoInfo().svParty.toProtoPrimitive, members)
+        sv3Backend.createElectionRequest(sv3Backend.getDsoInfo().svParty.toProtoPrimitive, members)
 
         loggerFactory.assertEventuallyLogsSeq(SuppressionRule.LevelAndAbove(Level.INFO))(
           actAndCheck(

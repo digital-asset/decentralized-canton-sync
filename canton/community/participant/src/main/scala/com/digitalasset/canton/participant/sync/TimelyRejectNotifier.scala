@@ -5,13 +5,12 @@ package com.digitalasset.canton.participant.sync
 
 import cats.Monad
 import cats.syntax.either.*
+import com.digitalasset.canton.DiscardOps
 import com.digitalasset.canton.data.CantonTimestamp
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.lifecycle.UnlessShutdown.{AbortedDueToShutdown, Outcome}
 import com.digitalasset.canton.lifecycle.{FutureUnlessShutdown, UnlessShutdown}
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.participant.protocol.submission.InFlightSubmissionTracker
-import com.digitalasset.canton.participant.store.ParticipantNodeEphemeralState
 import com.digitalasset.canton.participant.sync
 import com.digitalasset.canton.store.CursorPrehead.SequencerCounterCursorPrehead
 import com.digitalasset.canton.topology.DomainId
@@ -162,7 +161,7 @@ class TimelyRejectNotifier(
 object TimelyRejectNotifier {
 
   def apply(
-      participantNodeEphemeralState: ParticipantNodeEphemeralState,
+      inFlightSubmissionTracker: InFlightSubmissionTracker,
       domainId: DomainId,
       initialUpperBound: Option[CantonTimestamp],
       loggerFactory: NamedLoggerFactory,
@@ -171,12 +170,8 @@ object TimelyRejectNotifier {
       override def notify(
           upToInclusive: CantonTimestamp
       )(implicit traceContext: TraceContext): FutureUnlessShutdown[Unit] =
-        participantNodeEphemeralState.inFlightSubmissionTracker
-          .timelyReject(
-            domainId,
-            upToInclusive,
-            participantNodeEphemeralState.participantEventPublisher,
-          )
+        inFlightSubmissionTracker
+          .timelyReject(domainId, upToInclusive)
           .valueOr { case InFlightSubmissionTracker.UnknownDomain(domainId) =>
             // The CantonSyncService removes the SyncDomain from the connected domains map
             // before the SyncDomain is closed. So guarding the timely rejections against the SyncDomain being closed

@@ -1780,13 +1780,6 @@ class State:
                 cause=e,
             )
 
-        for cid, ev in self.active_contracts.items():
-            if not isinstance(ev, CreatedEvent):
-                self._fail(
-                    transaction,
-                    f"Unexpected non-create event in active contracts for {cid}: {ev}",
-                )
-
         # This is a sanity check to make sure the code does not
         # forget tracking an ACS change.
         acs_diff = transaction.acs_diff()
@@ -2211,7 +2204,7 @@ class State:
                         if i.initial_amount
                         else DamlDecimal(0)
                     ),
-                    "currency": "CC",
+                    "currency": "CC"
                 },
                 parties=interested_parties,
             )
@@ -2304,8 +2297,7 @@ class State:
         for event_id in event.child_event_ids:
             event = transaction.events_by_id[event_id]
             if (
-                isinstance(event, CreatedEvent)
-                and event.template_id.qualified_name
+                event.template_id.qualified_name
                 == TemplateQualifiedNames.validator_reward_coupon
             ):
                 self.active_contracts[event.contract_id] = event
@@ -2393,7 +2385,7 @@ class State:
                         if i.initial_amount
                         else DamlDecimal(0)
                     ),
-                    "currency": " CC",
+                    "currency": " CC"
                 },
                 parties=interested_parties,
             )
@@ -3059,8 +3051,6 @@ class State:
             case "AmuletRules_AddFutureAmuletConfigSchedule":
                 return HandleTransactionResult.empty()
             case "DsoRules_PruneAmuletConfigSchedule":
-                return HandleTransactionResult.empty()
-            case "DsoRules_MergeValidatorLicense":
                 return HandleTransactionResult.empty()
             case choice:
                 choice_str = f"{event.template_id.qualified_name}:{choice}"

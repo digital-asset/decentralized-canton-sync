@@ -3,16 +3,14 @@
 
 package com.digitalasset.canton.crypto.store
 
-import cats.data.OptionT
+import cats.data.EitherT
 import cats.syntax.functor.*
 import com.daml.error.{ErrorCategory, ErrorCode, Explanation, Resolution}
 import com.digitalasset.canton.config.ProcessingTimeout
 import com.digitalasset.canton.crypto.store.db.DbCryptoPublicStore
 import com.digitalasset.canton.crypto.store.memory.InMemoryCryptoPublicStore
 import com.digitalasset.canton.crypto.{KeyName, *}
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.error.{BaseCantonError, CantonErrorGroups}
-import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
 import com.digitalasset.canton.logging.NamedLoggerFactory
 import com.digitalasset.canton.logging.pretty.{Pretty, PrettyPrinting}
 import com.digitalasset.canton.resource.{DbStorage, MemoryStorage, Storage}
@@ -21,7 +19,7 @@ import com.digitalasset.canton.version.ReleaseProtocolVersion
 import com.google.common.annotations.VisibleForTesting
 
 import scala.collection.concurrent.TrieMap
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 /** Store for all public cryptographic material such as certificates or public keys. */
 trait CryptoPublicStore extends AutoCloseable {
@@ -35,25 +33,31 @@ trait CryptoPublicStore extends AutoCloseable {
   // Write methods that the underlying store has to implement for the caching
   protected def writeSigningKey(key: SigningPublicKey, name: Option[KeyName])(implicit
       traceContext: TraceContext
-  ): FutureUnlessShutdown[Unit]
-
+  ): EitherT[Future, CryptoPublicStoreError, Unit]
   protected def writeEncryptionKey(key: EncryptionPublicKey, name: Option[KeyName])(implicit
       traceContext: TraceContext
-  ): FutureUnlessShutdown[Unit]
+  ): EitherT[Future, CryptoPublicStoreError, Unit]
+
+  protected[crypto] def listAllKeyFingerprints(implicit
+      traceContext: TraceContext
+  ): EitherT[Future, CryptoPublicStoreError, Set[Fingerprint]] =
+    for {
+      signingKeys <- listSigningKeys
+      encryptionKeys <- listEncryptionKeys
+    } yield signingKeys.map(_.publicKey.id) ++ encryptionKeys.map(_.publicKey.id)
 
   @VisibleForTesting
   private[store] def listSigningKeys(implicit
       traceContext: TraceContext
-  ): FutureUnlessShutdown[Set[SigningPublicKeyWithName]]
-
+  ): EitherT[Future, CryptoPublicStoreError, Set[SigningPublicKeyWithName]]
   @VisibleForTesting
   private[store] def listEncryptionKeys(implicit
       traceContext: TraceContext
-  ): FutureUnlessShutdown[Set[EncryptionPublicKeyWithName]]
+  ): EitherT[Future, CryptoPublicStoreError, Set[EncryptionPublicKeyWithName]]
 
   def storePublicKey(publicKey: PublicKey, name: Option[KeyName])(implicit
       traceContext: TraceContext
-  ): FutureUnlessShutdown[Unit] =
+  ): EitherT[Future, CryptoPublicStoreError, Unit] =
     (publicKey: @unchecked) match {
       case sigKey: SigningPublicKey => storeSigningKey(sigKey, name)
       case encKey: EncryptionPublicKey => storeEncryptionKey(encKey, name)
@@ -61,35 +65,45 @@ trait CryptoPublicStore extends AutoCloseable {
 
   def publicKey(keyId: Fingerprint)(implicit
       traceContext: TraceContext
-  ): OptionT[FutureUnlessShutdown, PublicKey] =
-    readSigningKey(keyId)
-      .widen[PublicKeyWithName]
-      .orElse(readEncryptionKey(keyId).widen[PublicKeyWithName])
-      .map(_.publicKey)
+  ): EitherT[Future, CryptoPublicStoreError, Option[PublicKey]] =
+    publicKeyWithName(keyId).map(_.map(_.publicKey))
+
+  def publicKeyWithName(keyId: Fingerprint)(implicit
+      traceContext: TraceContext
+  ): EitherT[Future, CryptoPublicStoreError, Option[PublicKeyWithName]] =
+    for {
+      sigKeyOption <- readSigningKey(keyId)
+      pubKeyOption <- sigKeyOption.fold(readEncryptionKey(keyId).widen[Option[PublicKeyWithName]])(
+        key => EitherT.rightT(Some(key))
+      )
+    } yield pubKeyOption
+
+  def existsPublicKey(keyId: Fingerprint, purpose: KeyPurpose)(implicit
+      traceContext: TraceContext
+  ): EitherT[Future, CryptoPublicStoreError, Boolean] =
+    purpose match {
+      case KeyPurpose.Signing => signingKey(keyId).map(_.nonEmpty)
+      case KeyPurpose.Encryption => encryptionKey(keyId).map(_.nonEmpty)
+    }
 
   def findSigningKeyIdByName(keyName: KeyName)(implicit
       traceContext: TraceContext
-  ): OptionT[FutureUnlessShutdown, SigningPublicKey] =
-    OptionT(listSigningKeys.map(_.find(_.name.contains(keyName)).map(_.publicKey)))
+  ): EitherT[Future, CryptoPublicStoreError, Option[SigningPublicKey]] =
+    listSigningKeys.map(_.find(_.name.contains(keyName)).map(_.publicKey))
 
   def findSigningKeyIdByFingerprint(fingerprint: Fingerprint)(implicit
       traceContext: TraceContext
-  ): OptionT[FutureUnlessShutdown, SigningPublicKey] =
-    OptionT(listSigningKeys.map(_.find(_.publicKey.fingerprint == fingerprint).map(_.publicKey)))
+  ): EitherT[Future, CryptoPublicStoreError, Option[SigningPublicKey]] =
+    listSigningKeys.map(_.find(_.publicKey.fingerprint == fingerprint).map(_.publicKey))
 
   def findEncryptionKeyIdByName(keyName: KeyName)(implicit
       traceContext: TraceContext
-  ): OptionT[FutureUnlessShutdown, EncryptionPublicKey] =
-    OptionT(listEncryptionKeys.map(_.find(_.name.contains(keyName)).map(_.publicKey)))
-
-  def findEncryptionKeyIdByFingerprint(fingerprint: Fingerprint)(implicit
-      traceContext: TraceContext
-  ): OptionT[FutureUnlessShutdown, EncryptionPublicKey] =
-    OptionT(listEncryptionKeys.map(_.find(_.publicKey.fingerprint == fingerprint).map(_.publicKey)))
+  ): EitherT[Future, CryptoPublicStoreError, Option[EncryptionPublicKey]] =
+    listEncryptionKeys.map(_.find(_.name.contains(keyName)).map(_.publicKey))
 
   def publicKeysWithName(implicit
       traceContext: TraceContext
-  ): FutureUnlessShutdown[Set[PublicKeyWithName]] =
+  ): EitherT[Future, CryptoPublicStoreError, Set[PublicKeyWithName]] =
     for {
       sigKeys <- listSigningKeys
       encKeys <- listEncryptionKeys
@@ -97,68 +111,64 @@ trait CryptoPublicStore extends AutoCloseable {
 
   def signingKey(signingKeyId: Fingerprint)(implicit
       traceContext: TraceContext
-  ): OptionT[FutureUnlessShutdown, SigningPublicKey] =
+  ): EitherT[Future, CryptoPublicStoreError, Option[SigningPublicKey]] =
     retrieveKeyAndUpdateCache(signingKeyMap, readSigningKey(_))(signingKeyId)
 
   protected def readSigningKey(signingKeyId: Fingerprint)(implicit
       traceContext: TraceContext
-  ): OptionT[FutureUnlessShutdown, SigningPublicKeyWithName]
+  ): EitherT[Future, CryptoPublicStoreError, Option[SigningPublicKeyWithName]]
 
   def signingKeys(implicit
       traceContext: TraceContext
-  ): FutureUnlessShutdown[Set[SigningPublicKey]] =
+  ): EitherT[Future, CryptoPublicStoreError, Set[SigningPublicKey]] =
     retrieveKeysAndUpdateCache(listSigningKeys, signingKeyMap)
 
   def storeSigningKey(key: SigningPublicKey, name: Option[KeyName] = None)(implicit
       traceContext: TraceContext
-  ): FutureUnlessShutdown[Unit] =
+  ): EitherT[Future, CryptoPublicStoreError, Unit] =
     writeSigningKey(key, name).map { _ =>
-      signingKeyMap.put(key.id, SigningPublicKeyWithName(key, name)).discard
+      val _ = signingKeyMap.put(key.id, SigningPublicKeyWithName(key, name))
     }
 
   def encryptionKey(encryptionKeyId: Fingerprint)(implicit
       traceContext: TraceContext
-  ): OptionT[FutureUnlessShutdown, EncryptionPublicKey] =
+  ): EitherT[Future, CryptoPublicStoreError, Option[EncryptionPublicKey]] =
     retrieveKeyAndUpdateCache(encryptionKeyMap, readEncryptionKey(_))(encryptionKeyId)
 
   protected def readEncryptionKey(encryptionKeyId: Fingerprint)(implicit
       traceContext: TraceContext
-  ): OptionT[FutureUnlessShutdown, EncryptionPublicKeyWithName]
+  ): EitherT[Future, CryptoPublicStoreError, Option[EncryptionPublicKeyWithName]]
 
   def encryptionKeys(implicit
       traceContext: TraceContext
-  ): FutureUnlessShutdown[Set[EncryptionPublicKey]] =
+  ): EitherT[Future, CryptoPublicStoreError, Set[EncryptionPublicKey]] =
     retrieveKeysAndUpdateCache(listEncryptionKeys, encryptionKeyMap)
 
   def storeEncryptionKey(key: EncryptionPublicKey, name: Option[KeyName] = None)(implicit
       traceContext: TraceContext
-  ): FutureUnlessShutdown[Unit] =
+  ): EitherT[Future, CryptoPublicStoreError, Unit] =
     writeEncryptionKey(key, name)
       .map { _ =>
-        encryptionKeyMap.put(key.id, EncryptionPublicKeyWithName(key, name)).discard
+        val _ = encryptionKeyMap.put(key.id, EncryptionPublicKeyWithName(key, name))
       }
-
-  private[crypto] def deleteKey(keyId: Fingerprint)(implicit
-      traceContext: TraceContext
-  ): FutureUnlessShutdown[Unit]
 
   private def retrieveKeyAndUpdateCache[KN <: PublicKeyWithName](
       cache: TrieMap[Fingerprint, KN],
-      readKey: Fingerprint => OptionT[FutureUnlessShutdown, KN],
-  )(keyId: Fingerprint): OptionT[FutureUnlessShutdown, KN#K] =
+      readKey: Fingerprint => EitherT[Future, CryptoPublicStoreError, Option[KN]],
+  )(keyId: Fingerprint): EitherT[Future, CryptoPublicStoreError, Option[KN#K]] =
     cache.get(keyId) match {
-      case Some(key) => OptionT.some(key.publicKey)
+      case Some(value) => EitherT.rightT(Some(value.publicKey))
       case None =>
-        readKey(keyId).map { key =>
-          cache.putIfAbsent(keyId, key).discard
-          key.publicKey
+        readKey(keyId).map { keyOption =>
+          keyOption.foreach(key => cache.putIfAbsent(keyId, key))
+          keyOption.map(_.publicKey)
         }
     }
 
   private def retrieveKeysAndUpdateCache[KN <: PublicKeyWithName](
-      keysFromDb: FutureUnlessShutdown[Set[KN]],
+      keysFromDb: EitherT[Future, CryptoPublicStoreError, Set[KN]],
       cache: TrieMap[Fingerprint, KN],
-  ): FutureUnlessShutdown[Set[KN#K]] =
+  ): EitherT[Future, CryptoPublicStoreError, Set[KN#K]] =
     for {
       // we always rebuild the cache here just in case new keys have been added by another process
       // this should not be a problem since these operations to get all keys are infrequent and typically
@@ -178,7 +188,7 @@ object CryptoPublicStore {
       ec: ExecutionContext
   ): CryptoPublicStore = {
     storage match {
-      case _: MemoryStorage => new InMemoryCryptoPublicStore(loggerFactory)
+      case _: MemoryStorage => new InMemoryCryptoPublicStore
       case dbStorage: DbStorage =>
         new DbCryptoPublicStore(dbStorage, releaseProtocolVersion, timeouts, loggerFactory)
     }
@@ -202,22 +212,27 @@ object CryptoPublicStoreError extends CantonErrorGroups.CommandErrorGroup {
         extends BaseCantonError.Impl(cause = "An error occurred with the public crypto store")
   }
 
+  final case class FailedToListKeys(reason: String) extends CryptoPublicStoreError {
+    override def pretty: Pretty[FailedToListKeys] = prettyOfClass(unnamedParam(_.reason.unquoted))
+  }
+
+  final case class FailedToReadKey(keyId: Fingerprint, reason: String)
+      extends CryptoPublicStoreError {
+    override def pretty: Pretty[FailedToReadKey] = prettyOfClass(unnamedParam(_.reason.unquoted))
+  }
+
   final case class FailedToInsertKey(keyId: Fingerprint, reason: String)
       extends CryptoPublicStoreError {
     override def pretty: Pretty[FailedToInsertKey] =
       prettyOfClass(param("keyId", _.keyId), param("reason", _.reason.unquoted))
   }
 
-  final case class KeyAlreadyExists[K <: PublicKeyWithName: Pretty](
-      keyId: Fingerprint,
-      existingPublicKey: K,
-      newPublicKey: K,
-  ) extends CryptoPublicStoreError {
-    override def pretty: Pretty[KeyAlreadyExists[K]] =
+  final case class KeyAlreadyExists(keyId: Fingerprint, existingKeyName: Option[String])
+      extends CryptoPublicStoreError {
+    override def pretty: Pretty[KeyAlreadyExists] =
       prettyOfClass(
         param("keyId", _.keyId),
-        param("existingPublicKey", _.existingPublicKey),
-        param("newPublicKey", _.newPublicKey),
+        param("existingKeyName", _.existingKeyName.getOrElse("").unquoted),
       )
   }
 

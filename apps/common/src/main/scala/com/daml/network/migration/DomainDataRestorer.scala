@@ -3,24 +3,21 @@
 
 package com.daml.network.migration
 
-import cats.implicits.catsSyntaxParallelTraverse_
 import com.daml.network.environment.{BaseLedgerConnection, ParticipantAdminConnection, RetryFor}
 import com.daml.network.util.UploadablePackage
-import com.digitalasset.canton.config.{DomainTimeTrackerConfig, NonNegativeFiniteDuration}
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.tracing.TraceContext
+import com.digitalasset.canton.util.MonadUtil
 import com.digitalasset.canton.DomainAlias
 import com.digitalasset.canton.participant.domain.DomainConnectionConfig
 import com.digitalasset.canton.sequencing.SequencerConnections
 import com.digitalasset.canton.topology.DomainId
-import com.digitalasset.canton.util.FutureInstances.parallelFuture
 import com.google.protobuf.ByteString
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class DomainDataRestorer(
     participantAdminConnection: ParticipantAdminConnection,
-    timeTrackerMinObservationDuration: NonNegativeFiniteDuration,
     override protected val loggerFactory: NamedLoggerFactory,
 )(implicit ec: ExecutionContext)
     extends NamedLogging {
@@ -54,9 +51,6 @@ class DomainDataRestorer(
             sequencerConnections = sequencerConnections,
             manualConnect = false,
             initializeFromTrustedDomain = true,
-            timeTracker = DomainTimeTrackerConfig(
-              timeTrackerMinObservationDuration
-            ),
           )
           // We rely on the calls here being idempotent
           for {
@@ -95,15 +89,18 @@ class DomainDataRestorer(
   }
 
   private def importDars(dars: Seq[Dar])(implicit tc: TraceContext) = {
-    dars
-      .map { dar =>
+    // TODO(#5141): allow limit parallel upload once Canton deals with concurrent uploads
+    MonadUtil
+      .sequentialTraverse(dars.map { dar =>
         UploadablePackage.fromByteString(dar.hash.toHexString, dar.content)
-      }
-      .parTraverse_ { dar =>
+      }) { dar =>
         participantAdminConnection.uploadDarFileLocally(
           dar,
           RetryFor.WaitingOnInitDependency,
         )
+      }
+      .map { _ =>
+        ()
       }
   }
 

@@ -5,6 +5,7 @@ package com.digitalasset.canton.participant.store
 
 import cats.syntax.foldable.*
 import cats.syntax.parallel.*
+import com.daml.lf.data.Ref.PackageId
 import com.digitalasset.canton.config.CantonRequireTypes.{LengthLimitedString, String100, String36}
 import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.logging.ErrorLoggingContext
@@ -19,7 +20,6 @@ import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.FutureInstances.*
 import com.digitalasset.canton.util.{Checked, CheckedT}
 import com.digitalasset.canton.{RequestCounter, TransferCounter}
-import com.digitalasset.daml.lf.data.Ref.PackageId
 import com.google.common.annotations.VisibleForTesting
 import slick.jdbc.{GetResult, SetParameter}
 
@@ -87,37 +87,33 @@ trait ActiveContractStore
   def markContractsCreated(contracts: Seq[(LfContractId, TransferCounter)], toc: TimeOfChange)(
       implicit traceContext: TraceContext
   ): CheckedT[Future, AcsError, AcsWarning, Unit] =
-    markContractsCreatedOrAdded(
-      contracts.map { case (cid, tc) => (cid, tc, toc) },
-      isCreation = true,
-    )
+    markContractsCreatedOrAdded(contracts, toc: TimeOfChange, isCreation = true)
 
   /** Shorthand for `markContractsCreated(Seq(contract), toc)` */
   def markContractCreated(contract: (LfContractId, TransferCounter), toc: TimeOfChange)(implicit
       traceContext: TraceContext
-  ): CheckedT[Future, AcsError, AcsWarning, Unit] = {
-    val (cid, tc) = contract
-    markContractsCreatedOrAdded(Seq((cid, tc, toc)), isCreation = true)
-  }
+  ): CheckedT[Future, AcsError, AcsWarning, Unit] =
+    markContractsCreatedOrAdded(Seq(contract), toc, isCreation = true)
 
   /** Shorthand for `markContractAdded(Seq(contract), toc)` */
-  def markContractAdded(contract: (LfContractId, TransferCounter, TimeOfChange))(implicit
+  def markContractAdded(contract: (LfContractId, TransferCounter), toc: TimeOfChange)(implicit
       traceContext: TraceContext
   ): CheckedT[Future, AcsError, AcsWarning, Unit] =
-    markContractsAdded(Seq(contract))
+    markContractsAdded(Seq(contract), toc: TimeOfChange)
 
   /** Marks the given contracts as active from `timestamp` (inclusive) onwards.
     *
     * Unlike creation, add can be done several times in the life of a contract.
     * It is intended to use from the repair service.
     */
-  def markContractsAdded(contracts: Seq[(LfContractId, TransferCounter, TimeOfChange)])(implicit
-      traceContext: TraceContext
+  def markContractsAdded(contracts: Seq[(LfContractId, TransferCounter)], toc: TimeOfChange)(
+      implicit traceContext: TraceContext
   ): CheckedT[Future, AcsError, AcsWarning, Unit] =
-    markContractsCreatedOrAdded(contracts, isCreation = false)
+    markContractsCreatedOrAdded(contracts, toc: TimeOfChange, isCreation = false)
 
-  def markContractsCreatedOrAdded(
-      contracts: Seq[(LfContractId, TransferCounter, TimeOfChange)],
+  protected def markContractsCreatedOrAdded(
+      contracts: Seq[(LfContractId, TransferCounter)],
+      toc: TimeOfChange,
       isCreation: Boolean, // true if create, false if add
   )(implicit
       traceContext: TraceContext
@@ -156,7 +152,7 @@ trait ActiveContractStore
   def archiveContracts(contractIds: Seq[LfContractId], toc: TimeOfChange)(implicit
       traceContext: TraceContext
   ): CheckedT[Future, AcsError, AcsWarning, Unit] =
-    purgeOrArchiveContracts(contractIds.map((_, toc)), isArchival = true)
+    purgeOrArchiveContracts(contractIds, toc, isArchival = true)
 
   /** Shorthand for `archiveContracts(Seq(cid), toc)` */
   def archiveContract(cid: LfContractId, toc: TimeOfChange)(implicit
@@ -168,22 +164,23 @@ trait ActiveContractStore
   def purgeContract(cid: LfContractId, toc: TimeOfChange)(implicit
       traceContext: TraceContext
   ): CheckedT[Future, AcsError, AcsWarning, Unit] =
-    purgeOrArchiveContracts(Seq((cid, toc)), isArchival = false)
+    purgeOrArchiveContracts(Seq(cid), toc, isArchival = false)
 
   /** Marks the given contracts as inactive from `timestamp` (inclusive) onwards.
     *
     * Unlike archival, purge can be done several times in the life of a contract.
     * It is intended to use from the repair service.
     */
-  def purgeContracts(contractIds: Seq[(LfContractId, TimeOfChange)])(implicit
+  def purgeContracts(contractIds: Seq[LfContractId], toc: TimeOfChange)(implicit
       traceContext: TraceContext
   ): CheckedT[Future, AcsError, AcsWarning, Unit] =
-    purgeOrArchiveContracts(contractIds, isArchival = false)
+    purgeOrArchiveContracts(contractIds, toc, isArchival = false)
 
   /** Depending on the `isArchival`, will archive (effect of a Daml transaction) or purge (repair service)
     */
-  def purgeOrArchiveContracts(
-      contracts: Seq[(LfContractId, TimeOfChange)],
+  protected def purgeOrArchiveContracts(
+      contractIds: Seq[LfContractId],
+      toc: TimeOfChange,
       isArchival: Boolean,
   )(implicit
       traceContext: TraceContext

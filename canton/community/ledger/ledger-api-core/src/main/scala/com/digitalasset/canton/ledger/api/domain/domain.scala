@@ -3,29 +3,33 @@
 
 package com.digitalasset.canton.ledger.api.domain
 
+import com.daml.lf.command.{ApiCommands as LfCommands, DisclosedContract as LfDisclosedContract}
+import com.daml.lf.crypto
+import com.daml.lf.data.Time.Timestamp
+import com.daml.lf.data.logging.*
+import com.daml.lf.data.{Bytes, ImmArray, Ref}
+import com.daml.lf.value.Value as Lf
 import com.daml.logging.entries.{LoggingValue, ToLoggingValue}
-import com.digitalasset.canton.data.DeduplicationPeriod
+import com.digitalasset.canton.ledger.api.DeduplicationPeriod
 import com.digitalasset.canton.logging.pretty.{Pretty, PrettyPrinting}
 import com.digitalasset.canton.topology.DomainId
-import com.digitalasset.daml.lf.command.{
-  ApiCommands as LfCommands,
-  DisclosedContract as LfDisclosedContract,
-}
-import com.digitalasset.daml.lf.crypto
-import com.digitalasset.daml.lf.data.Time.Timestamp
-import com.digitalasset.daml.lf.data.logging.*
-import com.digitalasset.daml.lf.data.{Bytes, ImmArray, Ref}
-import com.digitalasset.daml.lf.transaction.TransactionVersion
-import com.digitalasset.daml.lf.value.Value as Lf
 import scalaz.@@
 import scalaz.syntax.tag.*
 
 import scala.collection.immutable
 
 final case class TransactionFilter(
-    filtersByParty: immutable.Map[Ref.Party, CumulativeFilter],
-    filtersForAnyParty: Option[CumulativeFilter] = None,
+    filtersByParty: immutable.Map[Ref.Party, Filters],
+    alwaysPopulateCreatedEventBlob: Boolean = false,
 )
+
+final case class Filters(inclusive: Option[InclusiveFilters])
+
+object Filters {
+  val noFilter: Filters = Filters(None)
+
+  def apply(inclusive: InclusiveFilters) = new Filters(Some(inclusive))
+}
 
 final case class InterfaceFilter(
     interfaceId: Ref.Identifier,
@@ -38,10 +42,6 @@ final case class TemplateFilter(
     includeCreatedEventBlob: Boolean,
 )
 
-final case class TemplateWildcardFilter(
-    includeCreatedEventBlob: Boolean
-)
-
 object TemplateFilter {
   def apply(templateId: Ref.Identifier, includeCreatedEventBlob: Boolean): TemplateFilter =
     TemplateFilter(
@@ -50,22 +50,10 @@ object TemplateFilter {
     )
 }
 
-final case class CumulativeFilter(
+final case class InclusiveFilters(
     templateFilters: immutable.Set[TemplateFilter],
     interfaceFilters: immutable.Set[InterfaceFilter],
-    templateWildcardFilter: Option[TemplateWildcardFilter],
 )
-
-object CumulativeFilter {
-  def templateWildcardFilter(includeCreatedEventBlob: Boolean = false): CumulativeFilter =
-    CumulativeFilter(
-      templateFilters = Set.empty,
-      interfaceFilters = Set.empty,
-      templateWildcardFilter =
-        Some(TemplateWildcardFilter(includeCreatedEventBlob = includeCreatedEventBlob)),
-    )
-
-}
 
 sealed abstract class ParticipantOffset extends Product with Serializable
 
@@ -86,10 +74,6 @@ object ParticipantOffset {
       case ParticipantOffset.ParticipantBegin => "%begin%"
       case ParticipantOffset.ParticipantEnd => "%end%"
     })
-
-  def fromString(str: String): ParticipantOffset =
-    if (str.isEmpty) ParticipantBegin
-    else Absolute(Ref.LedgerString.assertFromString(str))
 }
 
 final case class Commands(
@@ -130,7 +114,6 @@ final case class Commands(
 final case class DisclosedContract(
     templateId: Ref.TypeConName,
     packageName: Ref.PackageName,
-    packageVersion: Option[Ref.PackageVersion],
     contractId: Lf.ContractId,
     argument: Value,
     createdAt: Timestamp,
@@ -140,7 +123,6 @@ final case class DisclosedContract(
     keyMaintainers: Option[Set[Ref.Party]],
     keyValue: Option[Value],
     driverMetadata: Bytes,
-    transactionVersion: TransactionVersion,
 ) {
   def toLf: LfDisclosedContract =
     LfDisclosedContract(
@@ -170,6 +152,21 @@ object Commands {
       "deduplicationPeriod" -> commands.deduplicationPeriod,
     )
   }
+}
+
+sealed abstract class PackageEntry() extends Product with Serializable
+
+object PackageEntry {
+  final case class PackageUploadAccepted(
+      submissionId: String,
+      recordTime: Timestamp,
+  ) extends PackageEntry
+
+  final case class PackageUploadRejected(
+      submissionId: String,
+      recordTime: Timestamp,
+      reason: String,
+  ) extends PackageEntry
 }
 
 object Logging {

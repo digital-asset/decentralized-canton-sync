@@ -5,13 +5,13 @@ package com.daml.network.sv.store
 
 import cats.implicits.toTraverseOps
 import com.daml.ledger.javaapi.data as javab
-import com.digitalasset.daml.lf.data.Time.Timestamp
+import com.daml.lf.data.Time.Timestamp
 import com.daml.network.automation.MultiDomainExpiredContractTrigger.ListExpiredContracts
 import com.daml.network.automation.TransferFollowTrigger.Task as FollowTask
 import com.daml.network.codegen.java.splice.amulet.UnclaimedReward
 import com.daml.network.codegen.java.splice.amuletrules.{
-  AmuletRules_MiningRound_Archive,
   AppTransferContext,
+  AmuletRules_MiningRound_Archive,
 }
 import com.daml.network.codegen.java.splice.types.Round
 import com.daml.network.codegen.java.splice.validatorlicense as vl
@@ -25,14 +25,13 @@ import com.daml.network.codegen.java.splice.dsorules.amuletrules_actionrequiring
 import com.daml.network.codegen.java.splice.dsorules.dsorules_actionrequiringconfirmation.SRARC_ConfirmSvOnboarding
 import com.daml.network.codegen.java.splice.dsorules.{
   ActionRequiringConfirmation,
-  DsoRules_CloseVoteRequestResult,
   DsoRules_ConfirmSvOnboarding,
   VoteRequest,
+  DsoRules_CloseVoteRequestResult,
 }
 import com.daml.network.codegen.java.splice.svonboarding as so
 import com.daml.network.codegen.java.splice.wallet.subscriptions as sub
 import com.daml.network.codegen.java.splice
-import com.daml.network.codegen.java.splice.validatorlicense.ValidatorLicense
 import com.daml.network.environment.{PackageIdResolver, RetryProvider}
 import com.daml.network.migration.DomainMigrationInfo
 import com.daml.network.scan.admin.api.client.ScanConnection.GetAmuletRulesDomain
@@ -200,7 +199,7 @@ trait SvDsoStore
     listExpiredRoundBased(splice.amulet.LockedAmulet.COMPANION)(_.amulet)
 
   def listExpiredVoteRequests(): ListExpiredContracts[VoteRequest.ContractId, VoteRequest] =
-    multiDomainAcsStore.listExpiredFromPayloadExpiry(VoteRequest.COMPANION)
+    multiDomainAcsStore.listExpiredFromPayloadExpiry(VoteRequest.COMPANION)(_.voteBefore)
 
   def listConfirmations(
       action: splice.dsorules.ActionRequiringConfirmation,
@@ -552,17 +551,23 @@ trait SvDsoStore
 
   def listExpiredSvOnboardingRequests
       : ListExpiredContracts[so.SvOnboardingRequest.ContractId, so.SvOnboardingRequest] =
-    multiDomainAcsStore.listExpiredFromPayloadExpiry(so.SvOnboardingRequest.COMPANION)
+    multiDomainAcsStore.listExpiredFromPayloadExpiry(so.SvOnboardingRequest.COMPANION)(
+      _.expiresAt
+    )
 
   def listExpiredSvOnboardingConfirmed
       : ListExpiredContracts[so.SvOnboardingConfirmed.ContractId, so.SvOnboardingConfirmed] =
-    multiDomainAcsStore.listExpiredFromPayloadExpiry(so.SvOnboardingConfirmed.COMPANION)
+    multiDomainAcsStore.listExpiredFromPayloadExpiry(so.SvOnboardingConfirmed.COMPANION)(
+      _.expiresAt
+    )
 
   def listExpiredAnsEntries: ListExpiredContracts[
     splice.ans.AnsEntry.ContractId,
     splice.ans.AnsEntry,
   ] =
-    multiDomainAcsStore.listExpiredFromPayloadExpiry(splice.ans.AnsEntry.COMPANION)
+    multiDomainAcsStore.listExpiredFromPayloadExpiry(splice.ans.AnsEntry.COMPANION)(
+      _.expiresAt
+    )
 
   def listExpiredAnsSubscriptions(
       now: CantonTimestamp,
@@ -611,7 +616,7 @@ trait SvDsoStore
     listConfirmations(expectedAction, limit)
   }
 
-  def listSvOnboardingRequestsBySvs(
+  def listSvOnboardingRequestsByDsoMembers(
       dsoRules: Contract.Has[splice.dsorules.DsoRules.ContractId, splice.dsorules.DsoRules],
       limit: Limit = Limit.DefaultLimit,
   )(implicit
@@ -648,14 +653,18 @@ trait SvDsoStore
     splice.round.IssuingMiningRound.ContractId,
     splice.round.IssuingMiningRound,
   ] =
-    multiDomainAcsStore.listExpiredFromPayloadExpiry(splice.round.IssuingMiningRound.COMPANION)
+    multiDomainAcsStore.listExpiredFromPayloadExpiry(splice.round.IssuingMiningRound.COMPANION)(
+      _.targetClosesAt
+    )
 
   /** List stale confirmations past their expiresAt */
   def listStaleConfirmations: ListExpiredContracts[
     splice.dsorules.Confirmation.ContractId,
     splice.dsorules.Confirmation,
   ] =
-    multiDomainAcsStore.listExpiredFromPayloadExpiry(splice.dsorules.Confirmation.COMPANION)
+    multiDomainAcsStore.listExpiredFromPayloadExpiry(splice.dsorules.Confirmation.COMPANION)(
+      _.expiresAt
+    )
 
   /** List all the current amulet price votes. */
   final def listAllAmuletPriceVotes(
@@ -674,7 +683,7 @@ trait SvDsoStore
     } yield votes map (_.contract)
 
   /** List the current amulet price votes by the SVs. */
-  def listSvAmuletPriceVotes(limit: Limit = Limit.DefaultLimit)(implicit
+  def listMemberAmuletPriceVotes(limit: Limit = Limit.DefaultLimit)(implicit
       tc: TraceContext
   ): Future[
     Seq[Contract[
@@ -700,10 +709,6 @@ trait SvDsoStore
     multiDomainAcsStore
       .listContracts(vl.ValidatorLicense.COMPANION, limit)
       .map(_ map (_.contract))
-
-  def listValidatorLicensePerValidator(validator: String, limit: Limit)(implicit
-      tc: TraceContext
-  ): Future[Seq[Contract[ValidatorLicense.ContractId, ValidatorLicense]]]
 
   def getTotalPurchasedMemberTraffic(memberId: Member, domainId: DomainId)(implicit
       tc: TraceContext
@@ -740,8 +745,7 @@ trait SvDsoStore
 
   def getVoteRequest(contractId: splice.dsorules.VoteRequest.ContractId)(implicit
       tc: TraceContext
-  ): Future[Contract[splice.dsorules.VoteRequest.ContractId, splice.dsorules.VoteRequest]] = {
-    import com.digitalasset.canton.participant.pretty.Implicits.prettyContractId
+  ): Future[Contract[splice.dsorules.VoteRequest.ContractId, splice.dsorules.VoteRequest]] =
     lookupVoteRequest(contractId).map(
       _.getOrElse(
         throw Status.NOT_FOUND
@@ -749,7 +753,6 @@ trait SvDsoStore
           .asRuntimeException()
       )
     )
-  }
 
   def listVoteRequestsByTrackingCid(
       voteRequestCids: Seq[splice.dsorules.VoteRequest.ContractId],

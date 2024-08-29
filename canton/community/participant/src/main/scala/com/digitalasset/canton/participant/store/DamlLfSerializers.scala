@@ -3,6 +3,10 @@
 
 package com.digitalasset.canton.participant.store
 
+import com.daml.lf.CantonOnly
+import com.daml.lf.transaction.{Node, TransactionCoder, TransactionOuterClass, Versioned}
+import com.daml.lf.value.Value.ContractInstance
+import com.daml.lf.value.ValueCoder.{DecodeError, EncodeError}
 import com.digitalasset.canton.protocol
 import com.digitalasset.canton.protocol.{
   LfActionNode,
@@ -10,15 +14,6 @@ import com.digitalasset.canton.protocol.{
   LfNodeId,
   LfVersionedTransaction,
 }
-import com.digitalasset.daml.lf.CantonOnly
-import com.digitalasset.daml.lf.transaction.{
-  Node,
-  TransactionCoder,
-  TransactionOuterClass,
-  Versioned,
-}
-import com.digitalasset.daml.lf.value.Value.ContractInstance
-import com.digitalasset.daml.lf.value.ValueCoder.{DecodeError, EncodeError}
 import com.google.protobuf.ByteString
 
 /** Serialization and deserialization utilities for transactions and contracts.

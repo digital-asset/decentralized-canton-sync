@@ -3,11 +3,7 @@
 
 package com.daml.error
 
-import com.daml.error.NonSecuritySensitiveErrorCodeComponents.{
-  MaxCauseLogLength,
-  stringsPackedSize,
-  truncateDetails,
-}
+import com.daml.error.NonSecuritySensitiveErrorCodeComponents.{stringsPackedSize, truncateDetails}
 import com.daml.error.SerializableErrorCodeComponents.*
 import com.daml.error.utils.ErrorDetails
 import io.grpc.Status.Code
@@ -145,7 +141,7 @@ private[error] final case class NonSecuritySensitiveErrorCodeComponents(
   /** Truncates and serializes the self-service error components into a [[com.google.rpc.Status]].
     *
     * Truncation happens for both the error message and error details aiming to ensure that
-    * the maximum message size ([[NonSecuritySensitiveErrorCodeComponents.MaxCauseLogLength]]) and maximum total Status serialization size ([[ErrorCode.MaxErrorContentBytes]]) are respected.
+    * the maximum message size ([[ErrorCode.MaxCauseLogLength]]) and maximum total Status serialization size ([[ErrorCode.MaxErrorContentBytes]]) are respected.
     */
   def toStatusProto(maxSizeBytes: Int): com.google.rpc.Status = {
     val grpcStatusCode = validatedGrpcErrorCode(errorCode.category.grpcCode)
@@ -159,7 +155,7 @@ private[error] final case class NonSecuritySensitiveErrorCodeComponents(
       correlationId.orElse(traceId).map(ErrorDetails.RequestInfoDetail(_).toRpcAny)
     val errorCodeId = errorCode.id
 
-    val validatedMessage = errorCode.toMsg(cause, correlationId, limit = Some(MaxCauseLogLength))
+    val validatedMessage = errorCode.toMsg(cause, correlationId)
     val mandatoryDetailsEncodedSize =
       GrpcCodeBytes + MaximumPerTagOverheadBytes + // Grpc code size + its byte tag overhead
         stringsPackedSize(
@@ -210,10 +206,6 @@ private[error] final case class NonSecuritySensitiveErrorCodeComponents(
 }
 
 private[error] object NonSecuritySensitiveErrorCodeComponents {
-
-  /** The maximum size (in characters) of the self-service error description, truncated for transport as part of a Status */
-  val MaxCauseLogLength = 512
-
   private[error] def truncateDetails(
       context: Map[String, String],
       errResources: Seq[(ErrorResource, String)],

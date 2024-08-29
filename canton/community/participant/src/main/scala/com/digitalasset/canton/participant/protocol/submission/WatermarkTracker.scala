@@ -91,6 +91,7 @@ class WatermarkTracker[Mark: Pretty](
     *   if there are already `Int.MaxValue` tasks running for `mark`
     */
   def runIfAboveWatermark[F[_], A](mark: Mark, register: => F[A])(implicit
+      ec: ExecutionContext,
       traceContext: TraceContext,
       F: Thereafter[F],
   ): Either[MarkTooLow[Mark], F[A]] =

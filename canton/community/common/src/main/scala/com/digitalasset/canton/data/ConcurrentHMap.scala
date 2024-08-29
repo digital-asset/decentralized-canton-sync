@@ -3,9 +3,9 @@
 
 package com.digitalasset.canton.data
 
-import com.digitalasset.canton.discard.Implicits.DiscardOps
-
+import com.digitalasset.canton.DiscardOps
 import scala.annotation.unused
+
 import scala.collection.concurrent
 import scala.collection.concurrent.TrieMap
 

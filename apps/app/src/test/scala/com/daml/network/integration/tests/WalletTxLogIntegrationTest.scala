@@ -1,6 +1,6 @@
 package com.daml.network.integration.tests
 
-import com.digitalasset.daml.lf.data.Numeric
+import com.daml.lf.data.Numeric
 import com.daml.network.codegen.java.splice.amulet as amuletCodegen
 import com.daml.network.codegen.java.splice.wallet.payment as walletCodegen
 import com.daml.network.codegen.java.splice.wallet.subscriptions as subsCodegen
@@ -1026,7 +1026,7 @@ class WalletTxLogIntegrationTest
         "Request ans entry",
         requestAnsEntry(
           aliceValidatorBackend.participantClientWithAdminToken,
-          s"alice.unverified.$ansAcronym",
+          "alice.unverified.cns",
           aliceUserId,
           aliceUserParty,
         ),
@@ -1169,21 +1169,7 @@ class WalletTxLogIntegrationTest
 
       // Only Alice should see notification (note that aliceValidator is shared between tests)
       val validatorTxLogAfter = aliceValidatorWalletClient.listTransactions(None, Limit.MaxPageSize)
-
-      def isTopupOrTap(tx: walletLogEntry): Boolean = {
-        tx match {
-          case transfer: TransferTxLogEntry =>
-            transfer.getSubtype.choice == "AmuletRules_BuyMemberTraffic"
-          case balanceChange: BalanceChangeTxLogEntry =>
-            // A traffic purchase in devnet config produces an additional tap.
-            // We just filter out all taps instead of trying to be clever since they don't matter for the test.
-            balanceChange.getSubtype.choice == "AmuletRules_DevNet_Tap"
-          case _ => false
-        }
-      }
-      validatorTxLogBefore.filter(e => !isTopupOrTap(e)) should be(
-        validatorTxLogAfter.filter(e => !isTopupOrTap(e))
-      )
+      validatorTxLogBefore should be(validatorTxLogAfter)
       checkTxHistory(bobWalletClient, Seq.empty)
     }
 

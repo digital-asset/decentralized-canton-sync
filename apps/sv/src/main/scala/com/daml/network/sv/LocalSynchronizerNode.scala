@@ -3,16 +3,15 @@
 
 package com.daml.network.sv
 
-import com.daml.network.admin.api.client.commands.HttpCommandException
 import com.daml.network.environment.*
 import com.daml.network.http.HttpClient
 import com.daml.network.sv.admin.api.client.SvConnection
-import com.daml.network.sv.automation.singlesv.onboarding.SvOnboardingUnlimitedTrafficTrigger.UnlimitedTraffic
 import com.daml.network.sv.config.SequencerPruningConfig
 import com.daml.network.util.TemplateJsonDecoder
 import com.daml.nonempty.NonEmpty
 import com.digitalasset.canton.{DomainAlias, SequencerAlias}
 import com.digitalasset.canton.config.ClientConfig
+import com.digitalasset.canton.config.RequireTypes.NonNegativeLong
 import com.digitalasset.canton.health.admin.data.NodeStatus
 import com.digitalasset.canton.lifecycle.{FlagCloseable, Lifecycle}
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
@@ -20,17 +19,16 @@ import com.digitalasset.canton.logging.pretty.PrettyInstances.prettyPrettyPrinti
 import com.digitalasset.canton.networking.Endpoint
 import com.digitalasset.canton.protocol.StaticDomainParameters
 import com.digitalasset.canton.sequencing.GrpcSequencerConnection
-import com.digitalasset.canton.topology.{DomainId, ForceFlag, UniqueIdentifier}
+import com.digitalasset.canton.topology.{DomainId, UniqueIdentifier}
 import com.digitalasset.canton.topology.store.TopologyStoreId
-import com.digitalasset.canton.topology.transaction.SignedTopologyTransaction.GenericSignedTopologyTransaction
-import com.digitalasset.canton.topology.transaction.TopologyMapping.Code.{
-  NamespaceDelegation,
-  OwnerToKeyMapping,
+import com.digitalasset.canton.topology.transaction.SignedTopologyTransactionX.GenericSignedTopologyTransactionX
+import com.digitalasset.canton.topology.transaction.TopologyMappingX.Code.{
+  NamespaceDelegationX,
+  OwnerToKeyMappingX,
 }
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.ShowUtil.*
 import io.grpc.Status
-import org.apache.pekko.http.scaladsl.model.StatusCodes
 import org.apache.pekko.stream.Materializer
 
 import java.time.Duration
@@ -42,12 +40,12 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
   */
 final class LocalSynchronizerNode(
     participantAdminConnection: ParticipantAdminConnection,
-    override val sequencerAdminConnection: SequencerAdminConnection,
-    override val mediatorAdminConnection: MediatorAdminConnection,
+    val sequencerAdminConnection: SequencerAdminConnection,
+    val mediatorAdminConnection: MediatorAdminConnection,
     val staticDomainParameters: StaticDomainParameters,
     val sequencerInternalConfig: ClientConfig,
-    override val sequencerExternalPublicUrl: String,
-    override val sequencerAvailabilityDelay: Duration,
+    val sequencerExternalPublicUrl: String,
+    val sequencerAvailabilityDelay: Duration,
     val sequencerPruningConfig: Option[SequencerPruningConfig],
     override val loggerFactory: NamedLoggerFactory,
     override protected[this] val retryProvider: RetryProvider,
@@ -56,13 +54,7 @@ final class LocalSynchronizerNode(
     httpClient: HttpClient,
     templateDecoder: TemplateJsonDecoder,
     mat: Materializer,
-) extends SynchronizerNode(
-      sequencerAdminConnection,
-      mediatorAdminConnection,
-      sequencerExternalPublicUrl,
-      sequencerAvailabilityDelay,
-    )
-    with RetryProvider.Has
+) extends RetryProvider.Has
     with FlagCloseable
     with NamedLogging {
 
@@ -70,20 +62,20 @@ final class LocalSynchronizerNode(
 
   private def containsIdentityTransactions(
       uid: UniqueIdentifier,
-      txs: Seq[GenericSignedTopologyTransaction],
+      txs: Seq[GenericSignedTopologyTransactionX],
   ) =
     txs.exists(tx =>
-      tx.transaction.mapping.code == NamespaceDelegation && tx.transaction.mapping.namespace == uid.namespace
+      tx.transaction.mapping.code == NamespaceDelegationX && tx.transaction.mapping.namespace == uid.namespace
     ) &&
       txs.exists(tx =>
-        tx.transaction.mapping.code == OwnerToKeyMapping && tx.transaction.mapping.namespace == uid.namespace
+        tx.transaction.mapping.code == OwnerToKeyMappingX && tx.transaction.mapping.namespace == uid.namespace
       )
 
   private def addIdentityTransactions(
       node: String,
       domainId: DomainId,
       uid: UniqueIdentifier,
-      identityTransactions: Seq[GenericSignedTopologyTransaction],
+      identityTransactions: Seq[GenericSignedTopologyTransactionX],
   )(implicit traceContext: TraceContext) = {
     logger.info(s"Adding identity transactions for $node $uid")
     for {
@@ -100,7 +92,6 @@ final class LocalSynchronizerNode(
             _ <- participantAdminConnection.addTopologyTransactions(
               TopologyStoreId.DomainStore(domainId),
               identityTransactions,
-              ForceFlag.AlienMember,
             )
             _ <- waitForIdentityTransaction(domainId, uid)
           } yield ()
@@ -171,7 +162,7 @@ final class LocalSynchronizerNode(
         logger,
       )
       .flatMap {
-        case Left(NodeStatus.NotInitialized(_, _)) =>
+        case Left(NodeStatus.NotInitialized(_)) =>
           action
         case Right(NodeStatus.Success(_)) =>
           logger.info("Mediator is already onboarded")
@@ -214,7 +205,7 @@ final class LocalSynchronizerNode(
             mediatorId
           )
           .map(traffic =>
-            if (traffic.extraTrafficLimit != UnlimitedTraffic)
+            if (traffic.extraTrafficLimit != NonNegativeLong.maxValue)
               throw Status.FAILED_PRECONDITION
                 .withDescription(
                   show"Mediator $mediatorId does not have unlimited traffic limit, current limit: ${traffic.extraTrafficLimit}"
@@ -249,9 +240,10 @@ final class LocalSynchronizerNode(
         "initialize_mediator",
         "Initializing mediator",
         mediatorAdminConnection.getStatus.flatMap {
-          case NodeStatus.NotInitialized(_, _) =>
+          case NodeStatus.NotInitialized(_) =>
             mediatorAdminConnection.initialize(
               domainId,
+              staticDomainParameters,
               sequencerConnection,
             )
           case NodeStatus.Success(_) =>
@@ -299,7 +291,7 @@ final class LocalSynchronizerNode(
         logger,
       )
       .flatMap {
-        case Left(NodeStatus.NotInitialized(_, _)) =>
+        case Left(NodeStatus.NotInitialized(_)) =>
           logger.info("Adding sequencer identity")
           addLocalSequencerIdentity(
             domainAlias,
@@ -346,7 +338,7 @@ final class LocalSynchronizerNode(
         logger,
       )
       .flatMap {
-        case Left(NodeStatus.NotInitialized(_, _)) =>
+        case Left(NodeStatus.NotInitialized(_)) =>
           logger.info("Onboarding sequencer")
           svConnection.flatMap(onboardLocalSequencer)
         case Right(NodeStatus.Success(_)) =>
@@ -364,20 +356,7 @@ final class LocalSynchronizerNode(
         RetryFor.WaitingOnInitDependency,
         "onboarding_sequencer",
         "Onbarding sequencer through sponsoring SV",
-        svConnection.onboardSvSequencer(sequencerId).recover {
-          // TODO(#13410) - remove once canton returns a retryable error
-          case HttpCommandException(_, StatusCodes.BadRequest, message)
-              if message.contains("SNAPSHOT_NOT_FOUND") =>
-            throw Status.NOT_FOUND
-              .withDescription(message)
-              .asRuntimeException()
-          case HttpCommandException(_, StatusCodes.BadRequest, message)
-              if message.contains("BLOCK_NOT_FOUND") =>
-            // ensure the request is retried as the sequencer will eventually finish processing the block
-            throw Status.NOT_FOUND
-              .withDescription(message)
-              .asRuntimeException()
-        },
+        svConnection.onboardSvSequencer(sequencerId),
         logger,
       )
       _ = logger.info(s"Onboarded sequencer $sequencerId")
@@ -389,7 +368,7 @@ final class LocalSynchronizerNode(
         "initializer_sequencer",
         "Initializing sequencer",
         sequencerAdminConnection.getStatus.flatMap {
-          case NodeStatus.NotInitialized(_, _) =>
+          case NodeStatus.NotInitialized(_) =>
             sequencerAdminConnection.initializeFromOnboardingState(
               onboardingState
             )
@@ -425,11 +404,11 @@ object LocalSynchronizerNode {
   private def toEndpoints(config: ClientConfig): NonEmpty[Seq[Endpoint]] =
     NonEmpty.mk(Seq, toEndpoint(config))
 
-  def toSequencerConnection(config: ClientConfig, alias: SequencerAlias = SequencerAlias.Default) =
+  def toSequencerConnection(config: ClientConfig) =
     new GrpcSequencerConnection(
       LocalSynchronizerNode.toEndpoints(config),
       transportSecurity = config.tls.isDefined,
       customTrustCertificates = None,
-      alias,
+      SequencerAlias.Default,
     )
 }

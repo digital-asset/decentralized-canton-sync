@@ -60,36 +60,26 @@ trait RequestJournalStore { this: NamedLogging =>
   /** Deletes all request counters at or before the given timestamp.
     * Calls to this method are idempotent, independent of the order.
     *
-    * @param beforeAndIncluding inclusive timestamp to prune up to
-    * @param bypassAllSanityChecks force if true, bypass all pre-condition sanity checks
-    *
-    * Pre-conditions for the call unless `bypassAllSanityChecks` is true:
+    * Pre-conditions for the call:
     *   1. there must be a timestamp `ts` associated with the clean head
     *   2. beforeAndIncluding < `ts`
     * @throws java.lang.IllegalArgumentException if the preconditions are violated.
     */
   def prune(
-      beforeAndIncluding: CantonTimestamp,
-      bypassAllSanityChecks: Boolean,
-  )(implicit traceContext: TraceContext): Future[Unit] = {
-    def checkCleanHead(): Future[Unit] = for {
-      cleanHead <- OptionT(preheadClean)
-        .getOrElseF(
-          ErrorUtil.internalErrorAsync(
-            new IllegalArgumentException("Attempted to prune a journal with no clean timestamps")
-          )
+      beforeAndIncluding: CantonTimestamp
+  )(implicit traceContext: TraceContext): Future[Unit] =
+    for {
+      cleanHead <- OptionT(preheadClean).getOrElseF(
+        ErrorUtil.internalErrorAsync(
+          new IllegalArgumentException("Attempted to prune a journal with no clean timestamps")
         )
+      )
       _ = ErrorUtil.requireArgument(
         cleanHead.timestamp > beforeAndIncluding,
         s"Attempted to prune at timestamp $beforeAndIncluding which is not earlier than ${cleanHead.timestamp} associated with the clean head",
       )
-    } yield ()
-
-    for {
-      _ <- if (!bypassAllSanityChecks) checkCleanHead() else Future.unit
       result <- pruneInternal(beforeAndIncluding)
     } yield result
-  }
 
   /** Deletes all request counters at or before the given timestamp.
     * Calls to this method are idempotent, independent of the order.
@@ -146,10 +136,6 @@ trait RequestJournalStore { this: NamedLogging =>
   def repairRequests(fromInclusive: RequestCounter)(implicit
       traceContext: TraceContext
   ): Future[Seq[RequestData]]
-
-  /** Returns the number of dirty requests.
-    */
-  def totalDirtyRequests()(implicit traceContext: TraceContext): Future[Int]
 }
 
 sealed trait RequestJournalStoreError extends Product with Serializable

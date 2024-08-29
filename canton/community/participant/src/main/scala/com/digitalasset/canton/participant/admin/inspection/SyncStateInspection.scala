@@ -20,16 +20,17 @@ import com.digitalasset.canton.participant.store.ActiveContractStore.AcsError
 import com.digitalasset.canton.participant.store.*
 import com.digitalasset.canton.participant.sync.{
   ConnectedDomainsLookup,
+  LedgerSyncEvent,
   SyncDomainPersistentStateManager,
+  TimestampedEvent,
   UpstreamOffsetConvert,
 }
-import com.digitalasset.canton.platform.store.backend.EventStorageBackend.DomainOffset
 import com.digitalasset.canton.protocol.messages.{
   AcsCommitment,
   CommitmentPeriod,
   SignedProtocolMessage,
 }
-import com.digitalasset.canton.protocol.{LfContractId, SerializableContract}
+import com.digitalasset.canton.protocol.{LfCommittedTransaction, LfContractId, SerializableContract}
 import com.digitalasset.canton.sequencing.PossiblyIgnoredProtocolEvent
 import com.digitalasset.canton.sequencing.handlers.EnvelopeOpener
 import com.digitalasset.canton.serialization.ProtoConverter.ParsingResult
@@ -48,7 +49,13 @@ import com.digitalasset.canton.util.FutureInstances.*
 import com.digitalasset.canton.util.Thereafter.syntax.*
 import com.digitalasset.canton.util.{EitherTUtil, MonadUtil}
 import com.digitalasset.canton.version.ProtocolVersion
-import com.digitalasset.canton.{DomainAlias, LfPartyId, RequestCounter, TransferCounter}
+import com.digitalasset.canton.{
+  DomainAlias,
+  LedgerTransactionId,
+  LfPartyId,
+  RequestCounter,
+  TransferCounter,
+}
 
 import java.io.OutputStream
 import java.time.Instant
@@ -108,6 +115,13 @@ final class SyncStateInspection(
       .map(_.flatten.toMap)
   }
 
+  def lookupTransactionDomain(transactionId: LedgerTransactionId)(implicit
+      traceContext: TraceContext
+  ): Future[Option[DomainId]] =
+    participantNodePersistentState.value.multiDomainEventLog
+      .lookupTransactionDomain(transactionId)
+      .value
+
   /** returns the potentially big ACS of a given domain */
   def findAcs(
       domainAlias: DomainAlias
@@ -122,7 +136,7 @@ final class SyncStateInspection(
           .toRight(SyncStateInspection.NoSuchDomain(domainAlias))
       )
 
-      snapshotO <- EitherT.right(AcsInspection.getCurrentSnapshot(state).map(_.map(_.snapshot)))
+      snapshotO <- EitherT.liftF(AcsInspection.getCurrentSnapshot(state).map(_.map(_.snapshot)))
     } yield snapshotO.fold(Map.empty[LfContractId, (CantonTimestamp, TransferCounter)])(
       _.toMap
     )
@@ -281,6 +295,51 @@ final class SyncStateInspection(
       .findM { case (_, store) => AcsInspection.hasActiveContracts(store, partyId) }
       .map(_.nonEmpty)
 
+  def findAcceptedTransactions(
+      domain: Option[DomainAlias] = None,
+      from: Option[CantonTimestamp] = None,
+      to: Option[CantonTimestamp] = None,
+      limit: Option[Int] = None,
+  )(implicit
+      traceContext: TraceContext
+  ): Seq[(SyncStateInspection.DisplayOffset, LfCommittedTransaction)] = {
+    // Need to apply limit after filtering for TransactionAccepted-Events (else might miss transactions due to
+    // limit also counting towards non-TransactionAccepted-Events
+    val found = findEvents(domain, from, to).collect {
+      case (offset, TimestampedEvent(accepted: LedgerSyncEvent.TransactionAccepted, _, _, _)) =>
+        offset -> accepted.transaction
+    }
+    limit.fold(found)(n => found.take(n))
+  }
+
+  /** Returns the events from the given domain; if the specified domain is empty, returns the events from the combined,
+    * multi-domain event log. `from` and `to` only have an effect if the domain isn't empty.
+    * @throws scala.RuntimeException (by Await.result and if lookup fails)
+    */
+  def findEvents(
+      domain: Option[DomainAlias] = None,
+      from: Option[CantonTimestamp] = None,
+      to: Option[CantonTimestamp] = None,
+      limit: Option[Int] = None,
+  )(implicit
+      traceContext: TraceContext
+  ): Seq[(SyncStateInspection.DisplayOffset, TimestampedEvent)] = domain match {
+    case None =>
+      timeouts.inspection.await("finding events in the multi-domain event log")(
+        participantNodePersistentState.value.multiDomainEventLog
+          .lookupEventRange(None, limit)
+          .map(_.map { case (offset, event) => (offset.toString, event) })
+      )
+    case Some(domainAlias) =>
+      timeouts.inspection
+        .await(s"$functionFullName from $from to $to in the event log")(
+          getOrFail(getPersistentState(domainAlias), domainAlias).eventLog
+            .lookupEventRange(None, None, from, to, limit)
+        )
+        .toSeq
+        .map { case (offset, event) => (offset.toString, event) }
+  }
+
   private def tryGetProtocolVersion(
       state: SyncDomainPersistentState,
       domain: DomainAlias,
@@ -401,10 +460,6 @@ final class SyncStateInspection(
   }
 
   /** Update the prehead for clean requests to the given value, bypassing all checks. Only used for testing. */
-  @deprecated(
-    "usage being removed as part of fusing MultiDomainEventLog and Ledger API Indexer",
-    "3.1",
-  )
   def forceCleanPrehead(
       newHead: Option[RequestCounterCursorPrehead],
       domain: DomainAlias,
@@ -416,10 +471,6 @@ final class SyncStateInspection(
       .toRight(s"Unknown domain $domain")
   }
 
-  @deprecated(
-    "usage being removed as part of fusing MultiDomainEventLog and Ledger API Indexer",
-    "3.1",
-  )
   def forceCleanSequencerCounterPrehead(
       newHead: Option[SequencerCounterCursorPrehead],
       domain: DomainAlias,
@@ -446,10 +497,6 @@ final class SyncStateInspection(
   private[this] def getPersistentState(domain: DomainAlias): Option[SyncDomainPersistentState] =
     syncDomainPersistentStateManager.getByAlias(domain)
 
-  @deprecated(
-    "usage being removed as part of fusing MultiDomainEventLog and Ledger API Indexer",
-    "3.1",
-  )
   def locateOffset(
       numTransactions: Long
   )(implicit traceContext: TraceContext): Future[Either[String, ParticipantOffset]] = {
@@ -486,60 +533,6 @@ final class SyncStateInspection(
     (_eventLogId, _localOffset, publicationTimestamp) = res
   } yield publicationTimestamp
 
-  def hasInFlightSubmissions(
-      domain: DomainAlias
-  )(implicit traceContext: TraceContext): EitherT[Future, String, Boolean] = for {
-    domainId <- EitherT.fromEither[Future](
-      getPersistentState(domain).toRight(s"Unknown domain $domain").map(_.domainId.domainId)
-    )
-    earliestInFlightO <-
-      EitherT.right[String](
-        participantNodePersistentState.value.inFlightSubmissionStore.lookupEarliest(domainId)
-      )
-  } yield earliestInFlightO.isDefined
-
-  def hasDirtyRequests(
-      domain: DomainAlias
-  )(implicit traceContext: TraceContext): EitherT[Future, String, Boolean] =
-    for {
-      state <- EitherT.fromEither[Future](
-        getPersistentState(domain)
-          .toRight(s"Unknown domain $domain")
-      )
-      count <- EitherT.right[String](state.requestJournalStore.totalDirtyRequests())
-    } yield count > 0
-
-  def verifyLapiStoreIntegrity()(implicit traceContext: TraceContext): Unit =
-    timeouts.inspection.await(functionFullName)(
-      participantNodePersistentState.value.ledgerApiStore.onlyForTestingVerifyIntegrity()
-    )
-
-  def acceptedTransactionCount(domainAlias: DomainAlias)(implicit traceContext: TraceContext): Int =
-    getPersistentState(domainAlias)
-      .map(domainPersistentState =>
-        timeouts.inspection.await(functionFullName)(
-          participantNodePersistentState.value.ledgerApiStore
-            .onlyForTestingNumberOfAcceptedTransactionsFor(
-              domainPersistentState.domainId.domainId
-            )
-        )
-      )
-      .getOrElse(0)
-
-  def onlyForTestingMoveLedgerEndBackToScratch()(implicit traceContext: TraceContext): Unit =
-    timeouts.inspection.await(functionFullName)(
-      participantNodePersistentState.value.ledgerApiStore.onlyForTestingMoveLedgerAndBackToScratch()
-    )
-
-  def lastDomainOffset(
-      domainId: DomainId
-  )(implicit traceContext: TraceContext): Option[DomainOffset] =
-    timeouts.inspection.await(s"$functionFullName")(
-      participantNodePersistentState.value.ledgerApiStore.lastDomainOffsetBeforeOrAt(
-        domainId,
-        participantNodePersistentState.value.ledgerApiStore.ledgerEndCache()._1,
-      )
-    )
 }
 
 object SyncStateInspection {

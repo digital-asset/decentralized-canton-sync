@@ -98,6 +98,7 @@ object CloseContext {
       tracedLogger: TracedLogger,
   )(func: CloseContext => F[T])(implicit
       traceContext: TraceContext,
+      ex: ExecutionContext,
       F: Thereafter[F],
   ): F[T] = {
     val tmp = combineUnsafe(closeContext1, closeContext2, processingTimeout, tracedLogger)

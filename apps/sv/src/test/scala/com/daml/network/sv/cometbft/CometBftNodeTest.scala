@@ -89,7 +89,7 @@ class CometBftNodeTest extends AnyWordSpec with BaseTest {
     )
   }
 
-  private def mkSvNodeStates(
+  private def mkMemberNodeStates(
       members: Seq[(Int, String)]
   ): Seq[SvNodeState] =
     members.map { case (svNodeNr, validatorKey) =>
@@ -151,7 +151,7 @@ class CometBftNodeTest extends AnyWordSpec with BaseTest {
       .diffNetworkConfig(
         owningSvNodeId,
         cometBftRequestSigner.Fingerprint,
-        mkSvNodeStates(
+        mkMemberNodeStates(
           targetConfig.map((nodeNr, _)).toList ++ Seq(10 -> "key-10", 11 -> "key-11")
         ),
         networkConfig,
@@ -323,7 +323,7 @@ class CometBftNodeTest extends AnyWordSpec with BaseTest {
         .diffNetworkConfig(
           owningSvNodeId,
           cometBftRequestSigner.Fingerprint,
-          mkSvNodeStates(
+          mkMemberNodeStates(
             Seq(10 -> "key-10")
           ),
           networkConfig,

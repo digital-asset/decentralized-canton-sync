@@ -4,13 +4,13 @@
 package com.digitalasset.canton.ledger.error
 
 import com.daml.error.*
+import com.daml.lf.archive.Error as LfArchiveError
+import com.daml.lf.data.Ref
+import com.daml.lf.data.Ref.PackageId
+import com.daml.lf.engine.Error
+import com.daml.lf.validation.UpgradeError
+import com.daml.lf.{VersionRange, language, validation}
 import com.digitalasset.canton.ledger.error.groups.CommandExecutionErrors
-import com.digitalasset.daml.lf.archive.Error as LfArchiveError
-import com.digitalasset.daml.lf.data.Ref
-import com.digitalasset.daml.lf.data.Ref.PackageId
-import com.digitalasset.daml.lf.engine.Error
-import com.digitalasset.daml.lf.validation.UpgradeError
-import com.digitalasset.daml.lf.{VersionRange, language, validation}
 
 import ParticipantErrorGroup.LedgerApiErrorGroup.PackageServiceErrorGroup
 
@@ -110,6 +110,21 @@ object PackageServiceErrors extends PackageServiceErrorGroup {
           )
     }
 
+  }
+
+  @Explanation("""Package vetting has been aborted because the participant is shutting down.""")
+  @Resolution(
+    """Re-submit the vetting request when the participant node is available again."""
+  )
+  object ParticipantShuttingDown
+      extends ErrorCode(
+        id = "SHUTDOWN_INTERRUPTED_PACKAGE_VETTING",
+        ErrorCategory.InvalidGivenCurrentSystemStateOther,
+      ) {
+    final case class Error()(implicit val loggingContext: ContextualizedErrorLogger)
+        extends DamlError(
+          cause = "Participant has been pruned only partially due to shutdown."
+        )
   }
 
   @Explanation("""This error indicates an internal issue within the package service.""")
@@ -274,7 +289,12 @@ object PackageServiceErrors extends PackageServiceErrorGroup {
           val loggingContext: ContextualizedErrorLogger
       ) extends DamlError(
             cause =
-              s"The DAR contains a package which claims to upgrade another package, but basic checks indicate the package is not a valid upgrade. Upgrading package: ${upgradingPackage}; Upgraded package: ${upgradedPackage}; Reason: ${upgradeError.prettyInternal}"
+              "The DAR contains a package which claims to upgrade another package, but basic checks indicate the package is not a valid upgrade",
+            extraContext = Map(
+              "upgradingPackage" -> upgradingPackage,
+              "upgradedPackage" -> upgradedPackage,
+              "additionalInfo" -> upgradeError.prettyInternal,
+            ),
           )
     }
 
@@ -288,7 +308,7 @@ object PackageServiceErrors extends PackageServiceErrorGroup {
           ErrorCategory.InvalidIndependentOfSystemState,
         ) {
       final case class Error(
-          uploadedPackageId: Ref.PackageId,
+          uploadedPackage: Ref.PackageId,
           existingPackage: Ref.PackageId,
           packageVersion: Ref.PackageVersion,
       )(implicit
@@ -296,7 +316,7 @@ object PackageServiceErrors extends PackageServiceErrorGroup {
       ) extends DamlError(
             cause = "A DAR with the same version number has previously been uploaded.",
             extraContext = Map(
-              "uploadedPackageId" -> uploadedPackageId,
+              "uploadedPackage" -> uploadedPackage,
               "existingPackage" -> existingPackage,
               "packageVersion" -> packageVersion.toString,
             ),

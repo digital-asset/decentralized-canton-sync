@@ -6,10 +6,11 @@ package com.digitalasset.canton.participant.protocol.transfer
 import cats.data.EitherT
 import cats.syntax.bifunctor.*
 import cats.syntax.traverse.*
+import com.daml.lf.engine.Error as LfError
+import com.daml.lf.interpretation.Error as LfInterpretationError
 import com.digitalasset.canton.crypto.{DomainSnapshotSyncCryptoApi, SyncCryptoError}
 import com.digitalasset.canton.data.*
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
-import com.digitalasset.canton.participant.protocol.EngineController.GetEngineAbortStatus
 import com.digitalasset.canton.participant.protocol.ProcessingSteps
 import com.digitalasset.canton.participant.protocol.transfer.TransferInValidation.*
 import com.digitalasset.canton.participant.protocol.transfer.TransferProcessingSteps.*
@@ -21,15 +22,12 @@ import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.EitherTUtil.condUnitET
 import com.digitalasset.canton.util.EitherUtil.condUnitE
 import com.digitalasset.canton.{LfPartyId, TransferCounter}
-import com.digitalasset.daml.lf.engine.Error as LfError
-import com.digitalasset.daml.lf.interpretation.Error as LfInterpretationError
 import com.google.common.annotations.VisibleForTesting
 
 import scala.concurrent.{ExecutionContext, Future}
 
 private[transfer] class TransferInValidation(
     domainId: TargetDomainId,
-    staticDomainParameters: StaticDomainParameters,
     participantId: ParticipantId,
     engine: DAMLe,
     transferCoordination: TransferCoordination,
@@ -38,8 +36,7 @@ private[transfer] class TransferInValidation(
     extends NamedLogging {
 
   def checkStakeholders(
-      transferInRequest: FullTransferInTree,
-      getEngineAbortStatus: GetEngineAbortStatus,
+      transferInRequest: FullTransferInTree
   )(implicit traceContext: TraceContext): EitherT[Future, TransferProcessorError, Unit] = {
     val transferId = transferInRequest.transferOutResultEvent.transferId
 
@@ -51,16 +48,13 @@ private[transfer] class TransferInValidation(
         .contractMetadata(
           transferInRequest.contract.contractInstance,
           declaredContractStakeholders,
-          getEngineAbortStatus,
         )
         .leftMap {
-          case DAMLe.EngineError(
-                LfError.Interpretation(
-                  e @ LfError.Interpretation.DamlException(
-                    LfInterpretationError.FailedAuthorization(_, _)
-                  ),
-                  _,
-                )
+          case LfError.Interpretation(
+                e @ LfError.Interpretation.DamlException(
+                  LfInterpretationError.FailedAuthorization(_, _)
+                ),
+                _,
               ) =>
             StakeholdersMismatch(
               Some(transferId),
@@ -68,10 +62,7 @@ private[transfer] class TransferInValidation(
               declaredContractStakeholders = Some(declaredContractStakeholders),
               expectedStakeholders = Left(e.message),
             )
-          case DAMLe.EngineError(error) => MetadataNotFound(error)
-          case DAMLe.EngineAborted(reason) =>
-            ReinterpretationAborted(transferId, reason)
-
+          case error => MetadataNotFound(error)
         }
       recomputedStakeholders = metadata.stakeholders
       _ <- condUnitET[Future](
@@ -123,18 +114,13 @@ private[transfer] class TransferInValidation(
             )
             EitherT(
               transferCoordination
-                .awaitTransferOutTimestamp(
-                  sourceDomain,
-                  staticDomainParameters,
-                  transferOutTimestamp,
-                )
+                .awaitTransferOutTimestamp(sourceDomain, transferOutTimestamp)
                 .sequence
             )
           }
 
           sourceCrypto <- transferCoordination.cryptoSnapshot(
             sourceDomain.unwrap,
-            staticDomainParameters,
             transferOutTimestamp,
           )
           // TODO(i12926): Check the signatures of the mediator and the sequencer
@@ -161,11 +147,7 @@ private[transfer] class TransferInValidation(
 
           // TODO(i12926): Check that transferData.transferOutRequest.targetTimeProof.timestamp is in the past
           cryptoSnapshot <- transferCoordination
-            .cryptoSnapshot(
-              transferData.targetDomain.unwrap,
-              staticDomainParameters,
-              targetTimeProof,
-            )
+            .cryptoSnapshot(transferData.targetDomain.unwrap, targetTimeProof)
 
           exclusivityLimit <- ProcessingSteps
             .getTransferInExclusivity(
@@ -220,11 +202,6 @@ private[transfer] class TransferInValidation(
           _ <- EitherT.fromEither[Future](checkSubmitterIsStakeholder)
           res <-
             if (transferringParticipant) {
-              // This happens either in case of malicious transfer-ins (incorrectly declared transferring participants)
-              // OR if the transfer data has been pruned.
-              // The transfer-in should be rejected due to other validations (e.g. conflict detection), but
-              // we could code this more defensively at some point
-
               val targetIps = targetCrypto.ipsSnapshot
               val confirmingPartiesF = targetIps
                 .canConfirm(

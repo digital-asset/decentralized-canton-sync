@@ -4,7 +4,7 @@
 package com.daml.network.wallet.store
 
 import com.daml.ledger.javaapi.data.codegen.ContractId
-import com.digitalasset.daml.lf.data.Time.Timestamp
+import com.daml.lf.data.Time.Timestamp
 import com.daml.network.automation.MultiDomainExpiredContractTrigger.ListExpiredContracts
 import com.daml.network.codegen.java.splice
 import com.daml.network.codegen.java.splice.{
@@ -74,13 +74,17 @@ trait UserWalletStore extends AppStore with NamedLogging {
     transferOffersCodegen.TransferOffer.ContractId,
     transferOffersCodegen.TransferOffer,
   ] =
-    multiDomainAcsStore.listExpiredFromPayloadExpiry(transferOffersCodegen.TransferOffer.COMPANION)
+    multiDomainAcsStore.listExpiredFromPayloadExpiry(transferOffersCodegen.TransferOffer.COMPANION)(
+      _.expiresAt
+    )
 
   def listExpiredAcceptedTransferOffers: ListExpiredContracts[
     transferOffersCodegen.AcceptedTransferOffer.ContractId,
     transferOffersCodegen.AcceptedTransferOffer,
   ] = multiDomainAcsStore.listExpiredFromPayloadExpiry(
     transferOffersCodegen.AcceptedTransferOffer.COMPANION
+  )(
+    _.expiresAt
   )
 
   def getLatestTransferOfferEventByTrackingId(
@@ -94,6 +98,8 @@ trait UserWalletStore extends AppStore with NamedLogging {
     trafficRequestCodegen.BuyTrafficRequest,
   ] = multiDomainAcsStore.listExpiredFromPayloadExpiry(
     trafficRequestCodegen.BuyTrafficRequest.COMPANION
+  )(
+    _.expiresAt
   )
 
   def getLatestBuyTrafficRequestEventByTrackingId(
@@ -129,7 +135,9 @@ trait UserWalletStore extends AppStore with NamedLogging {
   def listExpiredAppPaymentRequests: ListExpiredContracts[
     walletCodegen.AppPaymentRequest.ContractId,
     walletCodegen.AppPaymentRequest,
-  ] = multiDomainAcsStore.listExpiredFromPayloadExpiry(walletCodegen.AppPaymentRequest.COMPANION)
+  ] = multiDomainAcsStore.listExpiredFromPayloadExpiry(walletCodegen.AppPaymentRequest.COMPANION)(
+    _.expiresAt
+  )
 
   def listSubscriptionStatesReadyForPayment: ListExpiredContracts[
     subsCodegen.SubscriptionIdleState.ContractId,

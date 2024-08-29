@@ -3,8 +3,7 @@
 
 package com.digitalasset.canton.crypto
 
-import com.digitalasset.canton.BaseTest
-import com.digitalasset.canton.discard.Implicits.DiscardOps
+import com.digitalasset.canton.{BaseTest, DiscardOps}
 import org.scalatest.wordspec.AnyWordSpec
 
 class HashPurposeTest extends AnyWordSpec with BaseTest {

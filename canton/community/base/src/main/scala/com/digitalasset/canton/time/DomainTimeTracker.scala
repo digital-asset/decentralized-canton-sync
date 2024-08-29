@@ -10,12 +10,7 @@ import com.daml.nameof.NameOf.functionFullName
 import com.daml.nonempty.NonEmpty
 import com.digitalasset.canton.config.{DomainTimeTrackerConfig, ProcessingTimeout}
 import com.digitalasset.canton.data.CantonTimestamp
-import com.digitalasset.canton.lifecycle.{
-  FlagCloseable,
-  FutureUnlessShutdown,
-  Lifecycle,
-  UnlessShutdown,
-}
+import com.digitalasset.canton.lifecycle.{FlagCloseable, FutureUnlessShutdown, UnlessShutdown}
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.sequencing.client.SequencerClient
 import com.digitalasset.canton.sequencing.protocol.{Envelope, TimeProof}
@@ -409,7 +404,7 @@ class DomainTimeTracker(
     Seq(timeProofRef, timestampRef).foreach { ref =>
       ref.get().next.foreach(_.trySuccess(UnlessShutdown.AbortedDueToShutdown))
     }
-    Lifecycle.close(timeRequestSubmitter)(logger)
+    timeRequestSubmitter.close()
   }
 
   /** In the absence of any real activity on the domain we will infrequently request a time.

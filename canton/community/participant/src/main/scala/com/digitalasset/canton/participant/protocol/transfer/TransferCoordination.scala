@@ -19,13 +19,7 @@ import com.digitalasset.canton.participant.protocol.transfer.TransferProcessingS
 import com.digitalasset.canton.participant.store.TransferStore
 import com.digitalasset.canton.participant.sync.SyncDomainPersistentStateManager
 import com.digitalasset.canton.protocol.messages.DeliveredTransferOutResult
-import com.digitalasset.canton.protocol.{
-  LfContractId,
-  SourceDomainId,
-  StaticDomainParameters,
-  TargetDomainId,
-  TransferId,
-}
+import com.digitalasset.canton.protocol.{LfContractId, SourceDomainId, TargetDomainId, TransferId}
 import com.digitalasset.canton.sequencing.protocol.TimeProof
 import com.digitalasset.canton.time.DomainTimeTracker
 import com.digitalasset.canton.topology.DomainId
@@ -53,13 +47,12 @@ class TransferCoordination(
     */
   private[transfer] def awaitTransferOutTimestamp(
       domain: SourceDomainId,
-      staticDomainParameters: StaticDomainParameters,
       timestamp: CantonTimestamp,
   )(implicit
       traceContext: TraceContext
   ): Either[UnknownDomain, Future[Unit]] = {
     syncCryptoApi
-      .forDomain(domain.unwrap, staticDomainParameters)
+      .forDomain(domain.unwrap)
       .toRight(UnknownDomain(domain.unwrap, "When transfer-in waits for transfer-out timestamp"))
       .map(_.awaitTimestamp(timestamp, waitForEffectiveTime = true).getOrElse(Future.unit))
   }
@@ -72,18 +65,16 @@ class TransferCoordination(
     */
   private[transfer] def awaitTimestamp(
       domain: DomainId,
-      staticDomainParameters: StaticDomainParameters,
       timestamp: CantonTimestamp,
       waitForEffectiveTime: Boolean,
   )(implicit
       traceContext: TraceContext
   ): Either[TransferProcessorError, Option[Future[Unit]]] = {
     OptionUtil
-      .zipWith(syncCryptoApi.forDomain(domain, staticDomainParameters), inSubmissionById(domain)) {
-        (cryptoApi, handle) =>
-          // we request a tick immediately only if the clock is a SimClock
-          handle.timeTracker.requestTick(timestamp, immediately = true)
-          cryptoApi.awaitTimestamp(timestamp, waitForEffectiveTime)
+      .zipWith(syncCryptoApi.forDomain(domain), inSubmissionById(domain)) { (cryptoApi, handle) =>
+        // we request a tick immediately only if the clock is a SimClock
+        handle.timeTracker.requestTick(timestamp, immediately = true)
+        cryptoApi.awaitTimestamp(timestamp, waitForEffectiveTime)
       }
       .toRight(UnknownDomain(domain, "When waiting for timestamp"))
   }
@@ -94,7 +85,6 @@ class TransferCoordination(
     */
   private[transfer] def awaitTimestamp(
       domain: DomainId,
-      staticDomainParameters: StaticDomainParameters,
       timestamp: CantonTimestamp,
       waitForEffectiveTime: Boolean,
       onImmediate: => Future[Unit],
@@ -102,15 +92,12 @@ class TransferCoordination(
       traceContext: TraceContext
   ): EitherT[Future, TransferProcessorError, Unit] =
     for {
-      timeout <- EitherT.fromEither[Future](
-        awaitTimestamp(domain, staticDomainParameters, timestamp, waitForEffectiveTime)
-      )
-      _ <- EitherT.right[TransferProcessorError](timeout.getOrElse(onImmediate))
+      timeout <- EitherT.fromEither[Future](awaitTimestamp(domain, timestamp, waitForEffectiveTime))
+      _ <- EitherT.liftF[Future, TransferProcessorError, Unit](timeout.getOrElse(onImmediate))
     } yield ()
 
   private[transfer] def awaitTimestampUS(
       domain: DomainId,
-      staticDomainParameters: StaticDomainParameters,
       timestamp: CantonTimestamp,
       waitForEffectiveTime: Boolean,
       onImmediate: => Future[Unit],
@@ -119,7 +106,7 @@ class TransferCoordination(
   ): EitherT[FutureUnlessShutdown, TransferProcessorError, Unit] =
     for {
       wait <- EitherT.fromEither[FutureUnlessShutdown](
-        awaitTimestamp(domain, staticDomainParameters, timestamp, waitForEffectiveTime)
+        awaitTimestamp(domain, timestamp, waitForEffectiveTime)
       )
       _ <- EitherT.right(FutureUnlessShutdown.outcomeF(wait.getOrElse(onImmediate)))
     } yield ()
@@ -159,47 +146,31 @@ class TransferCoordination(
     * The returned future fails with [[java.lang.IllegalArgumentException]] if the `domain` has not progressed far enough
     * such that it can compute the snapshot. Use [[awaitTimestamp]] to ensure progression to `timestamp`.
     */
-  private[transfer] def cryptoSnapshot(
-      domain: DomainId,
-      staticDomainParameters: StaticDomainParameters,
-      timestamp: CantonTimestamp,
-  )(implicit
+  private[transfer] def cryptoSnapshot(domain: DomainId, timestamp: CantonTimestamp)(implicit
       traceContext: TraceContext
   ): EitherT[Future, TransferProcessorError, DomainSnapshotSyncCryptoApi] =
     EitherT
       .fromEither[Future](
         syncCryptoApi
-          .forDomain(domain, staticDomainParameters)
+          .forDomain(domain)
           .toRight(UnknownDomain(domain, "When getting crypto snapshot"): TransferProcessorError)
       )
       .semiflatMap(_.snapshot(timestamp))
 
   private[transfer] def awaitTimestampAndGetCryptoSnapshot(
       domain: DomainId,
-      staticDomainParameters: StaticDomainParameters,
       timestamp: CantonTimestamp,
       waitForEffectiveTime: Boolean,
   )(implicit
       traceContext: TraceContext
   ): EitherT[FutureUnlessShutdown, TransferProcessorError, DomainSnapshotSyncCryptoApi] = {
     for {
-      _ <- awaitTimestampUS(
-        domain,
-        staticDomainParameters,
-        timestamp,
-        waitForEffectiveTime,
-        Future.unit,
-      )
-      snapshot <- cryptoSnapshot(domain, staticDomainParameters, timestamp).mapK(
-        FutureUnlessShutdown.outcomeK
-      )
+      _ <- awaitTimestampUS(domain, timestamp, waitForEffectiveTime, Future.unit)
+      snapshot <- cryptoSnapshot(domain, timestamp).mapK(FutureUnlessShutdown.outcomeK)
     } yield snapshot
   }
 
-  private[transfer] def getTimeProofAndSnapshot(
-      targetDomain: TargetDomainId,
-      staticDomainParameters: StaticDomainParameters,
-  )(implicit
+  private[transfer] def getTimeProofAndSnapshot(targetDomain: TargetDomainId)(implicit
       traceContext: TraceContext
   ): EitherT[
     FutureUnlessShutdown,
@@ -207,11 +178,10 @@ class TransferCoordination(
     (TimeProof, DomainSnapshotSyncCryptoApi),
   ] =
     for {
-      timeProof <- recentTimeProofFor.get(targetDomain, staticDomainParameters)
+      timeProof <- recentTimeProofFor.get(targetDomain)
       // Since events are stored before they are processed, we wait just to be sure.
       targetCrypto <- awaitTimestampAndGetCryptoSnapshot(
         targetDomain.unwrap,
-        staticDomainParameters,
         timeProof.timestamp,
         waitForEffectiveTime = true,
       )
@@ -220,13 +190,9 @@ class TransferCoordination(
   /** Stores the given transfer data on the target domain. */
   private[transfer] def addTransferOutRequest(
       transferData: TransferData
-  )(implicit
-      traceContext: TraceContext
-  ): EitherT[FutureUnlessShutdown, TransferProcessorError, Unit] = {
+  )(implicit traceContext: TraceContext): EitherT[Future, TransferProcessorError, Unit] = {
     for {
-      transferStore <- EitherT.fromEither[FutureUnlessShutdown](
-        transferStoreFor(transferData.targetDomain)
-      )
+      transferStore <- EitherT.fromEither[Future](transferStoreFor(transferData.targetDomain))
       _ <- transferStore
         .addTransfer(transferData)
         .leftMap[TransferProcessorError](TransferStoreFailed(transferData.transferId, _))
@@ -239,9 +205,9 @@ class TransferCoordination(
       transferOutResult: DeliveredTransferOutResult,
   )(implicit
       traceContext: TraceContext
-  ): EitherT[FutureUnlessShutdown, TransferProcessorError, Unit] = {
+  ): EitherT[Future, TransferProcessorError, Unit] = {
     for {
-      transferStore <- EitherT.fromEither[FutureUnlessShutdown](transferStoreFor(domain))
+      transferStore <- EitherT.fromEither[Future](transferStoreFor(domain))
       _ <- transferStore
         .addTransferOutResult(transferOutResult)
         .leftMap[TransferProcessorError](TransferStoreFailed(transferOutResult.transferId, _))

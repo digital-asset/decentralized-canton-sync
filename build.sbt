@@ -36,10 +36,8 @@ lazy val `canton-util-logging` = BuildCommon.`canton-util-logging`
 lazy val `canton-pekko-fork` = BuildCommon.`canton-pekko-fork`
 lazy val `canton-ledger-common` = BuildCommon.`canton-ledger-common`
 lazy val `canton-ledger-api-core` = BuildCommon.`canton-ledger-api-core`
-lazy val `canton-ledger-api-value` = BuildCommon.`canton-ledger-api-value`
 lazy val `canton-ledger-json-api` = BuildCommon.`canton-ledger-json-api`
 lazy val `canton-daml-errors` = BuildCommon.`canton-daml-errors`
-lazy val `canton-daml-tls` = BuildCommon.`canton-daml-tls`
 lazy val `canton-ledger-api` = BuildCommon.`canton-ledger-api`
 lazy val `canton-bindings-java` = BuildCommon.`canton-bindings-java`
 lazy val `canton-google-common-protos-scala` = BuildCommon.`canton-google-common-protos-scala`
@@ -100,7 +98,6 @@ lazy val root: Project = (project in file("."))
     `canton-community-participant`,
     `canton-ledger-common`,
     `canton-ledger-api-core`,
-    `canton-ledger-api-value`,
     `canton-ledger-api`,
     `canton-bindings-java`,
     `canton-google-common-protos-scala`,
@@ -148,10 +145,7 @@ val damlDarsLockCheckerFileArg =
 lazy val `build-tools-dar-lock-checker` = project
   .in(file("build-tools/dar-lock-checker"))
   .settings(
-    libraryDependencies ++= Seq(
-      Dependencies.better_files,
-      Dependencies.daml_lf_archive_reader,
-    ),
+    libraryDependencies ++= Seq(Dependencies.better_files, Dependencies.daml_lf_archive_reader),
     Headers.ApacheDAHeaderSettings,
   )
 
@@ -1127,8 +1121,6 @@ def mergeStrategy(oldStrategy: String => MergeStrategy): String => MergeStrategy
     // Hack for not getting trouble with different versions of generated classes of common openapi
     case x @ PathList("com", "daml", "network", "http", "v0" | "commonAdmin", _*) =>
       MergeStrategy.first
-    case PathList("com", "google", _*) => MergeStrategy.first
-    case PathList("io", "grpc", _*) => MergeStrategy.first
     // this file comes in multiple flavors, from io.get-coursier:interface and from org.scala-lang.modules:scala-collection-compat. Since the content differs it is resolve this explicitly with this MergeStrategy.
     case path if path.endsWith("scala-collection-compat.properties") => MergeStrategy.first
     case x => oldStrategy(x)
@@ -1408,11 +1400,7 @@ printTests := {
   def isAppManagerTest(name: String): Boolean = name contains "AppManager"
   def isDisasterRecoveryTest(name: String): Boolean = name contains "DisasterRecovery"
   def isAppUpgradeTest(name: String): Boolean = name contains "AppUpgrade"
-  def isResourceIntensiveTest(name: String): Boolean =
-    name.contains("SvReonboardingIntegration") ||
-      name.contains("DecentralizedSynchronizerMigrationIntegrationTest")
-  def isDockerBasedTest(name: String): Boolean =
-    name contains "DockerComposeValidatorFrontendIntegrationTest"
+  def isSvReonboardingTest(name: String): Boolean = name contains "SvReonboardingIntegration"
 
   val allTestNames =
     definedTests
@@ -1504,14 +1492,9 @@ printTests := {
       (t: String) => !isTimeBasedTest(t) && isAppUpgradeTest(t),
     ),
     (
-      "resource intensive tests",
-      "test-full-class-names-resource-intensive.log",
-      (t: String) => isResourceIntensiveTest(t),
-    ),
-    (
-      "tests using docker images",
-      "test-full-class-names-docker-based.log",
-      (t: String) => isDockerBasedTest(t),
+      "sv reonboarding test",
+      "test-full-class-names-sv-reonboarding.log",
+      (t: String) => isSvReonboardingTest(t),
     ),
     (
       "tests with wall clock time",

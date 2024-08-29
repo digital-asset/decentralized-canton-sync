@@ -3,6 +3,8 @@
 
 package com.digitalasset.canton.platform.apiserver.meteringreport
 
+import com.daml.lf.data.Ref
+import com.daml.lf.data.Time.Timestamp
 import com.digitalasset.canton.platform.apiserver.meteringreport.Jcs.{
   MaximumSupportedAbsSize,
   serialize,
@@ -12,14 +14,10 @@ import com.digitalasset.canton.platform.apiserver.meteringreport.MeteringReport.
   ParticipantReport,
   Request,
 }
-import com.digitalasset.daml.lf.data.Ref
-import com.digitalasset.daml.lf.data.Time.Timestamp
 import org.scalatest.Assertion
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import spray.json.{JsArray, JsBoolean, JsNull, JsNumber, JsObject, JsString, JsValue, enrichAny}
-
-import java.time.Instant
 
 class JcsSpec extends AnyWordSpec with Matchers {
 
@@ -74,8 +72,8 @@ class JcsSpec extends AnyWordSpec with Matchers {
     }
     "serialize report" in {
       val application = Ref.ApplicationId.assertFromString("a0")
-      val from = Timestamp.assertFromInstant(Instant.parse("2022-01-01T00:00:00Z"))
-      val to = Timestamp.assertFromInstant(Instant.parse("2022-01-01T00:00:00Z"))
+      val from = Timestamp.assertFromString("2022-01-01T00:00:00Z")
+      val to = Timestamp.assertFromString("2022-01-01T00:00:00Z")
       val report = ParticipantReport(
         participant = Ref.ParticipantId.assertFromString("p0"),
         request = Request(from, Some(to), Some(application)),

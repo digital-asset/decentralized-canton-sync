@@ -56,13 +56,9 @@ object ProtoDeserializationError extends ProtoDeserializationErrorGroup {
       extends ProtoDeserializationError {
     override val message = s"Unable to convert numeric field `$field`: $error"
   }
-
-  final case class InvariantViolation(field: Option[String], error: String)
-      extends ProtoDeserializationError {
-    override def message =
-      field.fold(error)(field => s"Invariant violation in field `$field`: $error")
+  final case class InvariantViolation(error: String) extends ProtoDeserializationError {
+    override def message = error
   }
-
   final case class MaxBytesToDecompressExceeded(error: String) extends ProtoDeserializationError {
     override def message = error
   }
@@ -109,12 +105,9 @@ object ProtoDeserializationError extends ProtoDeserializationErrorGroup {
   }
 
   object InvariantViolation {
-    def toProtoDeserializationError(field: String, e: PureInvariantViolation): InvariantViolation =
-      InvariantViolation(field = Some(field), error = e.message)
-    def apply(field: String, e: PureInvariantViolation): InvariantViolation =
-      InvariantViolation(field = Some(field), error = e.message)
-    def apply(field: String, error: String): InvariantViolation =
-      InvariantViolation(field = Some(field), error = error)
+    def toProtoDeserializationError(e: PureInvariantViolation): InvariantViolation =
+      InvariantViolation(e.message)
+    def apply(e: PureInvariantViolation): InvariantViolation = InvariantViolation(e.message)
   }
 
 }

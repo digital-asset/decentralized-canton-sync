@@ -6,8 +6,7 @@ package com.daml.network.environment
 import com.daml.error.ErrorCategory
 import com.daml.error.utils.ErrorDetails
 import com.daml.grpc.{GrpcException, GrpcStatus}
-import com.daml.metrics.api.MetricHandle.LabeledMetricsFactory
-import com.daml.metrics.api.{MetricInfo, MetricQualification, MetricsContext}
+import com.daml.metrics.api.MetricsContext
 import com.daml.network.admin.api.client.commands.HttpCommandException
 import com.digitalasset.canton.concurrent.FutureSupervisor
 import com.digitalasset.canton.config.{NonNegativeFiniteDuration, ProcessingTimeout}
@@ -20,6 +19,7 @@ import com.digitalasset.canton.lifecycle.{
 }
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging, TracedLogger}
 import com.digitalasset.canton.logging.pretty.Pretty
+import com.digitalasset.canton.metrics.CantonLabeledMetricsFactory
 import com.digitalasset.canton.sequencing.protocol.SequencerErrors
 import com.digitalasset.canton.tracing.{Spanning, TraceContext}
 import com.digitalasset.canton.util.ShowUtil.*
@@ -31,7 +31,7 @@ import com.digitalasset.canton.util.retry.RetryUtil.{
   NoErrorKind,
   TransientErrorKind,
 }
-import com.digitalasset.canton.discard.Implicits.DiscardOps
+import com.digitalasset.canton.DiscardOps
 import com.digitalasset.canton.time.Clock
 import io.grpc.Status
 import io.grpc.protobuf.StatusProto
@@ -59,7 +59,7 @@ final class RetryProvider(
     override val loggerFactory: NamedLoggerFactory,
     override val timeouts: ProcessingTimeout,
     val futureSupervisor: FutureSupervisor,
-    val metricsFactory: LabeledMetricsFactory,
+    val metricsFactory: CantonLabeledMetricsFactory,
 )(implicit tracer: Tracer)
     extends NamedLogging
     with FlagCloseable
@@ -426,7 +426,7 @@ final class RetryProvider(
   /** A retry intended for client calls, thus timing out relatively quickly. */
   def retryForClientCalls[T, R: Retryable](
       operationId: String,
-      operationDescription: String,
+      operationName: String,
       task: => Future[T],
       logger: TracedLogger,
       retryable: R = Seq.empty,
@@ -437,7 +437,7 @@ final class RetryProvider(
     retry(
       RetryFor.ClientCalls,
       operationId,
-      operationDescription,
+      operationName,
       task,
       logger,
       retryable,
@@ -487,7 +487,7 @@ object RetryProvider {
       loggerFactory: NamedLoggerFactory,
       timeouts: ProcessingTimeout,
       futureSupervisor: FutureSupervisor,
-      metricsFactory: LabeledMetricsFactory,
+      metricsFactory: CantonLabeledMetricsFactory,
   )(implicit tracer: Tracer): RetryProvider = {
     new RetryProvider(loggerFactory, timeouts, futureSupervisor, metricsFactory)
   }
@@ -517,7 +517,7 @@ object RetryProvider {
       transientDescription: String,
       nonTransientDescription: String,
       fatalBehavior: String,
-      metricsFactory: LabeledMetricsFactory,
+      metricsFactory: CantonLabeledMetricsFactory,
       additionalMetricsLabels: Map[String, String],
       flagCloseable: FlagCloseable,
   ) extends ExceptionRetryable {
@@ -559,13 +559,7 @@ object RetryProvider {
     )
 
     private val retryCounter =
-      metricsFactory.counter(
-        MetricInfo(
-          SpliceMetrics.MetricsPrefix :+ "retries" :+ "failures",
-          "Number of operations that failed and were retried",
-          MetricQualification.Errors,
-        )
-      )
+      metricsFactory.counter(SpliceMetrics.MetricsPrefix :+ "retries" :+ "failures")
 
     override def retryOK(outcome: Try[_], logger: TracedLogger, lastErrorKind: Option[ErrorKind])(
         implicit tc: TraceContext
@@ -781,7 +775,7 @@ object RetryProvider {
     private[RetryProvider] def apply(
         operationName: String,
         a: A,
-        metricsFactory: LabeledMetricsFactory,
+        metricsFactory: CantonLabeledMetricsFactory,
         additionalMetricsLabels: Map[String, String],
         flagCloseable: FlagCloseable,
     ): ExceptionRetryable
@@ -793,7 +787,7 @@ object RetryProvider {
         override def apply(
             operationName: String,
             a: String => ExceptionRetryable,
-            metricsFactory: LabeledMetricsFactory,
+            metricsFactory: CantonLabeledMetricsFactory,
             additionalMetricsLabels: Map[String, String],
             flagCloseable: FlagCloseable,
         ) = a(operationName)
@@ -803,7 +797,7 @@ object RetryProvider {
       override def apply(
           operationName: String,
           additionalCodes: Seq[Status.Code],
-          metricsFactory: LabeledMetricsFactory,
+          metricsFactory: CantonLabeledMetricsFactory,
           additionalMetricsLabels: Map[String, String],
           flagCloseable: FlagCloseable,
       ) = RetryProvider.RetryableError(
@@ -824,7 +818,7 @@ object RetryProvider {
         override def apply(
             operationName: String,
             additionalConditions: RetryableConditions,
-            metricsFactory: LabeledMetricsFactory,
+            metricsFactory: CantonLabeledMetricsFactory,
             additionalMetricsLabels: Map[String, String],
             flagCloseable: FlagCloseable,
         ) = RetryProvider.RetryableError(

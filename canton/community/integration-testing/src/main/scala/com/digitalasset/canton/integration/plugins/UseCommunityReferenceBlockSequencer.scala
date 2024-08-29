@@ -10,11 +10,11 @@ import com.digitalasset.canton.config.{
   CommunityDbConfig,
   CommunityStorageConfig,
 }
-import com.digitalasset.canton.domain.sequencing.config.CommunitySequencerNodeConfig
+import com.digitalasset.canton.domain.sequencing.config.CommunitySequencerNodeXConfig
 import com.digitalasset.canton.domain.sequencing.sequencer.CommunitySequencerConfig
 import com.digitalasset.canton.domain.sequencing.sequencer.reference.{
   CommunityReferenceSequencerDriverFactory,
-  ReferenceSequencerDriver,
+  ReferenceBlockOrderer,
 }
 import com.digitalasset.canton.environment.CommunityEnvironment
 import com.digitalasset.canton.integration.CommunityConfigTransforms
@@ -40,7 +40,7 @@ class UseCommunityReferenceBlockSequencer[S <: CommunityStorageConfig](
       CommunitySequencerConfig,
       CommunityEnvironment,
       CommunityTestConsoleEnvironment,
-    ](loggerFactory, "reference", sequencerGroups) {
+    ](loggerFactory, "reference", "reference", sequencerGroups) {
 
   private val driverFactory = new CommunityReferenceSequencerDriverFactory
 
@@ -56,7 +56,7 @@ class UseCommunityReferenceBlockSequencer[S <: CommunityStorageConfig](
           driverFactory
             .configWriter(confidential = false)
             .to(
-              ReferenceSequencerDriver
+              ReferenceBlockOrderer
                 .Config(storageConfigs.getOrElse(sequencerName, defaultStorageConfig))
             ),
           List(),
@@ -118,9 +118,9 @@ class UseCommunityReferenceBlockSequencer[S <: CommunityStorageConfig](
     val sequencersToConfig: Map[InstanceName, CommunitySequencerConfig] =
       driverConfigs(config, defaultDriverConfig, storageConfigMap)
 
-    def mapSequencerConfigs(
-        kv: (InstanceName, CommunitySequencerNodeConfig)
-    ): (InstanceName, CommunitySequencerNodeConfig) = kv match {
+    def mapSequencerXConfigs(
+        kv: (InstanceName, CommunitySequencerNodeXConfig)
+    ): (InstanceName, CommunitySequencerNodeXConfig) = kv match {
       case (name, config) =>
         (
           name,
@@ -130,6 +130,6 @@ class UseCommunityReferenceBlockSequencer[S <: CommunityStorageConfig](
 
     config
       .focus(_.sequencers)
-      .modify(_.map(mapSequencerConfigs))
+      .modify(_.map(mapSequencerXConfigs))
   }
 }

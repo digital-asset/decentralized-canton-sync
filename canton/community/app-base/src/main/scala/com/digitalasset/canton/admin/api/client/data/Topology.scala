@@ -27,23 +27,11 @@ object ListPartiesResult {
 
   private def fromProtoV30(
       value: v30.ListPartiesResponse.Result.ParticipantDomains
-  ): ParsingResult[ParticipantDomains] = {
-    val participantIdNew = UniqueIdentifier
-      .fromProtoPrimitive(value.participantUid, "participant_uid")
-      .map(ParticipantId(_))
-
-    // TODO(#16458) Remove this fallback which is used to allow 3.1 console
-    // to talk to 3.0 nodes
-    val participantIdOld = participantIdNew.orElse(
-      ParticipantId.fromProtoPrimitive(value.participantUid, "participant_uid")
-    )
-
+  ): ParsingResult[ParticipantDomains] =
     for {
-      participantId <- participantIdNew.orElse(participantIdOld)
-
+      participantId <- ParticipantId.fromProtoPrimitive(value.participant, "participant")
       domains <- value.domains.traverse(fromProtoV30)
     } yield ParticipantDomains(participantId, domains)
-  }
 
   def fromProtoV30(
       value: v30.ListPartiesResponse.Result

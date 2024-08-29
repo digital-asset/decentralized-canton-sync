@@ -3,12 +3,12 @@
 
 package com.digitalasset.canton.participant.store
 
+import com.digitalasset.canton.BaseTest
 import com.digitalasset.canton.protocol.WellFormedTransaction.WithSuffixes
 import com.digitalasset.canton.protocol.{ExampleTransactionFactory, WellFormedTransaction}
-import com.digitalasset.canton.{BaseTest, HasExecutionContext}
 import org.scalatest.wordspec.AsyncWordSpec
 
-class DamlLfSerializersTest extends AsyncWordSpec with BaseTest with HasExecutionContext {
+class DamlLfSerializersTest extends AsyncWordSpec with BaseTest {
 
   "transaction serialization and deserialization" when {
 

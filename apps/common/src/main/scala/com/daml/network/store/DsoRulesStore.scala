@@ -7,7 +7,6 @@ import com.daml.network.codegen.java.splice
 import com.daml.network.store.MultiDomainAcsStore.QueryResult
 import com.daml.network.util.{AssignedContract, Contract}
 import com.digitalasset.canton.logging.pretty.{Pretty, PrettyPrinting}
-import com.digitalasset.canton.participant.pretty.Implicits.prettyContractId
 import com.digitalasset.canton.topology.{DomainId, MediatorId, Member, ParticipantId, PartyId}
 import com.digitalasset.canton.tracing.TraceContext
 import io.grpc.Status
@@ -85,20 +84,20 @@ trait DsoRulesStore extends AppStore {
       )
     )
 
-  def getDsoRulesWithSvNodeStates()(implicit
+  def getDsoRulesWithMemberNodeStates()(implicit
       tc: TraceContext
-  ): Future[DsoRulesStore.DsoRulesWithSvNodeStates] = {
+  ): Future[DsoRulesStore.DsoRulesWithMemberNodeStates] = {
     for {
       // Note: at a certain size of the DSO, we'll be better off doing this join in the DB. We'll find out from our logs and performance tests.
       dsoRules <- getDsoRules()
-      dsoSvParties = dsoRules.payload.svs.keySet().asScala.toSeq
+      memberSvParties = dsoRules.payload.svs.keySet().asScala.toSeq
       svNodeStates <- Future
-        .traverse(dsoSvParties) { svPartyStr =>
+        .traverse(memberSvParties) { svPartyStr =>
           val svParty = PartyId.tryFromProtoPrimitive(svPartyStr)
           getSvNodeState(svParty).map(co => svParty -> co.contract)
         }
         .map(_.toMap)
-    } yield DsoRulesStore.DsoRulesWithSvNodeStates(dsoRules, svNodeStates)
+    } yield DsoRulesStore.DsoRulesWithMemberNodeStates(dsoRules, svNodeStates)
   }
 
   private def noActiveDsoRules =
@@ -107,7 +106,7 @@ trait DsoRulesStore extends AppStore {
 
 object DsoRulesStore {
 
-  case class DsoRulesWithSvNodeStates(
+  case class DsoRulesWithMemberNodeStates(
       dsoRules: AssignedContract[splice.dsorules.DsoRules.ContractId, splice.dsorules.DsoRules],
       svNodeStates: Map[
         PartyId,
@@ -129,7 +128,7 @@ object DsoRulesStore {
         .toSeq
     }
 
-    def activeSvParticipantAndMediatorIds(synchronizerId: DomainId): Seq[Member] = {
+    def activeSvParticipantAndMediatorIds(): Seq[Member] = {
       val svParticipants = dsoRules.contract.payload.svs
         .values()
         .asScala
@@ -143,9 +142,7 @@ object DsoRulesStore {
         .toSeq
         .map(ParticipantId.tryFromProtoPrimitive)
       val svMediators = svNodeStates.values
-        .flatMap(
-          _.payload.state.synchronizerNodes.asScala.get(synchronizerId.toProtoPrimitive).toList
-        )
+        .flatMap(_.payload.state.synchronizerNodes.values().asScala)
         .flatMap(_.mediator.toScala)
         .map(m =>
           MediatorId
@@ -155,7 +152,7 @@ object DsoRulesStore {
       svParticipants.filterNot(offboardedSvParticipants.contains) ++ svMediators
     }
 
-    def getSvNameInDso(svParty: PartyId): Future[String] =
+    def getSvMemberName(svParty: PartyId): Future[String] =
       dsoRules.contract.payload.svs.asScala
         .get(svParty.toProtoPrimitive)
         .fold(

@@ -3,9 +3,8 @@
 
 package com.daml.network.sv.automation
 
-import com.daml.metrics.api.MetricHandle.{Gauge, LabeledMetricsFactory}
-import com.daml.metrics.api.{MetricInfo, MetricsContext}
-import com.daml.metrics.api.MetricQualification.Debug
+import com.daml.metrics.api.MetricHandle.Gauge
+import com.daml.metrics.api.MetricsContext
 import com.daml.network.automation.{
   OnAssignedContractTrigger,
   TaskOutcome,
@@ -14,11 +13,14 @@ import com.daml.network.automation.{
 }
 import com.daml.network.codegen.java.splice.validatorlicense.ValidatorLicense
 import com.daml.network.environment.SpliceMetrics
-import com.daml.network.sv.automation.ReportValidatorLicenseMetricsExportTrigger.ValidatorLicenseMetrics
+import com.daml.network.sv.automation.ReportValidatorLicenseMetricsExportTrigger.{
+  ValidatorLicenseMetrics
+}
 import com.daml.network.sv.store.SvDsoStore
 import com.daml.network.util.{AssignedContract, Codec}
 import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.lifecycle.{AsyncOrSyncCloseable, SyncCloseable}
+import com.digitalasset.canton.metrics.CantonLabeledMetricsFactory
 import com.digitalasset.canton.topology.PartyId
 import com.digitalasset.canton.tracing.TraceContext
 import io.grpc.Status
@@ -27,7 +29,7 @@ import org.apache.pekko.stream.Materializer
 import com.digitalasset.canton.util.ShowUtil.*
 
 import scala.collection.concurrent.TrieMap
-import scala.concurrent.{blocking, ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future, blocking}
 import scala.jdk.OptionConverters.*
 
 /** A trigger to export the ValidatorLicense reports as metrics. */
@@ -110,7 +112,7 @@ object ReportValidatorLicenseMetricsExportTrigger {
       validator: PartyId,
       version: String,
       contactPoint: String,
-      metricsFactory: LabeledMetricsFactory,
+      metricsFactory: CantonLabeledMetricsFactory,
   ) extends AutoCloseable {
 
     private implicit val mc: MetricsContext =
@@ -125,11 +127,7 @@ object ReportValidatorLicenseMetricsExportTrigger {
     private val minTimestampValue = CantonTimestamp.MinValue.toMicros
 
     val lastActiveAt: Gauge[Long] = metricsFactory.gauge(
-      MetricInfo(
-        SpliceMetrics.MetricsPrefix :+ "validator_last_active_at_us",
-        "The last time the validator was active",
-        Debug,
-      ),
+      SpliceMetrics.MetricsPrefix :+ "validator_last_active_at_us",
       minTimestampValue,
     )
 

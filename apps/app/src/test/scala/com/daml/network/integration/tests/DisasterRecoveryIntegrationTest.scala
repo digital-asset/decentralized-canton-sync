@@ -2,9 +2,8 @@ package com.daml.network.integration.tests
 
 import better.files.File
 import better.files.File.apply
-import com.daml.metrics.api.noop.NoOpMetricsFactory
 import com.daml.network.config.{ConfigTransforms, ParticipantClientConfig, NetworkAppClientConfig}
-import com.daml.network.config.ConfigTransforms.{updateAutomationConfig, ConfigurableApp}
+import com.daml.network.config.ConfigTransforms.{ConfigurableApp, updateAutomationConfig}
 import com.daml.network.console.{
   AppBackendReference,
   ScanAppBackendReference,
@@ -27,7 +26,7 @@ import com.daml.network.sv.migration.{
   DomainMigrationDump,
   SynchronizerNodeIdentities,
 }
-import com.daml.network.validator.migration.DomainMigrationDump as ValidatorDomainMigrationDump
+import com.daml.network.validator.migration.{DomainMigrationDump as ValidatorDomainMigrationDump}
 import com.daml.network.util.{
   DomainMigrationUtil,
   ProcessTestUtil,
@@ -52,6 +51,7 @@ import com.digitalasset.canton.config.{
   ProcessingTimeout,
 }
 import com.digitalasset.canton.config.CantonRequireTypes.InstanceName
+import com.digitalasset.canton.metrics.CantonLabeledMetricsFactory.NoOpMetricsFactory
 import io.circe.syntax.EncoderOps
 import org.scalatest.time.{Minute, Span}
 
@@ -432,6 +432,7 @@ class DisasterRecoveryIntegrationTest
         s"disaster-recovery-$cantonInstanceSuffix",
         overrideSvDbsSuffix = Some("disaster_recovery_new"),
         overrideSequencerDriverDbSuffix = Some("disaster_recovery_new"),
+        autoInit = false,
         portsRange = Some(28),
         extraParticipantsConfigFileName = Some("standalone-participant-extra.conf"),
         extraParticipantsEnvMap = Map(
@@ -439,6 +440,7 @@ class DisasterRecoveryIntegrationTest
           "EXTRA_PARTICIPANT_DB" -> "participant_extra_disaster_recovery_new",
           "EXTRA_PARTICIPANT_ADMIN_API_PORT" -> "28502",
           "EXTRA_PARTICIPANT_LEDGER_API_PORT" -> "28501",
+          "EXTRA_PARTICIPANT_AUTO_INIT" -> "false",
         ),
       )(
       ) {

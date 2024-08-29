@@ -5,6 +5,7 @@ package com.digitalasset.canton.domain.sequencing.sequencer
 
 import cats.data.EitherT
 import cats.syntax.either.*
+import cats.syntax.functor.*
 import cats.syntax.option.*
 import com.daml.nameof.NameOf.functionFullName
 import com.digitalasset.canton.SequencerCounter
@@ -13,25 +14,17 @@ import com.digitalasset.canton.config.RequireTypes.{NonNegativeInt, NonNegativeL
 import com.digitalasset.canton.crypto.DomainSyncCryptoClient
 import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.domain.metrics.SequencerMetrics
-import com.digitalasset.canton.domain.sequencing.sequencer.Sequencer.RegisterError
-import com.digitalasset.canton.domain.sequencing.sequencer.SequencerWriter.ResetWatermark
-import com.digitalasset.canton.domain.sequencing.sequencer.errors.SequencerError.SnapshotNotFound
 import com.digitalasset.canton.domain.sequencing.sequencer.errors.*
 import com.digitalasset.canton.domain.sequencing.sequencer.store.SequencerStore.SequencerPruningResult
 import com.digitalasset.canton.domain.sequencing.sequencer.store.*
-import com.digitalasset.canton.domain.sequencing.sequencer.traffic.TimestampSelector.TimestampSelector
-import com.digitalasset.canton.domain.sequencing.sequencer.traffic.{
-  SequencerRateLimitError,
-  SequencerTrafficStatus,
-}
-import com.digitalasset.canton.domain.sequencing.traffic.store.TrafficConsumedStore
-import com.digitalasset.canton.health.admin.data.{SequencerAdminStatus, SequencerHealthStatus}
+import com.digitalasset.canton.domain.sequencing.sequencer.traffic.SequencerTrafficStatus
+import com.digitalasset.canton.health.admin.data.SequencerHealthStatus
 import com.digitalasset.canton.lifecycle.{FlagCloseable, FutureUnlessShutdown, Lifecycle}
 import com.digitalasset.canton.logging.{ErrorLoggingContext, NamedLoggerFactory, TracedLogger}
 import com.digitalasset.canton.metrics.MetricsHelper
 import com.digitalasset.canton.resource.Storage
 import com.digitalasset.canton.scheduler.PruningScheduler
-import com.digitalasset.canton.sequencing.client.SequencerClientSend
+import com.digitalasset.canton.sequencing.client.SequencerClient
 import com.digitalasset.canton.sequencing.protocol.{
   AcknowledgeRequest,
   MemberRecipient,
@@ -40,15 +33,22 @@ import com.digitalasset.canton.sequencing.protocol.{
   SubmissionRequest,
   TrafficState,
 }
-import com.digitalasset.canton.sequencing.traffic.TrafficControlErrors
 import com.digitalasset.canton.time.EnrichedDurations.*
-import com.digitalasset.canton.time.{Clock, DomainTimeTracker, NonNegativeFiniteDuration}
-import com.digitalasset.canton.topology.{DomainId, Member, SequencerId}
+import com.digitalasset.canton.time.{Clock, NonNegativeFiniteDuration}
+import com.digitalasset.canton.topology.{
+  AuthenticatedMember,
+  DomainId,
+  DomainMember,
+  DomainTopologyManagerId,
+  Member,
+  UnauthenticatedMemberId,
+}
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.tracing.TraceContext.withNewTraceContext
+import com.digitalasset.canton.traffic.TrafficControlErrors
+import com.digitalasset.canton.util.ErrorUtil
 import com.digitalasset.canton.util.FutureUtil.doNotAwait
 import com.digitalasset.canton.util.Thereafter.syntax.*
-import com.digitalasset.canton.util.{EitherTUtil, ErrorUtil}
 import com.digitalasset.canton.version.ProtocolVersion
 import io.opentelemetry.api.trace.Tracer
 import org.apache.pekko.stream.Materializer
@@ -61,7 +61,7 @@ object DatabaseSequencer {
   /** Creates a single instance of a database sequencer. */
   def single(
       config: DatabaseSequencerConfig,
-      initialState: Option[SequencerInitialState],
+      initialSnapshot: Option[SequencerSnapshot],
       timeouts: ProcessingTimeout,
       storage: Storage,
       clock: Clock,
@@ -72,7 +72,6 @@ object DatabaseSequencer {
       metrics: SequencerMetrics,
       loggerFactory: NamedLoggerFactory,
       unifiedSequencer: Boolean,
-      runtimeReady: FutureUnlessShutdown[Unit],
   )(implicit
       ec: ExecutionContext,
       tracer: Tracer,
@@ -89,7 +88,7 @@ object DatabaseSequencer {
     new DatabaseSequencer(
       SequencerWriterStoreFactory.singleInstance,
       config,
-      initialState,
+      initialSnapshot,
       TotalNodeCountValues.SingleSequencerTotalNodeCount,
       new LocalSequencerStateEventSignaller(
         timeouts,
@@ -105,13 +104,11 @@ object DatabaseSequencer {
       clock,
       domainId,
       topologyClientMember,
-      trafficConsumedStore = None,
       protocolVersion,
       cryptoApi,
       metrics,
       loggerFactory,
       unifiedSequencer,
-      runtimeReady,
     )
   }
 }
@@ -119,7 +116,7 @@ object DatabaseSequencer {
 class DatabaseSequencer(
     writerStorageFactory: SequencerWriterStoreFactory,
     config: DatabaseSequencerConfig,
-    initialState: Option[SequencerInitialState],
+    initialSnapshot: Option[SequencerSnapshot],
     totalNodeCount: PositiveInt,
     eventSignaller: EventSignaller,
     keepAliveInterval: Option[NonNegativeFiniteDuration],
@@ -131,15 +128,14 @@ class DatabaseSequencer(
     clock: Clock,
     domainId: DomainId,
     topologyClientMember: Member,
-    trafficConsumedStore: Option[TrafficConsumedStore],
     protocolVersion: ProtocolVersion,
     cryptoApi: DomainSyncCryptoClient,
     metrics: SequencerMetrics,
     loggerFactory: NamedLoggerFactory,
     unifiedSequencer: Boolean,
-    runtimeReady: FutureUnlessShutdown[Unit],
 )(implicit ec: ExecutionContext, tracer: Tracer, materializer: Materializer)
     extends BaseSequencer(
+      DomainTopologyManagerId(domainId),
       loggerFactory,
       health,
       clock,
@@ -158,31 +154,23 @@ class DatabaseSequencer(
     eventSignaller,
     protocolVersion,
     loggerFactory,
-    topologyClientMember,
-    unifiedSequencer = unifiedSequencer,
-  )
-
-  private lazy val storageForAdminChanges: Storage = exclusiveStorage.getOrElse(
-    storage // no exclusive storage in non-ha setups
   )
 
   override val pruningScheduler: Option[PruningScheduler] =
-    pruningSchedulerBuilder.map(_(storageForAdminChanges))
+    pruningSchedulerBuilder.map(
+      _(
+        exclusiveStorage.getOrElse(
+          storage // no exclusive storage in non-ha setups
+        )
+      )
+    )
 
-  override def adminStatus: SequencerAdminStatus = SequencerAdminStatus(
-    storageForAdminChanges.isActive
-  )
-
-  private[sequencer] val store = writer.generalStore
-
-  protected val memberValidator: SequencerMemberValidator = store
-
-  protected def resetWatermarkTo: ResetWatermark = SequencerWriter.ResetWatermarkToClockNow
+  private val store = writer.generalStore
 
   // Only start pruning scheduler after `store` variable above has been initialized to avoid racy NPE
   withNewTraceContext { implicit traceContext =>
     timeouts.unbounded.await(s"Waiting for sequencer writer to fully start")(
-      writer.startOrLogError(initialState, resetWatermarkTo)
+      writer.startOrLogError(initialSnapshot)
     )
 
     pruningScheduler.foreach(ps =>
@@ -241,7 +229,6 @@ class DatabaseSequencer(
       cryptoApi,
       eventSignaller,
       topologyClientMember,
-      trafficConsumedStore,
       protocolVersion,
       timeouts,
       loggerFactory,
@@ -250,33 +237,23 @@ class DatabaseSequencer(
   override def isRegistered(member: Member)(implicit traceContext: TraceContext): Future[Boolean] =
     store.lookupMember(member).map(_.isDefined)
 
-  override def isEnabled(member: Member)(implicit traceContext: TraceContext): Future[Boolean] =
-    store.lookupMember(member).map {
-      case Some(registeredMember) => registeredMember.enabled
-      case None =>
-        logger.warn(
-          s"Attempted to check if member $member is enabled but they are not registered"
-        )
-        false
-    }
-
-  override private[sequencing] final def registerMemberInternal(
-      member: Member,
-      timestamp: CantonTimestamp,
-  )(implicit
+  override def registerMember(member: Member)(implicit
       traceContext: TraceContext
-  ): EitherT[Future, RegisterError, Unit] = {
-    EitherT
-      .right[RegisterError](store.registerMember(member, timestamp))
-      .map(_ => ())
+  ): EitherT[Future, SequencerWriteError[RegisterMemberError], Unit] = {
+    // use a timestamp which is definitively lower than the subsequent sequencing timestamp
+    // otherwise, if the timestamp we use to register the member is equal or higher than the
+    // first message to the member, we'd ignore the first message by accident
+    val nowMs = clock.monotonicTime().toMicros
+    val uniqueMicros = nowMs - (nowMs % TotalNodeCountValues.MaxNodeCount) - 1
+    EitherT.right(store.registerMember(member, CantonTimestamp.assertFromLong(uniqueMicros)).void)
   }
 
-  override protected def sendAsyncInternal(submission: SubmissionRequest)(implicit
+  override def sendAsyncInternal(submission: SubmissionRequest)(implicit
       traceContext: TraceContext
-  ): EitherT[FutureUnlessShutdown, SendAsyncError, Unit] =
+  ): EitherT[Future, SendAsyncError, Unit] =
     for {
       // TODO(#12405) Support aggregatable submissions in the DB sequencer
-      _ <- EitherT.cond[FutureUnlessShutdown](
+      _ <- EitherT.cond[Future](
         submission.aggregationRule.isEmpty,
         (),
         SendAsyncError.RequestRefused(
@@ -284,7 +261,7 @@ class DatabaseSequencer(
         ),
       )
       // TODO(#12363) Support group addresses in the DB Sequencer
-      _ <- EitherT.cond[FutureUnlessShutdown](
+      _ <- EitherT.cond[Future](
         !submission.batch.allRecipients.exists {
           case _: MemberRecipient => false
           case _ => true
@@ -294,60 +271,59 @@ class DatabaseSequencer(
           "Group addresses are not yet supported by this database sequencer"
         ),
       )
-      _ <- writer.send(submission).mapK(FutureUnlessShutdown.outcomeK)
+      _ <- writer.send(submission)
     } yield ()
-
-  protected def blockSequencerWriteInternal(
-      outcome: DeliverableSubmissionOutcome
-  )(implicit
-      traceContext: TraceContext
-  ): EitherT[Future, SendAsyncError, Unit] =
-    writer.blockSequencerWrite(outcome)
 
   override protected def sendAsyncSignedInternal(
       signedSubmission: SignedContent[SubmissionRequest]
-  )(implicit traceContext: TraceContext): EitherT[FutureUnlessShutdown, SendAsyncError, Unit] =
+  )(implicit traceContext: TraceContext): EitherT[Future, SendAsyncError, Unit] =
     sendAsyncInternal(signedSubmission.content)
 
   override def readInternal(member: Member, offset: SequencerCounter)(implicit
       traceContext: TraceContext
-  ): EitherT[Future, CreateSubscriptionError, Sequencer.EventSource] = reader.read(member, offset)
-
-  /** Internal method to be used in the sequencer integration.
-    */
-  // TODO(#18401): Refactor ChunkUpdate and merge/remove this method with `acknowledgeSignedInternal` below
-  final protected def writeAcknowledgementInternal(
-      member: Member,
-      timestamp: CantonTimestamp,
-  )(implicit traceContext: TraceContext): Future[Unit] = {
-    withExpectedRegisteredMember(member, "Acknowledge") {
-      store.acknowledge(_, timestamp)
-    }
-  }
+  ): EitherT[Future, CreateSubscriptionError, Sequencer.EventSource] =
+    reader.read(member, offset)
 
   override protected def acknowledgeSignedInternal(
       signedAcknowledgeRequest: SignedContent[AcknowledgeRequest]
   )(implicit traceContext: TraceContext): Future[Unit] = {
+    val request = signedAcknowledgeRequest.content
+    acknowledge(request.member, request.timestamp)
+  }
+
+  override def acknowledge(member: Member, timestamp: CantonTimestamp)(implicit
+      traceContext: TraceContext
+  ): Future[Unit] =
     // it is unlikely that the ack operation will be called without the member being registered
     // as the sequencer-client will need to be registered to send and subscribe.
     // rather than introduce an error to deal with this case in the database sequencer we'll just
     // fail the operation.
-    val req = signedAcknowledgeRequest.content
-    writeAcknowledgementInternal(req.member, req.timestamp)
-  }
+    withExpectedRegisteredMember(member, "Acknowledge") {
+      store.acknowledge(_, timestamp)
+    }
 
   protected def disableMemberInternal(
       member: Member
-  )(implicit traceContext: TraceContext): Future[Unit] = store.disableMember(member)
+  )(implicit traceContext: TraceContext): Future[Unit] = {
+    withExpectedRegisteredMember(member, "Disable member") { memberId =>
+      member match {
+        // Unauthenticated members being disabled get automatically unregistered
+        case unauthenticated: UnauthenticatedMemberId =>
+          store.unregisterUnauthenticatedMember(unauthenticated)
+        case _: AuthenticatedMember =>
+          store.disableMember(memberId)
+      }
+    }
+  }
 
-  // For the database sequencer, the SequencerId serves as the local sequencer identity/member
+  // For the database sequencer, the DomainTopologyManagerId serves as the local sequencer identity/member
   // until the database and block sequencers are unified.
-  override protected def localSequencerMember: Member = SequencerId(domainId.uid)
+  override protected def localSequencerMember: DomainMember = DomainTopologyManagerId(domainId)
 
   /** helper for performing operations that are expected to be called with a registered member so will just throw if we
     * find the member is unregistered.
     */
-  final protected def withExpectedRegisteredMember[A](member: Member, operationName: String)(
+  private def withExpectedRegisteredMember[A](member: Member, operationName: String)(
       fn: SequencerMemberId => Future[A]
   )(implicit traceContext: TraceContext): Future[A] =
     for {
@@ -362,9 +338,7 @@ class DatabaseSequencer(
   override def pruningStatus(implicit traceContext: TraceContext): Future[SequencerPruningStatus] =
     store.status(clock.now)
 
-  override protected def healthInternal(implicit
-      traceContext: TraceContext
-  ): Future[SequencerHealthStatus] =
+  override def healthInternal(implicit traceContext: TraceContext): Future[SequencerHealthStatus] =
     writer.healthStatus
 
   override def prune(
@@ -400,25 +374,8 @@ class DatabaseSequencer(
 
   override def snapshot(timestamp: CantonTimestamp)(implicit
       traceContext: TraceContext
-  ): EitherT[Future, SequencerError, SequencerSnapshot] = {
-    for {
-      safeWatermarkO <- EitherT.right(store.safeWatermark)
-      // we check if watermark is after the requested timestamp to avoid snapshotting the sequencer
-      // at a timestamp that is not yet safe to read
-      _ <- {
-        safeWatermarkO match {
-          case Some(safeWatermark) =>
-            EitherTUtil.condUnitET[Future](
-              timestamp <= safeWatermark,
-              SnapshotNotFound.Error(timestamp, safeWatermark),
-            )
-          case None =>
-            EitherT.leftT[Future, Unit](SnapshotNotFound.MissingSafeWatermark(topologyClientMember))
-        }
-      }
-      snapshot <- EitherT.right[SequencerError](store.readStateAtTimestamp(timestamp))
-    } yield snapshot
-  }
+  ): EitherT[Future, String, SequencerSnapshot] =
+    EitherT.right[String](store.readStateAtTimestamp(timestamp))
 
   override private[sequencing] def firstSequencerCounterServeableForSequencer: SequencerCounter =
     // Database sequencers are never bootstrapped
@@ -436,38 +393,29 @@ class DatabaseSequencer(
     )(logger)
   }
 
-  override def trafficStatus(members: Seq[Member], selector: TimestampSelector)(implicit
+  override def trafficStatus(members: Seq[Member])(implicit
       traceContext: TraceContext
   ): FutureUnlessShutdown[SequencerTrafficStatus] =
-    throw new UnsupportedOperationException(
-      "Traffic control is not supported by the database sequencer"
-    )
-
-  override def setTrafficPurchased(
+    FutureUnlessShutdown.pure(SequencerTrafficStatus(Seq.empty))
+  override def setTrafficBalance(
       member: Member,
       serial: PositiveInt,
-      totalTrafficPurchased: NonNegativeLong,
-      sequencerClient: SequencerClientSend,
-      domainTimeTracker: DomainTimeTracker,
+      totalTrafficBalance: NonNegativeLong,
+      sequencerClient: SequencerClient,
   )(implicit
       traceContext: TraceContext
   ): EitherT[
     FutureUnlessShutdown,
     TrafficControlErrors.TrafficControlError,
     CantonTimestamp,
-  ] = {
-    throw new UnsupportedOperationException(
-      "Traffic control is not supported by the database sequencer"
+  ] = EitherT.liftF(
+    FutureUnlessShutdown.failed(
+      new NotImplementedError("Traffic control is not supported by the database sequencer")
     )
-  }
+  )
 
-  override def getTrafficStateAt(member: Member, timestamp: CantonTimestamp)(implicit
+  override def trafficStates(implicit
       traceContext: TraceContext
-  ): EitherT[FutureUnlessShutdown, SequencerRateLimitError.TrafficNotFound, Option[
-    TrafficState
-  ]] = {
-    throw new UnsupportedOperationException(
-      "Traffic control is not supported by the database sequencer"
-    )
-  }
+  ): FutureUnlessShutdown[Map[Member, TrafficState]] =
+    FutureUnlessShutdown.pure(Map.empty)
 }

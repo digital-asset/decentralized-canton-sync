@@ -16,6 +16,10 @@ import org.scalatest.Assertion
 
 class Ans4SvsIntegrationTest extends IntegrationTest with WalletTestUtil with TriggerTestUtil {
 
+  private val testEntryName = "mycoolentry.unverified.cns"
+  private val testEntryUrl = "https://ans-dir-url.com"
+  private val testEntryDescription = "Sample CNS Entry Description"
+
   override def environmentDefinition
       : BaseEnvironmentDefinition[EnvironmentImpl, SpliceTestConsoleEnvironment] =
     EnvironmentDefinition
@@ -28,7 +32,8 @@ class Ans4SvsIntegrationTest extends IntegrationTest with WalletTestUtil with Tr
         sv1Backend.dsoDelegateBasedAutomation.trigger[TerminatedSubscriptionTrigger]
 
       setTriggersWithin[Assertion](
-        // Figure out how to make the `onboardUser` part of `onboardWalletUser` not time out
+        // TODO(#13199): Consider adding a retry to the submission below instead
+        // ...and figuring out how to make the `onboardUser` part of `onboardWalletUser` not time out
         // in the even of an untimely domain disconnect
         triggersToPauseAtStart = Seq(
           aliceValidatorBackend.validatorAutomation.trigger[ReconcileSequencerConnectionsTrigger]
@@ -52,8 +57,7 @@ class Ans4SvsIntegrationTest extends IntegrationTest with WalletTestUtil with Tr
               actAs = Seq(aliceUserParty),
               readAs = Seq.empty,
               update = cmd,
-              disclosedContracts =
-                DisclosedContracts.forTesting(ansRules).toLedgerApiDisclosedContracts,
+              disclosedContracts = DisclosedContracts(ansRules).toLedgerApiDisclosedContracts,
             )
             .exerciseResult
             .requestCid

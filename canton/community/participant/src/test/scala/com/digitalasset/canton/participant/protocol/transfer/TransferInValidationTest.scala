@@ -6,7 +6,6 @@ package com.digitalasset.canton.participant.protocol.transfer
 import cats.implicits.*
 import com.digitalasset.canton.*
 import com.digitalasset.canton.crypto.*
-import com.digitalasset.canton.crypto.provider.symbolic.SymbolicPureCrypto
 import com.digitalasset.canton.data.{CantonTimestamp, FullTransferInTree, TransferSubmitterMetadata}
 import com.digitalasset.canton.participant.protocol.submission.SeedGenerator
 import com.digitalasset.canton.participant.protocol.transfer.TransferInValidation.*
@@ -15,7 +14,7 @@ import com.digitalasset.canton.participant.store.TransferStoreTest.transactionId
 import com.digitalasset.canton.protocol.ExampleTransactionFactory.submittingParticipant
 import com.digitalasset.canton.protocol.*
 import com.digitalasset.canton.protocol.messages.*
-import com.digitalasset.canton.sequencing.protocol.MediatorGroupRecipient
+import com.digitalasset.canton.sequencing.protocol.MediatorsOfDomain
 import com.digitalasset.canton.time.TimeProofTestUtil
 import com.digitalasset.canton.topology.MediatorGroup.MediatorGroupIndex
 import com.digitalasset.canton.topology.*
@@ -30,17 +29,15 @@ import scala.concurrent.{Future, Promise}
 class TransferInValidationTest
     extends AsyncWordSpec
     with BaseTest
-    with ProtocolVersionChecksAsyncWordSpec
-    with HasActorSystem
-    with HasExecutionContext {
+    with ProtocolVersionChecksAsyncWordSpec {
   private val sourceDomain = SourceDomainId(
     DomainId(UniqueIdentifier.tryFromProtoPrimitive("domain::source"))
   )
-  private val sourceMediator = MediatorGroupRecipient(MediatorGroupIndex.tryCreate(100))
+  private val sourceMediator = MediatorsOfDomain(MediatorGroupIndex.tryCreate(100))
   private val targetDomain = TargetDomainId(
     DomainId(UniqueIdentifier.tryFromProtoPrimitive("domain::target"))
   )
-  private val targetMediator = MediatorGroupRecipient(MediatorGroupIndex.tryCreate(200))
+  private val targetMediator = MediatorsOfDomain(MediatorGroupIndex.tryCreate(200))
 
   private val party1: LfPartyId = PartyId(
     UniqueIdentifier.tryFromProtoPrimitive("party1::party")
@@ -66,7 +63,7 @@ class TransferInValidationTest
     )
   }
 
-  private val identityFactory = TestingTopology()
+  private val identityFactory = TestingTopologyX()
     .withDomains(sourceDomain.unwrap)
     .withReversedTopology(
       Map(submittingParticipant -> Map(party1 -> ParticipantPermission.Submission))
@@ -79,7 +76,7 @@ class TransferInValidationTest
       .forOwnerAndDomain(submittingParticipant, sourceDomain.unwrap)
       .currentSnapshotApproximation
 
-  private val pureCrypto = new SymbolicPureCrypto
+  private val pureCrypto = TestingIdentityFactoryX.pureCrypto()
 
   private val seedGenerator = new SeedGenerator(pureCrypto)
 
@@ -250,7 +247,7 @@ class TransferInValidationTest
 
     "disallow transfers from source domain supporting transfer counter to destination domain not supporting them" in {
       val transferDataSourceDomainPVCNTestNet =
-        transferData.copy(sourceProtocolVersion = SourceProtocolVersion(ProtocolVersion.v31))
+        transferData.copy(sourceProtocolVersion = SourceProtocolVersion(ProtocolVersion.v30))
       for {
         result <-
           transferInValidation
@@ -263,7 +260,7 @@ class TransferInValidationTest
             )
             .value
       } yield {
-        if (transferOutRequest.targetProtocolVersion.v >= ProtocolVersion.v31) {
+        if (transferOutRequest.targetProtocolVersion.v >= ProtocolVersion.v30) {
           result shouldBe Right(Some(TransferInValidationResult(Set(party1))))
         } else {
           result shouldBe Left(
@@ -289,7 +286,6 @@ class TransferInValidationTest
 
     new TransferInValidation(
       domainId,
-      defaultStaticDomainParameters,
       submittingParticipant,
       damle,
       TestTransferCoordination.apply(
@@ -309,7 +305,7 @@ class TransferInValidationTest
       contract: SerializableContract,
       creatingTransactionId: TransactionId,
       targetDomain: TargetDomainId,
-      targetMediator: MediatorGroupRecipient,
+      targetMediator: MediatorsOfDomain,
       transferOutResult: DeliveredTransferOutResult,
       uuid: UUID = new UUID(4L, 5L),
       transferCounter: TransferCounter = initialTransferCounter,

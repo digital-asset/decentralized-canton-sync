@@ -22,8 +22,7 @@ trait SplitwellTestUtil extends TestCommon with WalletTestUtil with TimeTestUtil
   protected def splitwellUpgradeAlias = DomainAlias.tryCreate("splitwellUpgrade")
   protected def splitwellAlias = DomainAlias.tryCreate("splitwell")
   protected def connectSplitwellUpgradeDomain(
-      participant: ParticipantClientReference,
-      ensurePartyIsOnNewDomain: PartyId,
+      participant: ParticipantClientReference
   )(implicit env: SpliceTestConsoleEnvironment) = {
     val upgradeConfig =
       splitwellBackend.participantClient.domains.config(splitwellUpgradeAlias).value
@@ -35,25 +34,13 @@ trait SplitwellTestUtil extends TestCommon with WalletTestUtil with TimeTestUtil
     }
 
     participant.domains.connect(splitwellUpgradeAlias, url)
-
-    eventually() {
-      splitwellBackend
-        .getConnectedDomains(ensurePartyIsOnNewDomain)
-        .map(_.uid.identifier.str) should contain("splitwellUpgrade")
-    }
   }
 
   protected def disconnectSplitwellUpgradeDomain(participant: ParticipantClientReference) =
     participant.domains.disconnect(splitwellUpgradeAlias)
 
   protected def createSplitwellInstalls(splitwell: SplitwellAppClientReference, party: PartyId) = {
-    actAndCheck(
-      "Creating splitwell requests",
-      // Eventually, because the install might fail while domains are being reconnected
-      eventuallySucceeds() {
-        splitwell.createInstallRequests()
-      },
-    )(
+    actAndCheck("Creating splitwell requests", splitwell.createInstallRequests())(
       "Wait for splitwell installs",
       requests => {
         splitwell.listSplitwellInstalls().keys shouldBe requests.keys

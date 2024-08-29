@@ -11,7 +11,7 @@ import "google/protobuf/timestamp.proto";
 /**
  * The node identity initialization service
  */
-service IdentityInitializationService {
+service IdentityInitializationXService {
   /**
    * Initialize the node with the unique identifier (can and must be done once)
    *

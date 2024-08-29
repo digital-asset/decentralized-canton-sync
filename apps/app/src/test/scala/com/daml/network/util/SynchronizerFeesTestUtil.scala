@@ -19,7 +19,7 @@ import com.daml.network.integration.tests.SpliceTests.{TestCommon, SpliceTestCon
 import com.daml.network.wallet.admin.api.client.commands.HttpWalletAppClient.AmuletPosition
 import com.daml.network.wallet.util.ExtraTrafficTopupParameters
 import com.digitalasset.canton.data.CantonTimestamp
-import com.digitalasset.canton.sequencing.protocol.TrafficState
+import com.digitalasset.canton.sequencing.protocol.SequencedEventTrafficState
 import com.digitalasset.canton.topology.{DomainId, Member, PartyId}
 
 import java.time.Instant
@@ -151,12 +151,10 @@ trait SynchronizerFeesTestUtil extends TestCommon {
           Seq(validatorParty),
           Seq(validatorParty),
           executeBatchCmd,
-          disclosedContracts = DisclosedContracts
-            .forTesting(
-              transferContext.amuletRules,
-              transferContext.latestOpenMiningRound,
-            )
-            .toLedgerApiDisclosedContracts,
+          disclosedContracts = DisclosedContracts(
+            transferContext.amuletRules,
+            transferContext.latestOpenMiningRound,
+          ).toLedgerApiDisclosedContracts,
         )
         .exerciseResult
         .outcomes
@@ -204,12 +202,10 @@ trait SynchronizerFeesTestUtil extends TestCommon {
         Seq(buyer),
         cmd,
         None,
-        disclosedContracts = DisclosedContracts
-          .forTesting(
-            sv1ScanBackend.getAmuletRules(),
-            sv1ScanBackend.getLatestOpenMiningRound(now),
-          )
-          .toLedgerApiDisclosedContracts,
+        disclosedContracts = DisclosedContracts(
+          sv1ScanBackend.getAmuletRules(),
+          sv1ScanBackend.getLatestOpenMiningRound(now),
+        ).toLedgerApiDisclosedContracts,
       )
     result.exerciseResult.buyTrafficRequest
   }
@@ -238,9 +234,17 @@ trait SynchronizerFeesTestUtil extends TestCommon {
   def getTrafficState(
       validatorApp: ValidatorAppBackendReference,
       domainId: DomainId,
-  ): TrafficState = {
+  ): SequencedEventTrafficState = {
     validatorApp.participantClientWithAdminToken.traffic_control
       .traffic_state(domainId)
+      .trafficState
+  }
+
+  def getSequencerTrafficLimit(
+      validatorApp: ValidatorAppBackendReference,
+      domainId: DomainId,
+  ): Long = {
+    getTrafficState(validatorApp, domainId).extraTrafficLimit.fold(0L)(_.value)
   }
 
   def activeSynchronizerId(implicit env: SpliceTestConsoleEnvironment) =

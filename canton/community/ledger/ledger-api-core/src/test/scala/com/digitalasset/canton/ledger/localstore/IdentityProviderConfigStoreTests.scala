@@ -3,6 +3,7 @@
 
 package com.digitalasset.canton.ledger.localstore
 
+import com.daml.lf.data.Ref
 import com.digitalasset.canton.BaseTest
 import com.digitalasset.canton.ledger.api.domain.{
   IdentityProviderConfig,
@@ -18,7 +19,6 @@ import com.digitalasset.canton.ledger.localstore.api.IdentityProviderConfigStore
 }
 import com.digitalasset.canton.ledger.localstore.api.IdentityProviderConfigUpdate
 import com.digitalasset.canton.logging.LoggingContextWithTrace
-import com.digitalasset.daml.lf.data.Ref
 import org.scalatest.freespec.AsyncFreeSpec
 
 import java.util.UUID

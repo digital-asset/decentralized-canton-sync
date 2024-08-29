@@ -5,9 +5,9 @@ package com.digitalasset.canton.platform.indexer.parallel
 
 import com.daml.executors.InstrumentedExecutors
 import com.daml.ledger.resources.{Resource, ResourceContext, ResourceOwner}
-import com.digitalasset.canton.ledger.participant.state.ReadService
+import com.digitalasset.canton.ledger.participant.state.v2.ReadService
 import com.digitalasset.canton.logging.{NamedLoggerFactory, TracedLogger}
-import com.digitalasset.canton.metrics.LedgerApiServerMetrics
+import com.digitalasset.canton.metrics.Metrics
 import com.digitalasset.canton.platform.ResourceOwnerOps
 import com.digitalasset.canton.platform.config.ServerRole
 import com.digitalasset.canton.platform.indexer.Indexer
@@ -25,7 +25,6 @@ import com.digitalasset.canton.platform.store.backend.{
   DataSourceStorageBackend,
 }
 import com.digitalasset.canton.platform.store.dao.DbDispatcher
-import com.digitalasset.canton.time.Clock
 import com.digitalasset.canton.tracing.TraceContext
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import org.apache.pekko.stream.{KillSwitch, Materializer}
@@ -42,7 +41,7 @@ object ParallelIndexerFactory {
       batchingParallelism: Int,
       dbConfig: DbConfig,
       haConfig: HaConfig,
-      metrics: LedgerApiServerMetrics,
+      metrics: Metrics,
       dbLockStorageBackend: DBLockStorageBackend,
       dataSourceStorageBackend: DataSourceStorageBackend,
       initializeParallelIngestion: InitializeParallelIngestion,
@@ -50,10 +49,9 @@ object ParallelIndexerFactory {
       meteringAggregator: DbDispatcher => ResourceOwner[Unit],
       mat: Materializer,
       readService: ReadService,
-      initializeInMemoryState: LedgerEnd => Future[Unit],
+      initializeInMemoryState: DbDispatcher => LedgerEnd => Future[Unit],
       loggerFactory: NamedLoggerFactory,
       indexerDbDispatcherOverride: Option[DbDispatcher],
-      clock: Clock,
   )(implicit traceContext: TraceContext): ResourceOwner[Indexer] = {
     val logger = TracedLogger(loggerFactory.getLogger(getClass))
     for {
@@ -157,15 +155,16 @@ object ParallelIndexerFactory {
         ) { dbDispatcher =>
           initializeParallelIngestion(
             dbDispatcher = dbDispatcher,
-            initializeInMemoryState = initializeInMemoryState,
+            additionalInitialization = initializeInMemoryState(dbDispatcher),
             readService = readService,
+            mat = mat,
+            ec = ec,
           ).map(
             parallelIndexerSubscription(
               inputMapperExecutor = inputMapperExecutor,
               batcherExecutor = batcherExecutor,
               dbDispatcher = dbDispatcher,
               materializer = mat,
-              clock = clock,
             )
           )
         }

@@ -6,17 +6,14 @@ package com.daml.network.scan.dso
 import com.daml.network.util.Contract
 import com.daml.network.codegen.java.splice.dsorules.DsoRules
 import com.daml.network.http.v0.definitions as http
-import com.daml.network.scan.dso.DsoAnsResolver.DsoAnsEntry
+import com.daml.network.scan.dso.DsoAnsResolver.{DsoAnsEntry, dsoAnsName, svAnsNameSuffix}
 import com.digitalasset.canton.topology.PartyId
 
 import scala.jdk.CollectionConverters.*
 
-class DsoAnsResolver(dsoParty: PartyId, ansAcronym: String) {
-  val dsoAnsName = s"dso.$ansAcronym"
-  val svAnsNameSuffix = s".sv.$ansAcronym"
-
+class DsoAnsResolver(dsoParty: PartyId) {
   private val dsoAnsEntry: DsoAnsEntry = DsoAnsEntry(dsoParty, dsoAnsName)
-  private val svAnsNamePattern = s"^[a-zA-Z0-9_-]+\\.sv\\.$ansAcronym$$".r
+  private val svAnsNamePattern = """^[a-zA-Z0-9_-]+\.sv\.cns$""".r
 
   def lookupEntryByName(
       dsoRules: Contract[DsoRules.ContractId, DsoRules],
@@ -29,8 +26,8 @@ class DsoAnsResolver(dsoParty: PartyId, ansAcronym: String) {
           case (svPartyId, svInfo) if ansName == svAnsName(svInfo.name) =>
             PartyId.tryFromProtoPrimitive(svPartyId) -> svInfo.name
         }
-        maybeSvPartyId.map { case (svPartyId, svName) =>
-          svAnsEntry(svPartyId, svName.toLowerCase())
+        maybeSvPartyId.map { case (svPartyId, memberName) =>
+          svAnsEntry(svPartyId, memberName.toLowerCase())
         }
       case _ => None
     }
@@ -63,8 +60,8 @@ class DsoAnsResolver(dsoParty: PartyId, ansAcronym: String) {
 }
 
 object DsoAnsResolver {
-  def dsoAnsName(ansAcronym: String): String = s"dso.$ansAcronym"
-  def svAnsNameSuffix(ansAcronym: String): String = s".sv.$ansAcronym"
+  val dsoAnsName = "dso.cns"
+  val svAnsNameSuffix = ".sv.cns"
   case class DsoAnsEntry(user: PartyId, name: String) {
     def toHttp: http.AnsEntry = http.AnsEntry(None, user.toProtoPrimitive, name, "", "", None)
   }

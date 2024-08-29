@@ -15,6 +15,7 @@ import com.digitalasset.canton.domain.sequencing.sequencer.{
   InternalSequencerPruningStatus,
 }
 import com.digitalasset.canton.sequencing.OrdinarySerializedEvent
+import com.digitalasset.canton.sequencing.protocol.TrafficState
 import com.digitalasset.canton.topology.Member
 import com.digitalasset.canton.tracing.TraceContext
 import com.google.common.annotations.VisibleForTesting
@@ -62,7 +63,8 @@ trait SequencerStateManagerStore {
     * Implementations should ensure that all events are written atomically (or none written if a failure is hit).
     */
   def addEvents(
-      events: Map[Member, OrdinarySerializedEvent]
+      events: Map[Member, OrdinarySerializedEvent],
+      trafficSate: Map[Member, TrafficState],
   )(implicit
       traceContext: TraceContext
   ): Future[Unit]

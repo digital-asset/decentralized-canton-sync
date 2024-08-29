@@ -35,7 +35,6 @@ message Contract {
   message GlobalKey {
     bytes template_id = 1;
     bytes key = 2;
-    string package_name = 3;
   }
 
   string contract_id = 1;
@@ -44,4 +43,3 @@ message Contract {
   google.protobuf.Timestamp ledger_create_time = 4; // in microseconds of UTC time since Unix epoch
   com.digitalasset.canton.admin.crypto.v30.Salt contract_salt = 5; // optional
 }
-

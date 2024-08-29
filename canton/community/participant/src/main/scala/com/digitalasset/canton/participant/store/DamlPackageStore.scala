@@ -4,10 +4,11 @@
 package com.digitalasset.canton.participant.store
 
 import cats.data.OptionT
+import com.daml.daml_lf_dev.DamlLf
+import com.daml.lf.data.Ref.PackageId
 import com.digitalasset.canton.concurrent.FutureSupervisor
-import com.digitalasset.canton.config.CantonRequireTypes.String255
+import com.digitalasset.canton.config.CantonRequireTypes.String256M
 import com.digitalasset.canton.crypto.Hash
-import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.participant.ParticipantNodeParameters
@@ -18,8 +19,6 @@ import com.digitalasset.canton.participant.store.memory.InMemoryDamlPackageStore
 import com.digitalasset.canton.protocol.PackageDescription
 import com.digitalasset.canton.resource.{DbStorage, MemoryStorage, Storage}
 import com.digitalasset.canton.tracing.TraceContext
-import com.digitalasset.daml.lf.archive.DamlLf
-import com.digitalasset.daml.lf.data.Ref.PackageId
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -28,16 +27,13 @@ import scala.concurrent.{ExecutionContext, Future}
 trait DamlPackageStore extends AutoCloseable { this: NamedLogging =>
 
   /** @param pkgs Daml packages to be stored
-    * @param uploadedAt The timestamp at which the package has been persisted in the store
-    * @param sourceDescription an informal human readable description of what the DAR contains
     * @param dar The DAR containing the packages
     * @return Future which gets completed when the packages are successfully stored.
     */
   def append(
       pkgs: List[DamlLf.Archive],
-      uploadedAt: CantonTimestamp,
-      sourceDescription: String255,
-      dar: PackageService.Dar,
+      sourceDescription: String256M,
+      dar: Option[PackageService.Dar],
   )(implicit
       traceContext: TraceContext
   ): FutureUnlessShutdown[Unit]
@@ -104,7 +100,6 @@ object DamlPackageStore {
       storage: Storage,
       futureSupervisor: FutureSupervisor,
       parameterConfig: ParticipantNodeParameters,
-      exitOnFatalFailures: Boolean,
       loggerFactory: NamedLoggerFactory,
   )(implicit
       ec: ExecutionContext
@@ -118,7 +113,6 @@ object DamlPackageStore {
           pool,
           parameterConfig.processingTimeouts,
           futureSupervisor,
-          exitOnFatalFailures = exitOnFatalFailures,
           loggerFactory,
         )
     }

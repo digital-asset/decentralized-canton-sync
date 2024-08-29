@@ -4,9 +4,9 @@
 package com.digitalasset.canton.platform.store.dao
 
 import com.daml.ledger.api.v2.command_completion_service.CompletionStreamResponse
-import com.digitalasset.canton.data.Offset
+import com.digitalasset.canton.ledger.offset.Offset
 import com.digitalasset.canton.logging.{LoggingContextWithTrace, NamedLoggerFactory, NamedLogging}
-import com.digitalasset.canton.metrics.LedgerApiServerMetrics
+import com.digitalasset.canton.metrics.Metrics
 import com.digitalasset.canton.platform.store.backend.CompletionStorageBackend
 import com.digitalasset.canton.platform.store.dao.events.QueryValidRange
 import com.digitalasset.canton.platform.{ApiOffset, ApplicationId, Party}
@@ -21,7 +21,7 @@ private[dao] final class CommandCompletionsReader(
     dispatcher: DbDispatcher,
     storageBackend: CompletionStorageBackend,
     queryValidRange: QueryValidRange,
-    metrics: LedgerApiServerMetrics,
+    metrics: Metrics,
     pageSize: Int,
     override protected val loggerFactory: NamedLoggerFactory,
 ) extends LedgerDaoCommandCompletionsReader
@@ -32,7 +32,7 @@ private[dao] final class CommandCompletionsReader(
   @SuppressWarnings(Array("org.wartremover.warts.OptionPartial"))
   private def offsetFor(response: CompletionStreamResponse): Offset = {
     // It would be nice to obtain the offset such that it's obvious that it always exists (rather then relaying on calling .get)
-    ApiOffset.assertFromString(response.checkpoint.get.offset)
+    ApiOffset.assertFromString(response.checkpoint.get.offset.get.getAbsolute)
   }
 
   override def getCommandCompletions(

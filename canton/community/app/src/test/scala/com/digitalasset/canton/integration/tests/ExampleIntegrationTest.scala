@@ -4,10 +4,8 @@
 package com.digitalasset.canton.integration.tests
 
 import better.files.*
-import com.digitalasset.canton.ConsoleScriptRunner
 import com.digitalasset.canton.config.CommunityDbConfig.H2
 import com.digitalasset.canton.config.RequireTypes.NonNegativeInt
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.environment.Environment
 import com.digitalasset.canton.integration.CommunityTests.{
   CommunityIntegrationTest,
@@ -27,6 +25,7 @@ import com.digitalasset.canton.integration.{
 import com.digitalasset.canton.logging.NamedLogging
 import com.digitalasset.canton.tracing.TracingConfig
 import com.digitalasset.canton.util.ShowUtil.*
+import com.digitalasset.canton.{ConsoleScriptRunner, DiscardOps}
 import monocle.macros.syntax.lens.*
 
 import scala.concurrent.blocking
@@ -83,7 +82,7 @@ object ExampleIntegrationTest {
   })
 }
 
-sealed abstract class SimplePingExampleIntegrationTest
+sealed abstract class SimplePingExampleXIntegrationTest
     extends ExampleIntegrationTest(simpleTopology / "simple-topology.conf") {
 
   "run simple-ping.canton successfully" in { implicit env =>
@@ -94,12 +93,12 @@ sealed abstract class SimplePingExampleIntegrationTest
   }
 }
 
-final class SimplePingExampleReferenceIntegrationTestDefault
-    extends SimplePingExampleIntegrationTest {
+final class SimplePingExampleReferenceXIntegrationTestDefault
+    extends SimplePingExampleXIntegrationTest {
   registerPlugin(new UseCommunityReferenceBlockSequencer[H2](loggerFactory))
 }
 
-sealed abstract class RepairExampleIntegrationTest
+sealed abstract class RepairExampleXIntegrationTest
     extends ExampleIntegrationTest(
       referenceConfiguration / "storage" / "h2.conf",
       repairConfiguration / "domain-repair-lost.conf",
@@ -114,6 +113,6 @@ sealed abstract class RepairExampleIntegrationTest
   }
 }
 
-final class RepairExampleReferenceIntegrationTestDefault extends RepairExampleIntegrationTest {
+final class RepairExampleReferenceXIntegrationTestDefault extends RepairExampleXIntegrationTest {
   registerPlugin(new UseCommunityReferenceBlockSequencer[H2](loggerFactory))
 }

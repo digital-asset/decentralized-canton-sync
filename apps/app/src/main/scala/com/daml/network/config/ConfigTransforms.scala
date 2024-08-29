@@ -10,7 +10,7 @@ import com.daml.network.splitwell.config.{
   SplitwellAppClientConfig,
   SplitwellDomains,
 }
-import com.daml.network.sv.automation.singlesv.offboarding.{
+import com.daml.network.sv.automation.singlesv.membership.offboarding.{
   SvOffboardingMediatorTrigger,
   SvOffboardingPartyToParticipantProposalTrigger,
   SvOffboardingSequencerTrigger,
@@ -277,7 +277,7 @@ object ConfigTransforms {
       )
     )
 
-  def updateAllValidatorAppConfigs(
+  private def updateAllValidatorAppConfigs(
       update: (String, ValidatorAppBackendConfig) => ValidatorAppBackendConfig
   ): ConfigTransform =
     cantonConfig =>

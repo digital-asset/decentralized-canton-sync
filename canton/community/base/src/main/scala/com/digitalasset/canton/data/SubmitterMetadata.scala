@@ -5,16 +5,17 @@ package com.digitalasset.canton.data
 
 import cats.syntax.either.*
 import cats.syntax.traverse.*
+import com.daml.lf.data.Ref
 import com.daml.nonempty.NonEmpty
 import com.digitalasset.canton.*
 import com.digitalasset.canton.crypto.*
+import com.digitalasset.canton.ledger.api.DeduplicationPeriod
 import com.digitalasset.canton.logging.pretty.Pretty
 import com.digitalasset.canton.protocol.{v30, *}
 import com.digitalasset.canton.serialization.ProtoConverter.ParsingResult
 import com.digitalasset.canton.serialization.{ProtoConverter, ProtocolVersionedMemoizedEvidence}
 import com.digitalasset.canton.topology.*
 import com.digitalasset.canton.version.*
-import com.digitalasset.daml.lf.data.Ref
 import com.google.protobuf.ByteString
 
 /** Information about the submitters of the transaction
@@ -61,7 +62,7 @@ final case class SubmitterMetadata private (
     actAs = actAs.toSeq,
     applicationId = applicationId.toProtoPrimitive,
     commandId = commandId.toProtoPrimitive,
-    submittingParticipantUid = submittingParticipant.uid.toProtoPrimitive,
+    submittingParticipant = submittingParticipant.toProtoPrimitive,
     salt = Some(salt.toProtoV30),
     submissionId = submissionId.getOrElse(""),
     dedupPeriod = Some(SerializableDeduplicationPeriod(dedupPeriod).toProtoV30),
@@ -77,7 +78,7 @@ object SubmitterMetadata
   override val name: String = "SubmitterMetadata"
 
   val supportedProtoVersions = SupportedProtoVersions(
-    ProtoVersion(30) -> VersionedProtoConverter(ProtocolVersion.v31)(v30.SubmitterMetadata)(
+    ProtoVersion(30) -> VersionedProtoConverter(ProtocolVersion.v30)(v30.SubmitterMetadata)(
       supportedProtoVersionMemoized(_)(fromProtoV30),
       _.toProtoV30.toByteString,
     )
@@ -141,19 +142,15 @@ object SubmitterMetadata
       actAsP,
       applicationIdP,
       commandIdP,
-      submittingParticipantUidP,
+      submittingParticipantP,
       submissionIdP,
       dedupPeriodOP,
       maxSequencingTimeOP,
     ) = metaDataP
 
     for {
-      submittingParticipant <- UniqueIdentifier
-        .fromProtoPrimitive(
-          submittingParticipantUidP,
-          "SubmitterMetadata.submitter_participant_uid",
-        )
-        .map(ParticipantId(_))
+      submittingParticipant <- ParticipantId
+        .fromProtoPrimitive(submittingParticipantP, "SubmitterMetadata.submitter_participant")
       actAs <- actAsP.traverse(
         ProtoConverter
           .parseLfPartyId(_)

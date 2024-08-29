@@ -3,6 +3,7 @@
 
 package com.daml.error
 
+import com.daml.error.ErrorCode.MaxCauseLogLength
 import com.daml.error.SerializableErrorCodeComponents.validateTraceIdAndCorrelationId
 import com.google.rpc.Status
 import io.grpc.Status.Code
@@ -56,11 +57,12 @@ abstract class ErrorCode(val id: String, val category: ErrorCategory)(implicit
 
   /** @return message including error category id, error code id, correlation id and cause
     */
-  def toMsg(cause: => String, correlationId: Option[String], limit: Option[Int]): String = {
-    val truncatedCause = limit match {
-      case Some(maxLength) if (cause.length > maxLength) => cause.take(maxLength) + "..."
-      case _ => cause
-    }
+  def toMsg(cause: => String, correlationId: Option[String]): String = {
+    val truncatedCause =
+      if (cause.length > MaxCauseLogLength)
+        cause.take(MaxCauseLogLength) + "..."
+      else
+        cause
     ErrorCodeMsg(id, category.asInt, correlationId, truncatedCause)
   }
 
@@ -116,6 +118,9 @@ object ErrorCodeMsg {
 
 object ErrorCode {
 
+  /** The maximum size (in characters) of the self-service error description. */
+  val MaxCauseLogLength = 512
+
   /**  Maximum size (in bytes) of the [[com.google.rpc.Status]] proto that a self-service error code can be serialized into.
     *
     *  We choose this value with the following considerations:
@@ -127,7 +132,7 @@ object ErrorCode {
     *  (see [[ErrorCode.asGrpcError]] and how it creates a [[io.grpc.StatusRuntimeException]]).
     *
     *  Conservatively we allow a buffer of > 3KB for gRPC and gRPC->HTTP2 internals overhead.
-    *  (considering a [[MaxErrorContentBytes]] maximum Status proto size and limit the cause description size).
+    *  (considering a [[MaxErrorContentBytes]] maximum Status proto size and - [[MaxCauseLogLength]] - description size).
     *
     *  Note: instead of increasing this value, consider limiting better the error contents.
     */

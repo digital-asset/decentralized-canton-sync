@@ -17,11 +17,11 @@ import com.digitalasset.canton.console.HeadlessConsole.{
   HeadlessConsoleError,
   RuntimeError,
 }
-import com.digitalasset.canton.domain.mediator.MediatorNodeBootstrap
-import com.digitalasset.canton.domain.sequencing.SequencerNodeBootstrap
+import com.digitalasset.canton.domain.mediator.MediatorNodeBootstrapX
+import com.digitalasset.canton.domain.sequencing.SequencerNodeBootstrapX
 import com.digitalasset.canton.environment.*
 import com.digitalasset.canton.metrics.OnDemandMetricsReader.NoOpOnDemandMetricsReader$
-import com.digitalasset.canton.participant.{ParticipantNode, ParticipantNodeBootstrap}
+import com.digitalasset.canton.participant.{ParticipantNodeBootstrapX, ParticipantNodeX}
 import com.digitalasset.canton.telemetry.ConfiguredOpenTelemetry
 import com.digitalasset.canton.{BaseTest, ConfigStubs}
 import io.grpc.stub.AbstractStub
@@ -39,14 +39,14 @@ class ConsoleTest extends AnyWordSpec with BaseTest {
 
   lazy val DefaultConfig: CantonCommunityConfig = CantonCommunityConfig(
     sequencers = Map(
-      InstanceName.tryCreate("s1") -> ConfigStubs.sequencer,
-      InstanceName.tryCreate("s2") -> ConfigStubs.sequencer,
-      InstanceName.tryCreate("s-3") -> ConfigStubs.sequencer,
+      InstanceName.tryCreate("s1") -> ConfigStubs.sequencerx,
+      InstanceName.tryCreate("s2") -> ConfigStubs.sequencerx,
+      InstanceName.tryCreate("s-3") -> ConfigStubs.sequencerx,
     ),
     mediators = Map(
-      InstanceName.tryCreate("m1") -> ConfigStubs.mediator,
-      InstanceName.tryCreate("m2") -> ConfigStubs.mediator,
-      InstanceName.tryCreate("m-3") -> ConfigStubs.mediator,
+      InstanceName.tryCreate("m1") -> ConfigStubs.mediatorx,
+      InstanceName.tryCreate("m2") -> ConfigStubs.mediatorx,
+      InstanceName.tryCreate("m-3") -> ConfigStubs.mediatorx,
     ),
     participants = Map(
       InstanceName.tryCreate("p1") -> ConfigStubs.participant
@@ -65,27 +65,27 @@ class ConsoleTest extends AnyWordSpec with BaseTest {
       InstanceName.tryCreate("s1") -> ConfigStubs.participant,
     ),
     sequencers = Map(
-      InstanceName.tryCreate("s1") -> ConfigStubs.sequencer
+      InstanceName.tryCreate("s1") -> ConfigStubs.sequencerx
     ),
   )
 
   abstract class TestEnvironment(val config: CantonCommunityConfig = DefaultConfig) {
     val environment: CommunityEnvironment = mock[CommunityEnvironment]
     val participants: ParticipantNodes[
-      ParticipantNodeBootstrap,
-      ParticipantNode,
+      ParticipantNodeBootstrapX,
+      ParticipantNodeX,
       config.ParticipantConfigType,
     ] =
       mock[
-        ParticipantNodes[ParticipantNodeBootstrap, ParticipantNode, config.ParticipantConfigType]
+        ParticipantNodes[ParticipantNodeBootstrapX, ParticipantNodeX, config.ParticipantConfigType]
       ]
-    val sequencers: SequencerNodes[config.SequencerNodeConfigType] =
-      mock[SequencerNodes[config.SequencerNodeConfigType]]
-    val mediators: MediatorNodes[config.MediatorNodeConfigType] =
-      mock[MediatorNodes[config.MediatorNodeConfigType]]
-    val participant: ParticipantNodeBootstrap = mock[ParticipantNodeBootstrap]
-    val sequencer: SequencerNodeBootstrap = mock[SequencerNodeBootstrap]
-    val mediator: MediatorNodeBootstrap = mock[MediatorNodeBootstrap]
+    val sequencers: SequencerNodesX[config.SequencerNodeXConfigType] =
+      mock[SequencerNodesX[config.SequencerNodeXConfigType]]
+    val mediators: MediatorNodesX[config.MediatorNodeXConfigType] =
+      mock[MediatorNodesX[config.MediatorNodeXConfigType]]
+    val participant: ParticipantNodeBootstrapX = mock[ParticipantNodeBootstrapX]
+    val sequencer: SequencerNodeBootstrapX = mock[SequencerNodeBootstrapX]
+    val mediator: MediatorNodeBootstrapX = mock[MediatorNodeBootstrapX]
 
     when(environment.config).thenReturn(config)
     when(environment.testingConfig).thenReturn(
@@ -101,6 +101,7 @@ class ConsoleTest extends AnyWordSpec with BaseTest {
         OpenTelemetrySdk.builder().build(),
         SdkTracerProvider.builder(),
         NoOpOnDemandMetricsReader$,
+        metricsEnabled = false,
       )
     )
     type NodeGroup = Seq[(String, Nodes[CantonNode, CantonNodeBootstrap[CantonNode]])]
@@ -129,12 +130,8 @@ class ConsoleTest extends AnyWordSpec with BaseTest {
       new CommunityConsoleEnvironment(
         environment,
         consoleOutput = testConsoleOutput,
-      ) {
-        override protected def createAdminCommandRunner(
-            consoleEnvironment: ConsoleEnvironment,
-            apiName: String,
-        ): ConsoleGrpcAdminCommandRunner = adminCommandRunner
-      }
+        createAdminCommandRunner = _ => adminCommandRunner,
+      )
 
     def runOrFail(commands: String*): Unit = {
       val (result, stderr) = run(commands*)

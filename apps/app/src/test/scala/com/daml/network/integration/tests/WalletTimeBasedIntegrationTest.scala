@@ -29,6 +29,9 @@ class WalletTimeBasedIntegrationTest
     with TriggerTestUtil {
 
   private val splitwellDarPath = "daml/splitwell/.daml/dist/splitwell-current.dar"
+  private val testEntryName = "mycoolentry.unverified.cns"
+  private val testEntryUrl = "https://ans-dir-url.com"
+  private val testEntryDescription = "Sample CNS Entry Description"
 
   override def environmentDefinition
       : BaseEnvironmentDefinition[EnvironmentImpl, SpliceTestConsoleEnvironment] =

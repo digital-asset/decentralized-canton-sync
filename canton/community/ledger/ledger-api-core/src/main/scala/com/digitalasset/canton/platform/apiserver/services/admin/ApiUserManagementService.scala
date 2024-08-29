@@ -13,6 +13,7 @@ import com.daml.ledger.api.v2.admin.user_management_service.{
   UpdateUserResponse,
 }
 import com.daml.ledger.api.v2.admin.user_management_service as proto
+import com.daml.lf.data.Ref
 import com.daml.platform.v1.page_tokens.ListUsersPageTokenPayload
 import com.daml.tracing.Telemetry
 import com.digitalasset.canton.ledger.api.SubmissionIdGenerator
@@ -28,7 +29,7 @@ import com.digitalasset.canton.ledger.error.groups.{
   UserManagementServiceErrors,
 }
 import com.digitalasset.canton.ledger.localstore.api.UserManagementStore
-import com.digitalasset.canton.ledger.participant.state.index.IndexPartyManagementService
+import com.digitalasset.canton.ledger.participant.state.index.v2.IndexPartyManagementService
 import com.digitalasset.canton.logging.LoggingContextUtil.createLoggingContext
 import com.digitalasset.canton.logging.LoggingContextWithTrace.withEnrichedLoggingContext
 import com.digitalasset.canton.logging.{
@@ -39,7 +40,6 @@ import com.digitalasset.canton.logging.{
 }
 import com.digitalasset.canton.platform.apiserver.update
 import com.digitalasset.canton.platform.apiserver.update.UserUpdateMapper
-import com.digitalasset.daml.lf.data.Ref
 import io.grpc.{ServerServiceDefinition, StatusRuntimeException}
 import scalaz.std.either.*
 import scalaz.std.list.*
@@ -556,9 +556,6 @@ private[apiserver] final class ApiUserManagementService(
       case proto.Right(proto.Right.Kind.CanReadAs(r)) =>
         requireParty(r.party).map(UserRight.CanReadAs(_))
 
-      case proto.Right(_: proto.Right.Kind.CanReadAsAnyParty) =>
-        Right(UserRight.CanReadAsAnyParty)
-
       case proto.Right(proto.Right.Kind.Empty) =>
         Left(
           RequestValidationErrors.InvalidArgument
@@ -616,8 +613,6 @@ object ApiUserManagementService {
       proto.Right(proto.Right.Kind.CanActAs(proto.Right.CanActAs(party)))
     case UserRight.CanReadAs(party) =>
       proto.Right(proto.Right.Kind.CanReadAs(proto.Right.CanReadAs(party)))
-    case UserRight.CanReadAsAnyParty =>
-      proto.Right(proto.Right.Kind.CanReadAsAnyParty(proto.Right.CanReadAsAnyParty()))
   }
 
   def encodeNextPageToken(token: Option[Ref.UserId]): String =

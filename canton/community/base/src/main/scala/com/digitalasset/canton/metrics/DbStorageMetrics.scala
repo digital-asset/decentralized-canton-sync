@@ -3,86 +3,91 @@
 
 package com.digitalasset.canton.metrics
 
-import com.daml.metrics.api.HistogramInventory.Item
-import com.daml.metrics.api.MetricHandle.{Counter, LabeledMetricsFactory, Timer}
-import com.daml.metrics.api.{
-  HistogramInventory,
-  MetricInfo,
-  MetricName,
-  MetricQualification,
-  MetricsContext,
-}
+import com.daml.metrics.api.MetricDoc.MetricQualification.Debug
+import com.daml.metrics.api.MetricHandle.{Counter, Gauge, Timer}
+import com.daml.metrics.api.noop.{NoOpGauge, NoOpTimer}
+import com.daml.metrics.api.{MetricDoc, MetricName, MetricsContext}
+import com.digitalasset.canton.metrics.CantonLabeledMetricsFactory
 
-class DbStorageHistograms(val parent: MetricName)(implicit
-    inventory: HistogramInventory
-) {
+import scala.concurrent.duration.*
 
-  private[metrics] val prefix: MetricName = parent :+ "db-storage"
-  private[metrics] val general = new DbQueueHistograms(prefix :+ "general")
-  private[metrics] val write = new DbQueueHistograms(prefix :+ "write")
-  private[metrics] val lock = new DbQueueHistograms(prefix :+ "lock")
-
-}
-
+@MetricDoc.GroupTag(
+  representative = "canton.db-storage.<service>.executor",
+  groupableClass = classOf[DbQueueMetrics],
+)
 class DbStorageMetrics(
-    histograms: DbStorageHistograms,
-    metricsFactory: LabeledMetricsFactory,
-)(implicit metricsContext: MetricsContext) {
+    basePrefix: MetricName,
+    metricsFactory: CantonLabeledMetricsFactory,
+)(implicit context: MetricsContext) {
 
-  object general extends DbQueueMetrics(histograms.general, metricsFactory)
+  val prefix: MetricName = basePrefix :+ "db-storage"
 
-  object write extends DbQueueMetrics(histograms.write, metricsFactory)
+  def loadGaugeM(
+      name: String
+  )(implicit gaugeContext: MetricsContext = MetricsContext.Empty): TimedLoadGauge = {
+    val mc = context.merge(gaugeContext)
+    val timerM = metricsFactory.timer(prefix :+ name)(mc)
+    metricsFactory.loadGauge(prefix :+ name :+ "load", 1.second, timerM)(mc)
+  }
 
-  object locks extends DbQueueMetrics(histograms.lock, metricsFactory)
-}
-
-class DbQueueHistograms(val parent: MetricName)(implicit
-    inventory: HistogramInventory
-) {
-
-  private[metrics] val prefix: MetricName = parent :+ "executor"
-
-  private[metrics] val waitTimer: Item = Item(
-    prefix :+ "waittime",
-    summary = "Scheduling time metric for database tasks",
-    description = """Every database query is scheduled using an asynchronous executor with a queue.
-          |The time a task is waiting in this queue is monitored using this metric.""",
-    qualification = MetricQualification.Debug,
+  @MetricDoc.Tag(
+    summary = "Timer monitoring duration and rate of accessing the given storage",
+    description = """Covers both read from and writes to the storage.""",
+    qualification = Debug,
   )
+  @SuppressWarnings(Array("org.wartremover.warts.Null"))
+  val timerExampleForDocs: Timer = NoOpTimer(prefix :+ "<storage>")
 
+  @MetricDoc.Tag(
+    summary = "The load on the given storage",
+    description =
+      """The load is a factor between 0 and 1 describing how much of an existing interval
+          |has been spent reading from or writing to the storage.""",
+    qualification = Debug,
+  )
+  @SuppressWarnings(Array("org.wartremover.warts.Null"))
+  val loadExampleForDocs: Gauge[Double] =
+    NoOpGauge(prefix :+ "<storage>" :+ "load", 0d)
+
+  object queue extends DbQueueMetrics(prefix :+ "general", metricsFactory)
+
+  object writeQueue extends DbQueueMetrics(prefix :+ "write", metricsFactory)
+
+  object locks extends DbQueueMetrics(prefix :+ "locks", metricsFactory)
 }
 
 class DbQueueMetrics(
-    histograms: DbQueueHistograms,
-    factory: LabeledMetricsFactory,
-)(implicit metricsContext: MetricsContext) {
+    basePrefix: MetricName,
+    factory: CantonLabeledMetricsFactory,
+) {
+  val prefix: MetricName = basePrefix :+ "executor"
 
-  val prefix = histograms.prefix
-
-  val queue: Counter = factory.counter(
-    MetricInfo(
-      prefix :+ "queued",
-      summary = "Number of database access tasks waiting in queue",
-      description =
-        """Database access tasks get scheduled in this queue and get executed using one of the
+  @MetricDoc.Tag(
+    summary = "Number of database access tasks waiting in queue",
+    description =
+      """Database access tasks get scheduled in this queue and get executed using one of the
         |existing asynchronous sessions. A large queue indicates that the database connection is
         |not able to deal with the large number of requests.
         |Note that the queue has a maximum size. Tasks that do not fit into the queue
         |will be retried, but won't show up in this metric.""",
-      qualification = MetricQualification.Saturation,
-    )
+    qualification = Debug,
   )
+  val queue: Counter = factory.counter(prefix :+ "queued")
 
-  val running: Counter = factory.counter(
-    MetricInfo(
-      prefix :+ "running",
-      summary = "Number of database access tasks currently running",
-      description = """Database access tasks run on an async executor. This metric shows
-                    |the current number of tasks running in parallel.""",
-      qualification = MetricQualification.Debug,
-    )
+  @MetricDoc.Tag(
+    summary = "Number of database access tasks currently running",
+    description = """Database access tasks run on an async executor. This metric shows
+        |the current number of tasks running in parallel.""",
+    qualification = Debug,
   )
+  val running: Counter = factory.counter(prefix :+ "running")
 
-  val waitTimer: Timer = factory.timer(histograms.waitTimer.info)
+  @MetricDoc.Tag(
+    summary = "Scheduling time metric for database tasks",
+    description = """Every database query is scheduled using an asynchronous executor with a queue.
+        |The time a task is waiting in this queue is monitored using this metric.""",
+    qualification = Debug,
+  )
+  val waitTimer: Timer = factory.timer(prefix :+ "waittime")
 
 }

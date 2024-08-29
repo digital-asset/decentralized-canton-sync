@@ -5,25 +5,26 @@ package com.digitalasset.canton.topology
 
 import cats.kernel.Order
 import cats.syntax.either.*
+import com.daml.ledger.javaapi.data.Party
 import com.daml.nonempty.NonEmpty
 import com.digitalasset.canton.ProtoDeserializationError.ValueConversionError
 import com.digitalasset.canton.config.CantonRequireTypes.{String255, String3, String300}
 import com.digitalasset.canton.config.RequireTypes.{NonNegativeInt, PositiveInt}
+import com.digitalasset.canton.crypto.RandomOps
 import com.digitalasset.canton.logging.pretty.{Pretty, PrettyPrinting}
 import com.digitalasset.canton.serialization.ProtoConverter.ParsingResult
 import com.digitalasset.canton.store.db.DbDeserializationException
 import com.digitalasset.canton.topology.MediatorGroup.MediatorGroupIndex
+import com.digitalasset.canton.util.HexString
 import com.digitalasset.canton.{LedgerParticipantId, LfPartyId, ProtoDeserializationError}
 import com.google.common.annotations.VisibleForTesting
 import io.circe.Encoder
 import slick.jdbc.{GetResult, PositionedParameters, SetParameter}
 
 /** Top level trait representing an identity within the system */
-sealed trait Identity
-    extends HasUniqueIdentifier
-    with Product
-    with Serializable
-    with PrettyPrinting {
+sealed trait Identity extends Product with Serializable with PrettyPrinting {
+  def uid: UniqueIdentifier
+
   def toProtoPrimitive: String = uid.toProtoPrimitive
 
   /** returns the string representation used in console filters (maps to the uid) */
@@ -49,8 +50,10 @@ object MemberCode {
   def fromProtoPrimitive_(code: String): Either[String, MemberCode] =
     String3.create(code).flatMap {
       case MediatorId.Code.threeLetterId => Right(MediatorId.Code)
+      case DomainTopologyManagerId.Code.threeLetterId => Right(DomainTopologyManagerId.Code)
       case ParticipantId.Code.threeLetterId => Right(ParticipantId.Code)
       case SequencerId.Code.threeLetterId => Right(SequencerId.Code)
+      case UnauthenticatedMemberId.Code.threeLetterId => Right(UnauthenticatedMemberId.Code)
       case _ => Left(s"Unknown three letter type $code")
     }
 
@@ -73,16 +76,18 @@ sealed trait Member extends Identity with Product with Serializable {
 
   def description: String
 
+  def isAuthenticated: Boolean
+
   override def toProtoPrimitive: String = toLengthLimitedString.unwrap
 
   def toLengthLimitedString: String300 =
     String300.tryCreate(
-      s"${code.threeLetterId.unwrap}${UniqueIdentifier.delimiter}${uid.toProtoPrimitive}"
+      s"${code.threeLetterId.unwrap}${SafeSimpleString.delimiter}${uid.toProtoPrimitive}"
     )
 
   override def pretty: Pretty[Member] =
     prettyOfString(inst =>
-      inst.code.threeLetterId.unwrap + UniqueIdentifier.delimiter + inst.uid.show
+      inst.code.threeLetterId.unwrap + SafeSimpleString.delimiter + inst.uid.show
     )
 }
 
@@ -95,13 +100,15 @@ object Member {
     def mapToType(code: MemberCode, uid: UniqueIdentifier): Either[String, Member] = {
       code match {
         case MediatorId.Code => Right(MediatorId(uid))
+        case DomainTopologyManagerId.Code => Right(DomainTopologyManagerId(uid))
         case ParticipantId.Code => Right(ParticipantId(uid))
         case SequencerId.Code => Right(SequencerId(uid))
+        case UnauthenticatedMemberId.Code => Right(UnauthenticatedMemberId(uid))
       }
     }
 
     // expecting COD::<uid>
-    val dlen = UniqueIdentifier.delimiter.length
+    val dlen = SafeSimpleString.delimiter.length
 
     for {
       _ <- Either.cond(
@@ -110,12 +117,12 @@ object Member {
         s"Invalid member `$member`, expecting <three-letter-code>::id::fingerprint.",
       )
       _ <- Either.cond(
-        member.substring(3, 3 + dlen) == UniqueIdentifier.delimiter,
+        member.substring(3, 3 + dlen) == SafeSimpleString.delimiter,
         (),
-        s"Expected delimiter ${UniqueIdentifier.delimiter} after three letter code of `$member`",
+        s"Expected delimiter ${SafeSimpleString.delimiter} after three letter code of `$member`",
       )
       code <- MemberCode.fromProtoPrimitive_(typ)
-      uid <- UniqueIdentifier.fromProtoPrimitive_(uidS.substring(dlen)).leftMap(_.message)
+      uid <- UniqueIdentifier.fromProtoPrimitive_(uidS.substring(dlen))
       member <- mapToType(code, uid)
     } yield member
   }
@@ -145,10 +152,41 @@ object Member {
 
 }
 
-final case class DomainId(uid: UniqueIdentifier) extends Identity {
+sealed trait AuthenticatedMember extends Member {
+  override def code: AuthenticatedMemberCode
+  override def isAuthenticated: Boolean = true
+}
+
+sealed trait AuthenticatedMemberCode extends MemberCode
+
+final case class UnauthenticatedMemberId(uid: UniqueIdentifier) extends Member {
+  override def code: MemberCode = UnauthenticatedMemberId.Code
+  override val description: String = "unauthenticated member"
+  override def isAuthenticated: Boolean = false
+}
+
+object UnauthenticatedMemberId {
+  object Code extends MemberCode {
+    val threeLetterId: String3 = String3.tryCreate("UNM")
+  }
+
+  private val RandomIdentifierNumberOfBytes = 20
+
+  def tryCreate(namespace: Namespace)(randomOps: RandomOps): UnauthenticatedMemberId =
+    UnauthenticatedMemberId(
+      UniqueIdentifier.tryCreate(
+        HexString.toHexString(randomOps.generateRandomByteString(RandomIdentifierNumberOfBytes)),
+        namespace.fingerprint.unwrap,
+      )
+    )
+}
+
+final case class DomainId(uid: UniqueIdentifier) extends NodeIdentity {
   def unwrap: UniqueIdentifier = uid
   def toLengthLimitedString: String255 = uid.toLengthLimitedString
 
+  // The member and member of a domain identity is the domain topology manager
+  override def member: Member = DomainTopologyManagerId(uid)
 }
 
 object DomainId {
@@ -178,14 +216,16 @@ object DomainId {
   def tryFromString(str: String): DomainId = DomainId(UniqueIdentifier.tryFromProtoPrimitive(str))
 
   def fromString(str: String): Either[String, DomainId] =
-    UniqueIdentifier.fromProtoPrimitive_(str).map(DomainId(_)).leftMap(_.message)
+    UniqueIdentifier.fromProtoPrimitive_(str).map(DomainId(_))
 
 }
 
 /** A participant identifier */
-final case class ParticipantId(uid: UniqueIdentifier) extends Member with NodeIdentity {
+final case class ParticipantId(uid: UniqueIdentifier)
+    extends AuthenticatedMember
+    with NodeIdentity {
 
-  override def code: MemberCode = ParticipantId.Code
+  override def code: AuthenticatedMemberCode = ParticipantId.Code
 
   override val description: String = "participant"
 
@@ -196,14 +236,11 @@ final case class ParticipantId(uid: UniqueIdentifier) extends Member with NodeId
 }
 
 object ParticipantId {
-  object Code extends MemberCode {
+  object Code extends AuthenticatedMemberCode {
     val threeLetterId: String3 = String3.tryCreate("PAR")
   }
-  def apply(identifier: String, namespace: Namespace): ParticipantId =
-    ParticipantId(UniqueIdentifier.tryCreate(identifier, namespace))
-
-  def apply(uid: UniqueIdentifier): ParticipantId =
-    new ParticipantId(uid)
+  def apply(identifier: Identifier, namespace: Namespace): ParticipantId =
+    ParticipantId(UniqueIdentifier(identifier, namespace))
 
   /** create a participant from a string
     *
@@ -229,6 +266,15 @@ object ParticipantId {
         )
     }
 
+  def fromLfParticipant(lfParticipant: LedgerParticipantId): Either[String, ParticipantId] =
+    UniqueIdentifier.fromProtoPrimitive_(lfParticipant).map(ParticipantId(_))
+
+  def tryFromLfParticipant(lfParticipant: LedgerParticipantId): ParticipantId =
+    fromLfParticipant(lfParticipant).fold(
+      e => throw new IllegalArgumentException(e),
+      Predef.identity,
+    )
+
   def tryFromProtoPrimitive(str: String): ParticipantId =
     fromProtoPrimitive(str, "").fold(
       err => throw new IllegalArgumentException(err.message),
@@ -247,6 +293,8 @@ object ParticipantId {
 final case class PartyId(uid: UniqueIdentifier) extends Identity {
 
   def toLf: LfPartyId = LfPartyId.assertFromString(uid.toProtoPrimitive)
+
+  def toParty: Party = new Party(toLf)
 }
 
 object PartyId {
@@ -257,11 +305,11 @@ object PartyId {
   implicit val setParameterPartyId: SetParameter[PartyId] =
     (p: PartyId, pp: PositionedParameters) => pp >> p.uid.toLengthLimitedString
 
-  def tryCreate(identifier: String, namespace: Namespace): PartyId =
-    PartyId(UniqueIdentifier.tryCreate(identifier, namespace))
+  def apply(identifier: Identifier, namespace: Namespace): PartyId =
+    PartyId(UniqueIdentifier(identifier, namespace))
 
   def fromLfParty(lfParty: LfPartyId): Either[String, PartyId] =
-    UniqueIdentifier.fromProtoPrimitive_(lfParty).map(PartyId(_)).leftMap(_.message)
+    UniqueIdentifier.fromProtoPrimitive_(lfParty).map(PartyId(_))
 
   def tryFromLfParty(lfParty: LfPartyId): PartyId =
     fromLfParty(lfParty) match {
@@ -277,6 +325,23 @@ object PartyId {
   def tryFromProtoPrimitive(str: String): PartyId = PartyId(
     UniqueIdentifier.tryFromProtoPrimitive(str)
   )
+
+}
+
+sealed trait DomainMember extends AuthenticatedMember
+
+object DomainMember {
+
+  /** List domain members for the given id, optionally including the sequencer. * */
+  def list(id: DomainId, includeSequencer: Boolean): Set[DomainMember] = {
+    // TODO(i7992) remove static mediator id
+    val baseMembers = Set[DomainMember](DomainTopologyManagerId(id), MediatorId(id))
+    if (includeSequencer) baseMembers + SequencerId(id)
+    else baseMembers
+  }
+
+  /** List all domain members always including the sequencer. */
+  def listAll(id: DomainId): Set[DomainMember] = list(id, includeSequencer = true)
 
 }
 
@@ -301,19 +366,21 @@ object MediatorGroup {
   val MediatorGroupIndex = NonNegativeInt
 }
 
-final case class MediatorId(uid: UniqueIdentifier) extends Member with NodeIdentity {
-  override def code: MemberCode = MediatorId.Code
+final case class MediatorId(uid: UniqueIdentifier) extends DomainMember with NodeIdentity {
+  override def code: AuthenticatedMemberCode = MediatorId.Code
   override val description: String = "mediator"
   override def member: Member = this
 }
 
 object MediatorId {
-  object Code extends MemberCode {
+  object Code extends AuthenticatedMemberCode {
     val threeLetterId = String3.tryCreate("MED")
   }
 
-  def tryCreate(identifier: String, namespace: Namespace): MediatorId =
-    MediatorId(UniqueIdentifier.tryCreate(identifier, namespace))
+  def apply(identifier: Identifier, namespace: Namespace): MediatorId =
+    MediatorId(UniqueIdentifier(identifier, namespace))
+
+  def apply(domainId: DomainId): MediatorId = MediatorId(domainId.unwrap)
 
   def fromProtoPrimitive(
       mediatorId: String,
@@ -329,29 +396,54 @@ object MediatorId {
 
 }
 
+/** The domain topology manager id
+  *
+  * The domain manager is the topology manager of the domain. The read side
+  * of the domain manager is the IdentityProvidingService.
+  */
+final case class DomainTopologyManagerId(uid: UniqueIdentifier) extends DomainMember {
+  override def code: AuthenticatedMemberCode = DomainTopologyManagerId.Code
+  override val description: String = "domain topology manager"
+  lazy val domainId: DomainId = DomainId(uid)
+}
+
+object DomainTopologyManagerId {
+
+  object Code extends AuthenticatedMemberCode {
+    val threeLetterId = String3.tryCreate("DOM")
+  }
+
+  def apply(identifier: Identifier, namespace: Namespace): DomainTopologyManagerId =
+    DomainTopologyManagerId(UniqueIdentifier(identifier, namespace))
+
+  def apply(domainId: DomainId): DomainTopologyManagerId = DomainTopologyManagerId(domainId.unwrap)
+}
+
 final case class SequencerGroup(
     active: NonEmpty[Seq[SequencerId]],
     passive: Seq[SequencerId],
     threshold: PositiveInt,
 )
 
-final case class SequencerId(uid: UniqueIdentifier) extends Member with NodeIdentity {
-  override def code: MemberCode = SequencerId.Code
+final case class SequencerId(uid: UniqueIdentifier) extends DomainMember with NodeIdentity {
+  override def code: AuthenticatedMemberCode = SequencerId.Code
   override val description: String = "sequencer"
   override def member: Member = this
 }
 
 object SequencerId {
 
-  object Code extends MemberCode {
+  object Code extends AuthenticatedMemberCode {
     val threeLetterId = String3.tryCreate("SEQ")
   }
 
   implicit val sequencerIdOrdering: Ordering[SequencerId] =
     Ordering.by(_.toString)
 
-  def tryCreate(identifier: String, namespace: Namespace): SequencerId =
-    SequencerId(UniqueIdentifier.tryCreate(identifier, namespace))
+  def apply(identifier: Identifier, namespace: Namespace): SequencerId =
+    SequencerId(UniqueIdentifier(identifier, namespace))
+
+  def apply(domainId: DomainId): SequencerId = SequencerId(domainId.unwrap)
 
   def fromProtoPrimitive(
       proto: String,

@@ -2,7 +2,6 @@ package com.daml.network.scan.automation
 
 import com.daml.ledger.api.v2.TraceContextOuterClass
 import com.daml.ledger.javaapi.data.TransactionTree
-import com.daml.metrics.api.noop.NoOpMetricsFactory
 import com.daml.network.automation.{TriggerContext, TriggerEnabledSynchronization}
 import com.daml.network.config.AutomationConfig
 import com.daml.network.environment.RetryProvider
@@ -14,6 +13,7 @@ import com.daml.network.store.{PageLimit, TreeUpdateWithMigrationId, UpdateHisto
 import com.digitalasset.canton.concurrent.FutureSupervisor
 import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.logging.SuppressionRule
+import com.digitalasset.canton.metrics.CantonLabeledMetricsFactory.NoOpMetricsFactory
 import com.digitalasset.canton.time.SimClock
 import com.digitalasset.canton.topology.DomainId
 import com.digitalasset.canton.tracing.TraceContext

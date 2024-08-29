@@ -13,6 +13,7 @@ in pkgs.mkShell {
   packages = with pkgs; [
 
     # NOTE: please keep this list sorted for an easy overview and to avoid merge noise.
+
     istioctl
     ammonite
     auth0-cli
@@ -66,7 +67,7 @@ in pkgs.mkShell {
     ripgrep
     rsync
     sbt
-    scala_2_13
+    scala
     selenium-server-standalone
     shellcheck
     sphinx
@@ -76,9 +77,6 @@ in pkgs.mkShell {
     which
     x86Pkgs.sphinx-autobuild
     zip
-
-    # Package required to install daml studio
-    yq-go
   ] ++ linuxOnly;
 
   CANTON = "${pkgs.canton}";

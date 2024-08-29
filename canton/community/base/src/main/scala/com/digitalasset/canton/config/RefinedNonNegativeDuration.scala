@@ -5,12 +5,10 @@ package com.digitalasset.canton.config
 
 import cats.syntax.either.*
 import com.digitalasset.canton.ProtoDeserializationError.ValueConversionError
-import com.digitalasset.canton.checked
 import com.digitalasset.canton.config.RefinedNonNegativeDuration.{
   noisyAwaitResult,
   strToFiniteDuration,
 }
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.logging.ErrorLoggingContext
 import com.digitalasset.canton.logging.pretty.{Pretty, PrettyPrinting}
 import com.digitalasset.canton.serialization.ProtoConverter
@@ -19,6 +17,7 @@ import com.digitalasset.canton.time.{NonNegativeFiniteDuration as NonNegativeFin
 import com.digitalasset.canton.util.FutureUtil.defaultStackTraceFilter
 import com.digitalasset.canton.util.ShowUtil.*
 import com.digitalasset.canton.util.{FutureUtil, LoggerUtil, StackTraceUtil}
+import com.digitalasset.canton.{DiscardOps, checked}
 import com.google.common.annotations.VisibleForTesting
 import com.google.protobuf.duration.Duration as PbDuration
 import io.circe.Encoder
@@ -413,11 +412,6 @@ object PositiveFiniteDuration extends RefinedNonNegativeDurationCompanion[Positi
   implicit val positiveFiniteDurationWriter: ConfigWriter[PositiveFiniteDuration] =
     // avoid pretty printing by converting the underlying value to string
     ConfigWriter.toString(_.underlying.toString)
-
-  implicit val forgetRefinementJDuration: Transformer[PositiveFiniteDuration, JDuration] =
-    _.asJava
-  implicit val forgetRefinementFDuration: Transformer[PositiveFiniteDuration, FiniteDuration] =
-    _.underlying
 }
 
 /** Duration class used for positive durations that are rounded to the second. */

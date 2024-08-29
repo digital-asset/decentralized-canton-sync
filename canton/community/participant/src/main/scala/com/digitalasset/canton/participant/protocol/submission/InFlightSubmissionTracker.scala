@@ -15,20 +15,18 @@ import com.daml.error.utils.DecodedCantonError
 import com.daml.nameof.NameOf.functionFullName
 import com.daml.nonempty.NonEmpty
 import com.digitalasset.canton.config.ProcessingTimeout
-import com.digitalasset.canton.data.{CantonTimestamp, DeduplicationPeriod}
+import com.digitalasset.canton.data.CantonTimestamp
+import com.digitalasset.canton.ledger.api.DeduplicationPeriod
 import com.digitalasset.canton.lifecycle.{FlagCloseable, FutureUnlessShutdown}
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.participant.LocalOffset
 import com.digitalasset.canton.participant.protocol.submission.CommandDeduplicator.DeduplicationFailed
-import com.digitalasset.canton.participant.store.InFlightSubmissionStore.{
-  InFlightByMessageId,
-  InFlightBySequencingInfo,
-}
+import com.digitalasset.canton.participant.protocol.submission.InFlightSubmissionTracker.InFlightSubmissionTrackerDomainState
+import com.digitalasset.canton.participant.store.InFlightSubmissionStore.InFlightBySequencingInfo
 import com.digitalasset.canton.participant.store.MultiDomainEventLog.{DeduplicationInfo, OnPublish}
 import com.digitalasset.canton.participant.store.*
 import com.digitalasset.canton.participant.sync.TimestampedEvent.TimelyRejectionEventId
 import com.digitalasset.canton.participant.sync.{LedgerSyncEvent, ParticipantEventPublisher}
-import com.digitalasset.canton.platform.indexer.parallel.{PostPublishData, PublishSource}
 import com.digitalasset.canton.protocol.RootHash
 import com.digitalasset.canton.sequencing.protocol.SequencerErrors.AggregateSubmissionAlreadySent
 import com.digitalasset.canton.sequencing.protocol.{DeliverError, MessageId}
@@ -38,14 +36,14 @@ import com.digitalasset.canton.tracing.{TraceContext, Traced}
 import com.digitalasset.canton.util.FutureInstances.*
 import com.digitalasset.canton.util.ShowUtil.*
 import com.digitalasset.canton.util.retry.Policy
-import com.digitalasset.canton.util.{ErrorUtil, FutureUtil, SingleUseCell}
+import com.digitalasset.canton.util.{ErrorUtil, FutureUtil}
 
 import scala.collection.immutable.ArraySeq
 import scala.concurrent.{ExecutionContext, Future}
 
 /** Tracker for in-flight submissions backed by the [[com.digitalasset.canton.participant.store.InFlightSubmissionStore]].
   *
-  * A submission is in-flight if it is in the [[com.digitalasset.canton.participant.store.InFlightSubmissionStore]].
+  * A submission is in flight if it is in the [[com.digitalasset.canton.participant.store.InFlightSubmissionStore]].
   * The tracker registers a submission
   * before the [[com.digitalasset.canton.sequencing.protocol.SubmissionRequest]]
   * is sent to the [[com.digitalasset.canton.sequencing.client.SequencerClient]] of a domain.
@@ -64,28 +62,16 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 class InFlightSubmissionTracker(
     store: Eval[InFlightSubmissionStore],
+    participantEventPublisher: ParticipantEventPublisher,
     deduplicator: CommandDeduplicator,
     multiDomainEventLog: Eval[MultiDomainEventLog],
+    domainStates: DomainId => Option[InFlightSubmissionTrackerDomainState],
     override protected val timeouts: ProcessingTimeout,
     override protected val loggerFactory: NamedLoggerFactory,
 )(implicit val ec: ExecutionContext)
     extends FlagCloseable
     with NamedLogging {
   import InFlightSubmissionTracker.*
-
-  private val domainStateLookupCell
-      : SingleUseCell[DomainId => Option[InFlightSubmissionTrackerDomainState]] =
-    new SingleUseCell
-
-  private def domainStates(domainId: DomainId): Option[InFlightSubmissionTrackerDomainState] =
-    domainStateLookupCell.get.getOrElse(throw new IllegalStateException)(domainId)
-
-  def registerDomainStateLookup(
-      domainStates: DomainId => Option[InFlightSubmissionTrackerDomainState]
-  ): Unit =
-    domainStateLookupCell
-      .putIfAbsent(domainStates)
-      .foreach(_ => throw new IllegalStateException("RegisterDomainStateLookup already defined"))
 
   /** Registers the given submission as being in flight and unsequenced
     * unless there already is an in-flight submission for the same change ID
@@ -238,11 +224,7 @@ class InFlightSubmissionTracker(
     * Does not remove the submissions from the in-flight table as this will happen by the
     * [[onPublishListener]] called by the [[com.digitalasset.canton.participant.store.MultiDomainEventLog]].
     */
-  def timelyReject(
-      domainId: DomainId,
-      upToInclusive: CantonTimestamp,
-      participantEventPublisher: ParticipantEventPublisher,
-  )(implicit
+  def timelyReject(domainId: DomainId, upToInclusive: CantonTimestamp)(implicit
       traceContext: TraceContext
   ): EitherT[FutureUnlessShutdown, UnknownDomain, Unit] =
     performUnlessClosingEitherUSF(functionFullName) {
@@ -327,32 +309,6 @@ class InFlightSubmissionTracker(
       )
     }
   }
-
-  def processPublications(
-      publications: Vector[PostPublishData]
-  )(implicit traceContext: TraceContext): Future[Unit] =
-    for {
-      _ <- deduplicator.processPublications(publications)
-      trackedReferences = publications.map(publication =>
-        publication.publishSource match {
-          case PublishSource.Local(messageUuid) =>
-            InFlightByMessageId(
-              domainId = publication.submissionDomainId,
-              messageId = MessageId.fromUuid(messageUuid),
-            )
-
-          case PublishSource.Sequencer(requestSequencerCounter, sequencerTimestamp) =>
-            InFlightBySequencingInfo(
-              domainId = publication.submissionDomainId,
-              sequenced = SequencedSubmission(
-                sequencerCounter = requestSequencerCounter,
-                sequencingTime = sequencerTimestamp,
-              ),
-            )
-        }
-      )
-      _ <- store.value.delete(trackedReferences)
-    } yield ()
 
   /** Completes all unsequenced in-flight submissions for the given domains for which a timely rejection event
     * has been published in the [[com.digitalasset.canton.participant.store.MultiDomainEventLog]].
@@ -491,6 +447,16 @@ class InFlightSubmissionTracker(
       localOffsets <- localOffsetsFor(sequencedInFlight)
       sequencingInfoAndPublications <- publicationsFor(localOffsets)
       (toDelete, publications) = sequencingInfoAndPublications.unzip
+
+      transferEvents = publications.mapFilter { publication =>
+        publication.event match {
+          case transfer: LedgerSyncEvent.TransferEvent if transfer.isTransferringParticipant =>
+            Some((transfer, publication.globalOffset))
+          case _ => None
+        }
+      }
+
+      _ <- multiDomainEventLog.value.notifyOnPublishTransfer(transferEvents)
 
       _ <- deduplicator.processPublications(publications)
       _ = logger.debug("Removing in-flight submissions from in-flight submission store")

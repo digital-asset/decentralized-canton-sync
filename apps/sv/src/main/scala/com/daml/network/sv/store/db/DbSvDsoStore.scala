@@ -685,7 +685,7 @@ class DbSvDsoStore(
     )).getOrRaise(offsetExpectedError())
   }
 
-  override def listSvOnboardingRequestsBySvs(
+  override def listSvOnboardingRequestsByDsoMembers(
       dsoRules: Contract.Has[DsoRules.ContractId, DsoRules],
       limit: Limit = Limit.DefaultLimit,
   )(implicit
@@ -694,14 +694,14 @@ class DbSvDsoStore(
     waitUntilAcsIngested {
       import scala.jdk.CollectionConverters.*
       val svCandidates = dsoRules.payload.svs.asScala
-        .map { case (party, sv) =>
-          sql"(${lengthLimited(party)}, ${lengthLimited(sv.name)})"
+        .map { case (party, member) =>
+          sql"(${lengthLimited(party)}, ${lengthLimited(member.name)})"
         }
         .reduceOption { (acc, next) =>
           (acc ++ sql"," ++ next).toActionBuilder
         }
         .getOrElse(
-          throw new IllegalArgumentException("DsoRules is supposed to have at least one sv")
+          throw new IllegalArgumentException("DsoRules is supposed to have at least one member")
         )
       for {
         result <- storage
@@ -715,9 +715,9 @@ class DbSvDsoStore(
                 )} and (sv_candidate_party, sv_candidate_name) in (""" ++ svCandidates ++ sql")").toActionBuilder,
               orderLimit = sql"""limit ${sqlLimit(limit)}""",
             ),
-            "listSvOnboardingRequestsBySvs",
+            "listSvOnboardingRequestsByDsoMembers",
           )
-        limited = applyLimit("listSvOnboardingRequestsBySvs", limit, result)
+        limited = applyLimit("listSvOnboardingRequestsByDsoMembers", limit, result)
       } yield limited.map(contractFromRow(SvOnboardingRequest.COMPANION)(_))
     }
 
@@ -775,7 +775,7 @@ class DbSvDsoStore(
     )
   }
 
-  override def listSvAmuletPriceVotes(limit: Limit = Limit.DefaultLimit)(implicit
+  override def listMemberAmuletPriceVotes(limit: Limit = Limit.DefaultLimit)(implicit
       tc: TraceContext
   ): Future[Seq[Contract[AmuletPriceVote.ContractId, AmuletPriceVote]]] = waitUntilAcsIngested {
     import scala.jdk.CollectionConverters.*
@@ -798,9 +798,9 @@ class DbSvDsoStore(
                  and voter in """ ++ voterParties).toActionBuilder,
             orderLimit = sql"""limit ${sqlLimit(limit)}""",
           ),
-          "listSvAmuletPriceVotes",
+          "listMemberAmuletPriceVotes",
         )
-      limited = applyLimit("listSvAmuletPriceVotes", limit, result)
+      limited = applyLimit("listMemberAmuletPriceVotes", limit, result)
     } yield limited.map(contractFromRow(AmuletPriceVote.COMPANION)(_)).distinctBy(_.payload.sv)
   }
 
@@ -859,26 +859,6 @@ class DbSvDsoStore(
       resultWithOffset.row.map(contractFromRow(ValidatorLicense.COMPANION)(_)),
     )).getOrRaise(offsetExpectedError())
   }
-
-  override def listValidatorLicensePerValidator(validator: String, limit: Limit)(implicit
-      tc: TraceContext
-  ): Future[Seq[Contract[ValidatorLicense.ContractId, ValidatorLicense]]] =
-    for {
-      result <- storage
-        .query(
-          selectFromAcsTable(
-            DsoTables.acsTableName,
-            storeId,
-            domainMigrationId,
-            where =
-              sql"""template_id_qualified_name = ${QualifiedName(ValidatorLicense.TEMPLATE_ID)}
-              AND validator = ${lengthLimited(validator)}
-            """,
-            orderLimit = sql"""limit ${sqlLimit(limit)}""",
-          ),
-          "listValidatorLicensePerValidator",
-        )
-    } yield result.map(contractFromRow(ValidatorLicense.COMPANION)(_))
 
   override def getTotalPurchasedMemberTraffic(memberId: Member, domainId: DomainId)(implicit
       tc: TraceContext

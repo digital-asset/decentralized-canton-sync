@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 1182,
+  "id": 62,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -77,7 +77,8 @@
                 "value": 80
               }
             ]
-          }
+          },
+          "unitScale": true
         },
         "overrides": [
           {
@@ -186,6 +187,7 @@
         }
       ],
       "title": "Connections",
+      "transformations": [],
       "type": "timeseries"
     },
     {
@@ -243,7 +245,8 @@
                 "value": 80
               }
             ]
-          }
+          },
+          "unitScale": true
         },
         "overrides": []
       },
@@ -288,6 +291,7 @@
         }
       ],
       "title": "Pending requests",
+      "transformations": [],
       "type": "timeseries"
     },
     {
@@ -346,7 +350,8 @@
               }
             ]
           },
-          "unit": "ms"
+          "unit": "ms",
+          "unitScale": true
         },
         "overrides": []
       },
@@ -379,18 +384,19 @@
           },
           "disableTextWrap": false,
           "editorMode": "code",
-          "expr": "sum by(namespace, service, pool_name) (histogram_avg(rate(db_client_connections_use_time_milliseconds{namespace=~\"$namespace\", service=~\"$app\"}[$__rate_interval])))",
+          "expr": "sum by(namespace, service, pool_name) (rate(db_client_connections_use_time_milliseconds_sum{namespace=~\"$namespace\", service=~\"$app\"}[$__rate_interval])) / sum by(namespace, service, pool_name) (rate(db_client_connections_use_time_milliseconds_count{namespace=~\"$namespace\", service=~\"$app\"}[$__rate_interval]))",
           "fullMetaSearch": false,
           "hide": false,
           "includeNullMetadata": false,
           "instant": true,
-          "legendFormat": "{{namespace}} {{pool_name}} {{service}}",
+          "legendFormat": "{{namespace}} {{pool_name}} {{app}}",
           "range": true,
           "refId": "C",
           "useBackend": false
         }
       ],
       "title": "Avg Connection use time ",
+      "transformations": [],
       "type": "timeseries"
     },
     {
@@ -449,7 +455,8 @@
               }
             ]
           },
-          "unit": "ops"
+          "unit": "ops",
+          "unitScale": true
         },
         "overrides": []
       },
@@ -482,7 +489,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "code",
-          "expr": "sum by(namespace, service, pool_name) (histogram_count(rate(db_client_connections_use_time_milliseconds{namespace=~\"$namespace\", service=~\"$app\"}[$__rate_interval])))",
+          "expr": "sum by(namespace, service, pool_name) (rate(db_client_connections_use_time_milliseconds_count{namespace=~\"$namespace\", service=~\"$app\"}[$__rate_interval]))",
           "fullMetaSearch": false,
           "hide": false,
           "includeNullMetadata": false,
@@ -494,6 +501,7 @@
         }
       ],
       "title": "Connection Use",
+      "transformations": [],
       "type": "timeseries"
     },
     {
@@ -553,7 +561,8 @@
               }
             ]
           },
-          "unit": "ms"
+          "unit": "ms",
+          "unitScale": true
         },
         "overrides": []
       },
@@ -586,7 +595,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "code",
-          "expr": "sum by(namespace, service, pool_name) (histogram_avg(rate(db_client_connections_wait_time_milliseconds{namespace=~\"$namespace\", service=~\"$app\"}[$__rate_interval])))",
+          "expr": "sum by(namespace, service, pool_name) (rate(db_client_connections_wait_time_milliseconds_count{namespace=~\"$namespace\", service=~\"$app\"}[$__rate_interval])) / sum by(namespace, service, pool_name) (rate(db_client_connections_wait_time_milliseconds_count{namespace=~\"$namespace\", service=~\"$app\"}[$__rate_interval]))",
           "fullMetaSearch": false,
           "hide": false,
           "includeNullMetadata": false,
@@ -598,6 +607,7 @@
         }
       ],
       "title": "Avg Connection wait time ",
+      "transformations": [],
       "type": "timeseries"
     },
     {
@@ -656,7 +666,8 @@
               }
             ]
           },
-          "unit": "ops"
+          "unit": "ops",
+          "unitScale": true
         },
         "overrides": []
       },
@@ -689,18 +700,19 @@
           },
           "disableTextWrap": false,
           "editorMode": "code",
-          "expr": "sum by(namespace, service, pool_name) (histogram_count(rate(db_client_connections_wait_time_milliseconds{namespace=~\"$namespace\", service=~\"$app\"}[$__rate_interval])))",
+          "expr": "sum by(namespace, service, pool_name) (rate(db_client_connections_wait_time_milliseconds_count{namespace=~\"$namespace\", service=~\"$app\"}[$__rate_interval]))",
           "fullMetaSearch": false,
           "hide": false,
           "includeNullMetadata": false,
           "instant": true,
-          "legendFormat": "{{namespace}} {{pool_name}} {{service}}",
+          "legendFormat": "{{namespace}} {{pool_name}} {{app}}",
           "range": true,
           "refId": "C",
           "useBackend": false
         }
       ],
       "title": "Connection Borrow",
+      "transformations": [],
       "type": "timeseries"
     },
     {
@@ -760,7 +772,8 @@
               }
             ]
           },
-          "unit": "ms"
+          "unit": "ms",
+          "unitScale": true
         },
         "overrides": []
       },
@@ -793,18 +806,19 @@
           },
           "disableTextWrap": false,
           "editorMode": "code",
-          "expr": "sum by(namespace, service, pool_name) (histogram_avg(rate(db_client_connections_create_time_milliseconds{namespace=~\"$namespace\", service=~\"$app\"}[$__rate_interval])))",
+          "expr": "sum by(namespace, service, pool_name) (rate(db_client_connections_create_time_milliseconds_count{namespace=~\"$namespace\", service=~\"$app\"}[$__rate_interval])) / sum by(namespace, service, pool_name) (rate(db_client_connections_create_time_milliseconds_count{namespace=~\"$namespace\", service=~\"$app\"}[$__rate_interval]))",
           "fullMetaSearch": false,
           "hide": false,
           "includeNullMetadata": false,
           "instant": true,
-          "legendFormat": "{{namespace}} {{pool_name}} {{service}}",
+          "legendFormat": "{{namespace}} {{pool_name}} {{app}}",
           "range": true,
           "refId": "C",
           "useBackend": false
         }
       ],
       "title": "Avg Connection create time ",
+      "transformations": [],
       "type": "timeseries"
     },
     {
@@ -863,7 +877,8 @@
               }
             ]
           },
-          "unit": "ops"
+          "unit": "ops",
+          "unitScale": true
         },
         "overrides": []
       },
@@ -896,18 +911,19 @@
           },
           "disableTextWrap": false,
           "editorMode": "code",
-          "expr": "sum by(namespace, service, pool_name) (histogram_count(rate(db_client_connections_create_time_milliseconds{namespace=~\"$namespace\", service=~\"$app\"}[$__rate_interval])))",
+          "expr": "sum by(namespace, service, pool_name) (rate(db_client_connections_create_time_milliseconds_count{namespace=~\"$namespace\", service=~\"$app\"}[$__rate_interval]))",
           "fullMetaSearch": false,
           "hide": false,
           "includeNullMetadata": false,
           "instant": true,
-          "legendFormat": "{{namespace}} {{pool_name}} {{service}}",
+          "legendFormat": "{{namespace}} {{pool_name}} {{app}}",
           "range": true,
           "refId": "C",
           "useBackend": false
         }
       ],
       "title": "Connection Create",
+      "transformations": [],
       "type": "timeseries"
     }
   ],
@@ -921,10 +937,10 @@
         "current": {
           "selected": true,
           "text": [
-            "sv-1"
+            "All"
           ],
           "value": [
-            "sv-1"
+            "$__all"
           ]
         },
         "datasource": {
@@ -953,10 +969,10 @@
         "current": {
           "selected": true,
           "text": [
-            "sv-app"
+            "All"
           ],
           "value": [
-            "sv-app"
+            "$__all"
           ]
         },
         "datasource": {
@@ -990,6 +1006,6 @@
   "timezone": "",
   "title": "Pool",
   "uid": "e354fe73-26da-41b3-a196-ae67fac36367",
-  "version": 2,
+  "version": 3,
   "weekStart": ""
 }

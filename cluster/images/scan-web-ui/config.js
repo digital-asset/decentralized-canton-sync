@@ -1,3 +1,4 @@
+const cluster = "${CN_APP_UI_CLUSTER}";
 window.splice_config = {
   services: {
     scan: {

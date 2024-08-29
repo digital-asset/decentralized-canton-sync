@@ -19,7 +19,6 @@ import com.digitalasset.canton.integration.BaseEnvironmentDefinition
 import com.digitalasset.canton.topology.{DomainId, PartyId}
 
 import org.slf4j.event.Level
-import scala.concurrent.duration.DurationInt
 import scala.util.Try
 
 class SplitwellUpgradeIntegrationTest
@@ -45,8 +44,8 @@ class SplitwellUpgradeIntegrationTest
   "splitwell with upgraded domain" should {
     "report both domains" in { implicit env =>
       val splitwellDomains = splitwellBackend.getSplitwellDomainIds()
-      splitwellDomains.preferred.uid.identifier shouldBe "splitwellUpgrade"
-      splitwellDomains.others.map(_.uid.identifier) shouldBe Seq("splitwell")
+      splitwellDomains.preferred.uid.id shouldBe "splitwellUpgrade"
+      splitwellDomains.others.map(_.uid.id) shouldBe Seq("splitwell")
     }
 
     def installFirstAlice(alice: PartyId)(implicit env: FixtureParam) =
@@ -102,13 +101,10 @@ class SplitwellUpgradeIntegrationTest
       val (_, install) = installFirstAlice(alice)
 
       bracket(
-        connectSplitwellUpgradeDomain(aliceValidatorBackend.participantClient, alice),
+        connectSplitwellUpgradeDomain(aliceValidatorBackend.participantClient),
         disconnectSplitwellUpgradeDomain(aliceValidatorBackend.participantClient),
       ) {
-        actAndCheck(timeUntilSuccess = 40.seconds)(
-          "alice creates install requests",
-          createInstalls(aliceSplitwellClient),
-        )(
+        actAndCheck("alice creates install requests", createInstalls(aliceSplitwellClient))(
           "alice sees one install contracts",
           _ => {
             val (contracts, newInstall) = twoInstalls(alice, install)
@@ -122,7 +118,7 @@ class SplitwellUpgradeIntegrationTest
               aliceValidatorBackend.participantClient.domains.id_of(splitwellUpgradeAlias)
             val splitwellDomainId =
               aliceValidatorBackend.participantClient.domains.id_of(splitwellAlias)
-            contractDomains should contain theSameElementsAs Map[String, DomainId](
+            contractDomains shouldBe Map[String, DomainId](
               newInstall.id.contractId -> splitwellUpgradeDomainId,
               install.id.contractId -> splitwellDomainId,
             )
@@ -171,11 +167,11 @@ class SplitwellUpgradeIntegrationTest
         acceptedInvite.contractId,
       ).map(cid => cid -> splitwellDomainId).toMap
       bracket(
-        connectSplitwellUpgradeDomain(aliceValidatorBackend.participantClient, alice),
+        connectSplitwellUpgradeDomain(aliceValidatorBackend.participantClient),
         disconnectSplitwellUpgradeDomain(aliceValidatorBackend.participantClient),
       ) {
         bracket(
-          connectSplitwellUpgradeDomain(bobValidatorBackend.participantClient, bob),
+          connectSplitwellUpgradeDomain(bobValidatorBackend.participantClient),
           disconnectSplitwellUpgradeDomain(bobValidatorBackend.participantClient),
         ) {
           actAndCheck(
@@ -209,7 +205,7 @@ class SplitwellUpgradeIntegrationTest
     val globalAlias = DomainAlias tryCreate "global"
 
     "fully upgrade an active model" in { implicit env =>
-      val (alice, bob) = clue("Setup some users on the old domain") {
+      val (alice, _) = clue("Setup some users on the old domain") {
         val alice = onboardWalletUser(aliceWalletClient, aliceValidatorBackend)
         val bob = onboardWalletUser(bobWalletClient, bobValidatorBackend)
         createSplitwellInstalls(aliceSplitwellClient, alice)
@@ -334,11 +330,11 @@ class SplitwellUpgradeIntegrationTest
 
       // Switch splitwell preferred domain
       bracket(
-        connectSplitwellUpgradeDomain(aliceValidatorBackend.participantClient, alice),
+        connectSplitwellUpgradeDomain(aliceValidatorBackend.participantClient),
         disconnectSplitwellUpgradeDomain(aliceValidatorBackend.participantClient),
       ) {
         bracket(
-          connectSplitwellUpgradeDomain(bobValidatorBackend.participantClient, bob),
+          connectSplitwellUpgradeDomain(bobValidatorBackend.participantClient),
           disconnectSplitwellUpgradeDomain(bobValidatorBackend.participantClient),
         ) {
           clue("Onboard user's participants gradually to new domain") {

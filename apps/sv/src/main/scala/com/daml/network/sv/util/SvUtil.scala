@@ -21,8 +21,7 @@ import com.daml.network.codegen.java.splice.dso.decentralizedsynchronizer.{
 import com.daml.network.codegen.java.splice.dsorules.DsoRulesConfig
 import com.daml.network.codegen.java.splice.{cometbft, dso}
 import com.daml.network.codegen.java.da.time.types.RelTime
-import com.daml.network.environment.SequencerAdminConnection
-import com.daml.network.sv.{ExtraSynchronizerNode, LocalSynchronizerNode, SynchronizerNode}
+import com.daml.network.sv.LocalSynchronizerNode
 import com.daml.network.sv.cometbft.CometBftNode
 import com.daml.network.sv.config.{BeneficiaryConfig, SvScanConfig}
 import com.digitalasset.canton.config.{NonNegativeFiniteDuration, PositiveDurationSeconds}
@@ -32,7 +31,6 @@ import com.digitalasset.canton.time.EnrichedDurations.*
 import com.digitalasset.canton.topology.{DomainId, PartyId}
 import com.digitalasset.canton.tracing.TraceContext
 
-import io.grpc.Status
 import java.security.interfaces.{ECPrivateKey, ECPublicKey}
 import java.security.spec.{EncodedKeySpec, PKCS8EncodedKeySpec, X509EncodedKeySpec}
 import java.security.{KeyFactory, SecureRandom, Signature}
@@ -127,10 +125,11 @@ object SvUtil {
 
   case class LocalSequencerConfig(sequencerId: String, url: String, migrationId: Long)
 
-  def getSequencerConfig(synchronizerNode: Option[SynchronizerNode], migrationId: Long)(implicit
+  def getSequencerConfig(localSynchronizerNode: Option[LocalSynchronizerNode], migrationId: Long)(
+      implicit
       ec: ExecutionContext,
       tc: TraceContext,
-  ): Future[Option[LocalSequencerConfig]] = synchronizerNode.map { node =>
+  ): Future[Option[LocalSequencerConfig]] = localSynchronizerNode.map { node =>
     node.sequencerAdminConnection.getSequencerId.map { sequencerId =>
       LocalSequencerConfig(
         sequencerId.toProtoPrimitive,
@@ -142,10 +141,10 @@ object SvUtil {
 
   case class LocalMediatorConfig(mediatorId: String)
 
-  def getMediatorConfig(synchronizerNode: Option[SynchronizerNode])(implicit
+  def getMediatorConfig(localSynchronizerNode: Option[LocalSynchronizerNode])(implicit
       ec: ExecutionContext,
       tc: TraceContext,
-  ): Future[Option[LocalMediatorConfig]] = synchronizerNode.map { node =>
+  ): Future[Option[LocalMediatorConfig]] = localSynchronizerNode.map { node =>
     node.mediatorAdminConnection.getMediatorId.map { mediatorId =>
       LocalMediatorConfig(
         mediatorId.toProtoPrimitive
@@ -302,20 +301,4 @@ object SvUtil {
   def toRelTime(duration: NonNegativeFiniteDuration): RelTime = new RelTime(
     duration.toInternal.toScala.toMicros
   )
-
-  // TODO(#13301) Handle this in a nicer way, at least make the primary connection less magic.
-  def getSequencerAdminConnection(
-      domainId: DomainId,
-      primarySequencerAdminConnection: Option[SequencerAdminConnection],
-      extraSynchronizerNodes: Map[String, ExtraSynchronizerNode],
-  ): SequencerAdminConnection =
-    extraSynchronizerNodes.get(domainId.uid.identifier.str) match {
-      case Some(synchronizer) => synchronizer.sequencerAdminConnection
-      case None =>
-        primarySequencerAdminConnection.getOrElse(
-          throw Status.FAILED_PRECONDITION
-            .withDescription("No sequencer admin connection configured for SV App")
-            .asRuntimeException()
-        )
-    }
 }

@@ -30,7 +30,7 @@ import com.digitalasset.canton.ledger.client.services.state.StateServiceClient
 import com.digitalasset.canton.ledger.client.services.updates.UpdateServiceClient
 import com.digitalasset.canton.ledger.client.services.version.VersionClient
 import com.digitalasset.canton.logging.NamedLoggerFactory
-import com.digitalasset.canton.tracing.{TraceContext, TraceContextGrpc, W3CTraceContext}
+import com.digitalasset.canton.tracing.{TraceContext, W3CTraceContext}
 import io.grpc.Channel
 import io.grpc.netty.NettyChannelBuilder
 import io.grpc.stub.AbstractStub
@@ -41,7 +41,9 @@ import scala.concurrent.{ExecutionContext, Future}
 /** GRPC client for the Canton Ledger API.
   *
   * Tracing support:
-  *  we use CallOptions, see [[com.digitalasset.canton.tracing.TraceContextGrpc]]
+  *   In order to propagate the TraceContext through the API, just run
+  *     traceContext.context.makeCurrent()
+  *     before any request invocation.
   */
 final class LedgerClient private (
     val channel: Channel,
@@ -112,11 +114,7 @@ object LedgerClient {
       channel: Channel,
       config: LedgerClientConfiguration,
       loggerFactory: NamedLoggerFactory,
-  )(implicit
-      ec: ExecutionContext,
-      esf: ExecutionSequencerFactory,
-      traceContext: TraceContext,
-  ): Future[LedgerClient] =
+  )(implicit ec: ExecutionContext, esf: ExecutionSequencerFactory): Future[LedgerClient] =
     for {
       // requesting ledger end validates the token, thus guaranteeing that the client is operable
       _ <- new StateServiceClient(
@@ -132,17 +130,7 @@ object LedgerClient {
     new LedgerClient(channel, config, loggerFactory)
 
   private[client] def stub[A <: AbstractStub[A]](stub: A, token: Option[String]): A =
-    token.fold(stub)(
-      authenticatingStub(stub, _).withInterceptors(TraceContextGrpc.clientInterceptor)
-    )
-
-  private[client] def stubWithTracing[A <: AbstractStub[A]](stub: A, token: Option[String])(implicit
-      traceContext: TraceContext
-  ): A =
-    token
-      .fold(stub)(authenticatingStub(stub, _))
-      .withInterceptors(TraceContextGrpc.clientInterceptor)
-      .withOption(TraceContextGrpc.TraceContextCallOptionKey, traceContext)
+    token.fold(stub)(authenticatingStub(stub, _))
 
   /** A convenient shortcut to build a [[LedgerClient]], use [[fromBuilder]] for a more
     * flexible alternative.
@@ -156,7 +144,6 @@ object LedgerClient {
   )(implicit
       ec: ExecutionContext,
       esf: ExecutionSequencerFactory,
-      traceContext: TraceContext,
   ): Future[LedgerClient] =
     fromBuilder(channelConfig.builderFor(hostIp, port), configuration, loggerFactory)
 
@@ -168,7 +155,6 @@ object LedgerClient {
   )(implicit
       ec: ExecutionContext,
       esf: ExecutionSequencerFactory,
-      traceContext: TraceContext,
   ): Future[LedgerClient] =
     fromBuilder(
       LedgerClientChannelConfiguration.InsecureDefaults.builderFor(hostIp, port),
@@ -188,11 +174,7 @@ object LedgerClient {
       builder: NettyChannelBuilder,
       configuration: LedgerClientConfiguration,
       loggerFactory: NamedLoggerFactory,
-  )(implicit
-      ec: ExecutionContext,
-      esf: ExecutionSequencerFactory,
-      traceContext: TraceContext,
-  ): Future[LedgerClient] = {
+  )(implicit ec: ExecutionContext, esf: ExecutionSequencerFactory): Future[LedgerClient] = {
     LedgerClient(
       GrpcChannel.withShutdownHook(builder),
       configuration,

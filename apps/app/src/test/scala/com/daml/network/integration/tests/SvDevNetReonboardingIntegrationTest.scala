@@ -27,7 +27,7 @@ class SvDevNetReonboardingIntegrationTest extends SvIntegrationTestBase {
         )(conf)
       )
 
-  "Reonboarding an SV with the same name removes the old SV from PartyToParticipant and the Decentralized Namespace" in {
+  "Reonboarding an SV with the same name removes the old SV from PartyToParticipantX and the Decentralized Namespace" in {
     implicit env =>
       clue("SV3 and SV4 use different participants") {
         sv3Backend.participantClient.id should not be sv4Backend.participantClient.id
@@ -45,7 +45,7 @@ class SvDevNetReonboardingIntegrationTest extends SvIntegrationTestBase {
         )
       }
 
-      def checkPartyToParticipant(expected: Seq[ParticipantId]) = {
+      def checkPartyToParticipantX(expected: Seq[ParticipantId]) = {
         eventually() {
           val mapping = sv1Backend.appState.participantAdminConnection
             .getPartyToParticipant(decentralizedSynchronizerId, sv1Backend.getDsoInfo().dsoParty)
@@ -72,7 +72,7 @@ class SvDevNetReonboardingIntegrationTest extends SvIntegrationTestBase {
         }
       }
 
-      checkPartyToParticipant(
+      checkPartyToParticipantX(
         Seq(
           sv1Backend.participantClient.id,
           sv2Backend.participantClient.id,
@@ -84,7 +84,7 @@ class SvDevNetReonboardingIntegrationTest extends SvIntegrationTestBase {
       )
 
       val sv3PartyId = eventually() {
-        val svs = sv1Backend
+        val members = sv1Backend
           .getDsoInfo()
           .dsoRules
           .payload
@@ -92,9 +92,9 @@ class SvDevNetReonboardingIntegrationTest extends SvIntegrationTestBase {
           .asScala
           .toMap
 
-        svs should have size 3
+        members should have size 3
         val sv3PartyId = sv3Backend.getDsoInfo().svParty
-        inside(svs.get(sv3PartyId.toProtoPrimitive)) { case Some(svInfo) =>
+        inside(members.get(sv3PartyId.toProtoPrimitive)) { case Some(svInfo) =>
           svInfo.name shouldBe getSvName(3)
         }
         sv3PartyId
@@ -104,7 +104,7 @@ class SvDevNetReonboardingIntegrationTest extends SvIntegrationTestBase {
       sv3ValidatorBackend.stop()
       startAllSync(sv4Backend, sv4ValidatorBackend)
 
-      checkPartyToParticipant(
+      checkPartyToParticipantX(
         Seq(
           sv1Backend.participantClient.id,
           sv2Backend.participantClient.id,
@@ -117,7 +117,7 @@ class SvDevNetReonboardingIntegrationTest extends SvIntegrationTestBase {
         "start sv4 with sv3 onboarding config",
         startAllSync(sv4Backend, sv4ValidatorBackend),
       )(
-        "old SV from PartyToParticipant is removed and sv3 is overwritten with different party id",
+        "old SV from PartyToParticipantX is removed and sv3 is overwritten with different party id",
         _ => {
           val mapping = sv1Backend.appState.participantAdminConnection
             .getPartyToParticipant(decentralizedSynchronizerId, sv1Backend.getDsoInfo().dsoParty)

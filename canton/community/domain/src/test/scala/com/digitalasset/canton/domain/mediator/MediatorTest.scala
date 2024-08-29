@@ -5,6 +5,7 @@ package com.digitalasset.canton.domain.mediator
 
 import cats.data.NonEmptySeq
 import com.digitalasset.canton.BaseTest
+import com.digitalasset.canton.config.RequireTypes.PositiveInt
 import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.domain.mediator.Mediator.{Safe, SafeUntil}
 import com.digitalasset.canton.protocol.{DynamicDomainParametersWithValidity, TestDomainParameters}
@@ -34,6 +35,7 @@ class MediatorTest extends AnyWordSpec with BaseTest {
           defaultParameters,
           CantonTimestamp.Epoch,
           None,
+          serial = PositiveInt.one,
           domainId,
         )
 
@@ -54,6 +56,7 @@ class MediatorTest extends AnyWordSpec with BaseTest {
             defaultParameters,
             validFrom,
             validUntil,
+            PositiveInt.one,
             domainId,
           )
 
@@ -78,6 +81,7 @@ class MediatorTest extends AnyWordSpec with BaseTest {
           defaultParameters,
           origin,
           None,
+          PositiveInt.one,
           domainId,
         )
 
@@ -95,6 +99,7 @@ class MediatorTest extends AnyWordSpec with BaseTest {
           defaultParameters,
           origin,
           Some(dpChangeTs),
+          PositiveInt.one,
           domainId,
         )
 
@@ -135,6 +140,7 @@ class MediatorTest extends AnyWordSpec with BaseTest {
         defaultParameters,
         origin,
         Some(dpChangeTs1),
+        PositiveInt.one,
         domainId,
       ),
       // This one prevents pruning for some time
@@ -142,12 +148,14 @@ class MediatorTest extends AnyWordSpec with BaseTest {
         parametersWith(hugeTimeout),
         dpChangeTs1,
         Some(dpChangeTs2),
+        PositiveInt.two,
         domainId,
       ),
       DynamicDomainParametersWithValidity(
         defaultParameters,
         dpChangeTs2,
         None,
+        PositiveInt.three,
         domainId,
       ),
     )

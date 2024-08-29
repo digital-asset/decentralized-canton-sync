@@ -84,9 +84,8 @@ class UpdateHistoryIntegrationTest
   "update history can replicate update stream" in { implicit env =>
     val ledgerBeginSv1 = sv1Backend.participantClient.ledger_api.state.end()
     val ledgerBeginAlice = aliceValidatorBackend.participantClient.ledger_api.state.end()
-    val tapAmount = com.digitalasset.daml.lf.data.Numeric.assertFromString("33." + "3".repeat(10))
-    val transferAmount =
-      com.digitalasset.daml.lf.data.Numeric.assertFromString("11." + "1".repeat(10))
+    val tapAmount = com.daml.lf.data.Numeric.assertFromString("33." + "3".repeat(10))
+    val transferAmount = com.daml.lf.data.Numeric.assertFromString("11." + "1".repeat(10))
 
     // The trigger that advances rounds, running in the sv app
     // Note: using `def`, as the trigger may be destroyed and recreated (when the sv delegate changes)
@@ -264,7 +263,7 @@ class UpdateHistoryIntegrationTest
       )
       .map {
         case definitions.UpdateHistoryItem.members.UpdateHistoryTransaction(http) =>
-          LosslessScanHttpEncodings.httpToLapiTransaction(http)
+          LosslessScanHttpEncodings.httpToTxTreeUpdate(http)
         case definitions.UpdateHistoryItem.members.UpdateHistoryReassignment(_) =>
           // TODO(#14067): Support decoding reasssignments, and test this also in the soft migration test where we actually have them
           fail("Unexpected reassignment")

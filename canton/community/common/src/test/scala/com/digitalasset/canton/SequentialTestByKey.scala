@@ -16,16 +16,16 @@ import scala.collection.concurrent.TrieMap
 trait SequentialTestByKey extends BeforeAndAfterAll {
   self: Suite =>
 
-  protected val semaphoreKey: Option[String]
+  protected val semaphoreKey: String
 
   override def beforeAll(): Unit = {
-    semaphoreKey.foreach(TestSemaphoreUtil.acquire)
+    TestSemaphoreUtil.acquire(semaphoreKey)
     super.beforeAll()
   }
 
   override def afterAll(): Unit = {
     super.afterAll()
-    semaphoreKey.foreach(TestSemaphoreUtil.release)
+    TestSemaphoreUtil.release(semaphoreKey)
   }
 }
 
@@ -41,7 +41,6 @@ object TestSemaphoreUtil {
     semaphoreMap.get(key).foreach(_.release())
 
   // pre-defined semaphore keys here
-  val SEQUENCER_DB_H2 = Some("sequencer-db-h2")
-  val SEQUENCER_DB_PG = Some("sequencer-db-pg")
-  val SEQUENCER_DB_ORACLE = Some("sequencer-db-oracle")
+  val SEQUENCER_DB_H2 = "sequencer-db-h2"
+  val SEQUENCER_DB_PG = "sequencer-db-pg"
 }

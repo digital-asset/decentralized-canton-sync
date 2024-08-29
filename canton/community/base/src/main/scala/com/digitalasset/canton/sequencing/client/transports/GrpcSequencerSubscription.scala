@@ -4,8 +4,8 @@
 package com.digitalasset.canton.sequencing.client.transports
 
 import com.daml.nameof.NameOf.functionFullName
+import com.digitalasset.canton.DiscardOps
 import com.digitalasset.canton.config.ProcessingTimeout
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.domain.api.v30
 import com.digitalasset.canton.lifecycle.UnlessShutdown.{AbortedDueToShutdown, Outcome}
 import com.digitalasset.canton.lifecycle.*
@@ -49,6 +49,11 @@ trait HasProtoTraceContext[R] {
   def traceContext(value: R): Option[com.digitalasset.canton.v30.TraceContext]
 }
 object HasProtoTraceContext {
+  implicit val subscriptionResponseTraceContext: HasProtoTraceContext[v30.SubscriptionResponse] =
+    new HasProtoTraceContext[v30.SubscriptionResponse] {
+      override def traceContext(value: v30.SubscriptionResponse) = value.traceContext
+    }
+
   implicit val versionedSubscriptionResponseTraceContext
       : HasProtoTraceContext[v30.VersionedSubscriptionResponse] =
     new HasProtoTraceContext[v30.VersionedSubscriptionResponse] {
@@ -287,7 +292,7 @@ object GrpcSequencerSubscription {
           response => {
             val signedEvent = response.signedSequencedEvent
             val ordinaryEvent =
-              OrdinarySequencedEvent(signedEvent)(response.traceContext)
+              OrdinarySequencedEvent(signedEvent, response.trafficState)(response.traceContext)
             handler(ordinaryEvent)
           },
         )

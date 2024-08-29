@@ -50,7 +50,4 @@ object RequiredTypesCodec {
   implicit val nonNegativeLongOptionGetResult: GetResult[Option[NonNegativeLong]] =
     GetResult.GetLongOption.andThen(_.map(nonNegativeLongDBDeserializer))
 
-  implicit val positiveIntOptionGetResult: GetResult[Option[PositiveInt]] =
-    GetResult.GetIntOption.andThen(_.map(positiveIntDBDeserializer))
-
 }

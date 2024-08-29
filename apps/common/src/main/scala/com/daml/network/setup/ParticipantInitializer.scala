@@ -4,10 +4,10 @@
 package com.daml.network.setup
 
 import com.daml.network.config.ParticipantBootstrapDumpConfig
-import com.daml.network.environment.{ParticipantAdminConnection, RetryProvider}
+import com.daml.network.environment.{ParticipantAdminConnection, RetryFor, RetryProvider}
 import com.daml.network.identities.NodeIdentitiesDump
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
-import com.digitalasset.canton.topology.{ParticipantId, UniqueIdentifier}
+import com.digitalasset.canton.topology.{Identifier, ParticipantId, UniqueIdentifier}
 import com.digitalasset.canton.tracing.TraceContext
 import io.grpc.Status
 
@@ -18,7 +18,6 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
 
 object ParticipantInitializer {
   def ensureParticipantInitializedWithExpectedId(
-      identifierName: String,
       participantAdminConnection: ParticipantAdminConnection,
       dumpConfig: Option[ParticipantBootstrapDumpConfig],
       loggerFactory: NamedLoggerFactory,
@@ -28,7 +27,6 @@ object ParticipantInitializer {
       tc: TraceContext,
   ): Future[Unit] = {
     val participantInitializer = new ParticipantInitializer(
-      identifierName,
       dumpConfig,
       loggerFactory,
       retryProvider,
@@ -57,7 +55,6 @@ object ParticipantInitializer {
 }
 
 class ParticipantInitializer(
-    identifierName: String,
     dumpConfig: Option[ParticipantBootstrapDumpConfig],
     override protected val loggerFactory: NamedLoggerFactory,
     retryProvider: RetryProvider,
@@ -77,21 +74,34 @@ class ParticipantInitializer(
         for {
           dump <- ParticipantInitializer.getDump(c)
           newParticipantId = c.newParticipantIdentifier.fold(dump.id)(id =>
-            ParticipantId(UniqueIdentifier.tryCreate(id, dump.id.uid.namespace))
+            ParticipantId(UniqueIdentifier(Identifier.tryCreate(id), dump.id.uid.namespace))
           )
-          result <- nodeInitializer.initializeFromDumpAndWait(dump, Some(newParticipantId))
+          result <- nodeInitializer.initializeAndWait(dump, Some(newParticipantId))
         } yield result
       case None =>
-        logger.info(s"Initializing participant $identifierName")
-        for {
-          _ <- nodeInitializer.initializeWithNewIdentityIfNeeded(
-            identifierName,
-            ParticipantId.apply,
+        retryProvider
+          .waitUntil(
+            RetryFor.WaitingOnInitDependency,
+            "participant_init",
+            "participant is initialized",
+            participantAdminConnection
+              .isNodeInitialized()
+              .flatMap(if (_) {
+                Future.unit
+              } else {
+                // There doesn't seem to be a way to tell the participant to init with
+                // a freshly generated identity, except by changing its config.
+                Future.failed(
+                  Status.FAILED_PRECONDITION
+                    .withDescription(
+                      "Participant is still initializing. " +
+                        "Is the participant configured to auto-init? " +
+                        "(You didn't specify a participant bootstrapping config.)"
+                    )
+                    .asRuntimeException()
+                )
+              }),
+            logger,
           )
-          _ <- nodeInitializer.waitForNodeInitialized()
-        } yield {
-          logger.info(s"Participant $identifierName is initialized")
-        }
-
     }
 }

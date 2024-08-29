@@ -52,29 +52,42 @@ class AppUpgradeIntegrationTest
       // Makes the test a bit faster and easier to debug. See #11488
       ConfigTransforms.useDecentralizedSynchronizerSplitwell()(config)
     })
-    .addConfigTransform((_, config) => {
-      config
-        .focus(_.validatorApps)
-        .modify(_.updatedWith(InstanceName.tryCreate("splitwellValidatorApp"))(_.map {
-          splitwellValidator =>
-            splitwellValidator
-              .focus(_.appInstances)
-              .modify(_.map {
-                case (n @ "splitwell", appInstance) =>
-                  n -> appInstance
-                    .focus(_.dars)
-                    .modify(_.map { darPath =>
-                      Paths.get(
-                        darPath.toString.replace(
-                          "current",
-                          DarResources.splitwell_current.metadata.version.toString(),
+    .addConfigTransforms(
+      (_, config) => {
+        config
+          .focus(_.validatorApps)
+          .modify(_.updatedWith(InstanceName.tryCreate("splitwellValidatorApp"))(_.map {
+            splitwellValidator =>
+              splitwellValidator
+                .focus(_.appInstances)
+                .modify(_.map {
+                  case (n @ "splitwell", appInstance) =>
+                    n -> appInstance
+                      .focus(_.dars)
+                      .modify(_.map { darPath =>
+                        Paths.get(
+                          darPath.toString.replace(
+                            "current",
+                            DarResources.splitwell_current.metadata.version.toString(),
+                          )
                         )
-                      )
-                    })
-                case x => x
-              })
-        }))
-    })
+                      })
+                  case x => x
+                })
+          }))
+      },
+      (_, config) =>
+        ConfigTransforms.updateAllValidatorConfigs { case (name, validatorConfig) =>
+          if (name == "bobValidator") {
+            validatorConfig.copy(validatorPartyHint = Some(s"bob_validator-${config.name.value}"))
+          } else if (name == "splitwellValidator") {
+            validatorConfig
+              .copy(validatorPartyHint = Some(s"splitwell_validator-${config.name.value}"))
+          } else {
+            validatorConfig
+          }
+        }(config),
+    )
 
   "A set of Splice apps" should {
     "be upgradeable" in { implicit env =>
@@ -175,10 +188,11 @@ class AppUpgradeIntegrationTest
           }
 
           // SV1 does not upload DAR before the vote goes through
-          val sv1Packages = sv1Backend.participantClientWithAdminToken.packages.list()
-          forAll(sv1Packages) { pkg =>
-            pkg.packageId should not be DarResources.amulet.bootstrap.packageId
-          }
+          // TODO(#13413) Enable this
+          // val sv1Packages = sv1Backend.participantClientWithAdminToken.packages.list()
+          // forAll(sv1Packages) { pkg =>
+          //   pkg.packageId should not be DarResources.amulet.bootstrap.packageId
+          // }
 
           val amuletRules = sv2ScanBackend.getAmuletRules()
           val amuletConfig = amuletRules.payload.configSchedule.initialValue
@@ -326,7 +340,7 @@ class AppUpgradeIntegrationTest
             "Old and new amulet get merged together into a new amulet",
             _ => {
               val amulet = bobWalletClient.list().amulets.loneElement.contract
-              amulet.contract.identifier.getPackageId shouldBe DarResources.amulet_current.packageId
+              amulet.identifier.getPackageId shouldBe DarResources.amulet_current.packageId
               BigDecimal(amulet.payload.amount.initialAmount) should beWithin(
                 walletUsdToAmulet(30 - smallAmount),
                 walletUsdToAmulet(30),

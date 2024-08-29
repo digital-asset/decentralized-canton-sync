@@ -44,10 +44,7 @@ trait ProtocolVersionChecksFixtureAnyWordSpec {
     def onlyRunWith(protocolVersion: ProtocolVersion): OnlyRunWhenWordSpecStringWrapper =
       new OnlyRunWhenWordSpecStringWrapper(verb, testedProtocolVersion == protocolVersion)
 
-    def onlyRunWhen(condition: ProtocolVersion => Boolean): OnlyRunWhenWordSpecStringWrapper =
-      new OnlyRunWhenWordSpecStringWrapper(verb, condition(testedProtocolVersion))
-
-    def onlyRunLessThan(
+    def onlyRunWithLessThan(
         minProtocolVersion: ProtocolVersion
     ): OnlyRunWhenWordSpecStringWrapper =
       new OnlyRunWhenWordSpecStringWrapper(verb, testedProtocolVersion < minProtocolVersion)
@@ -59,9 +56,6 @@ trait ProtocolVersionChecksFixtureAnyWordSpec {
   }
 
   implicit class ProtocolCheckTaggedString(verb: ResultOfTaggedAsInvocationOnString) {
-    def onlyRunWhen(condition: Boolean): OnlyRunWhenResultOfTaggedAsInvocationOnString =
-      new OnlyRunWhenResultOfTaggedAsInvocationOnString(verb, condition)
-
     def onlyRunWithOrGreaterThan(
         minProtocolVersion: ProtocolVersion
     ): OnlyRunWhenResultOfTaggedAsInvocationOnString =
@@ -202,22 +196,15 @@ trait ProtocolVersionChecksAsyncWordSpec {
   this: TestEssentials & AsyncWordSpecLike =>
 
   implicit class ProtocolCheckString(verb: String) {
-    def onlyRunWhen(condition: Boolean): OnlyRunWhenWordSpecStringWrapper =
-      new OnlyRunWhenWordSpecStringWrapper(verb, condition)
     def onlyRunWithOrGreaterThan(
         minProtocolVersion: ProtocolVersion
     ): OnlyRunWhenWordSpecStringWrapper =
-      onlyRunWhen(_ >= minProtocolVersion)
+      new OnlyRunWhenWordSpecStringWrapper(verb, testedProtocolVersion >= minProtocolVersion)
 
     def onlyRunWithOrLessThan(
         minProtocolVersion: ProtocolVersion
     ): OnlyRunWhenWordSpecStringWrapper =
-      onlyRunWhen(testedProtocolVersion <= minProtocolVersion)
-
-    private def onlyRunWhen(
-        condition: ProtocolVersion => Boolean
-    ): OnlyRunWhenWordSpecStringWrapper =
-      new OnlyRunWhenWordSpecStringWrapper(verb, condition(testedProtocolVersion))
+      new OnlyRunWhenWordSpecStringWrapper(verb, testedProtocolVersion <= minProtocolVersion)
   }
 
   protected final class OnlyRunWhenWordSpecStringWrapper(

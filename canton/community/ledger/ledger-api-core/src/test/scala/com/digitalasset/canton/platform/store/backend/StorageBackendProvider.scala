@@ -4,7 +4,7 @@
 package com.digitalasset.canton.platform.store.backend
 
 import com.digitalasset.canton.BaseTest
-import com.digitalasset.canton.data.{CantonTimestamp, Offset}
+import com.digitalasset.canton.ledger.offset.Offset
 import com.digitalasset.canton.logging.NamedLoggerFactory
 import com.digitalasset.canton.platform.store.backend.ParameterStorageBackend.LedgerEnd
 import com.digitalasset.canton.platform.store.backend.h2.H2StorageBackendFactory
@@ -43,11 +43,8 @@ trait StorageBackendProvider {
   protected final def updateLedgerEnd(
       ledgerEndOffset: Offset,
       ledgerEndSequentialId: Long,
-      ledgerEndPublicationTime: CantonTimestamp = CantonTimestamp.now(),
   )(connection: Connection): Unit = {
-    backend.parameter.updateLedgerEnd(
-      LedgerEnd(ledgerEndOffset, ledgerEndSequentialId, 0, ledgerEndPublicationTime)
-    )(
+    backend.parameter.updateLedgerEnd(LedgerEnd(ledgerEndOffset, ledgerEndSequentialId, 0))(
       connection
     ) // we do not care about the stringInterningId here
     updateLedgerEndCache(connection)
@@ -60,13 +57,7 @@ trait StorageBackendProvider {
 
   protected final def updateLedgerEndCache(connection: Connection): Unit = {
     val ledgerEnd = backend.parameter.ledgerEnd(connection)
-    backend.ledgerEndCache.set(
-      (
-        ledgerEnd.lastOffset,
-        ledgerEnd.lastEventSeqId,
-        ledgerEnd.lastPublicationTime,
-      )
-    )
+    backend.ledgerEndCache.set(ledgerEnd.lastOffset -> ledgerEnd.lastEventSeqId)
   }
 }
 
@@ -103,6 +94,7 @@ final case class TestBackend(
     parameter: ParameterStorageBackend,
     meteringParameter: MeteringParameterStorageBackend,
     party: PartyStorageBackend,
+    packageBackend: PackageStorageBackend,
     completion: CompletionStorageBackend,
     contract: ContractStorageBackend,
     event: EventStorageBackend,
@@ -142,9 +134,10 @@ object TestBackend {
 
     TestBackend(
       ingestion = storageBackendFactory.createIngestionStorageBackend,
-      parameter = storageBackendFactory.createParameterStorageBackend(stringInterning),
+      parameter = storageBackendFactory.createParameterStorageBackend,
       meteringParameter = storageBackendFactory.createMeteringParameterStorageBackend,
       party = storageBackendFactory.createPartyStorageBackend(ledgerEndCache),
+      packageBackend = storageBackendFactory.createPackageStorageBackend(ledgerEndCache),
       completion =
         storageBackendFactory.createCompletionStorageBackend(stringInterning, loggerFactory),
       contract =

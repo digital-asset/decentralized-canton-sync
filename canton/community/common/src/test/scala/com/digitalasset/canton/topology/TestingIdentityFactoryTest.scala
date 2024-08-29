@@ -5,6 +5,7 @@ package com.digitalasset.canton.topology
 
 import cats.data.EitherT
 import cats.syntax.either.*
+import com.digitalasset.canton.config.RequireTypes.PositiveInt
 import com.digitalasset.canton.crypto.*
 import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.protocol.{DomainParameters, DynamicDomainParameters}
@@ -32,12 +33,14 @@ class TestingIdentityFactoryTest extends AnyWordSpec with BaseTest with HasExecu
   private val domainParameters1 = DomainParameters.WithValidity(
     CantonTimestamp.Epoch,
     Some(CantonTimestamp.ofEpochSecond(10)),
+    PositiveInt.one,
     increaseConfirmationResponseTimeout(defaultDynamicDomainParameters),
   )
 
   private val domainParameters2 = DomainParameters.WithValidity(
     CantonTimestamp.ofEpochSecond(10),
     None,
+    PositiveInt.two,
     increaseConfirmationResponseTimeout(domainParameters1.parameter),
   )
 
@@ -45,7 +48,7 @@ class TestingIdentityFactoryTest extends AnyWordSpec with BaseTest with HasExecu
 
   "testing topology" when {
 
-    def compare(setup: TestingIdentityFactory): Unit = {
+    def compare(setup: TestingIdentityFactoryX): Unit = {
       val p1 = setup.forOwnerAndDomain(participant1)
       val p2 = setup.forOwnerAndDomain(participant2)
       val hash = getMyHash(p1.pureCrypto)
@@ -54,7 +57,6 @@ class TestingIdentityFactoryTest extends AnyWordSpec with BaseTest with HasExecu
       val signature =
         Await
           .result(p1.currentSnapshotApproximation.sign(hash).value, 10.seconds)
-          .failOnShutdown
           .valueOr(err => fail(s"Failed to sign: $err"))
 
       "signature of participant1 is verifiable by participant1" in {
@@ -97,7 +99,6 @@ class TestingIdentityFactoryTest extends AnyWordSpec with BaseTest with HasExecu
       "participant2 can't sign messages without appropriate keys" in {
         Await
           .result(p2.currentSnapshotApproximation.sign(hash).value, 10.seconds)
-          .failOnShutdown
           .left
           .value shouldBe a[SyncCryptoError]
       }
@@ -120,7 +121,7 @@ class TestingIdentityFactoryTest extends AnyWordSpec with BaseTest with HasExecu
         val sequencers = p1.currentSnapshotApproximation.ipsSnapshot
           .sequencerGroup()
           .futureValue
-          .valueOrFail("did not find SequencerDomainState")
+          .valueOrFail("did not find SequencerDomainStateX")
           .active
 
         val mediators =
@@ -131,8 +132,10 @@ class TestingIdentityFactoryTest extends AnyWordSpec with BaseTest with HasExecu
         val did = participant2.uid
         require(did != DefaultTestIdentities.domainId.unwrap)
         checkDomainKeys(
-          sequencers = Seq(SequencerId(participant2.uid.tryChangeId("fake-sequencer"))),
-          mediators = Seq(MediatorId(participant2.uid.tryChangeId("fake-mediator"))),
+          sequencers =
+            Seq(SequencerId(Identifier.tryCreate("fake-sequencer"), participant2.uid.namespace)),
+          mediators =
+            Seq(MediatorId(Identifier.tryCreate("fake-mediator"), participant2.uid.namespace)),
           0,
         )
       }
@@ -162,7 +165,7 @@ class TestingIdentityFactoryTest extends AnyWordSpec with BaseTest with HasExecu
           participant1 -> ParticipantPermission.Confirmation
         )
       )
-      val setup = TestingTopology(
+      val setup = TestingTopologyX(
         topology = topology,
         domainParameters = domainParameters,
         participants = Map(
@@ -171,7 +174,7 @@ class TestingIdentityFactoryTest extends AnyWordSpec with BaseTest with HasExecu
       ).build()
       compare(setup)
       // extend with admin parties should give participant2 a signing key
-      val crypto2 = TestingTopology(topology = topology, domainParameters = domainParameters)
+      val crypto2 = TestingTopologyX(topology = topology, domainParameters = domainParameters)
         .withParticipants(
           participant1 -> ParticipantAttributes(ParticipantPermission.Confirmation),
           participant2 -> ParticipantAttributes(ParticipantPermission.Submission),
@@ -196,7 +199,6 @@ class TestingIdentityFactoryTest extends AnyWordSpec with BaseTest with HasExecu
       val signature =
         Await
           .result(p2.currentSnapshotApproximation.sign(hash).value, 10.seconds)
-          .failOnShutdown
           .valueOr(err => fail(s"Failed to sign: $err"))
 
       "participant2 signatures are valid" in {
@@ -211,7 +213,7 @@ class TestingIdentityFactoryTest extends AnyWordSpec with BaseTest with HasExecu
     }
 
     "using reverse topology" should {
-      val setup = TestingTopology(domainParameters = domainParameters)
+      val setup = TestingTopologyX(domainParameters = domainParameters)
         .withReversedTopology(
           Map(participant1 -> Map(party1.toLf -> ParticipantPermission.Confirmation))
         )
@@ -223,7 +225,7 @@ class TestingIdentityFactoryTest extends AnyWordSpec with BaseTest with HasExecu
 
       "preserve topology and permissions" in {
         val syncCryptoApi =
-          TestingTopology()
+          TestingTopologyX()
             .withReversedTopology(
               Map(
                 participant1 -> Map(
@@ -250,7 +252,7 @@ class TestingIdentityFactoryTest extends AnyWordSpec with BaseTest with HasExecu
     }
 
     "withTopology" should {
-      val setup = TestingTopology(domainParameters = domainParameters)
+      val setup = TestingTopologyX(domainParameters = domainParameters)
         .withTopology(
           Map(party1.toLf -> participant1),
           ParticipantPermission.Confirmation,

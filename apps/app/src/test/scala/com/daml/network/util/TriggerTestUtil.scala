@@ -11,8 +11,8 @@ trait TriggerTestUtil { self: BaseTest =>
   /** Enable/Disable triggers before executing a code block
     */
   def setTriggersWithin[T](
-      triggersToPauseAtStart: Seq[Trigger] = Seq.empty,
-      triggersToResumeAtStart: Seq[Trigger] = Seq.empty,
+      triggersToPauseAtStart: Seq[Trigger],
+      triggersToResumeAtStart: Seq[Trigger],
   )(codeBlock: => T) = {
     try {
       triggersToPauseAtStart.foreach(_.pause().futureValue)

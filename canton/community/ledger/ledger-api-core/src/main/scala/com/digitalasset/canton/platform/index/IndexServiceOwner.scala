@@ -3,18 +3,19 @@
 
 package com.digitalasset.canton.platform.index
 
-import com.daml.error.ContextualizedErrorLogger
 import com.daml.executors.InstrumentedExecutors
 import com.daml.ledger.resources.{Resource, ResourceContext, ResourceOwner}
+import com.daml.lf.data.Ref
+import com.daml.lf.engine.Engine
 import com.daml.resources.ProgramResource.StartupException
 import com.daml.timer.RetryStrategy
-import com.digitalasset.canton.data.Offset
 import com.digitalasset.canton.ledger.api.domain
 import com.digitalasset.canton.ledger.error.IndexErrors.IndexDbException
-import com.digitalasset.canton.ledger.participant.state.index.IndexService
+import com.digitalasset.canton.ledger.offset.Offset
+import com.digitalasset.canton.ledger.participant.state.index.v2.IndexService
 import com.digitalasset.canton.logging.LoggingContextWithTrace.implicitExtractTraceContext
 import com.digitalasset.canton.logging.{LoggingContextWithTrace, NamedLoggerFactory, NamedLogging}
-import com.digitalasset.canton.metrics.LedgerApiServerMetrics
+import com.digitalasset.canton.metrics.Metrics
 import com.digitalasset.canton.platform.InMemoryState
 import com.digitalasset.canton.platform.apiserver.TimedIndexService
 import com.digitalasset.canton.platform.config.IndexServiceConfig
@@ -32,10 +33,7 @@ import com.digitalasset.canton.platform.store.dao.{
   LedgerReadDao,
 }
 import com.digitalasset.canton.platform.store.interning.StringInterning
-import com.digitalasset.canton.platform.store.packagemeta.PackageMetadata
 import com.digitalasset.canton.tracing.TraceContext
-import com.digitalasset.daml.lf.data.Ref
-import com.digitalasset.daml.lf.engine.Engine
 import io.opentelemetry.api.trace.Tracer
 
 import scala.concurrent.duration.*
@@ -46,16 +44,14 @@ final class IndexServiceOwner(
     config: IndexServiceConfig,
     dbSupport: DbSupport,
     servicesExecutionContext: ExecutionContext,
-    metrics: LedgerApiServerMetrics,
+    metrics: Metrics,
     engine: Engine,
     participantId: Ref.ParticipantId,
     inMemoryState: InMemoryState,
     tracer: Tracer,
     val loggerFactory: NamedLoggerFactory,
-    incompleteOffsets: (Offset, Option[Set[Ref.Party]], TraceContext) => Future[Vector[Offset]],
+    incompleteOffsets: (Offset, Set[Ref.Party], TraceContext) => Future[Vector[Offset]],
     contractLoader: ContractLoader,
-    getPackageMetadataSnapshot: ContextualizedErrorLogger => PackageMetadata,
-    lfValueTranslation: LfValueTranslation,
 ) extends ResourceOwner[IndexService]
     with NamedLogging {
   private val initializationRetryDelay = 100.millis
@@ -66,7 +62,6 @@ final class IndexServiceOwner(
       ledgerEndCache = inMemoryState.ledgerEndCache,
       stringInterning = inMemoryState.stringInterningView,
       contractLoader = contractLoader,
-      lfValueTranslation = lfValueTranslation,
     )
 
     for {
@@ -79,6 +74,14 @@ final class IndexServiceOwner(
         contractStateCaches = inMemoryState.contractStateCaches,
         loggerFactory = loggerFactory,
       )(servicesExecutionContext)
+
+      lfValueTranslation = new LfValueTranslation(
+        metrics = metrics,
+        engineO = Some(engine),
+        loadPackage = (packageId, loggingContext) =>
+          ledgerDao.getLfArchive(packageId)(loggingContext),
+        loggerFactory = loggerFactory,
+      )
 
       inMemoryFanOutExecutionContext <- buildInMemoryFanOutExecutionContext(
         metrics = metrics,
@@ -111,7 +114,7 @@ final class IndexServiceOwner(
         contractStore = contractStore,
         pruneBuffers = inMemoryState.inMemoryFanoutBuffer.prune,
         dispatcher = () => inMemoryState.dispatcherState.getDispatcher,
-        getPackageMetadataSnapshot = getPackageMetadataSnapshot,
+        packageMetadataView = inMemoryState.packageMetadataView,
         metrics = metrics,
         loggerFactory = loggerFactory,
       )
@@ -182,7 +185,6 @@ final class IndexServiceOwner(
       ledgerEndCache: LedgerEndCache,
       stringInterning: StringInterning,
       contractLoader: ContractLoader,
-      lfValueTranslation: LfValueTranslation,
   ): LedgerReadDao =
     JdbcLedgerDao.read(
       dbSupport = dbSupport,
@@ -202,11 +204,10 @@ final class IndexServiceOwner(
       loggerFactory = loggerFactory,
       incompleteOffsets = incompleteOffsets,
       contractLoader = contractLoader,
-      lfValueTranslation = lfValueTranslation,
     )
 
   private def buildInMemoryFanOutExecutionContext(
-      metrics: LedgerApiServerMetrics,
+      metrics: Metrics,
       threadPoolSize: Int,
   ): ResourceOwner[ExecutionContextExecutorService] =
     ResourceOwner

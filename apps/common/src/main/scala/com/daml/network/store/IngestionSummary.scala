@@ -9,12 +9,9 @@ import com.daml.network.store.MultiDomainAcsStore.{ContractStateEvent, Reassignm
 import com.digitalasset.canton.config.CantonRequireTypes.String3
 import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.logging.pretty.Pretty
-import com.digitalasset.canton.participant.pretty.Implicits.prettyContractId
-import com.digitalasset.canton.topology.DomainId
 
 final case class IngestionSummary(
     updateId: Option[String],
-    synchronizerId: Option[DomainId],
     offset: Option[String],
     recordTime: Option[CantonTimestamp],
     newAcsSize: Int,
@@ -38,7 +35,6 @@ private[store] object IngestionSummary {
 
   private val Empty: IngestionSummary = IngestionSummary(
     updateId = None,
-    synchronizerId = None,
     offset = None,
     recordTime = None,
     newAcsSize = 0,
@@ -67,7 +63,6 @@ private[store] object IngestionSummary {
     prettyNode(
       "", // intentionally left empty, as that worked better in the log messages above
       paramIfDefined("updateId", _.updateId.map(_.unquoted)),
-      paramIfDefined("synchronizerId", _.synchronizerId),
       paramIfDefined("offset", _.offset.map(_.unquoted)),
       paramIfDefined("recordTime", _.recordTime.map(_.toString.unquoted)),
       param("newAcsSize", _.newAcsSize),

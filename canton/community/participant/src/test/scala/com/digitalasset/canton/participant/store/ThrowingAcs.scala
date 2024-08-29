@@ -3,6 +3,7 @@
 
 package com.digitalasset.canton.participant.store
 
+import com.daml.lf.data.Ref.PackageId
 import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.participant.store.ActiveContractSnapshot.ActiveContractIdsChange
 import com.digitalasset.canton.participant.store.ActiveContractStore.{
@@ -17,7 +18,6 @@ import com.digitalasset.canton.store.IndexedStringStore
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.{Checked, CheckedT}
 import com.digitalasset.canton.{RequestCounter, TransferCounter}
-import com.digitalasset.daml.lf.data.Ref.PackageId
 
 import scala.collection.immutable.SortedMap
 import scala.concurrent.{ExecutionContext, Future}
@@ -31,23 +31,25 @@ class ThrowingAcs[T <: Throwable](mk: String => T)(override implicit val ec: Exe
   )
 
   override def markContractsCreatedOrAdded(
-      contracts: Seq[(LfContractId, TransferCounter, TimeOfChange)],
+      contracts: Seq[(LfContractId, TransferCounter)],
+      toc: TimeOfChange,
       isCreation: Boolean,
   )(implicit
       traceContext: TraceContext
   ): CheckedT[Future, AcsError, AcsWarning, Unit] = {
     val operation = if (isCreation) "create contracts" else "add contracts"
-    CheckedT(Future.failed[M](mk(s"$operation for $contracts")))
+    CheckedT(Future.failed[M](mk(s"$operation for $contracts at $toc")))
   }
 
   override def purgeOrArchiveContracts(
-      contracts: Seq[(LfContractId, TimeOfChange)],
+      contracts: Seq[LfContractId],
+      toc: TimeOfChange,
       isArchival: Boolean,
   )(implicit
       traceContext: TraceContext
   ): CheckedT[Future, AcsError, AcsWarning, Unit] = {
     val operation = if (isArchival) "archive contracts" else "purge contracts"
-    CheckedT(Future.failed[M](mk(s"$operation for $contracts")))
+    CheckedT(Future.failed[M](mk(s"$operation for $contracts at $toc")))
   }
 
   override def transferInContracts(

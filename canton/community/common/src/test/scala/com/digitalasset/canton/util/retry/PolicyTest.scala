@@ -32,7 +32,7 @@ import org.slf4j.event.Level
 import java.util.Random
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger, AtomicLong, AtomicReference}
 import scala.concurrent.duration.*
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{Await, Future}
 import scala.util.{Failure, Success as TrySuccess, Try}
 
 class PolicyTest extends AsyncFunSpec with BaseTest with HasExecutorService {
@@ -709,13 +709,11 @@ class PolicyTest extends AsyncFunSpec with BaseTest with HasExecutorService {
         num
       }
 
-      val retryF = {
-        implicit val executionContext: ExecutionContext = executorService
+      val retryF =
         policy(closeable)(run(), AllExnRetryable)(Success.never, executorService, traceContext)
           .thereafter { count =>
             logger.debug(s"Stopped retry after $count")
-          }
-      }
+          }(executorService)
 
       logger.debug("Wrapping")
       // Wrap the retry in a performUnlessClosing to trigger possible deadlocks.

@@ -5,37 +5,34 @@ package com.digitalasset.canton.sequencing.authentication.grpc
 
 import cats.data.EitherT
 import cats.implicits.*
+import com.digitalasset.canton.BaseTest
 import com.digitalasset.canton.crypto.provider.symbolic.SymbolicPureCrypto
 import com.digitalasset.canton.data.CantonTimestamp
-import com.digitalasset.canton.lifecycle.{
-  FutureUnlessShutdown,
-  PromiseUnlessShutdown,
-  UnlessShutdown,
-}
+import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
 import com.digitalasset.canton.sequencing.authentication.{
   AuthenticationToken,
   AuthenticationTokenManagerConfig,
 }
 import com.digitalasset.canton.time.Clock
-import com.digitalasset.canton.{BaseTest, HasExecutionContext}
 import io.grpc.Status
 import org.mockito.ArgumentMatchersSugar
-import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.wordspec.AsyncWordSpec
 
 import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
+import scala.concurrent.{Future, Promise}
 
 object AuthenticationTokenManagerTest extends org.mockito.MockitoSugar with ArgumentMatchersSugar {
-  val mockClock: Clock = mock[Clock]
+  val mockClock = mock[Clock]
   when(mockClock.scheduleAt(any[CantonTimestamp => Unit], any[CantonTimestamp]))
     .thenReturn(FutureUnlessShutdown.unit)
 }
 
-class AuthenticationTokenManagerTest extends AnyWordSpec with BaseTest with HasExecutionContext {
+class AuthenticationTokenManagerTest extends AsyncWordSpec with BaseTest {
 
-  private val crypto = new SymbolicPureCrypto
-  private val token1 = AuthenticationToken.generate(crypto)
-  private val token2 = AuthenticationToken.generate(crypto)
-  private val now = CantonTimestamp.Epoch
+  val crypto = new SymbolicPureCrypto
+  val token1: AuthenticationToken = AuthenticationToken.generate(crypto)
+  val token2: AuthenticationToken = AuthenticationToken.generate(crypto)
+  val now = CantonTimestamp.Epoch
 
   "first call to getToken will obtain it" in {
     val (tokenManager, mock, _) = setup()
@@ -45,7 +42,7 @@ class AuthenticationTokenManagerTest extends AnyWordSpec with BaseTest with HasE
     for {
       _ <- tokenManager.getToken
     } yield mock.callCount shouldBe 1
-  }.failOnShutdown.futureValue
+  }
 
   "multiple calls to getToken before obtain has completed will return pending" in {
     val (tokenManager, mock, _) = setup()
@@ -62,7 +59,7 @@ class AuthenticationTokenManagerTest extends AnyWordSpec with BaseTest with HasE
       mock.callCount shouldBe 1
       result1 shouldEqual result2
     }
-  }.failOnShutdown.futureValue
+  }
 
   "getToken after error will cause refresh" in {
     val (tokenManager, mock, _) = setup()
@@ -81,7 +78,25 @@ class AuthenticationTokenManagerTest extends AnyWordSpec with BaseTest with HasE
     } yield {
       result2 shouldBe token1
     }
-  }.failOnShutdown.futureValue
+  }
+
+  "getToken after failure will cause refresh" in {
+    val (tokenManager, mock, _) = setup()
+
+    for {
+      error1 <- loggerFactory.suppressWarningsAndErrors {
+        val call1 = tokenManager.getToken
+        mock.fail(new RuntimeException("uh oh"))
+
+        call1.value.failed.map(_.getMessage)
+      }
+      _ = error1 shouldBe "uh oh"
+      _ = mock.resetNextResult()
+      call2 = tokenManager.getToken
+      _ = mock.succeed(token1)
+      result2 <- call2.value.map(_.value)
+    } yield result2 shouldBe token1
+  }
 
   "invalidateToken will cause obtain to be called on next call" in {
     val (tokenManager, mock, _) = setup()
@@ -89,7 +104,7 @@ class AuthenticationTokenManagerTest extends AnyWordSpec with BaseTest with HasE
     mock.succeed(token1)
 
     for {
-      result1 <- tokenManager.getToken
+      result1 <- tokenManager.getToken.value.map(_.value)
       _ = {
         mock.resetNextResult()
         tokenManager.invalidateToken(result1)
@@ -101,7 +116,7 @@ class AuthenticationTokenManagerTest extends AnyWordSpec with BaseTest with HasE
       result2 shouldBe token2
       mock.callCount shouldBe 2
     }
-  }.failOnShutdown.futureValue
+  }
 
   "invalidateToken with a different token wont cause a refresh" in {
     val (tokenManager, mock, _) = setup()
@@ -118,7 +133,7 @@ class AuthenticationTokenManagerTest extends AnyWordSpec with BaseTest with HasE
       result1 shouldBe result2
       mock.callCount shouldBe 1 // despite invalidation
     }
-  }.failOnShutdown.futureValue
+  }
 
   "automatically renew token in due time" in {
     val clockMock = mock[Clock]
@@ -153,25 +168,8 @@ class AuthenticationTokenManagerTest extends AnyWordSpec with BaseTest with HasE
       t2 shouldBe token2
       t3 shouldBe token2
     }
-  }.failOnShutdown.futureValue
 
-  "getToken after failure will cause refresh" in {
-    val (tokenManager, mock, _) = setup()
-
-    for {
-      error1 <- loggerFactory.suppressWarningsAndErrors {
-        val call1 = tokenManager.getToken
-        mock.fail(new RuntimeException("uh oh"))
-
-        call1.value.failed.map(_.getMessage)
-      }
-      _ = error1 shouldBe "uh oh"
-      _ = mock.resetNextResult()
-      call2 = tokenManager.getToken
-      _ = mock.succeed(token1)
-      result2 <- call2.value.map(_.value)
-    } yield result2 shouldBe token1
-  }.failOnShutdown.futureValue
+  }
 
   private def setup(
       clockO: Option[Clock] = None
@@ -190,36 +188,31 @@ class AuthenticationTokenManagerTest extends AnyWordSpec with BaseTest with HasE
 
   private class ObtainTokenMock {
     private val callCounter = new AtomicInteger()
-    private val nextResult =
-      new AtomicReference[PromiseUnlessShutdown[Either[Status, AuthenticationToken]]]()
+    private val nextResult = new AtomicReference[Promise[Either[Status, AuthenticationToken]]]()
 
     resetNextResult()
 
     def callCount: Int = callCounter.get()
 
-    def obtain(): EitherT[FutureUnlessShutdown, Status, AuthenticationTokenWithExpiry] = {
+    def obtain(): EitherT[Future, Status, AuthenticationTokenWithExpiry] = {
       callCounter.incrementAndGet()
       EitherT(
-        nextResult.get.futureUS.map(
+        nextResult.get.future.map(
           _.map(token => AuthenticationTokenWithExpiry(token, now.plusSeconds(100)))
         )
       )
     }
 
     def resetNextResult(): Unit = {
-      nextResult.set(
-        new PromiseUnlessShutdown[Either[Status, AuthenticationToken]]("test", futureSupervisor)
-      )
+      nextResult.set(Promise[Either[Status, AuthenticationToken]]())
     }
 
     def succeed(token: AuthenticationToken): Unit = {
-      nextResult.get().success(UnlessShutdown.Outcome(Right(token)))
+      nextResult.get().success(Right(token))
     }
 
     def error(message: String): Unit = {
-      nextResult
-        .get()
-        .success(UnlessShutdown.Outcome(Left(Status.PERMISSION_DENIED.withDescription(message))))
+      nextResult.get().success(Left(Status.PERMISSION_DENIED.withDescription(message)))
     }
 
     def fail(throwable: Throwable): Unit = {

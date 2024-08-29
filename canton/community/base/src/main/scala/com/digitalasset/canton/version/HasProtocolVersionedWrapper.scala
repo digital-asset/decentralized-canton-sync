@@ -8,14 +8,12 @@ import cats.syntax.foldable.*
 import cats.syntax.functor.*
 import com.daml.nonempty.{NonEmpty, NonEmptyUtil}
 import com.digitalasset.canton.ProtoDeserializationError.{OtherError, UnknownProtoVersion}
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.logging.pretty.{Pretty, PrettyPrinting}
 import com.digitalasset.canton.serialization.ProtoConverter
 import com.digitalasset.canton.serialization.ProtoConverter.ParsingResult
 import com.digitalasset.canton.store.db.DbDeserializationException
 import com.digitalasset.canton.util.BinaryFileUtil
-import com.digitalasset.canton.version.Transfer.{SourceProtocolVersion, TargetProtocolVersion}
-import com.digitalasset.canton.{ProtoDeserializationError, checked}
+import com.digitalasset.canton.{DiscardOps, ProtoDeserializationError, checked}
 import com.google.common.annotations.VisibleForTesting
 import com.google.protobuf.{ByteString, InvalidProtocolBufferException}
 import slick.jdbc.{GetResult, PositionedParameters, SetParameter}
@@ -93,8 +91,7 @@ object RepresentativeProtocolVersion {
   * instead.
   */
 trait HasProtocolVersionedWrapper[ValueClass <: HasRepresentativeProtocolVersion]
-    extends HasRepresentativeProtocolVersion
-    with HasToByteString {
+    extends HasRepresentativeProtocolVersion {
   self: ValueClass =>
 
   @transient
@@ -153,7 +150,7 @@ trait HasProtocolVersionedWrapper[ValueClass <: HasRepresentativeProtocolVersion
   /** Serializes this instance to a message together with a delimiter (the message length) to the given output stream.
     *
     * This method works in conjunction with
-    *  [[com.digitalasset.canton.version.HasProtocolVersionedCompanion2.parseDelimitedFromTrusted]] which deserializes the
+    *  [[com.digitalasset.canton.version.HasProtocolVersionedCompanion2.parseDelimitedFromUnsafe]] which deserializes the
     *  message again. It is useful for serializing multiple messages to a single output stream through multiple
     *  invocations.
     *
@@ -338,7 +335,7 @@ trait HasSupportedProtoVersions[ValueClass] {
       Either.cond(
         v.isEmpty == pv < untilExclusive.representative,
         (),
-        s"expecting None for $attributeName if and only if pv < ${untilExclusive.representative}; for $pv, found: $v",
+        s"expecting None if and only if pv < ${untilExclusive.representative}; for $pv, found: $v",
       )
   }
 
@@ -695,7 +692,7 @@ trait HasProtocolVersionedWrapperWithoutContextCompanion[
     *
     * @param bytes                 a trusted byte string with an embedded proto version
     */
-  def fromTrustedByteString(
+  def fromByteStringUnsafe(
       bytes: OriginalByteString
   ): ParsingResult[DeserializedValueClass]
 
@@ -704,12 +701,12 @@ trait HasProtocolVersionedWrapperWithoutContextCompanion[
     * '''Unsafe!''' Do NOT use this method unless you can justify that the data originates from a trusted
     * source.
     */
-  def readFromTrustedFile(
+  def readFromFileUnsafe(
       inputFile: String
   ): Either[String, DeserializedValueClass] = {
     for {
       bs <- BinaryFileUtil.readByteStringFromFile(inputFile)
-      value <- fromTrustedByteString(bs).leftMap(_.toString)
+      value <- fromByteStringUnsafe(bs).leftMap(_.toString)
     } yield value
   }
 
@@ -718,8 +715,8 @@ trait HasProtocolVersionedWrapperWithoutContextCompanion[
     * '''Unsafe!''' Do NOT use this method unless you can justify that the data originates from a trusted
     * source.
     */
-  def tryReadFromTrustedFile(inputFile: String): DeserializedValueClass =
-    readFromTrustedFile(inputFile).valueOr(err =>
+  def tryReadFromFileUnsafe(inputFile: String): DeserializedValueClass =
+    readFromFileUnsafe(inputFile).valueOr(err =>
       throw new IllegalArgumentException(s"Reading $name from file $inputFile failed: $err")
     )
 
@@ -748,14 +745,6 @@ trait HasMemoizedProtocolVersionedWrapperCompanion2[
     (original: OriginalByteString, data: DataByteString) =>
       ProtoConverter.protoParser(p.parseFrom)(data).flatMap(fromProto(_)(original))
 
-  def fromTrustedByteArray(bytes: Array[Byte]): ParsingResult[DeserializedValueClass] =
-    for {
-      proto <- ProtoConverter.protoParserArray(v1.UntypedVersionedMessage.parseFrom)(bytes)
-      data <- proto.wrapper.data.toRight(ProtoDeserializationError.FieldNotSet(s"$name: data"))
-      valueClass <- supportedProtoVersions
-        .deserializerFor(ProtoVersion(proto.version))(ByteString.copyFrom(bytes), data)
-    } yield valueClass
-
   override def fromByteString(
       expectedProtocolVersion: ProtocolVersion
   )(
@@ -769,14 +758,14 @@ trait HasMemoizedProtocolVersionedWrapperCompanion2[
       bytes: OriginalByteString
   ): ParsingResult[DeserializedValueClass] =
     for {
-      valueClass <- fromTrustedByteString(bytes)
+      valueClass <- fromByteStringUnsafe(bytes)
       _ <- validateDeserialization(
         expectedProtocolVersion,
         valueClass.representativeProtocolVersion.representative,
       )
     } yield valueClass
 
-  override def fromTrustedByteString(
+  override def fromByteStringUnsafe(
       bytes: OriginalByteString
   ): ParsingResult[DeserializedValueClass] =
     for {
@@ -846,7 +835,7 @@ trait HasProtocolVersionedWrapperWithContextCompanion[
     * @param context additional information which required for the deserialization
     * @param bytes   a trusted byte string with an embedded proto version
     */
-  def fromTrustedByteString(
+  def fromByteStringUnsafe(
       context: Context
   )(
       bytes: OriginalByteString
@@ -857,12 +846,12 @@ trait HasProtocolVersionedWrapperWithContextCompanion[
     * '''Unsafe!''' Do NOT use this method unless you can justify that the data originates from a trusted
     * source.
     */
-  private[version] def readFromTrustedFile(context: Context)(
+  private[version] def readFromFileUnsafe(context: Context)(
       inputFile: String
   ): Either[String, DeserializedValueClass] = {
     for {
       bs <- BinaryFileUtil.readByteStringFromFile(inputFile)
-      value <- fromTrustedByteString(context)(bs).leftMap(_.toString)
+      value <- fromByteStringUnsafe(context)(bs).leftMap(_.toString)
     } yield value
   }
 
@@ -871,10 +860,10 @@ trait HasProtocolVersionedWrapperWithContextCompanion[
     * '''Unsafe!''' Do NOT use this method unless you can justify that the data originates from a trusted
     * source.
     */
-  private[version] def tryReadFromTrustedFile(
+  private[version] def tryReadFromFileUnsafe(
       context: Context
   )(inputFile: String): DeserializedValueClass =
-    readFromTrustedFile(context)(inputFile).valueOr(err =>
+    readFromFileUnsafe(context)(inputFile).valueOr(err =>
       throw new IllegalArgumentException(s"Reading $name from file $inputFile failed: $err")
     )
 }
@@ -918,14 +907,14 @@ trait HasMemoizedProtocolVersionedWithContextCompanion2[
   )(
       bytes: OriginalByteString
   ): ParsingResult[DeserializedValueClass] = for {
-    valueClass <- fromTrustedByteString(context)(bytes)
+    valueClass <- fromByteStringUnsafe(context)(bytes)
     _ <- validateDeserialization(
       expectedProtocolVersion,
       valueClass.representativeProtocolVersion.representative,
     )
   } yield valueClass
 
-  override def fromTrustedByteString(
+  override def fromByteStringUnsafe(
       context: Context
   )(
       bytes: OriginalByteString
@@ -970,14 +959,14 @@ trait HasProtocolVersionedCompanion2[
     *
     * @param bytes trusted bytes with an embedded proto version
     */
-  def fromTrustedByteArray(bytes: Array[Byte]): ParsingResult[DeserializedValueClass] =
+  def fromByteArrayUnsafe(bytes: Array[Byte]): ParsingResult[DeserializedValueClass] =
     for {
       proto <- ProtoConverter.protoParserArray(v1.UntypedVersionedMessage.parseFrom)(bytes)
-      valueClass <- fromTrustedProtoVersioned(VersionedMessage(proto))
+      valueClass <- fromProtoVersionedUnsafe(VersionedMessage(proto))
     } yield valueClass
 
   /** '''Unsafe!''' No deserialization validation is performed. Use `fromByteString` instead. */
-  private def fromTrustedProtoVersioned(
+  private def fromProtoVersionedUnsafe(
       proto: VersionedMessage[DeserializedValueClass]
   ): ParsingResult[DeserializedValueClass] =
     proto.wrapper.data.toRight(ProtoDeserializationError.FieldNotSet(s"$name: data")).flatMap {
@@ -997,19 +986,19 @@ trait HasProtocolVersionedCompanion2[
       bytes: OriginalByteString
   ): ParsingResult[DeserializedValueClass] =
     for {
-      valueClass <- fromTrustedByteString(bytes)
+      valueClass <- fromByteStringUnsafe(bytes)
       _ <- validateDeserialization(
         expectedProtocolVersion,
         valueClass.representativeProtocolVersion.representative,
       )
     } yield valueClass
 
-  override def fromTrustedByteString(
+  override def fromByteStringUnsafe(
       bytes: OriginalByteString
   ): ParsingResult[DeserializedValueClass] =
     for {
       proto <- ProtoConverter.protoParser(v1.UntypedVersionedMessage.parseFrom)(bytes)
-      valueClass <- fromTrustedProtoVersioned(VersionedMessage(proto))
+      valueClass <- fromProtoVersionedUnsafe(VersionedMessage(proto))
     } yield valueClass
 
   /** Deserializes a message using a delimiter (the message length) from the given input stream.
@@ -1031,14 +1020,14 @@ trait HasProtocolVersionedCompanion2[
     *         where left represents a deserialization error (exception) and right represents the successfully
     *         deserialized message
     */
-  def parseDelimitedFromTrusted(
+  def parseDelimitedFromUnsafe(
       input: InputStream
   ): Option[ParsingResult[DeserializedValueClass]] = {
     try {
       v1.UntypedVersionedMessage
         .parseDelimitedFrom(input)
         .map(VersionedMessage[DeserializedValueClass])
-        .map(fromTrustedProtoVersioned)
+        .map(fromProtoVersionedUnsafe)
     } catch {
       case protoBuffException: InvalidProtocolBufferException =>
         Some(Left(ProtoDeserializationError.BufferException(protoBuffException)))
@@ -1050,7 +1039,7 @@ trait HasProtocolVersionedCompanion2[
   implicit def hasVersionedWrapperGetResult(implicit
       getResultByteArray: GetResult[Array[Byte]]
   ): GetResult[DeserializedValueClass] = GetResult { r =>
-    fromTrustedByteArray(r.<<[Array[Byte]]).valueOr(err =>
+    fromByteArrayUnsafe(r.<<[Array[Byte]]).valueOr(err =>
       throw new DbDeserializationException(s"Failed to deserialize $name: $err")
     )
   }
@@ -1060,7 +1049,7 @@ trait HasProtocolVersionedCompanion2[
   ): GetResult[Option[DeserializedValueClass]] = GetResult { r =>
     r.<<[Option[Array[Byte]]]
       .map(
-        fromTrustedByteArray(_).valueOr(err =>
+        fromByteArrayUnsafe(_).valueOr(err =>
           throw new DbDeserializationException(s"Failed to deserialize $name: $err")
         )
       )
@@ -1087,7 +1076,7 @@ trait HasProtocolVersionedWithContextCompanion[
 
   /** '''Unsafe!''' No deserialization validation is performed. Use `fromByteString` instead.
     */
-  private def fromTrustedProtoVersioned(
+  private def fromProtoVersionedUnsafe(
       context: Context
   )(proto: VersionedMessage[ValueClass]): ParsingResult[ValueClass] =
     proto.wrapper.data.toRight(ProtoDeserializationError.FieldNotSet(s"$name: data")).flatMap {
@@ -1102,18 +1091,18 @@ trait HasProtocolVersionedWithContextCompanion[
   override def fromByteString(expectedProtocolVersion: ProtocolVersionValidation)(
       context: Context
   )(bytes: OriginalByteString): ParsingResult[ValueClass] = for {
-    valueClass <- fromTrustedByteString(context)(bytes)
+    valueClass <- fromByteStringUnsafe(context)(bytes)
     _ <- validateDeserialization(
       expectedProtocolVersion,
       valueClass.representativeProtocolVersion.representative,
     )
   } yield valueClass
 
-  override def fromTrustedByteString(
+  override def fromByteStringUnsafe(
       context: Context
   )(bytes: OriginalByteString): ParsingResult[ValueClass] = for {
     proto <- ProtoConverter.protoParser(v1.UntypedVersionedMessage.parseFrom)(bytes)
-    valueClass <- fromTrustedProtoVersioned(context)(VersionedMessage(proto))
+    valueClass <- fromProtoVersionedUnsafe(context)(VersionedMessage(proto))
   } yield valueClass
 
   override protected def deserializationErrorK(
@@ -1172,38 +1161,6 @@ trait HasProtocolVersionedWithContextAndValidationCompanion[
 }
 
 /** Similar to [[HasProtocolVersionedWithContextAndValidationCompanion]] but the deserialization
-  * context contains a [[com.digitalasset.canton.version.Transfer.TargetProtocolVersion]] for validation.
-  */
-trait HasProtocolVersionedWithContextAndValidationWithTargetProtocolVersionCompanion[
-    ValueClass <: HasRepresentativeProtocolVersion,
-    RawContext,
-] extends HasProtocolVersionedWithContextCompanion[
-      ValueClass,
-      (RawContext, TargetProtocolVersion),
-    ] {
-  def fromByteString(context: RawContext, expectedProtocolVersion: TargetProtocolVersion)(
-      bytes: OriginalByteString
-  ): ParsingResult[ValueClass] =
-    super.fromByteString(expectedProtocolVersion.v)((context, expectedProtocolVersion))(bytes)
-}
-
-/** Similar to [[HasProtocolVersionedWithContextAndValidationCompanion]] but the deserialization
-  * context contains a [[com.digitalasset.canton.version.Transfer.SourceProtocolVersion]] for validation.
-  */
-trait HasProtocolVersionedWithContextAndValidationWithSourceProtocolVersionCompanion[
-    ValueClass <: HasRepresentativeProtocolVersion,
-    RawContext,
-] extends HasProtocolVersionedWithContextCompanion[
-      ValueClass,
-      (RawContext, SourceProtocolVersion),
-    ] {
-  def fromByteString(context: RawContext, expectedProtocolVersion: SourceProtocolVersion)(
-      bytes: OriginalByteString
-  ): ParsingResult[ValueClass] =
-    super.fromByteString(expectedProtocolVersion.v)((context, expectedProtocolVersion))(bytes)
-}
-
-/** Similar to [[HasProtocolVersionedWithContextAndValidationCompanion]] but the deserialization
   * context contains '''only''' the protocol version for validation.
   */
 trait HasProtocolVersionedWithValidationCompanion[
@@ -1226,12 +1183,11 @@ trait HasProtocolVersionedWithOptionalValidationCompanion[
   ): ParsingResult[ValueClass] =
     super.fromByteString(expectedProtocolVersion)(expectedProtocolVersion)(bytes)
 
-  /** The embedded version is not validated */
-  def fromTrustedByteString(bytes: OriginalByteString): ParsingResult[ValueClass] =
-    super.fromTrustedByteString(ProtocolVersionValidation.NoValidation)(bytes)
+  def fromByteStringUnsafe(bytes: OriginalByteString): ParsingResult[ValueClass] =
+    super.fromByteStringUnsafe(ProtocolVersionValidation.NoValidation)(bytes)
 
-  def tryReadFromTrustedFile(inputFile: String): ValueClass =
-    super.tryReadFromTrustedFile(ProtocolVersionValidation.NoValidation)(inputFile)
+  def tryReadFromFileUnsafe(inputFile: String): ValueClass =
+    super.tryReadFromFileUnsafe(ProtocolVersionValidation.NoValidation)(inputFile)
 }
 
 /** Similar to [[HasProtocolVersionedWithValidationCompanion]] but with memoization. */

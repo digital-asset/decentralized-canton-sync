@@ -3,7 +3,6 @@
 
 package com.digitalasset.canton.metrics
 
-import com.daml.metrics.api.MetricHandle.LabeledMetricsFactory
 import com.daml.metrics.api.testing.InMemoryMetricsFactory.{MetricsByName, MetricsState}
 import com.daml.metrics.api.testing.{InMemoryMetricsFactory, MetricValues}
 import com.daml.metrics.api.{MetricName, MetricsContext}
@@ -15,13 +14,13 @@ import scala.language.implicitConversions
 trait MetricsFactoryValues extends MetricValues {
 
   implicit def convertFactoryToValuable(
-      factory: LabeledMetricsFactory
+      factory: CantonLabeledMetricsFactory
   ): MetricsFactoryValuable = MetricsFactoryValuable(
     factory
   )
 
   // Not final due to scalac: "The outer reference in this type test cannot be checked at run time."
-  case class MetricsFactoryValuable(factory: LabeledMetricsFactory) {
+  case class MetricsFactoryValuable(factory: CantonLabeledMetricsFactory) {
 
     def asInMemory: InMemoryMetricsFactory = factory match {
       case inMemory: InMemoryMetricsFactory => inMemory

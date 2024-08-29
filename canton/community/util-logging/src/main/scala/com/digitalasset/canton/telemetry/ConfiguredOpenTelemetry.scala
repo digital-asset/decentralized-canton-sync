@@ -15,6 +15,7 @@ final case class ConfiguredOpenTelemetry(
     openTelemetry: OpenTelemetrySdk,
     tracerProviderBuilder: SdkTracerProviderBuilder,
     onDemandMetricsReader: OnDemandMetricsReader,
+    metricsEnabled: Boolean,
 ) extends AutoCloseable {
 
   override def close(): Unit = {

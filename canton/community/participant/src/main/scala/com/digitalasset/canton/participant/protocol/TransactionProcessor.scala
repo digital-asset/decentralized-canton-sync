@@ -7,22 +7,28 @@ import cats.data.EitherT
 import com.daml.error.*
 import com.digitalasset.canton.*
 import com.digitalasset.canton.concurrent.FutureSupervisor
-import com.digitalasset.canton.config.{ProcessingTimeout, TestingConfigInternal}
+import com.digitalasset.canton.config.ProcessingTimeout
 import com.digitalasset.canton.crypto.*
 import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.data.ViewType.TransactionViewType
 import com.digitalasset.canton.error.CantonErrorGroups.ParticipantErrorGroup.TransactionErrorGroup.SubmissionErrorGroup
 import com.digitalasset.canton.error.*
 import com.digitalasset.canton.ledger.error.groups.ConsistencyErrors
-import com.digitalasset.canton.ledger.participant.state.{ChangeId, SubmitterInfo, TransactionMeta}
+import com.digitalasset.canton.ledger.participant.state.v2.{
+  ChangeId,
+  SubmitterInfo,
+  TransactionMeta,
+}
 import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
+import com.digitalasset.canton.logging.NamedLoggerFactory
 import com.digitalasset.canton.logging.pretty.{Pretty, PrettyPrinting}
-import com.digitalasset.canton.logging.{ErrorLoggingContext, NamedLoggerFactory}
-import com.digitalasset.canton.participant.ParticipantNodeParameters
 import com.digitalasset.canton.participant.metrics.TransactionProcessingMetrics
 import com.digitalasset.canton.participant.protocol.ProcessingSteps.WrapsProcessorError
 import com.digitalasset.canton.participant.protocol.ProtocolProcessor.ProcessorError
-import com.digitalasset.canton.participant.protocol.TransactionProcessor.TransactionSubmissionResult
+import com.digitalasset.canton.participant.protocol.TransactionProcessor.{
+  TransactionSubmitted,
+  buildAuthenticator,
+}
 import com.digitalasset.canton.participant.protocol.submission.TransactionConfirmationRequestFactory.TransactionConfirmationRequestCreationError
 import com.digitalasset.canton.participant.protocol.submission.TransactionTreeFactory.PackageUnknownTo
 import com.digitalasset.canton.participant.protocol.submission.{
@@ -37,11 +43,10 @@ import com.digitalasset.canton.participant.protocol.validation.{
 import com.digitalasset.canton.participant.store.SyncDomainEphemeralState
 import com.digitalasset.canton.participant.util.DAMLe
 import com.digitalasset.canton.participant.util.DAMLe.PackageResolver
-import com.digitalasset.canton.platform.apiserver.execution.CommandProgressTracker
 import com.digitalasset.canton.protocol.WellFormedTransaction.WithoutSuffixes
 import com.digitalasset.canton.protocol.*
 import com.digitalasset.canton.sequencing.client.{SendAsyncClientError, SequencerClient}
-import com.digitalasset.canton.sequencing.protocol.MediatorGroupRecipient
+import com.digitalasset.canton.sequencing.protocol.MediatorsOfDomain
 import com.digitalasset.canton.topology.{DomainId, ParticipantId}
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.ShowUtil.*
@@ -56,22 +61,19 @@ class TransactionProcessor(
     domainId: DomainId,
     damle: DAMLe,
     staticDomainParameters: StaticDomainParameters,
-    parameters: ParticipantNodeParameters,
     crypto: DomainSyncCryptoClient,
     sequencerClient: SequencerClient,
     inFlightSubmissionTracker: InFlightSubmissionTracker,
     ephemeral: SyncDomainEphemeralState,
-    commandProgressTracker: CommandProgressTracker,
     metrics: TransactionProcessingMetrics,
     override protected val timeouts: ProcessingTimeout,
     override protected val loggerFactory: NamedLoggerFactory,
     futureSupervisor: FutureSupervisor,
     packageResolver: PackageResolver,
-    override val testingConfig: TestingConfigInternal,
 )(implicit val ec: ExecutionContext)
     extends ProtocolProcessor[
       TransactionProcessingSteps.SubmissionParam,
-      TransactionSubmissionResult,
+      TransactionSubmitted,
       TransactionViewType,
       TransactionProcessor.TransactionSubmissionError,
     ](
@@ -88,7 +90,7 @@ class TransactionProcessor(
         ModelConformanceChecker(
           damle,
           confirmationRequestFactory.transactionTreeFactory,
-          SerializableContractAuthenticator(crypto.pureCrypto, parameters),
+          buildAuthenticator(crypto),
           participantId,
           packageResolver,
           loggerFactory,
@@ -97,14 +99,13 @@ class TransactionProcessor(
         crypto,
         ephemeral.contractStore,
         metrics,
-        SerializableContractAuthenticator(crypto.pureCrypto, parameters),
+        buildAuthenticator(crypto),
         new AuthenticationValidator(),
         new AuthorizationValidator(participantId),
         new InternalConsistencyChecker(
           staticDomainParameters.protocolVersion,
           loggerFactory,
         ),
-        commandProgressTracker,
         loggerFactory,
         futureSupervisor,
       ),
@@ -113,7 +114,6 @@ class TransactionProcessor(
       crypto,
       sequencerClient,
       domainId,
-      staticDomainParameters,
       staticDomainParameters.protocolVersion,
       loggerFactory,
       futureSupervisor,
@@ -130,7 +130,9 @@ class TransactionProcessor(
   ): EitherT[
     FutureUnlessShutdown,
     TransactionProcessor.TransactionSubmissionError,
-    FutureUnlessShutdown[TransactionSubmissionResult],
+    FutureUnlessShutdown[
+      TransactionSubmitted
+    ],
   ] =
     this.submit(
       TransactionProcessingSteps.SubmissionParam(
@@ -145,6 +147,12 @@ class TransactionProcessor(
 
 object TransactionProcessor {
 
+  private def buildAuthenticator(
+      crypto: DomainSyncCryptoClient
+  ): SerializableContractAuthenticatorImpl = new SerializableContractAuthenticatorImpl(
+    new UnicumGenerator(crypto.pureCrypto)
+  )
+
   sealed trait TransactionProcessorError
       extends WrapsProcessorError
       with Product
@@ -156,11 +164,7 @@ object TransactionProcessor {
   trait TransactionSubmissionError extends TransactionProcessorError with TransactionError {
     override def pretty: Pretty[TransactionSubmissionError] = {
       this.prettyOfString(_ =>
-        this.code.toMsg(
-          cause,
-          correlationId = None,
-          limit = None,
-        ) + "; " + ContextualizedErrorLogger.formatContextAsString(
+        this.code.toMsg(cause, None) + "; " + ContextualizedErrorLogger.formatContextAsString(
           context
         )
       )
@@ -232,10 +236,26 @@ object TransactionProcessor {
         changeId: ChangeId,
         existingSubmissionId: Option[LedgerSubmissionId],
         existingSubmissionDomain: DomainId,
-    ) extends TransactionErrorImpl(cause = "The submission is already in-flight")(
+    ) extends TransactionErrorImpl(cause = "The submission is already in flight")(
           ConsistencyErrors.SubmissionAlreadyInFlight.code
         )
         with TransactionSubmissionError
+
+    @Explanation(
+      """This error occurs when the sequencer refuses to accept a command due to backpressure."""
+    )
+    @Resolution("Wait a bit and retry, preferably with some backoff factor.")
+    object DomainBackpressure
+        extends ErrorCode(id = "DOMAIN_BACKPRESSURE", ErrorCategory.ContentionOnSharedResources) {
+      override def logLevel: Level = Level.INFO
+
+      final case class Rejection(reason: String)
+          extends TransactionErrorImpl(
+            cause = "The domain is overloaded.",
+            // Only reported asynchronously, so covered by submission rank guarantee
+            definiteAnswer = true,
+          )
+    }
 
     @Explanation(
       """The participant has rejected all incoming commands during a configurable grace period."""
@@ -363,26 +383,9 @@ object TransactionProcessor {
           id = "CHOSEN_MEDIATOR_IS_INACTIVE",
           ErrorCategory.ContentionOnSharedResources,
         ) {
-      final case class Error(chosen_mediator: MediatorGroupRecipient, timestamp: CantonTimestamp)
+      final case class Error(chosen_mediator: MediatorsOfDomain, timestamp: CantonTimestamp)
           extends TransactionErrorImpl(
             cause = "the chosen mediator is not active on the domain"
-          )
-    }
-
-    @Explanation(
-      "An internal error occurred during transaction submission."
-    )
-    @Resolution("Please contact support and provide the failure reason.")
-    object SubmissionInternalError
-        extends ErrorCode(
-          "SUBMISSION_INTERNAL_ERROR",
-          ErrorCategory.SystemInternalAssumptionViolated,
-        ) {
-      final case class Failure(throwable: Throwable)(implicit
-          val loggingContext: ErrorLoggingContext
-      ) extends TransactionErrorImpl(
-            cause = "internal error during transaction submission",
-            throwableO = Some(throwable),
           )
     }
   }
@@ -421,12 +424,6 @@ object TransactionProcessor {
     )
   }
 
-  sealed trait TransactionSubmissionResult extends Product with Serializable
-  case object TransactionSubmitted extends TransactionSubmissionResult
+  case object TransactionSubmitted
   type TransactionSubmitted = TransactionSubmitted.type
-  case object TransactionSubmissionFailure extends TransactionSubmissionResult
-  type TransactionSubmissionFailure = TransactionSubmissionFailure.type
-  final case class TransactionSubmissionUnknown(maxSequencingTime: CantonTimestamp)
-      extends TransactionSubmissionResult
-  type TransactonSubmissionUnknown = TransactionSubmissionUnknown.type
 }

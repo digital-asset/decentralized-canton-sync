@@ -78,11 +78,6 @@ private[backend] object AppendOnlySchema {
     ): Field[FROM, Option[Boolean], _] =
       BooleanOptional(extractor)
 
-    def boolean[FROM](
-        extractor: StringInterning => FROM => Boolean
-    ): Field[FROM, Boolean, _] =
-      BooleanMandatory(extractor)
-
     def insert[FROM](tableName: String)(fields: (String, Field[FROM, _, _])*): Table[FROM]
     def idempotentInsert[FROM](tableName: String, keyFieldIndex: Int, ordering: Ordering[FROM])(
         fields: (String, Field[FROM, _, _])*
@@ -109,9 +104,6 @@ private[backend] object AppendOnlySchema {
         ),
         "package_name" -> fieldStrategy.int(stringInterning =>
           dbDto => stringInterning.packageName.unsafe.internalize(dbDto.package_name)
-        ),
-        "package_version" -> fieldStrategy.intOptional(stringInterning =>
-          _.package_version.map(stringInterning.packageVersion.unsafe.internalize)
         ),
         "flat_event_witnesses" -> fieldStrategy.intArray(stringInterning =>
           _.flat_event_witnesses.map(stringInterning.party.unsafe.internalize)
@@ -247,9 +239,6 @@ private[backend] object AppendOnlySchema {
         "package_name" -> fieldStrategy.int(stringInterning =>
           dbDto => stringInterning.packageName.unsafe.internalize(dbDto.package_name)
         ),
-        "package_version" -> fieldStrategy.intOptional(stringInterning =>
-          _.package_version.map(stringInterning.packageVersion.unsafe.internalize)
-        ),
         "flat_event_witnesses" -> fieldStrategy.intArray(stringInterning =>
           _.flat_event_witnesses.map(stringInterning.party.unsafe.internalize)
         ),
@@ -291,6 +280,30 @@ private[backend] object AppendOnlySchema {
     val eventsNonConsumingExercise: Table[DbDto.EventExercise] =
       fieldStrategy.insert("lapi_events_non_consuming_exercise")(exerciseFields*)
 
+    val packageEntries: Table[DbDto.PackageEntry] =
+      fieldStrategy.insert("lapi_package_entries")(
+        "ledger_offset" -> fieldStrategy.string(_ => _.ledger_offset),
+        "recorded_at" -> fieldStrategy.bigint(_ => _.recorded_at),
+        "submission_id" -> fieldStrategy.stringOptional(_ => _.submission_id),
+        "typ" -> fieldStrategy.string(_ => _.typ),
+        "rejection_reason" -> fieldStrategy.stringOptional(_ => _.rejection_reason),
+      )
+
+    val packages: Table[DbDto.Package] =
+      fieldStrategy.idempotentInsert(
+        tableName = "lapi_packages",
+        keyFieldIndex = 0,
+        ordering = Ordering.by[DbDto.Package, String](_.package_id),
+      )(
+        "package_id" -> fieldStrategy.string(_ => _.package_id),
+        "upload_id" -> fieldStrategy.string(_ => _.upload_id),
+        "source_description" -> fieldStrategy.stringOptional(_ => _.source_description),
+        "package_size" -> fieldStrategy.bigint(_ => _.package_size),
+        "known_since" -> fieldStrategy.bigint(_ => _.known_since),
+        "ledger_offset" -> fieldStrategy.string(_ => _.ledger_offset),
+        "package" -> fieldStrategy.bytea(_ => _._package),
+      )
+
     val partyEntries: Table[DbDto.PartyEntry] =
       fieldStrategy.insert("lapi_party_entries")(
         "ledger_offset" -> fieldStrategy.string(_ => _.ledger_offset),
@@ -310,7 +323,6 @@ private[backend] object AppendOnlySchema {
       fieldStrategy.insert("lapi_command_completions")(
         "completion_offset" -> fieldStrategy.string(_ => _.completion_offset),
         "record_time" -> fieldStrategy.bigint(_ => _.record_time),
-        "publication_time" -> fieldStrategy.bigint(_ => _.publication_time),
         "application_id" -> fieldStrategy.string(_ => _.application_id),
         "submitters" -> fieldStrategy.intArray(stringInterning =>
           _.submitters.map(stringInterning.party.unsafe.internalize)
@@ -332,11 +344,6 @@ private[backend] object AppendOnlySchema {
         "domain_id" -> fieldStrategy.int(stringInterning =>
           dbDto => stringInterning.domainId.unsafe.internalize(dbDto.domain_id)
         ),
-        "message_uuid" -> fieldStrategy.stringOptional(_ => _.message_uuid),
-        "request_sequencer_counter" -> fieldStrategy.bigintOptional(_ =>
-          _.request_sequencer_counter
-        ),
-        "is_transaction" -> fieldStrategy.boolean(_ => _.is_transaction),
         "trace_context" -> fieldStrategy.bytea(_ => _.trace_context),
       )
 
@@ -420,11 +427,6 @@ private[backend] object AppendOnlySchema {
       fieldStrategy.insert("lapi_transaction_meta")(
         "transaction_id" -> fieldStrategy.string(_ => _.transaction_id),
         "event_offset" -> fieldStrategy.string(_ => _.event_offset),
-        "publication_time" -> fieldStrategy.bigint(_ => _.publication_time),
-        "record_time" -> fieldStrategy.bigint(_ => _.record_time),
-        "domain_id" -> fieldStrategy.int(stringInterning =>
-          dbDto => stringInterning.domainId.unsafe.internalize(dbDto.domain_id)
-        ),
         "event_sequential_id_first" -> fieldStrategy.bigint(_ => _.event_sequential_id_first),
         "event_sequential_id_last" -> fieldStrategy.bigint(_ => _.event_sequential_id_last),
       )
@@ -443,6 +445,8 @@ private[backend] object AppendOnlySchema {
       eventsNonConsumingExercise.executeUpdate,
       eventsUnassign.executeUpdate,
       eventsAssign.executeUpdate,
+      packageEntries.executeUpdate,
+      packages.executeUpdate,
       partyEntries.executeUpdate,
       commandCompletions.executeUpdate,
       stringInterningTable.executeUpdate,
@@ -474,6 +478,8 @@ private[backend] object AppendOnlySchema {
             .prepareData(collectWithFilter[EventExercise](!_.consuming), stringInterning),
           eventsUnassign.prepareData(collect[EventUnassign], stringInterning),
           eventsAssign.prepareData(collect[EventAssign], stringInterning),
+          packageEntries.prepareData(collect[PackageEntry], stringInterning),
+          packages.prepareData(collect[Package], stringInterning),
           partyEntries.prepareData(collect[PartyEntry], stringInterning),
           commandCompletions.prepareData(collect[CommandCompletion], stringInterning),
           stringInterningTable.prepareData(collect[StringInterningDto], stringInterning),

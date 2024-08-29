@@ -13,41 +13,41 @@ import com.digitalasset.canton.crypto.{
   PrivateKey,
   SigningPrivateKey,
 }
-import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
 import org.scalatest.wordspec.AsyncWordSpec
 
-trait CryptoPrivateStoreExtendedTest extends CryptoPrivateStoreTest {
-  this: AsyncWordSpec =>
+import scala.concurrent.Future
+
+trait CryptoPrivateStoreExtendedTest extends CryptoPrivateStoreTest { this: AsyncWordSpec =>
 
   def cryptoPrivateStoreExtended(
       newStore: => CryptoPrivateStoreExtended,
       encrypted: Boolean,
   ): Unit = {
 
-    val crypto = SymbolicCrypto.create(testedReleaseProtocolVersion, timeouts, loggerFactory)
-    crypto.setRandomKeysFlag(true)
-
     val sigKey1Name: String = uniqueKeyName("sigKey1_")
-    val encKey1Name: String = uniqueKeyName("encKey1_")
+    val sigKey2Name: String = uniqueKeyName("sigKey2_")
 
-    val sigKey1: SigningPrivateKey = crypto.newSymbolicSigningKeyPair().privateKey
+    val encKey1Name: String = uniqueKeyName("encKey1_")
+    val encKey2Name: String = uniqueKeyName("encKey2_")
+
+    val sigKey1: SigningPrivateKey = SymbolicCrypto.signingPrivateKey(sigKey1Name)
     val sigKey1WithName: SigningPrivateKeyWithName =
       SigningPrivateKeyWithName(sigKey1, Some(KeyName.tryCreate(sigKey1Name)))
     val sigKey1BytesWithName =
       (sigKey1.toByteString(testedReleaseProtocolVersion.v), sigKey1WithName.name)
 
-    val sigKey2: SigningPrivateKey = crypto.newSymbolicSigningKeyPair().privateKey
+    val sigKey2: SigningPrivateKey = SymbolicCrypto.signingPrivateKey(sigKey2Name)
     val sigKey2WithName: SigningPrivateKeyWithName = SigningPrivateKeyWithName(sigKey2, None)
     val sigKey2BytesWithName =
       (sigKey2.toByteString(testedReleaseProtocolVersion.v), sigKey2WithName.name)
 
-    val encKey1: EncryptionPrivateKey = crypto.newSymbolicEncryptionKeyPair().privateKey
+    val encKey1: EncryptionPrivateKey = SymbolicCrypto.encryptionPrivateKey(encKey1Name)
     val encKey1WithName: EncryptionPrivateKeyWithName =
       EncryptionPrivateKeyWithName(encKey1, Some(KeyName.tryCreate(encKey1Name)))
     val encKey1BytesWithName =
       (encKey1.toByteString(testedReleaseProtocolVersion.v), encKey1WithName.name)
 
-    val encKey2: EncryptionPrivateKey = crypto.newSymbolicEncryptionKeyPair().privateKey
+    val encKey2: EncryptionPrivateKey = SymbolicCrypto.encryptionPrivateKey(encKey2Name)
     val encKey2WithName: EncryptionPrivateKeyWithName = EncryptionPrivateKeyWithName(encKey2, None)
     val encKey2BytesWithName =
       (encKey2.toByteString(testedReleaseProtocolVersion.v), encKey2WithName.name)
@@ -57,12 +57,11 @@ trait CryptoPrivateStoreExtendedTest extends CryptoPrivateStoreTest {
         privateKey: PrivateKey,
         id: Fingerprint,
         name: Option[KeyName],
-    ): EitherT[FutureUnlessShutdown, CryptoPrivateStoreError, Unit] =
+    ): EitherT[Future, CryptoPrivateStoreError, Unit] =
       store match {
-        case extended: CryptoPrivateStoreExtended =>
-          extended.storePrivateKey(privateKey, name)
+        case extended: CryptoPrivateStoreExtended => extended.storePrivateKey(privateKey, name)
         case _ =>
-          EitherT.leftT[FutureUnlessShutdown, Unit](
+          EitherT.leftT[Future, Unit](
             CryptoPrivateStoreError.FailedToInsertKey(
               id,
               "crypto private store does not implement the necessary method to store a private key",
@@ -73,6 +72,7 @@ trait CryptoPrivateStoreExtendedTest extends CryptoPrivateStoreTest {
     behave like cryptoPrivateStore(
       newStore,
       storePrivateKey,
+      encrypted,
     )
 
     "store encryption keys correctly when added incrementally" in {
@@ -80,9 +80,9 @@ trait CryptoPrivateStoreExtendedTest extends CryptoPrivateStoreTest {
       for {
         _ <- store
           .storeDecryptionKey(encKey1, encKey1WithName.name)
-          .valueOrFailShutdown("store key 1")
-        _ <- store.storeDecryptionKey(encKey2, None).valueOrFailShutdown("store key 2")
-        result <- store.listPrivateKeys(Encryption, encrypted).valueOrFailShutdown("list keys")
+          .valueOrFail("store key 1")
+        _ <- store.storeDecryptionKey(encKey2, None).valueOrFail("store key 2")
+        result <- store.listPrivateKeys(Encryption, encrypted).valueOrFail("list keys")
       } yield {
         result.map(storedKey => (storedKey.data, storedKey.name)) shouldEqual Set(
           encKey1BytesWithName,
@@ -94,9 +94,9 @@ trait CryptoPrivateStoreExtendedTest extends CryptoPrivateStoreTest {
     "store signing keys correctly when added incrementally" in {
       val store = newStore
       for {
-        _ <- store.storeSigningKey(sigKey1, sigKey1WithName.name).valueOrFailShutdown("store key 1")
-        _ <- store.storeSigningKey(sigKey2, None).valueOrFailShutdown("store key 2")
-        result <- store.listPrivateKeys(Signing, encrypted).valueOrFailShutdown("list keys")
+        _ <- store.storeSigningKey(sigKey1, sigKey1WithName.name).valueOrFail("store key 1")
+        _ <- store.storeSigningKey(sigKey2, None).valueOrFail("store key 2")
+        result <- store.listPrivateKeys(Signing, encrypted).valueOrFail("list keys")
       } yield {
         result.map(storedKey => (storedKey.data, storedKey.name)) shouldEqual Set(
           sigKey1BytesWithName,
@@ -110,19 +110,17 @@ trait CryptoPrivateStoreExtendedTest extends CryptoPrivateStoreTest {
       for {
         _ <- store
           .storeDecryptionKey(encKey1, encKey1WithName.name)
-          .valueOrFailShutdown("store key 1 with name")
+          .valueOrFail("store key 1 with name")
 
         // Should succeed
         _ <- store
           .storeDecryptionKey(encKey1, encKey1WithName.name)
-          .valueOrFailShutdown("store key 1 with name again")
+          .valueOrFail("store key 1 with name again")
 
         // Should fail due to different name
-        failedInsert <- store.storeDecryptionKey(encKey1, None).failOnShutdown.value
+        failedInsert <- store.storeDecryptionKey(encKey1, None).value
 
-        result <- store
-          .listPrivateKeys(Encryption, encrypted)
-          .valueOrFailShutdown("list private keys")
+        result <- store.listPrivateKeys(Encryption, encrypted)
       } yield {
         failedInsert.left.value shouldBe a[CryptoPrivateStoreError]
         result.map(storedKey => (storedKey.data, storedKey.name)) shouldEqual Set(
@@ -136,17 +134,17 @@ trait CryptoPrivateStoreExtendedTest extends CryptoPrivateStoreTest {
       for {
         _ <- store
           .storeSigningKey(sigKey1, sigKey1WithName.name)
-          .valueOrFailShutdown("store key 1 with name")
+          .valueOrFail("store key 1 with name")
 
         // Should succeed
         _ <- store
           .storeSigningKey(sigKey1, sigKey1WithName.name)
-          .valueOrFailShutdown("store key 1 with name again")
+          .valueOrFail("store key 1 with name again")
 
         // Should fail due to different name
-        failedInsert <- store.storeSigningKey(sigKey1, None).failOnShutdown.value
+        failedInsert <- store.storeSigningKey(sigKey1, None).value
 
-        result <- store.listPrivateKeys(Signing, encrypted).valueOrFailShutdown("list private keys")
+        result <- store.listPrivateKeys(Signing, encrypted)
       } yield {
         failedInsert.left.value shouldBe a[CryptoPrivateStoreError]
         result.map(storedKey => (storedKey.data, storedKey.name)) shouldEqual Set(
@@ -160,8 +158,8 @@ trait CryptoPrivateStoreExtendedTest extends CryptoPrivateStoreTest {
       for {
         _ <- store
           .storeDecryptionKey(encKey1, encKey1WithName.name)
-          .valueOrFailShutdown("store key 1")
-        encryptedRes <- store.encrypted(encKey1.id).valueOrFailShutdown("encrypted")
+          .valueOrFail("store key 1")
+        encryptedRes <- store.encrypted(encKey1.id)
       } yield encryptedRes.isDefined shouldBe encrypted
     }
 

@@ -5,7 +5,11 @@ package com.digitalasset.canton.admin.api.client.data
 
 import cats.Show
 import com.digitalasset.canton.admin.api.client.data.CantonStatus.splitSuccessfulAndFailedStatus
-import com.digitalasset.canton.console.{MediatorReference, ParticipantReference, SequencerReference}
+import com.digitalasset.canton.console.{
+  MediatorReference,
+  ParticipantReference,
+  SequencerNodeReference,
+}
 import com.digitalasset.canton.health.admin.data.{
   MediatorNodeStatus,
   NodeStatus,
@@ -71,7 +75,7 @@ object CommunityCantonStatus {
       participants: Map[String, () => NodeStatus[ParticipantStatus]],
   ): CommunityCantonStatus = {
     val (sequencerStatus, unreachableSequencers) =
-      splitSuccessfulAndFailedStatus(sequencers, SequencerReference.InstanceType)
+      splitSuccessfulAndFailedStatus(sequencers, SequencerNodeReference.InstanceType)
     val (mediatorStatus, unreachableMediators) =
       splitSuccessfulAndFailedStatus(mediators, MediatorReference.InstanceType)
     val (participantStatus, unreachableParticipants) =
@@ -103,7 +107,7 @@ final case class CommunityCantonStatus(
     val sequencers = descriptions(
       sequencerStatus,
       unreachableSequencers,
-      SequencerReference.InstanceType,
+      SequencerNodeReference.InstanceType,
     )
     val mediators = descriptions(
       mediatorStatus,

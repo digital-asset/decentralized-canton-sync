@@ -7,21 +7,16 @@ import cats.syntax.parallel.*
 import com.daml.metrics
 import com.daml.metrics.api.MetricHandle.Gauge
 import com.daml.metrics.api.MetricHandle.Gauge.SimpleCloseableGauge
+import com.daml.metrics.api.MetricName
 import com.daml.metrics.api.noop.NoOpCounter
-import com.daml.metrics.api.{MetricInfo, MetricName, MetricQualification}
 import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
 import com.digitalasset.canton.logging.pretty.Pretty
-import com.digitalasset.canton.logging.{NamedEventCapturingLogger, NamedLoggerFactory}
-import com.digitalasset.canton.time.SimClock
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.FutureInstances.*
 import com.digitalasset.canton.util.MonadUtil
 import com.digitalasset.canton.{BaseTest, SequencerCounter}
-import org.scalatest.Assertion
 import org.scalatest.wordspec.AsyncWordSpec
-import org.slf4j.event.Level
 
-import java.time.Duration as JDuration
 import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -33,31 +28,9 @@ class TaskSchedulerTest extends AsyncWordSpec with BaseTest {
 
   private lazy val metrics = new MockTaskSchedulerMetrics()
 
-  private lazy val clock: SimClock = new SimClock(loggerFactory = loggerFactory)
-
-  private val alertAfter: JDuration = JDuration.ofSeconds(10)
-
-  private val alertEvery: JDuration = JDuration.ofSeconds(2)
-
-  private def mkTaskScheduler(
-      initSc: SequencerCounter = SequencerCounter(0),
-      initTs: CantonTimestamp = CantonTimestamp.Epoch,
-      loggerFactory: NamedLoggerFactory = loggerFactory,
-  ): TaskScheduler[TestTask] = new TaskScheduler(
-    initSc,
-    initTs,
-    alertAfter,
-    alertEvery,
-    TestTaskOrdering,
-    metrics,
-    exitOnFatalFailures = true,
-    timeouts,
-    loggerFactory,
-    futureSupervisor,
-    clock,
-  )
-
   "TaskScheduler" should {
+    val EPOCH = CantonTimestamp.Epoch
+
     "correctly order tasks and barriers" in {
       final case class TaskData(
           timestamp: CantonTimestamp,
@@ -113,7 +86,16 @@ class TaskSchedulerTest extends AsyncWordSpec with BaseTest {
       (0 until repetitions).toList
         .parTraverse_ { _ =>
           val shuffled = rand.shuffle(indexedChanges)
-          val taskScheduler = mkTaskScheduler(initTs = CantonTimestamp.MinValue)
+          val taskScheduler =
+            new TaskScheduler(
+              SequencerCounter(0),
+              CantonTimestamp.MinValue,
+              TestTaskOrdering,
+              metrics,
+              timeouts,
+              loggerFactory,
+              futureSupervisor,
+            )
           val executionOrder = mutable.Queue.empty[Int]
 
           val barrierFutures = barriers.map(timestamp => taskScheduler.scheduleBarrier(timestamp))
@@ -151,7 +133,7 @@ class TaskSchedulerTest extends AsyncWordSpec with BaseTest {
           for {
             _ <- MonadUtil.sequentialTraverse_(shuffled.zipWithIndex) {
               case (Task(TaskData(ts, sc, kind), taskCounter), idx) =>
-                val task = TestTask(ts, sc, executionOrder, taskCounter, kind)
+                val task = new TestTask(executionOrder, taskCounter, ts, sc, kind)
                 tasks += task
                 taskScheduler.scheduleTask(task)
 
@@ -162,7 +144,7 @@ class TaskSchedulerTest extends AsyncWordSpec with BaseTest {
                   ticksAdded += sc
                   checkBarriers()
                 } else Future.unit
-              case (Tick(sc, ts), _) =>
+              case (Tick(sc, ts), idx) =>
                 taskScheduler.addTick(sc, ts)
                 ticksAdded += sc
                 checkBarriers()
@@ -179,17 +161,27 @@ class TaskSchedulerTest extends AsyncWordSpec with BaseTest {
     }
 
     "process tasks and complete barriers when they are ready" in {
-      val taskScheduler = mkTaskScheduler()
+      val taskScheduler =
+        new TaskScheduler(
+          SequencerCounter(0),
+          CantonTimestamp.MinValue,
+          TestTaskOrdering,
+          metrics,
+          timeouts,
+          loggerFactory,
+          futureSupervisor,
+        )
       val executionOrder = mutable.Queue.empty[Int]
       val waitPromise = Promise[Unit]()
-      val task0 = TestTask(ofEpochMilli(1), SequencerCounter(0), executionOrder)
+      val task0 = TestTask(executionOrder, 0, ofEpochMilli(1), SequencerCounter(0), Activeness)
       val task1 =
         TestTask(
+          executionOrder,
+          1,
           ofEpochMilli(2),
           SequencerCounter(0),
-          executionOrder,
-          seqNo = 1,
-          waitFor = waitPromise.future,
+          Activeness,
+          waitPromise.future,
         )
       taskScheduler.scheduleTask(task1)
       taskScheduler.scheduleTask(task0)
@@ -213,15 +205,33 @@ class TaskSchedulerTest extends AsyncWordSpec with BaseTest {
     }
 
     "complain about timestamps before head" in {
-      val taskScheduler = mkTaskScheduler()
+      val taskScheduler =
+        new TaskScheduler(
+          SequencerCounter(0),
+          EPOCH,
+          TestTaskOrdering,
+          metrics,
+          timeouts,
+          loggerFactory,
+          futureSupervisor,
+        )
       loggerFactory.assertInternalError[IllegalArgumentException](
-        taskScheduler.addTick(SequencerCounter(1), ofEpochMilli(-1)),
+        taskScheduler.addTick(SequencerCounter(1), EPOCH.minusMillis(1)),
         _.getMessage shouldBe "Timestamp 1969-12-31T23:59:59.999Z for sequence counter 1 is not after current time 1970-01-01T00:00:00Z.",
       )
     }
 
     "complain about non-increasing timestamps on ticks" in {
-      val taskScheduler = mkTaskScheduler()
+      val taskScheduler =
+        new TaskScheduler(
+          SequencerCounter(0),
+          EPOCH,
+          TestTaskOrdering,
+          metrics,
+          timeouts,
+          loggerFactory,
+          futureSupervisor,
+        )
 
       taskScheduler.addTick(SequencerCounter(1), ofEpochMilli(2))
       taskScheduler.addTick(SequencerCounter(7), ofEpochMilli(4))
@@ -254,7 +264,16 @@ class TaskSchedulerTest extends AsyncWordSpec with BaseTest {
     }
 
     "ignore signals before head" in {
-      val taskScheduler = mkTaskScheduler()
+      val taskScheduler =
+        new TaskScheduler(
+          SequencerCounter(0),
+          EPOCH,
+          TestTaskOrdering,
+          metrics,
+          timeouts,
+          loggerFactory,
+          futureSupervisor,
+        )
 
       taskScheduler.addTick(SequencerCounter(0), ofEpochMilli(2))
       taskScheduler.addTick(SequencerCounter(1), ofEpochMilli(3))
@@ -267,7 +286,16 @@ class TaskSchedulerTest extends AsyncWordSpec with BaseTest {
     }
 
     "complain about adding a sequencer counter twice with different times" in {
-      val taskScheduler = mkTaskScheduler()
+      val taskScheduler =
+        new TaskScheduler(
+          SequencerCounter(0),
+          EPOCH,
+          TestTaskOrdering,
+          metrics,
+          timeouts,
+          loggerFactory,
+          futureSupervisor,
+        )
 
       taskScheduler.addTick(SequencerCounter(1), ofEpochMilli(10))
       loggerFactory.assertInternalError[IllegalArgumentException](
@@ -279,7 +307,16 @@ class TaskSchedulerTest extends AsyncWordSpec with BaseTest {
     }
 
     "complain about Long.MaxValue as a sequencer counter" in {
-      val taskScheduler = mkTaskScheduler()
+      val taskScheduler =
+        new TaskScheduler(
+          SequencerCounter(0),
+          EPOCH,
+          TestTaskOrdering,
+          metrics,
+          timeouts,
+          loggerFactory,
+          futureSupervisor,
+        )
       loggerFactory.assertInternalError[IllegalArgumentException](
         taskScheduler.addTick(SequencerCounter.MaxValue, CantonTimestamp.MaxValue),
         _.getMessage shouldBe "Sequencer counter Long.MaxValue signalled to task scheduler.",
@@ -287,97 +324,41 @@ class TaskSchedulerTest extends AsyncWordSpec with BaseTest {
     }
 
     "scheduled tasks must be after current time" in {
-      val taskScheduler = mkTaskScheduler(SequencerCounter(10))
+      val taskScheduler =
+        new TaskScheduler(
+          SequencerCounter(10),
+          EPOCH,
+          TestTaskOrdering,
+          metrics,
+          timeouts,
+          loggerFactory,
+          futureSupervisor,
+        )
       val queue = mutable.Queue.empty[Int]
 
       loggerFactory.assertInternalError[IllegalArgumentException](
-        taskScheduler.scheduleTask(TestTask(ofEpochMilli(-1), SequencerCounter(10), queue, 1)),
+        taskScheduler.scheduleTask(new TestTask(queue, 1, ofEpochMilli(-1), SequencerCounter(10))),
         _.getMessage should fullyMatch regex "Timestamp .* of new task TestTask.* lies before current time .*\\.",
       )
 
       taskScheduler.scheduleTask(
-        TestTask(
-          ofEpochMilli(3),
-          SequencerCounter(10),
+        new TestTask(
           queue,
           2,
+          ofEpochMilli(3),
+          SequencerCounter(10),
+          waitFor = Promise[Unit]().future,
         )
       )
       taskScheduler.addTick(SequencerCounter(11), ofEpochMilli(5))
       taskScheduler.addTick(SequencerCounter(10), ofEpochMilli(1))
       // Time advances even if a task cannot be processed yet
       loggerFactory.assertInternalError[IllegalArgumentException](
-        taskScheduler.scheduleTask(TestTask(ofEpochMilli(4), SequencerCounter(10), queue, 3)),
+        taskScheduler.scheduleTask(new TestTask(queue, 3, ofEpochMilli(4), SequencerCounter(10))),
         _.getMessage should fullyMatch regex "Timestamp .* of new task TestTask.* lies before current time .*\\.",
       )
     }
 
-    "log INFO in case of missing ticks" in {
-      val timeoutMillis = 10L
-
-      val capturingLoggerFactory =
-        new NamedEventCapturingLogger(
-          classOf[TaskSchedulerTest].getSimpleName,
-          // Skip everything below INFO level as this is not relevant here
-          skip = _.level.toInt < Level.INFO.toInt,
-        )
-      val taskScheduler = mkTaskScheduler(
-        initTs = CantonTimestamp.ofEpochSecond(-1),
-        loggerFactory = capturingLoggerFactory,
-      )
-
-      def assertInfoLogged(
-          waitFor: Int,
-          lastSc: Int,
-          lastTimestamp: CantonTimestamp,
-          traceContext: TraceContext,
-      ): Assertion = {
-        capturingLoggerFactory.assertNextMessageIs(
-          s"Task scheduler waits for tick of sc=$waitFor. The tick with sc=$lastSc occurred at $lastTimestamp. Blocked trace ids: ${traceContext.traceId.value}",
-          Level.INFO,
-        )
-        capturingLoggerFactory.assertNoMoreEvents(timeoutMillis)
-      }
-
-      // An idle scheduler should not log a problem.
-      clock.advance(alertAfter)
-      capturingLoggerFactory.assertNoMoreEvents(timeoutMillis)
-
-      // Schedule a task. The scheduler should not log a problem as the task is above the high watermark.
-      val task = TestTask(CantonTimestamp.ofEpochSecond(1), SequencerCounter(1))(
-        traceContext = nonEmptyTraceContext1,
-        ec = implicitly,
-      )
-      taskScheduler.scheduleTask(task)
-      clock.advance(alertEvery)
-      capturingLoggerFactory.assertNoMoreEvents(timeoutMillis)
-
-      // Tick the task and check that a log line is emitted
-      taskScheduler.addTick(SequencerCounter(1), CantonTimestamp.ofEpochSecond(1))
-      clock.advance(alertEvery)
-      assertInfoLogged(0, -1, CantonTimestamp.Epoch, nonEmptyTraceContext1)
-
-      // After alertEvery, the log line should be emitted again.
-      clock.advance(alertEvery)
-      assertInfoLogged(0, -1, CantonTimestamp.Epoch, nonEmptyTraceContext1)
-
-      // Add the missing ticks, wait and check that nothing is logged.
-      taskScheduler.addTick(SequencerCounter(0), CantonTimestamp.ofEpochSecond(0))
-      val tsOf1 = clock.now
-      clock.advance(alertAfter)
-      capturingLoggerFactory.assertNoMoreEvents(timeoutMillis)
-
-      // Schedule a blocked barrier and check that a log line is emitted.
-      taskScheduler.scheduleBarrier(CantonTimestamp.ofEpochSecond(3))(nonEmptyTraceContext2)
-      taskScheduler.addTick(SequencerCounter(3), CantonTimestamp.ofEpochSecond(3))
-      clock.advance(alertEvery)
-      assertInfoLogged(2, 1, tsOf1, nonEmptyTraceContext2)
-
-      // Add the missing tick, wait and check that nothing is logged.
-      taskScheduler.addTick(SequencerCounter(2), CantonTimestamp.ofEpochSecond(2))
-      clock.advance(alertAfter)
-      capturingLoggerFactory.assertNoMoreEvents(timeoutMillis)
-    }
   }
 }
 
@@ -386,11 +367,11 @@ object TaskSchedulerTest {
   class MockTaskSchedulerMetrics extends TaskSchedulerMetrics {
     val prefix: MetricName = MetricName("test")
     override val sequencerCounterQueue: metrics.api.MetricHandle.Counter = NoOpCounter(
-      MetricInfo(prefix :+ "counter", "", MetricQualification.Debug)
+      prefix :+ "counter"
     )
 
     override def taskQueue(size: () => Int): Gauge.CloseableGauge =
-      SimpleCloseableGauge(MetricInfo(MetricName("test"), "", MetricQualification.Debug), () => ())
+      SimpleCloseableGauge("test", () => ())
   }
 
   val Finalization: Int = 0
@@ -398,10 +379,10 @@ object TaskSchedulerTest {
   val Activeness: Int = 2
 
   private final case class TestTask(
+      queue: mutable.Queue[Int],
+      seqNo: Int,
       override val timestamp: CantonTimestamp,
       override val sequencerCounter: SequencerCounter,
-      queue: mutable.Queue[Int] = mutable.Queue.empty,
-      seqNo: Int = 0,
       kind: Int = Activeness,
       waitFor: Future[Unit] = Future.unit,
   )(implicit val ec: ExecutionContext, val traceContext: TraceContext)

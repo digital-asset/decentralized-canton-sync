@@ -1,7 +1,7 @@
 package com.daml.network.store
 
 import com.daml.ledger.javaapi.data.{CreatedEvent, DamlRecord, ExercisedEvent, Int64, Value}
-import com.digitalasset.daml.lf.data.Bytes
+import com.daml.lf.data.Bytes
 import com.daml.network.environment.ledger.api.LedgerClient.GetTreeUpdatesResponse
 import com.daml.network.environment.ledger.api.{
   LedgerClient,
@@ -41,7 +41,7 @@ class UpdateHistoryTest extends UpdateHistoryTestBase {
         val store = mkStore()
         for {
           _ <- initStore(store)
-          _ <- create(domain1, cid1, offset1, party1, store, time(1))
+          _ <- create(domain1, cid1, offset1, party1, store)
           updates <- updates(store)
         } yield checkUpdates(
           updates,

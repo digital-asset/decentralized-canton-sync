@@ -93,13 +93,7 @@ const SendTransfer: React.FC = () => {
         <CardContent sx={{ paddingX: '64px' }}>
           <Stack direction="column" mb={4} spacing={1}>
             <Typography variant="h6">Recipient</Typography>
-            <BftAnsField
-              name="Receiver"
-              label="Receiver"
-              aria-label="Receiver"
-              id="create-offer-receiver"
-              onPartyChanged={setReceiver}
-            />
+            <BftAnsField id="create-offer-receiver" label="Receiver" onPartyChanged={setReceiver} />
           </Stack>
 
           <Stack direction="column" mb={4} spacing={1}>

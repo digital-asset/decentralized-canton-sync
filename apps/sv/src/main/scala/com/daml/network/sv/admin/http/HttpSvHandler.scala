@@ -29,7 +29,7 @@ import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.time.Clock
 import com.digitalasset.canton.topology.*
-import com.digitalasset.canton.topology.transaction.SequencerDomainState
+import com.digitalasset.canton.topology.transaction.SequencerDomainStateX
 import com.digitalasset.canton.tracing.{Spanning, TraceContext}
 import io.grpc.{Status, StatusRuntimeException}
 import io.grpc.Status.Code
@@ -293,7 +293,7 @@ class HttpSvHandler(
       for {
         latestOpenMiningRound <- dsoStore.getLatestActiveOpenMiningRound()
         amuletRules <- dsoStore.getAmuletRules()
-        rulesAndStates <- dsoStore.getDsoRulesWithSvNodeStates()
+        rulesAndStates <- dsoStore.getDsoRulesWithMemberNodeStates()
         dsoRules = rulesAndStates.dsoRules
       } yield definitions.GetDsoInfoResponse(
         svUser = svUserName,
@@ -364,11 +364,11 @@ class HttpSvHandler(
         candidateParty <- Codec.decode(Codec.Party)(body.candidatePartyId)
       } yield {
         val errorMessage =
-          s"Candidate party is not an sv and no `SvOnboardingConfirmed` for the candidate party is found."
+          s"Candidate party is not a member and no `SvOnboardingConfirmed` for the candidate party is found."
         for {
           isCandidateOnboardingConfirmed <- isOnboardingConfirmed(candidateParty)
           dsoRules <- dsoStore.getDsoRules()
-          isCandidateSv = SvApp.isSvParty(candidateParty, dsoRules)
+          isCandidateMember = SvApp.isDsoMemberParty(candidateParty, dsoRules)
           contracts <- dsoStore.lookupSvOnboardingConfirmedByParty(candidateParty)
           candidateParticipantId = contracts
             .getOrElse(
@@ -377,7 +377,7 @@ class HttpSvHandler(
                 .asRuntimeException()
             )
           res <-
-            if (!isCandidateOnboardingConfirmed && !isCandidateSv)
+            if (!isCandidateOnboardingConfirmed && !isCandidateMember)
               Future.failed(
                 HttpErrorHandler.unauthorized(
                   errorMessage
@@ -505,7 +505,7 @@ class HttpSvHandler(
           .map { result =>
             result
               .sortBy(_.base.serial)
-              .foldLeft[Option[TopologyResult[SequencerDomainState]]](None) {
+              .foldLeft[Option[TopologyResult[SequencerDomainStateX]]](None) {
                 case (_, newMapping) if !newMapping.mapping.allSequencers.contains(sequencerId) =>
                   None
                 case (None, newMapping) if newMapping.mapping.allSequencers.contains(sequencerId) =>
@@ -552,7 +552,7 @@ class HttpSvHandler(
       svParty: PartyId,
       dsoRules: Contract.Has[DsoRules.ContractId, DsoRules],
   ): Option[definitions.GetSvOnboardingStatusResponse] = {
-    Option.when(SvApp.isSvParty(svParty, dsoRules))(
+    Option.when(SvApp.isDsoMemberParty(svParty, dsoRules))(
       definitions.SvOnboardingStateCompleted(
         state = "completed",
         name = dsoRules.payload.svs.get(svParty.toProtoPrimitive).name,
@@ -565,7 +565,7 @@ class HttpSvHandler(
       svParty: String,
       dsoRules: Contract.Has[DsoRules.ContractId, DsoRules],
   ): Option[definitions.GetSvOnboardingStatusResponse] = {
-    Option.when(SvApp.isSvName(svParty, dsoRules))(
+    Option.when(SvApp.isDsoMemberName(svParty, dsoRules))(
       definitions.SvOnboardingStateCompleted(
         state = "completed",
         name = svParty,
@@ -615,7 +615,7 @@ class HttpSvHandler(
       confirmedBy = confirmations
         .map(c =>
           dsoRules.payload.svs.asScala.get(c.payload.confirmer) match {
-            case Some(sv) => sv.name
+            case Some(member) => member.name
             case None => c.payload.confirmer
           }
         )

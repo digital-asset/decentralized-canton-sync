@@ -5,21 +5,20 @@ package com.digitalasset.canton.platform.apiserver.services
 
 import com.daml.ledger.api.v2.commands.DisclosedContract
 import com.daml.ledger.api.v2.value.Identifier
-import com.digitalasset.canton.LfValue
-import com.digitalasset.daml.lf.data.{Bytes, ImmArray, Ref, Time}
-import com.digitalasset.daml.lf.transaction.{
+import com.daml.lf.data.{Bytes, ImmArray, Ref, Time}
+import com.daml.lf.transaction.{
   FatContractInstance,
   GlobalKeyWithMaintainers,
   Node,
   TransactionCoder,
   TransactionVersion,
 }
-import com.digitalasset.daml.lf.value.Value.{ContractId, ValueRecord, ValueTrue}
+import com.daml.lf.value.Value.{ContractId, ValueRecord, ValueTrue}
+import com.digitalasset.canton.LfValue
 import com.google.protobuf.ByteString
 
 object DisclosedContractCreator {
 
-  // TODO(#19494): Change to minVersion once 2.2 is released and 2.1 is removed
   private val testTxVersion = TransactionVersion.maxVersion
 
   private object api {
@@ -66,7 +65,6 @@ object DisclosedContractCreator {
         ),
       ),
       api.keyMaintainers,
-      Ref.PackageName.assertFromString(api.packageName),
     )
 
     val fatContractInstance: FatContractInstance = FatContractInstance.fromCreateNode(

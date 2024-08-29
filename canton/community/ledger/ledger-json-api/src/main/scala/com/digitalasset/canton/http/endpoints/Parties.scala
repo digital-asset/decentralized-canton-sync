@@ -14,14 +14,12 @@ import scalaz.NonEmptyList
 import scala.concurrent.ExecutionContext
 import com.daml.logging.LoggingContextOf
 import com.digitalasset.canton.http.{PartiesService, domain}
-import org.apache.pekko.stream.Materializer
 
 private[http] final class Parties(partiesService: PartiesService)(implicit ec: ExecutionContext) {
   import Parties.*
 
   def allParties(jwt: Jwt)(implicit
-      lc: LoggingContextOf[InstanceUUID with RequestID],
-      mat: Materializer,
+      lc: LoggingContextOf[InstanceUUID with RequestID]
   ): ET[domain.SyncResponse[List[domain.PartyDetails]]] = for {
     res <- eitherT(partiesService.allParties(jwt))
   } yield domain.OkResponse(res)

@@ -4,7 +4,6 @@
 package com.digitalasset.canton.sequencing
 
 import com.digitalasset.canton.data.CantonTimestamp
-import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
 import com.digitalasset.canton.sequencing.SequencedEventMonotonicityChecker.MonotonicityFailureException
 import com.digitalasset.canton.sequencing.client.SequencedEventTestFixture
@@ -89,11 +88,11 @@ class SequencedEventMonotonicityCheckerTest
       val event1 = createEvent(
         timestamp = CantonTimestamp.ofEpochSecond(2),
         counter = 2L,
-      ).futureValueUS
+      ).futureValue
       val event2 = createEvent(
         timestamp = CantonTimestamp.ofEpochSecond(2),
         counter = 3L,
-      ).futureValueUS
+      ).futureValue
 
       val checker = new SequencedEventMonotonicityChecker(
         SequencerCounter(2L),
@@ -158,11 +157,11 @@ class SequencedEventMonotonicityCheckerTest
       val event1 = createEvent(
         timestamp = CantonTimestamp.ofEpochSecond(2),
         counter = 2L,
-      ).futureValueUS
+      ).futureValue
       val event2 = createEvent(
         timestamp = CantonTimestamp.ofEpochSecond(2),
         counter = 3L,
-      ).futureValueUS
+      ).futureValue
 
       val checker = new SequencedEventMonotonicityChecker(
         SequencerCounter(2L),

@@ -8,10 +8,10 @@ import com.digitalasset.canton.topology.store.DownloadTopologyStateForInitializa
 
 class DownloadTopologyStateForInitializationServiceTestPostgres
     extends DownloadTopologyStateForInitializationServiceTest
-    with DbTopologyStoreHelper
+    with DbTopologyStoreXHelper
     with PostgresTest
 
 class DownloadTopologyStateForInitializationServiceTestH2
     extends DownloadTopologyStateForInitializationServiceTest
-    with DbTopologyStoreHelper
+    with DbTopologyStoreXHelper
     with H2Test

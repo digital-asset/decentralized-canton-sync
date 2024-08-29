@@ -3,8 +3,11 @@
 
 package com.digitalasset.canton.http.query
 
-import com.digitalasset.daml.lf.value.Value as V
+import com.daml.lf.data.Ref
+import com.daml.lf.typesig
+import com.daml.lf.value.Value as V
 
 object ValuePredicate {
+  type TypeLookup = Ref.Identifier => Option[typesig.DefDataType.FWT]
   type LfV = V
 }

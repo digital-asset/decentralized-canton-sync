@@ -16,7 +16,7 @@ import com.daml.network.environment.SpliceLedgerConnection
 import com.daml.network.scan.admin.api.client.ScanConnection
 import com.daml.network.splitwell.store.SplitwellStore
 import com.daml.network.util.{DisclosedContracts, AssignedContract}
-import com.digitalasset.canton.participant.pretty.Implicits.prettyContractId
+import com.daml.network.util.PrettyInstances.*
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.ShowUtil.*
 import io.grpc.Status
@@ -65,7 +65,7 @@ class AcceptedAppPaymentRequestsTrigger(
     }
     for {
       transferContextE <- scanConnection
-        .getAppTransferContextForRound(connection, store.key.providerParty, round)
+        .getAppTransferContextForRound(store.key.providerParty, round)
       result <- transferContextE match {
         case Right((transferContext, disclosedContracts)) =>
           for {
@@ -94,7 +94,7 @@ class AcceptedAppPaymentRequestsTrigger(
           } yield TaskSuccess("accepted payment and completed transfer")
         case Left(err) =>
           scanConnection
-            .getAppTransferContext(connection, store.key.providerParty)
+            .getAppTransferContext(store.key.providerParty)
             .flatMap { case (transferContext, disclosedContracts) =>
               rejectPayment(
                 s"Round ${payment.payload.round} is no longer active: $err",
