@@ -214,6 +214,8 @@ object PackageIdResolver {
     "Splice.Wallet.TransferOffer" -> Package.SpliceWallet,
     "Splice.Wallet.Payment" -> Package.SpliceWalletPayments,
     "Splice.Wallet.Subscriptions" -> Package.SpliceWalletPayments,
+    "Splice.Wallet.ExternalParty" -> Package.SpliceWallet,
+    "Splice.TransferPreapproval" -> Package.SpliceAmuletNameService,
   )
 
   sealed abstract class Package extends Product with Serializable {
@@ -250,25 +252,5 @@ object PackageIdResolver {
     val dsoGovernanceVersion =
       PackageVersion.assertFromString(currentConfig.packageConfig.dsoGovernance)
     dsoGovernanceVersion >= DarResources.dsoGovernance_0_1_5.metadata.version
-  }
-
-  def supportsMergeDuplicatedValidatorLicense(
-      now: CantonTimestamp,
-      amuletRules: AmuletRules,
-  ): Boolean = {
-    val currentConfig = AmuletConfigSchedule(amuletRules).getConfigAsOf(now)
-    val dsoGovernanceVersion =
-      PackageVersion.assertFromString(currentConfig.packageConfig.dsoGovernance)
-    dsoGovernanceVersion >= DarResources.dsoGovernance_0_1_8.metadata.version
-  }
-
-  def supportsLegacySequencerConfig(
-      now: CantonTimestamp,
-      amuletRules: AmuletRules,
-  ): Boolean = {
-    val currentConfig = AmuletConfigSchedule(amuletRules).getConfigAsOf(now)
-    val dsoGovernanceVersion =
-      PackageVersion.assertFromString(currentConfig.packageConfig.dsoGovernance)
-    dsoGovernanceVersion >= DarResources.dsoGovernance_0_1_7.metadata.version
   }
 }

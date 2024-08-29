@@ -10,6 +10,7 @@ import com.daml.network.codegen.java.splice.amulet.FeaturedAppRight
 import com.daml.network.codegen.java.splice.amuletrules.AmuletRules
 import com.daml.network.codegen.java.splice.round.{IssuingMiningRound, OpenMiningRound}
 import com.daml.network.codegen.java.splice.ans.AnsRules
+import com.daml.network.codegen.java.splice.transferpreapproval.TransferPreapproval
 import com.daml.network.config.{NetworkAppClientConfig, UpgradesConfig}
 import com.daml.network.environment.PackageIdResolver.HasAmuletRules
 import com.daml.network.environment.{BaseAppConnection, SpliceLedgerClient, RetryFor, RetryProvider}
@@ -162,6 +163,12 @@ class BftScanConnection(
       tc: TraceContext,
   ): OptionT[Future, MigrationSchedule] = OptionT(bftCall(_.getMigrationSchedule().value))
 
+  override def lookupTransferPreapprovalByParty(receiver: PartyId)(implicit
+      ec: ExecutionContext,
+      tc: TraceContext,
+  ): Future[Option[ContractWithState[TransferPreapproval.ContractId, TransferPreapproval]]] =
+    bftCall(_.lookupTransferPreapprovalByParty(receiver))
+
   private def bftCall[T](
       call: SingleScanConnection => Future[T]
   )(implicit ec: ExecutionContext, tc: TraceContext): Future[T] = {
@@ -179,23 +186,19 @@ class BftScanConnection(
       Future.failed(exception)
     } else {
       val nRequestsToDo = 2 * f + 1
+      val requestFrom = Random.shuffle(open).take(nRequestsToDo)
       retryProvider
         .retryForClientCalls(
           "bft_call",
           s"Bft call with f $f",
-          BftScanConnection.executeCall(
-            call,
-            Random.shuffle(open).take(nRequestsToDo),
-            nTargetSuccess = f + 1,
-            logger,
-          ),
+          BftScanConnection.executeCall(call, requestFrom, nTargetSuccess = f + 1, logger),
           logger,
           (_: String) => ConsensusNotReachedRetryable,
         )
         .recoverWith { case c: ConsensusNotReached =>
           val httpError = HttpErrorWithHttpCode(
             StatusCodes.BadGateway,
-            s"Failed to reach consensus from $nRequestsToDo Scan nodes.",
+            s"Failed to reach consensus from ${requestFrom.size} Scan nodes.",
           )
           logger.warn(s"Consensus not reached.", c)
           Future.failed(httpError)

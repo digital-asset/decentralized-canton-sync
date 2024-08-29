@@ -130,7 +130,7 @@ abstract class ValidatorPreflightIntegrationTestBase
 
   checkValidatorIsConnectedToSvRunbook()
 
-  "run through runbook against cluster validator" in { implicit env =>
+  "run through runbook against cluster validator" in { _ =>
     val aliceUser = auth0Users.get("alice-validator").value
 
     val bobUser = auth0Users.get("bob-validator").value
@@ -194,8 +194,7 @@ abstract class ValidatorPreflightIntegrationTestBase
               description should fullyMatch regex partyR
               transaction.ccAmount should beWithin(BigDecimal(10) - smallAmount, BigDecimal(10))
               // we can't test a specific amulet price as the amulet price on a live network can change
-              val rateR =
-                raw"""^\s*(\d+(?:\.\d+)?)\s*${spliceInstanceNames.amuletNameAcronym}/USD\s*$$""".r
+              val rateR = """^\s*(\d+(?:\.\d+)?)\s*CC/USD\s*$""".r
               inside(transaction.rate) { case rateR(rate) =>
                 BigDecimal(rate) should be > BigDecimal(0)
                 transaction.usdAmount should beWithin(
@@ -216,7 +215,7 @@ abstract class ValidatorPreflightIntegrationTestBase
   }
 
   // test is similar to 'settle debts with a single party' in SplitwellFrontendIntegrationTest
-  "test splitwell group creation and payment against validator" in { implicit env =>
+  "test splitwell group creation and payment against validator" in { _ =>
     if (includeSplitwellTests) {
       val groupName = "troika"
 
@@ -289,20 +288,13 @@ abstract class ValidatorPreflightIntegrationTestBase
             forExactly(1, rows)(row =>
               matchRow(
                 Seq("sender", "description"),
-                Seq(
-                  aliceUserPartyId,
-                  s"paid 100.0 ${spliceInstanceNames.amuletNameAcronym} for Team lunch",
-                ),
+                Seq(aliceUserPartyId, "paid 100.0 CC for Team lunch"),
               )(row)
             )
             forExactly(1, rows)(row =>
               matchRow(
                 Seq("sender", "description", "receiver"),
-                Seq(
-                  bobUserPartyId,
-                  s"sent 50.0 ${spliceInstanceNames.amuletNameAcronym} to",
-                  aliceUserPartyId,
-                ),
+                Seq(bobUserPartyId, "sent 50.0 CC to", aliceUserPartyId),
               )(row)
             )
           }
@@ -311,7 +303,7 @@ abstract class ValidatorPreflightIntegrationTestBase
     }
   }
 
-  "test the CNS ui of a validator" in { implicit env =>
+  "test the CNS ui of a validator" in { _ =>
     val aliceUser = auth0Users.get("alice-validator").value
 
     withFrontEnd("alice-validator") { implicit webDriver =>
@@ -322,7 +314,7 @@ abstract class ValidatorPreflightIntegrationTestBase
 
         // Generate new random ANS names to avoid conflicts between multiple preflight check runs
         val entryId = (new scala.util.Random).nextInt().toHexString
-        val ansName = s"alice_${entryId}.unverified.$ansAcronym"
+        val ansName = s"alice_${entryId}.unverified.cns"
 
         tapAmulets(100)
         reserveAnsNameFor(
@@ -339,7 +331,6 @@ abstract class ValidatorPreflightIntegrationTestBase
           "1.0000000000",
           "USD",
           "90 days",
-          ansAcronym,
         )
       } else {
         // On non-DevNet clusters, we only test logging in to the directory UI

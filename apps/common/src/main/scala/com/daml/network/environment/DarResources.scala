@@ -16,11 +16,10 @@ object DarResources {
   val amulet_0_1_2 = DarResource("splice-amulet-0.1.2.dar")
   val amulet_0_1_3 = DarResource("splice-amulet-0.1.3.dar")
   val amulet_0_1_4 = DarResource("splice-amulet-0.1.4.dar")
-  val amulet_0_1_5 = DarResource("splice-amulet-0.1.5.dar")
   val amulet_current = DarResource("splice-amulet-current.dar")
   val amulet = PackageResource(
     amulet_current,
-    Seq(amulet_0_1_0, amulet_0_1_1, amulet_0_1_2, amulet_0_1_3, amulet_0_1_4, amulet_0_1_5),
+    Seq(amulet_0_1_0, amulet_0_1_1, amulet_0_1_2, amulet_0_1_3, amulet_0_1_4),
   )
 
   val dsoGovernance_0_1_0 = DarResource("splice-dso-governance-0.1.0.dar")
@@ -72,18 +71,10 @@ object DarResources {
   val splitwell_0_1_2 = DarResource("splitwell-0.1.2.dar")
   val splitwell_0_1_3 = DarResource("splitwell-0.1.3.dar")
   val splitwell_0_1_4 = DarResource("splitwell-0.1.4.dar")
-  val splitwell_0_1_5 = DarResource("splitwell-0.1.5.dar")
   val splitwell_current = DarResource("splitwell-current.dar")
   val splitwell = PackageResource(
     splitwell_current,
-    Seq(
-      splitwell_0_1_0,
-      splitwell_0_1_1,
-      splitwell_0_1_2,
-      splitwell_0_1_3,
-      splitwell_0_1_4,
-      splitwell_0_1_5,
-    ),
+    Seq(splitwell_0_1_0, splitwell_0_1_1, splitwell_0_1_2, splitwell_0_1_3, splitwell_0_1_4),
   )
 
   val wallet_0_1_0 = DarResource("splice-wallet-0.1.0.dar")
@@ -103,7 +94,6 @@ object DarResources {
   val walletPayments_0_1_2 = DarResource("splice-wallet-payments-0.1.2.dar")
   val walletPayments_0_1_3 = DarResource("splice-wallet-payments-0.1.3.dar")
   val walletPayments_0_1_4 = DarResource("splice-wallet-payments-0.1.4.dar")
-  val walletPayments_0_1_5 = DarResource("splice-wallet-payments-0.1.5.dar")
   val walletPayments_current = DarResource("splice-wallet-payments-current.dar")
   val walletPayments = PackageResource(
     walletPayments_current,
@@ -113,7 +103,6 @@ object DarResources {
       walletPayments_0_1_2,
       walletPayments_0_1_3,
       walletPayments_0_1_4,
-      walletPayments_0_1_5,
     ),
   )
 

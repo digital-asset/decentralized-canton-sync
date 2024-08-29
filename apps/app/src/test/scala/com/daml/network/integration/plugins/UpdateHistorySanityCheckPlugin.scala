@@ -1,16 +1,13 @@
 package com.daml.network.integration.plugins
 
 import com.daml.ledger.javaapi.data.Identifier
-import com.daml.network.config.ConfigTransforms.updateAllScanAppConfigs_
 import com.daml.network.config.SpliceConfig
 import com.daml.network.console.ScanAppBackendReference
 import com.daml.network.environment.EnvironmentImpl
 import com.daml.network.http.v0.definitions.UpdateHistoryItem.members
 import com.daml.network.http.v0.definitions.UpdateHistoryReassignment.Event.members as reassignmentMembers
 import com.daml.network.integration.tests.SpliceTests.SpliceTestConsoleEnvironment
-import com.daml.network.scan.automation.AcsSnapshotTrigger
 import com.daml.network.util.QualifiedName
-import com.digitalasset.canton.ScalaFuturesWithPatience
 import com.digitalasset.canton.integration.EnvironmentSetupPlugin
 import com.digitalasset.canton.logging.NamedLoggerFactory
 import com.digitalasset.canton.tracing.TraceContext
@@ -35,14 +32,7 @@ class UpdateHistorySanityCheckPlugin(
     protected val loggerFactory: NamedLoggerFactory,
 ) extends EnvironmentSetupPlugin[EnvironmentImpl, SpliceTestConsoleEnvironment]
     with Matchers
-    with Inspectors
-    with ScalaFuturesWithPatience {
-
-  override def beforeEnvironmentCreated(config: SpliceConfig): SpliceConfig = {
-    updateAllScanAppConfigs_(config => config.copy(enableForcedAcsSnapshots = true))(
-      super.beforeEnvironmentCreated(config)
-    )
-  }
+    with Inspectors {
 
   override def beforeEnvironmentDestroyed(
       config: SpliceConfig,
@@ -52,11 +42,6 @@ class UpdateHistorySanityCheckPlugin(
     // Also, it might not be initialized if the test uses `manualStart` and it wasn't ever started.
     environment.scans.local.find(scan => scan.name == scanName && scan.is_initialized).foreach {
       scan =>
-        // prevent races with the trigger when taking the forced manual snapshot
-        scan.automation.trigger[AcsSnapshotTrigger].pause().futureValue
-
-        val snapshotRecordTime = scan.forceAcsSnapshotNow()
-
         paginateHistory(scan, None)
 
         val readLines = mutable.Buffer[String]()
@@ -71,10 +56,6 @@ class UpdateHistorySanityCheckPlugin(
                 "--loglevel",
                 "DEBUG",
                 "--scan-balance-assertions",
-                "--stop-at-record-time",
-                snapshotRecordTime.toInstant.toString,
-                "--compare-acs-with-snapshot",
-                snapshotRecordTime.toInstant.toString,
               ) ++ ignoredRootCreates.flatMap { templateId =>
                 Seq("--ignore-root-create", QualifiedName(templateId).toString)
               } ++ ignoredRootExercises.flatMap { case (templateId, choice) =>
@@ -95,8 +76,6 @@ class UpdateHistorySanityCheckPlugin(
         forExactly(1, readLines) { line =>
           line should include("Reached end of stream")
         }
-
-        scan.automation.trigger[AcsSnapshotTrigger].resume()
     }
   }
 

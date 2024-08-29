@@ -163,6 +163,28 @@ abstract class TopologyAdminConnection(
     ).map(_.map(r => TopologyResult(r.context, r.item)))
   }
 
+  def listPartyToKey(
+      filterStore: String = "",
+      operation: Option[TopologyChangeOp] = None,
+      filterParty: String = "",
+      timeQuery: TimeQuery = TimeQuery.HeadState,
+      proposals: TopologyTransactionType = AuthorizedState,
+  )(implicit traceContext: TraceContext): Future[Seq[TopologyResult[PartyToKeyMapping]]] = {
+    runCmd(
+      TopologyAdminCommands.Read.ListPartyToKeyMapping(
+        BaseQuery(
+          filterStore,
+          proposals = proposals.proposals,
+          timeQuery,
+          operation,
+          filterSigningKey = proposals.signingKey.getOrElse(""),
+          protocolVersion = None,
+        ),
+        filterParty,
+      )
+    ).map(_.map(r => TopologyResult(r.context, r.item)))
+  }
+
   private def findPartyToParticipant(
       domainId: DomainId,
       partyId: PartyId,
@@ -495,6 +517,19 @@ abstract class TopologyAdminConnection(
       signedBy,
       serial,
       isProposal,
+    )
+
+  /** Prepare a transaction for external signing.
+    */
+  def generateTransactions(
+      proposals: Seq[TopologyAdminCommands.Write.GenerateTransactions.Proposal]
+  )(implicit
+      traceContext: TraceContext
+  ): Future[Seq[TopologyTransaction[TopologyChangeOp, TopologyMapping]]] =
+    runCmd(
+      TopologyAdminCommands.Write.GenerateTransactions(
+        proposals
+      )
     )
 
   /** Version of [[ensureTopologyMapping]] that also handles proposals:

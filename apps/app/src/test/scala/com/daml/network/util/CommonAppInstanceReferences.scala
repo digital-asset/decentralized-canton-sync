@@ -1,6 +1,5 @@
 package com.daml.network.util
 
-import com.daml.network.config.SpliceInstanceNamesConfig
 import com.daml.network.console.{
   AppManagerAppClientReference,
   ScanAppBackendReference,
@@ -21,6 +20,7 @@ import com.digitalasset.canton.DomainAlias
 // TODO(#736): these should eventually be defined analogue to Canton's `participant1` references etc
 // however, this is likely only possible once we depend on Canton as a library
 trait CommonAppInstanceReferences {
+
   def decentralizedSynchronizerId(implicit env: SpliceTestConsoleEnvironment): DomainId =
     sv1Backend.participantClientWithAdminToken.domains.id_of(sv1Backend.config.domains.global.alias)
   def decentralizedSynchronizerAlias(implicit env: SpliceTestConsoleEnvironment): DomainAlias =
@@ -305,18 +305,4 @@ trait CommonAppInstanceReferences {
     env.scans.remote
       .find(_.name == name)
       .getOrElse(sys.error(s"scan app client [$name] not configured"))
-
-  def spliceInstanceNames(implicit env: SpliceTestConsoleEnvironment): SpliceInstanceNamesConfig = {
-    // Find any SV or remote scan reference to read a splice instance name config
-    env.svs.local.headOption
-      .map(_.config.spliceInstanceNames)
-      .getOrElse(
-        env.scans.remote.headOption
-          .getOrElse(sys.error("No SV or remote scan reference to get splice instance names from"))
-          .getSpliceInstanceNames()
-      )
-  }
-
-  def ansAcronym(implicit env: SpliceTestConsoleEnvironment): String =
-    spliceInstanceNames.nameServiceNameAcronym.toLowerCase()
 }

@@ -8,7 +8,7 @@ import org.apache.pekko.stream.Materializer
 import cats.implicits.{catsSyntaxTuple2Semigroupal, catsSyntaxTuple4Semigroupal, toTraverseOps}
 import cats.syntax.foldable.*
 import com.daml.network.codegen.java.splice.svonboarding.SvOnboardingConfirmed
-import com.daml.network.config.{NetworkAppClientConfig, SpliceInstanceNamesConfig, UpgradesConfig}
+import com.daml.network.config.{NetworkAppClientConfig, UpgradesConfig}
 import com.daml.network.environment.*
 import com.daml.network.environment.TopologyAdminConnection.TopologyTransactionType
 import com.daml.network.http.HttpClient
@@ -20,11 +20,7 @@ import com.daml.network.store.{
 }
 import com.daml.network.sv.admin.api.client.SvConnection
 import com.daml.network.sv.automation.{SvDsoAutomationService, SvSvAutomationService}
-import com.daml.network.sv.automation.singlesv.{
-  ReconcileSequencerLimitWithMemberTrafficTrigger,
-  SvPackageVettingTrigger,
-}
-import com.daml.network.sv.automation.singlesv.onboarding.SvOnboardingUnlimitedTrafficTrigger
+import com.daml.network.sv.automation.singlesv.SvPackageVettingTrigger
 import com.daml.network.sv.cometbft.{
   CometBftClient,
   CometBftConnectionConfig,
@@ -48,7 +44,6 @@ import com.daml.network.sv.util.{SvOnboardingToken, SvUtil}
 import com.daml.network.sv.{ExtraSynchronizerNode, LocalSynchronizerNode, SvApp}
 import com.daml.network.util.{Contract, PackageVetting, TemplateJsonDecoder, UploadablePackage}
 import com.digitalasset.canton.config.DomainTimeTrackerConfig
-import com.digitalasset.canton.config.RequireTypes.NonNegativeLong
 import com.digitalasset.canton.lifecycle.CloseContext
 import com.digitalasset.canton.logging.NamedLoggerFactory
 import com.digitalasset.canton.participant.domain.DomainConnectionConfig
@@ -85,7 +80,6 @@ class JoiningNodeInitializer(
     override protected val storage: Storage,
     override val loggerFactory: NamedLoggerFactory,
     override protected val retryProvider: RetryProvider,
-    override protected val spliceInstanceNamesConfig: SpliceInstanceNamesConfig,
 )(implicit
     ec: ExecutionContextExecutor,
     httpClient: HttpClient,
@@ -288,7 +282,6 @@ class JoiningNodeInitializer(
       dsoAutomationService: SvDsoAutomationService,
       svSvAutomationService: SvSvAutomationService,
       withSvStore: Option[WithSvStore],
-      skipTrafficReconciliationTriggers: Boolean = false,
   ): Future[Unit] = {
     val dsoStore = dsoAutomationService.store
     val dsoPartyId = dsoStore.key.dsoParty
@@ -345,15 +338,10 @@ class JoiningNodeInitializer(
           // Finally, fully onboard the sequencer and mediator
           _ <-
             localSynchronizerNode.onboardLocalSequencerIfRequired(svConnection.map(_._2))
-          // For domain migrations, the traffic triggers have already been registered earlier and so we skip that step here.
-          _ = if (!skipTrafficReconciliationTriggers)
-            dsoAutomationService.registerTrafficReconciliationTriggers()
+          _ = dsoAutomationService.registerPostSequencerInitTriggers()
           _ <- localSynchronizerNode.initializeLocalMediatorIfRequired(
             decentralizedSynchronizer
           )
-          _ = checkTrafficReconciliationTriggersStarted(dsoAutomationService)
-          _ <- waitForSvToObtainUnlimitedTraffic(localSynchronizerNode, decentralizedSynchronizer)
-          _ = dsoAutomationService.registerPostUnlimitedTrafficTriggers()
         } yield ()
       }
       _ <- synchronizerNodeReconciler
@@ -445,50 +433,6 @@ class JoiningNodeInitializer(
             else
               throw Status.FAILED_PRECONDITION.withDescription(description).asRuntimeException()
         }
-      },
-      logger,
-    )
-  }
-
-  private def checkTrafficReconciliationTriggersStarted(service: SvDsoAutomationService): Unit = {
-    val unlimitedTrafficTrigger = service.trigger[SvOnboardingUnlimitedTrafficTrigger]
-    val trafficReconciliationTrigger =
-      service.trigger[ReconcileSequencerLimitWithMemberTrafficTrigger]
-    if (!unlimitedTrafficTrigger.isHealthy || !trafficReconciliationTrigger.isHealthy)
-      throw new RuntimeException("Traffic triggers not started")
-  }
-
-  private def waitForSvToObtainUnlimitedTraffic(
-      localSynchronizerNode: LocalSynchronizerNode,
-      synchronizerId: DomainId,
-  ) = {
-    val description = "SV nodes have been granted unlimited traffic"
-    retryProvider.getValueWithRetries(
-      RetryFor.WaitingOnInitDependency,
-      "unlimited_traffic",
-      description,
-      for {
-        mediatorId <- localSynchronizerNode.mediatorAdminConnection.getMediatorId
-        participantTrafficState <- participantAdminConnection.getParticipantTrafficState(
-          synchronizerId
-        )
-        mediatorTrafficState <- localSynchronizerNode.sequencerAdminConnection
-          .getSequencerTrafficControlState(mediatorId)
-      } yield {
-        val unlimitedTraffic = NonNegativeLong.maxValue
-        if (participantTrafficState.extraTrafficPurchased != unlimitedTraffic)
-          throw Status.FAILED_PRECONDITION
-            .withDescription(
-              show"SV participant $participantId does not have unlimited traffic on synchronizer $synchronizerId"
-            )
-            .asRuntimeException()
-        if (mediatorTrafficState.extraTrafficLimit != unlimitedTraffic)
-          throw Status.FAILED_PRECONDITION
-            .withDescription(
-              show"SV mediator $participantId does not have unlimited traffic on synchronizer $synchronizerId"
-            )
-            .asRuntimeException()
-        ()
       },
       logger,
     )

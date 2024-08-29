@@ -25,7 +25,7 @@ spec:
     spec:
       containers:
       - name: ans-web-ui
-        image: "{{ .Values.imageRepo }}/ans-web-ui:{{ .Chart.AppVersion }}{{ ((.Values.imageDigests).ans_web_ui) }}"
+        image: "{{ .Values.imageRepo }}/ans-web-ui:{{ .Chart.AppVersion }}{{ ((.Values.imageDigests).cns_web_ui) }}"
         imagePullPolicy: Always
         env:
         - name: CN_APP_UI_AUTH_CLIENT_ID
@@ -42,6 +42,8 @@ spec:
               optional: false
         - name: CN_APP_UI_AUTH_AUDIENCE
           value: {{ (.Values.auth).audience | default "https://canton.network.global" | quote }}
+        - name: CN_APP_UI_CLUSTER
+          value: {{ .Values.clusterUrl | quote }}
         - name: CN_APP_UI_NETWORK_NAME
           value: {{ .Values.spliceInstanceNames.networkName | quote }}
         - name: CN_APP_UI_NETWORK_FAVICON_URL

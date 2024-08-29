@@ -15,7 +15,6 @@ import com.daml.network.codegen.java.splice.amuletrules.AmuletRules
 import com.daml.network.codegen.java.splice.dsorules.DsoRules
 import com.daml.network.codegen.java.splice.round.{IssuingMiningRound, OpenMiningRound}
 import com.daml.network.config.UpgradesConfig
-import com.daml.network.config.SpliceInstanceNamesConfig
 import com.daml.network.environment.*
 import com.daml.network.http.HttpClient
 import com.daml.network.store.{DomainTimeSynchronization, DomainUnpausedSynchronization}
@@ -65,7 +64,6 @@ class SvDsoAutomationService(
     localSynchronizerNode: Option[LocalSynchronizerNode],
     extraSynchronizerNodes: Map[String, ExtraSynchronizerNode],
     upgradesConfig: UpgradesConfig,
-    spliceInstanceNamesConfig: SpliceInstanceNamesConfig,
     override protected val loggerFactory: NamedLoggerFactory,
 )(implicit
     ec: ExecutionContextExecutor,
@@ -132,128 +130,10 @@ class SvDsoAutomationService(
 
   // Triggers that require namespace permissions and the existence of the DsoRules and AmuletRules contracts
   def registerPostOnboardingTriggers(): Unit = {
+    registerTrigger(new SummarizingMiningRoundTrigger(triggerContext, dsoStore, connection))
     registerTrigger(
       new SvOnboardingRequestTrigger(triggerContext, dsoStore, svStore, config, connection)
     )
-    // Register optional BFT triggers
-    cometBft.foreach { node =>
-      if (triggerContext.config.enableCometbftReconciliation) {
-        registerTrigger(
-          new PublishLocalCometBftNodeConfigTrigger(
-            triggerContext,
-            dsoStore,
-            connection,
-            node,
-          )
-        )
-        registerTrigger(
-          new ReconcileCometBftNetworkConfigWithDsoRulesTrigger(
-            triggerContext,
-            dsoStore,
-            node,
-          )
-        )
-      }
-    }
-    registerTrigger(
-      new SvOffboardingPartyToParticipantProposalTrigger(
-        triggerContext,
-        dsoStore,
-        participantAdminConnection,
-      )
-    )
-    registerTrigger(
-      new SvOffboardingMediatorTrigger(
-        wallClockTriggerContext,
-        dsoStore,
-        participantAdminConnection,
-      )
-    )
-    registerTrigger(
-      new SvOffboardingSequencerTrigger(
-        wallClockTriggerContext,
-        dsoStore,
-        participantAdminConnection,
-      )
-    )
-    registerTrigger(
-      new SvOnboardingPromoteParticipantToSubmitterTrigger(
-        onboardingTriggerContext,
-        dsoStore,
-        participantAdminConnection,
-        config.enableOnboardingParticipantPromotionDelay,
-      )
-    )
-    registerTrigger(
-      new SvOnboardingPartyToParticipantProposalTrigger(
-        onboardingTriggerContext,
-        dsoStore,
-        participantAdminConnection,
-      )
-    )
-    registerTrigger(
-      new SvOnboardingSequencerTrigger(
-        onboardingTriggerContext,
-        dsoStore,
-        participantAdminConnection,
-      )
-    )
-    registerTrigger(
-      new SvOnboardingMediatorProposalTrigger(
-        onboardingTriggerContext,
-        dsoStore,
-        participantAdminConnection,
-      )
-    )
-
-    (localSynchronizerNode, config.domainMigrationDumpPath) match {
-      case (Some(synchronizerNode), Some(dumpPath)) =>
-        registerTrigger(
-          new DecentralizedSynchronizerMigrationTrigger(
-            config.domainMigrationId,
-            triggerContext,
-            config.domains.global.alias,
-            synchronizerNode,
-            dsoStore,
-            participantAdminConnection,
-            synchronizerNode.sequencerAdminConnection,
-            dumpPath: Path,
-          )
-        )
-      case _ => ()
-    }
-    registerTrigger(
-      new ReconcileDynamicDomainParametersTrigger(
-        triggerContext,
-        dsoStore,
-        participantAdminConnection,
-      )
-    )
-  }
-
-  def registerTrafficReconciliationTriggers(): Unit = {
-    registerTrigger(
-      new ReconcileSequencerLimitWithMemberTrafficTrigger(
-        triggerContext,
-        dsoStore,
-        localSynchronizerNode.map(_.sequencerAdminConnection),
-        extraSynchronizerNodes,
-        config.trafficBalanceReconciliationDelay,
-      )
-    )
-    registerTrigger(
-      new SvOnboardingUnlimitedTrafficTrigger(
-        onboardingTriggerContext,
-        dsoStore,
-        localSynchronizerNode.map(_.sequencerAdminConnection),
-        extraSynchronizerNodes,
-        config.trafficBalanceReconciliationDelay,
-      )
-    )
-  }
-
-  def registerPostUnlimitedTrafficTriggers(): Unit = {
-    registerTrigger(new SummarizingMiningRoundTrigger(triggerContext, dsoStore, connection))
     registerTrigger(
       new ReceiveSvRewardCouponTrigger(
         triggerContext,
@@ -331,12 +211,7 @@ class SvDsoAutomationService(
     }
     registerTrigger(new AssignTrigger(triggerContext, dsoStore, connection, store.key.dsoParty))
     registerTrigger(
-      new AnsSubscriptionInitialPaymentTrigger(
-        triggerContext,
-        dsoStore,
-        spliceInstanceNamesConfig,
-        connection,
-      )
+      new AnsSubscriptionInitialPaymentTrigger(triggerContext, dsoStore, connection)
     )
     registerTrigger(
       new SvPackageVettingTrigger(
@@ -372,6 +247,93 @@ class SvDsoAutomationService(
         dsoStore,
       )
     )
+    registerTrigger(
+      new SvOffboardingPartyToParticipantProposalTrigger(
+        triggerContext,
+        dsoStore,
+        participantAdminConnection,
+      )
+    )
+    registerTrigger(
+      new SvOffboardingMediatorTrigger(
+        wallClockTriggerContext,
+        dsoStore,
+        participantAdminConnection,
+      )
+    )
+    registerTrigger(
+      new SvOffboardingSequencerTrigger(
+        wallClockTriggerContext,
+        dsoStore,
+        participantAdminConnection,
+      )
+    )
+    registerTrigger(
+      new SvOnboardingPromoteParticipantToSubmitterTrigger(
+        onboardingTriggerContext,
+        dsoStore,
+        participantAdminConnection,
+        config.enableOnboardingParticipantPromotionDelay,
+      )
+    )
+    registerTrigger(
+      new SvOnboardingPartyToParticipantProposalTrigger(
+        onboardingTriggerContext,
+        dsoStore,
+        participantAdminConnection,
+      )
+    )
+    registerTrigger(
+      new SvOnboardingSequencerTrigger(
+        onboardingTriggerContext,
+        dsoStore,
+        participantAdminConnection,
+      )
+    )
+    registerTrigger(
+      new SvOnboardingMediatorProposalTrigger(
+        onboardingTriggerContext,
+        dsoStore,
+        participantAdminConnection,
+      )
+    )
+
+    (localSynchronizerNode, config.domainMigrationDumpPath) match {
+      case (Some(synchronizerNode), Some(dumpPath)) =>
+        registerTrigger(
+          new DecentralizedSynchronizerMigrationTrigger(
+            config.domainMigrationId,
+            triggerContext,
+            config.domains.global.alias,
+            synchronizerNode,
+            dsoStore,
+            participantAdminConnection,
+            synchronizerNode.sequencerAdminConnection,
+            dumpPath: Path,
+          )
+        )
+      case _ => ()
+    }
+    // Register optional BFT triggers
+    cometBft.foreach { node =>
+      if (triggerContext.config.enableCometbftReconciliation) {
+        registerTrigger(
+          new PublishLocalCometBftNodeConfigTrigger(
+            triggerContext,
+            dsoStore,
+            connection,
+            node,
+          )
+        )
+        registerTrigger(
+          new ReconcileCometBftNetworkConfigWithDsoRulesTrigger(
+            triggerContext,
+            dsoStore,
+            node,
+          )
+        )
+      }
+    }
 
     config.scan.foreach { scan =>
       registerTrigger(
@@ -385,6 +347,34 @@ class SvDsoAutomationService(
       )
     }
 
+    registerTrigger(
+      new ReconcileDynamicDomainParametersTrigger(
+        triggerContext,
+        dsoStore,
+        participantAdminConnection,
+      )
+    )
+  }
+
+  def registerPostSequencerInitTriggers(): Unit = {
+    registerTrigger(
+      new ReconcileSequencerLimitWithMemberTrafficTrigger(
+        triggerContext,
+        dsoStore,
+        localSynchronizerNode.map(_.sequencerAdminConnection),
+        extraSynchronizerNodes,
+        config.trafficBalanceReconciliationDelay,
+      )
+    )
+    registerTrigger(
+      new SvOnboardingUnlimitedTrafficTrigger(
+        onboardingTriggerContext,
+        dsoStore,
+        localSynchronizerNode.map(_.sequencerAdminConnection),
+        extraSynchronizerNodes,
+        config.trafficBalanceReconciliationDelay,
+      )
+    )
   }
 
   private val localSequencerClientContext: Option[LocalSequencerClientContext] =

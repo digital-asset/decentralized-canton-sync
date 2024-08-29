@@ -82,6 +82,16 @@ import com.daml.ledger.api.v2.event_query_service.{
   GetEventsByContractIdRequest,
   GetEventsByContractIdResponse,
 }
+import com.daml.ledger.api.v2.interactive_submission_service.InteractiveSubmissionServiceGrpc.InteractiveSubmissionServiceStub
+import com.daml.ledger.api.v2.interactive_submission_service.{
+  ExecuteSubmissionRequest,
+  ExecuteSubmissionResponse,
+  InteractiveSubmissionServiceGrpc,
+  PartySignatures,
+  PrepareSubmissionRequest,
+  PrepareSubmissionResponse,
+  SinglePartySignatures,
+}
 import com.daml.ledger.api.v2.participant_offset.ParticipantOffset
 import com.daml.ledger.api.v2.reassignment.{AssignedEvent, Reassignment, UnassignedEvent}
 import com.daml.ledger.api.v2.reassignment_command.{
@@ -136,6 +146,7 @@ import com.digitalasset.canton.admin.api.client.data.{
   UserRights,
 }
 import com.digitalasset.canton.config.RequireTypes.PositiveInt
+import com.digitalasset.canton.crypto.Signature
 import com.digitalasset.canton.data.{CantonTimestamp, DeduplicationPeriod}
 import com.digitalasset.canton.ledger.api.domain
 import com.digitalasset.canton.ledger.api.domain.{IdentityProviderId, JwksUrl}
@@ -149,6 +160,7 @@ import com.digitalasset.canton.serialization.ProtoConverter
 import com.digitalasset.canton.topology.{DomainId, PartyId}
 import com.digitalasset.canton.util.BinaryFileUtil
 import com.digitalasset.canton.{LfPackageId, LfPartyId, config}
+import com.google.protobuf.ByteString
 import com.google.protobuf.empty.Empty
 import com.google.protobuf.field_mask.FieldMask
 import io.grpc.*
@@ -1314,6 +1326,101 @@ object LedgerApiCommands {
       override def handleResponse(response: SubmitReassignmentResponse): Either[String, Unit] =
         Right(())
     }
+  }
+
+  object InteractiveSubmissionService {
+    trait BaseCommand[Req, Resp, Res] extends GrpcAdminCommand[Req, Resp, Res] {
+      override type Svc = InteractiveSubmissionServiceStub
+      override def createService(channel: ManagedChannel): InteractiveSubmissionServiceStub =
+        InteractiveSubmissionServiceGrpc.stub(channel)
+    }
+
+    final case class PrepareCommand(
+        override val actAs: Seq[LfPartyId],
+        override val readAs: Seq[LfPartyId],
+        override val commands: Seq[Command],
+        override val workflowId: String,
+        override val commandId: String,
+        override val deduplicationPeriod: Option[DeduplicationPeriod],
+        override val submissionId: String,
+        override val minLedgerTimeAbs: Option[Instant],
+        override val disclosedContracts: Seq[DisclosedContract],
+        override val domainId: Option[DomainId],
+        override val applicationId: String,
+        override val packageIdSelectionPreference: Seq[LfPackageId],
+    ) extends SubmitCommand
+        with BaseCommand[
+          PrepareSubmissionRequest,
+          PrepareSubmissionResponse,
+          PrepareSubmissionResponse,
+        ] {
+
+      override def createRequest(): Either[String, PrepareSubmissionRequest] =
+        Right(
+          PrepareSubmissionRequest(
+            commands = Some(mkCommand)
+          )
+        )
+
+      override def submitRequest(
+          service: InteractiveSubmissionServiceStub,
+          request: PrepareSubmissionRequest,
+      ): Future[PrepareSubmissionResponse] =
+        service.prepareSubmission(request)
+
+      override def handleResponse(
+          response: PrepareSubmissionResponse
+      ): Either[String, PrepareSubmissionResponse] =
+        Right(response)
+
+      override def timeoutType: TimeoutType = DefaultUnboundedTimeout
+
+    }
+
+    final case class ExecuteCommand(
+        interpretedTransaction: ByteString,
+        transactionSignatures: Map[PartyId, Seq[Signature]],
+    ) extends BaseCommand[
+          ExecuteSubmissionRequest,
+          ExecuteSubmissionResponse,
+          ExecuteSubmissionResponse,
+        ] {
+
+      import com.digitalasset.canton.crypto.LedgerApiCryptoConversions.*
+      import io.scalaland.chimney.dsl.*
+      import com.daml.ledger.api.v2.interactive_submission_service as iss
+
+      private def makePartySignatures: PartySignatures = PartySignatures(
+        transactionSignatures.map { case (party, signatures) =>
+          SinglePartySignatures(
+            party = party.toProtoPrimitive,
+            signatures = signatures.map(_.toProtoV30.transformInto[iss.Signature]),
+          )
+        }.toSeq
+      )
+
+      override def createRequest(): Either[String, ExecuteSubmissionRequest] =
+        Right(
+          ExecuteSubmissionRequest(
+            interpretedTransaction,
+            Some(makePartySignatures),
+          )
+        )
+
+      override def submitRequest(
+          service: InteractiveSubmissionServiceStub,
+          request: ExecuteSubmissionRequest,
+      ): Future[ExecuteSubmissionResponse] =
+        service.executeSubmission(request)
+
+      override def handleResponse(
+          response: ExecuteSubmissionResponse
+      ): Either[String, ExecuteSubmissionResponse] =
+        Right(response)
+
+      override def timeoutType: TimeoutType = DefaultUnboundedTimeout
+    }
+
   }
 
   object CommandService {

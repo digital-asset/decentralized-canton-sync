@@ -5,7 +5,7 @@ package com.daml.network.sv.onboarding.domainmigration
 
 import cats.implicits.catsSyntaxTuple2Semigroupal
 import cats.syntax.either.*
-import com.daml.network.config.{SpliceInstanceNamesConfig, UpgradesConfig}
+import com.daml.network.config.UpgradesConfig
 import com.daml.network.environment.{
   BaseLedgerConnection,
   MediatorAdminConnection,
@@ -74,7 +74,6 @@ class DomainMigrationInitializer(
     override protected val storage: Storage,
     override protected val loggerFactory: NamedLoggerFactory,
     override protected val retryProvider: RetryProvider,
-    override protected val spliceInstanceNamesConfig: SpliceInstanceNamesConfig,
     newJoiningNodeInitializer: (
         Option[SvOnboardingConfig.JoinWithKey],
         Option[CometBftNode],
@@ -190,12 +189,14 @@ class DomainMigrationInitializer(
           Some(localSynchronizerNode),
           extraSynchronizerNodes,
           upgradesConfig,
-          spliceInstanceNamesConfig,
           loggerFactory,
         )
-      // We register the traffic triggers earlier for domain migrations to ensure that SV nodes obtain
-      // unlimited traffic and prevent lock-out issues due to lack of traffic (see #13868)
-      _ = dsoAutomationService.registerTrafficReconciliationTriggers()
+      _ <- newJoiningNodeInitializer(None, newCometBftNode).onboard(
+        decentralizedSynchronizerId,
+        dsoAutomationService,
+        svAutomation,
+        None,
+      )
       _ <- ensureCometBftGovernanceKeysAreSet(
         cometBftNode,
         svStore.key.svParty,
@@ -203,13 +204,6 @@ class DomainMigrationInitializer(
         dsoAutomationService,
       )
       _ <- rotateGenesisGovernanceKeyForSV1(newCometBftNode, domainMigrationConfig.name)
-      _ <- newJoiningNodeInitializer(None, newCometBftNode).onboard(
-        decentralizedSynchronizerId,
-        dsoAutomationService,
-        svAutomation,
-        None,
-        skipTrafficReconciliationTriggers = true,
-      )
     } yield (
       decentralizedSynchronizerId,
       dsoPartyHosting,
