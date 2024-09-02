@@ -6,10 +6,9 @@ import { Outlet } from 'react-router-dom';
 import { Box, Button, Stack } from '@mui/material';
 
 import { usePrimaryParty } from '../hooks/queries/usePrimaryParty';
-import { useAnsConfig } from '../utils';
+import { config } from '../utils/config';
 
 const Root: React.FC = () => {
-  const config = useAnsConfig();
   const { logout } = useUserState();
   const primaryPartyId = usePrimaryParty();
 

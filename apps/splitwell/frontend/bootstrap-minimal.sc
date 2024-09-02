@@ -69,12 +69,9 @@ def ensureAnsEntry(
     }
   }
 }
-
-val ansAcronym = "cns"
-
 ensureAnsEntry(
   aliceUserParty,
-  s"alice.unverified.$ansAcronym",
+  "alice.unverified.cns",
   "https://alice-url.ans.com",
   "",
   aliceAns,
@@ -82,7 +79,7 @@ ensureAnsEntry(
 )
 ensureAnsEntry(
   bobUserParty,
-  s"bob.unverified.$ansAcronym",
+  "bob.unverified.cns",
   "https://bob-url.ans.com",
   "",
   bobAns,
@@ -90,7 +87,7 @@ ensureAnsEntry(
 )
 ensureAnsEntry(
   charlieUserParty,
-  s"charlie.unverified.$ansAcronym",
+  "charlie.unverified.cns",
   "https://charlie-url.ans.com",
   "",
   charlieAns,

@@ -12,7 +12,7 @@ import { Party } from '@daml/types';
 
 import { useDsoInfos } from '../contexts/SvContext';
 import { useValidatorLicenses } from '../hooks/useValidatorLicenses';
-import { useSvConfig } from '../utils';
+import { config } from '../utils';
 
 const ValidatorLicenses: React.FC = () => {
   const validatorLicensesQuery = useValidatorLicenses();
@@ -98,7 +98,6 @@ const LicenseRow: React.FC<LicenseRowProps> = ({ validator, sponsor, createdAt, 
 };
 
 const ValidatorLicensesWithContexts: React.FC = () => {
-  const config = useSvConfig();
   return (
     <SvClientProvider url={config.services.sv.url}>
       <ValidatorLicenses />

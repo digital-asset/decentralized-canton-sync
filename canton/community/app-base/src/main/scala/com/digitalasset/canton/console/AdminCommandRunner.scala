@@ -93,7 +93,7 @@ trait BaseInspection[+I <: CantonNode] {
     )
   }
 
-  protected[canton] def crypto: Crypto = {
+  def crypto: Crypto = {
     runningNode
       .flatMap(_.crypto)
       .getOrElse(throw new IllegalArgumentException(s"instance $name is not running."))
@@ -114,7 +114,7 @@ trait FeatureFlagFilter extends NamedLogging {
       noTracingLogger.error(
         s"The command is currently disabled. You need to enable it explicitly by setting `canton.features.${config} = yes` in your Canton configuration file (`.conf`)"
       )
-      throw new InteractiveCommandFailure()
+      throw new CommandFailure()
     }
 
   protected def check[T](flag: FeatureFlag)(command: => T): T =

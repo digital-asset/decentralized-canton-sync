@@ -342,7 +342,7 @@ lazy val `splice-wallet-daml` =
     .enablePlugins(DamlPlugin)
     .settings(
       BuildCommon.damlSettings,
-      Compile / damlDependencies := (`splice-amulet-daml` / Compile / damlBuild).value ++ (`splice-wallet-payments-daml` / Compile / damlBuild).value,
+      Compile / damlDependencies := (`splice-amulet-daml` / Compile / damlBuild).value ++ (`splice-wallet-payments-daml` / Compile / damlBuild).value ++ (`splice-amulet-name-service-daml` / Compile / damlBuild).value,
     )
     .dependsOn(`canton-bindings-java`)
 
@@ -1158,7 +1158,7 @@ lazy val bundleTask = {
     val webUis =
       Seq(
         ((`apps-wallet-frontend` / bundle).value, "wallet"),
-        ((`apps-ans-frontend` / bundle).value, "ans"),
+        ((`apps-ans-frontend` / bundle).value, "cns"),
         ((`apps-sv-frontend` / bundle).value, "sv"),
         ((`apps-scan-frontend` / bundle).value, "scan"),
         ((`apps-splitwell-frontend` / bundle).value, "splitwell"),
@@ -1351,7 +1351,7 @@ lazy val `apps-app` =
       // when building the fat jar, we need to properly merge our artefacts
       assembly / assemblyMergeStrategy := mergeStrategy((assembly / assemblyMergeStrategy).value),
       assembly / mainClass := Some("com.daml.network.SpliceApp"),
-      assembly / assemblyJarName := "splice-node.jar",
+      assembly / assemblyJarName := s"cn-node-${version.value}.jar",
       // include historic dars in the jar
       Compile / unmanagedResourceDirectories += { file(file(".").absolutePath) / "daml/dars" },
     )
@@ -1400,8 +1400,6 @@ printTests := {
   def isDamlCiupgradeVote(name: String): Boolean = name contains "DamlCIUpgradeVote"
   def isAuth0CredentialsPreflightIntegrationTest(name: String): Boolean =
     isPreflightIntegrationTest(name) && name.contains("Auth0Credentials")
-  def isDockerComposeValidatorPreflightIntegrationTest(name: String): Boolean =
-    isPreflightIntegrationTest(name) && name.contains("DockerComposeValidator")
 
   def isGlobalSoftMigrationTest(name: String): Boolean =
     name contains "DecentralizedSynchronizerSoftDomainMigration"
@@ -1413,8 +1411,6 @@ printTests := {
   def isResourceIntensiveTest(name: String): Boolean =
     name.contains("SvReonboardingIntegration") ||
       name.contains("DecentralizedSynchronizerMigrationIntegrationTest")
-  def isDockerBasedTest(name: String): Boolean =
-    name contains "DockerComposeValidatorFrontendIntegrationTest"
 
   val allTestNames =
     definedTests
@@ -1449,11 +1445,6 @@ printTests := {
       "Fetch UI credentials from Auth0 and store them in a k8s secret",
       "test-full-class-names-auth0-credentials-preflight.log",
       (t: String) => isAuth0CredentialsPreflightIntegrationTest(t),
-    ),
-    (
-      "Docker Compose validator preflight test",
-      "test-full-class-names-docker-compose-validator-preflight.log",
-      (t: String) => isDockerComposeValidatorPreflightIntegrationTest(t),
     ),
     (
       "Preflight tests against core nodes",
@@ -1514,11 +1505,6 @@ printTests := {
       "resource intensive tests",
       "test-full-class-names-resource-intensive.log",
       (t: String) => isResourceIntensiveTest(t),
-    ),
-    (
-      "tests using docker images",
-      "test-full-class-names-docker-based.log",
-      (t: String) => isDockerBasedTest(t),
     ),
     (
       "tests with wall clock time",

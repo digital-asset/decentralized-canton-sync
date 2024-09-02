@@ -13,7 +13,7 @@ import { Outlet } from 'react-router-dom';
 
 import Onboarding from '../components/Onboarding';
 import { useIsOnboarded } from '../hooks';
-import { useWalletConfig } from '../utils/config';
+import { config } from '../utils/config';
 
 interface AuthCheckProps {
   authConfig: AuthConfig;
@@ -21,7 +21,6 @@ interface AuthCheckProps {
 }
 
 const AuthCheck: React.FC<AuthCheckProps> = ({ authConfig, testAuthConfig }) => {
-  const config = useWalletConfig();
   const { isAuthenticated } = useUserState();
   const { isLoading, isError, data: isOnboarded } = useIsOnboarded();
 

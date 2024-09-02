@@ -5,28 +5,19 @@ import userEvent from '@testing-library/user-event';
 import { test, expect, describe } from 'vitest';
 
 import App from '../App';
-import { WalletConfigProvider } from '../utils/config';
 import { aliceEntry, nameServiceEntries, userLogin } from './mocks/constants';
 
 const dsoEntry = nameServiceEntries.find(e => e.name.startsWith('dso'))!;
 
 test('login screen shows up', async () => {
-  render(
-    <WalletConfigProvider>
-      <App />
-    </WalletConfigProvider>
-  );
+  render(<App />);
   expect(() => screen.findByText('Log In')).toBeDefined();
 });
 
 describe('Wallet user can', () => {
   test('login and see the user party ID', async () => {
     const user = userEvent.setup();
-    render(
-      <WalletConfigProvider>
-        <App />
-      </WalletConfigProvider>
-    );
+    render(<App />);
 
     expect(await screen.findByText('Log In')).toBeDefined();
 
@@ -41,11 +32,7 @@ describe('Wallet user can', () => {
 
   test('not see dso in list of transfer-offer receivers', async () => {
     const user = userEvent.setup();
-    render(
-      <WalletConfigProvider>
-        <App />
-      </WalletConfigProvider>
-    );
+    render(<App />);
     expect(await screen.findByText('Transfer')).toBeDefined();
 
     const transferOffersLink = screen.getByRole('link', { name: 'Transfer' });

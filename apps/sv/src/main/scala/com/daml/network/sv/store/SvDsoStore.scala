@@ -10,8 +10,8 @@ import com.daml.network.automation.MultiDomainExpiredContractTrigger.ListExpired
 import com.daml.network.automation.TransferFollowTrigger.Task as FollowTask
 import com.daml.network.codegen.java.splice.amulet.UnclaimedReward
 import com.daml.network.codegen.java.splice.amuletrules.{
-  AmuletRules_MiningRound_Archive,
   AppTransferContext,
+  AmuletRules_MiningRound_Archive,
 }
 import com.daml.network.codegen.java.splice.types.Round
 import com.daml.network.codegen.java.splice.validatorlicense as vl
@@ -25,14 +25,13 @@ import com.daml.network.codegen.java.splice.dsorules.amuletrules_actionrequiring
 import com.daml.network.codegen.java.splice.dsorules.dsorules_actionrequiringconfirmation.SRARC_ConfirmSvOnboarding
 import com.daml.network.codegen.java.splice.dsorules.{
   ActionRequiringConfirmation,
-  DsoRules_CloseVoteRequestResult,
   DsoRules_ConfirmSvOnboarding,
   VoteRequest,
+  DsoRules_CloseVoteRequestResult,
 }
 import com.daml.network.codegen.java.splice.svonboarding as so
 import com.daml.network.codegen.java.splice.wallet.subscriptions as sub
 import com.daml.network.codegen.java.splice
-import com.daml.network.codegen.java.splice.validatorlicense.ValidatorLicense
 import com.daml.network.environment.{PackageIdResolver, RetryProvider}
 import com.daml.network.migration.DomainMigrationInfo
 import com.daml.network.scan.admin.api.client.ScanConnection.GetAmuletRulesDomain
@@ -701,10 +700,6 @@ trait SvDsoStore
       .listContracts(vl.ValidatorLicense.COMPANION, limit)
       .map(_ map (_.contract))
 
-  def listValidatorLicensePerValidator(validator: String, limit: Limit)(implicit
-      tc: TraceContext
-  ): Future[Seq[Contract[ValidatorLicense.ContractId, ValidatorLicense]]]
-
   def getTotalPurchasedMemberTraffic(memberId: Member, domainId: DomainId)(implicit
       tc: TraceContext
   ): Future[Long]
@@ -998,6 +993,7 @@ object SvDsoStore {
     splice.ans.AnsEntry.COMPANION,
     splice.ans.AnsEntryContext.COMPANION,
     splice.ans.AnsRules.COMPANION,
+    splice.transferpreapproval.TransferPreapproval.COMPANION,
     splice.dso.amuletprice.AmuletPriceVote.COMPANION,
     splice.wallet.subscriptions.TerminatedSubscription.COMPANION, // TODO (#8782) move it to UserWalletStore.templatesMovedByMyAutomation
   )
@@ -1276,6 +1272,13 @@ object SvDsoStore {
         DsoAcsStoreRowData(
           contract,
           subscriptionReferenceContractId = Some(contract.payload.reference),
+        )
+      },
+      mkFilter(splice.transferpreapproval.TransferPreapproval.COMPANION)(co =>
+        co.payload.dso == dso
+      ) { contract =>
+        DsoAcsStoreRowData(
+          contract
         )
       },
     )

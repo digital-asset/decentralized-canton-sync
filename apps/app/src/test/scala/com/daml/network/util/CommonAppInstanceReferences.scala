@@ -1,6 +1,5 @@
 package com.daml.network.util
 
-import com.daml.network.config.SpliceInstanceNamesConfig
 import com.daml.network.console.{
   AppManagerAppClientReference,
   ScanAppBackendReference,
@@ -21,6 +20,7 @@ import com.digitalasset.canton.DomainAlias
 // TODO(#736): these should eventually be defined analogue to Canton's `participant1` references etc
 // however, this is likely only possible once we depend on Canton as a library
 trait CommonAppInstanceReferences {
+
   def decentralizedSynchronizerId(implicit env: SpliceTestConsoleEnvironment): DomainId =
     sv1Backend.participantClientWithAdminToken.domains.id_of(sv1Backend.config.domains.global.alias)
   def decentralizedSynchronizerAlias(implicit env: SpliceTestConsoleEnvironment): DomainAlias =
@@ -305,47 +305,4 @@ trait CommonAppInstanceReferences {
     env.scans.remote
       .find(_.name == name)
       .getOrElse(sys.error(s"scan app client [$name] not configured"))
-
-  def spliceInstanceNames(implicit env: SpliceTestConsoleEnvironment): SpliceInstanceNamesConfig = {
-    // Find any SV or remote scan reference to read a splice instance name config
-    env.svs.local.headOption
-      .map(_.config.spliceInstanceNames)
-      .getOrElse {
-        // TODO(#14512) for backwards compatibility with ciupgrade preflights, running against versions without the API. Remove in time.
-        val enableCnInstanceNames = sys.env.getOrElse("ENABLE_CN_INSTANCE_NAMES", "false")
-        val useCnInstanceNames =
-          try { enableCnInstanceNames.toBoolean }
-          catch {
-            case _: IllegalArgumentException => false
-          }
-
-        if (useCnInstanceNames)
-          SpliceInstanceNamesConfig(
-            networkName = "Canton Network",
-            networkFaviconUrl = "https://www.canton.network/hubfs/cn-favicon-05%201-1.png",
-            amuletName = "Canton Coin",
-            amuletNameAcronym = "CC",
-            nameServiceName = "Canton Name Service",
-            nameServiceNameAcronym = "CNS",
-          )
-        else
-          SpliceInstanceNamesConfig(
-            networkName = "Splice",
-            networkFaviconUrl = "https://www.hyperledger.org/hubfs/hyperledgerfavicon.png",
-            amuletName = "Amulet",
-            amuletNameAcronym = "AMT",
-            nameServiceName = "Amulet Name Service",
-            nameServiceNameAcronym = "ANS",
-          )
-      }
-  }
-
-  def ansAcronym(implicit env: SpliceTestConsoleEnvironment): String =
-    spliceInstanceNames.nameServiceNameAcronym.toLowerCase()
-
-  def amuletName(implicit env: SpliceTestConsoleEnvironment): String =
-    spliceInstanceNames.amuletName
-
-  def amuletNameAcronym(implicit env: SpliceTestConsoleEnvironment): String =
-    spliceInstanceNames.amuletNameAcronym
 }

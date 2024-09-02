@@ -41,7 +41,7 @@ class UpdateHistoryTest extends UpdateHistoryTestBase {
         val store = mkStore()
         for {
           _ <- initStore(store)
-          _ <- create(domain1, cid1, offset1, party1, store, time(1))
+          _ <- create(domain1, cid1, offset1, party1, store)
           updates <- updates(store)
         } yield checkUpdates(
           updates,

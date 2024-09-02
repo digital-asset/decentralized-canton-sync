@@ -101,13 +101,13 @@ class WalletTransfersFrontendIntegrationTest
               ) should matchText(expectedAns(aliceUserParty, aliceAnsName))
 
               offerCard.childElement(className("transfer-offer-cc-amount")).text should matchText(
-                s"+ $transferAmount $amuletNameAcronym"
+                s"+ $transferAmount CC"
               )
 
               offerCard
                 .childElement(className("transfer-offer-usd-amount-rate"))
                 .text should matchText(
-                s"7 USD @ ${BigDecimal(1) / amuletPrice} $amuletNameAcronym/USD"
+                s"7 USD @ ${BigDecimal(1) / amuletPrice} CC/USD"
               )
             }
           },
@@ -171,13 +171,13 @@ class WalletTransfersFrontendIntegrationTest
             )
 
             offerCard.childElement(className("transfer-offer-cc-amount")).text should matchText(
-              s"+ 1 $amuletNameAcronym"
+              "+ 1 CC"
             )
 
             offerCard
               .childElement(className("transfer-offer-usd-amount-rate"))
               .text should matchText(
-              s"2 USD @ 0.5 $amuletNameAcronym/USD"
+              "2 USD @ 0.5 CC/USD"
             )
           }
         }

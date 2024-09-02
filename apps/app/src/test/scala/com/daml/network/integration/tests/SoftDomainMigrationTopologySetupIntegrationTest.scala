@@ -195,7 +195,9 @@ class SoftDomainMigrationTopologySetupIntegrationTest
       group,
       alice,
     )
-    // TODO(#14419) Remove this once the retries cover all required errors
+    // TODO(#13199) Remove this once our test code does retries
+    // Splitwell does direct ledger API submissions through test code which do not have retries so it is quite
+    // sensitive domain reconnects. We disable the trigger temporarily to avoid any weird interactions.
     setTriggersWithin(triggersToPauseAtStart =
       Seq(
         aliceValidatorBackend.validatorAutomation.trigger[ReconcileSequencerConnectionsTrigger],

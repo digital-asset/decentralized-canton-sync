@@ -85,7 +85,7 @@ abstract class RunbookSvPreflightIntegrationTestBase
     }
   }
 
-  "The SV can log in to their wallet" in { implicit env =>
+  "The SV can log in to their wallet" in { _ =>
     withFrontEnd("sv") { implicit webDriver =>
       actAndCheck(
         s"Logging in to wallet at ${walletUrl}", {
@@ -227,7 +227,7 @@ abstract class RunbookSvPreflightIntegrationTestBase
               .getOrElse(fail(s"Failed parsing round number from: $asOfRound"))
           val totalAmuletBalanceSv = find(id("total-amulet-balance-cc")).value.text
           val totalAmuletBalanceSv1 = sv1ScanClient.getTotalAmuletBalance(round)
-          parseAmountText(totalAmuletBalanceSv, amuletNameAcronym) shouldBe totalAmuletBalanceSv1
+          parseAmountText(totalAmuletBalanceSv, "CC") shouldBe totalAmuletBalanceSv1
         }
       }
     } else {
@@ -235,11 +235,10 @@ abstract class RunbookSvPreflightIntegrationTestBase
     }
   }
 
-  "The Name Service UI is working" in { implicit env =>
+  "The CNS UI is working" in { implicit env =>
     val ansUrl = s"https://cns.sv.${sys.env("NETWORK_APPS_ADDRESS")}"
     val svPassword = sys.env(s"SV_DEV_NET_WEB_UI_PASSWORD");
-    val ansName =
-      s"da-test-${Random.alphanumeric.take(10).mkString.toLowerCase}.unverified.$ansAcronym"
+    val ansName = s"da-test-${Random.alphanumeric.take(10).mkString.toLowerCase}.unverified.cns"
 
     withFrontEnd("sv") { implicit webDriver =>
       def login(): Unit = {
@@ -260,14 +259,13 @@ abstract class RunbookSvPreflightIntegrationTestBase
         )
 
       }
-      if (isDevNet) { // SV missing Amulet in NonDevNet
+      if (isDevNet) { // SV missing CC in NonDevNet
         reserveAnsNameFor(
           () => login(),
           ansName,
           "1.0000000000",
           "USD",
           "90 days",
-          ansAcronym,
         )
         clue(s"Reserved ANS name can be looked up via scan") {
           val svScanClient = scancl("svTestScan")

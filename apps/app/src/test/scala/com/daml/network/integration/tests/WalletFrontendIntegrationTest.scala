@@ -24,7 +24,7 @@ class WalletFrontendIntegrationTest
 
     "tap" should {
 
-      def onboardAndTapTest(damlUser: String)(implicit env: SpliceTestConsoleEnvironment) = {
+      def onboardAndTapTest(damlUser: String) = {
         withFrontEnd("alice") { implicit webDriver =>
           actAndCheck(
             "User logs in", {
@@ -68,7 +68,7 @@ class WalletFrontendIntegrationTest
             val usdBefore = BigDecimal(usdTextBefore.split(" ").head)
 
             actAndCheck(
-              s"User taps $amount Amulet in the wallet", {
+              s"User taps $amount CC in the wallet", {
                 tapAmulets(amountUsd)
               },
             )(
@@ -219,7 +219,7 @@ class WalletFrontendIntegrationTest
             browseToAliceWallet(aliceDamlUser)
           },
         )(
-          "Alice sees her Name Service entry name",
+          "Alice sees her CNS entry name",
           _ => {
             seleniumText(find(id("logged-in-user"))) should matchText(entryName)
           },

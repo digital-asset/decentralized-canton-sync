@@ -32,11 +32,10 @@
     cargoDeps = old.cargoDeps.overrideAttrs {
       inherit version;
       inherit src;
-      outputHash = "sha256-gopI5iOCSzD23mvOues76WIiBtpNf9A6X9NoOULm6Qo=";
+      outputHash = "sha256-BFEYZxzbaXmfQUl4EgbpQblTQ5QJmizqsdJnaWxgdaI=";
     };
   });
   git-search-replace = super.callPackage ./git-search-replace.nix {};
-  sphinx-lint = super.callPackage ./sphinx-lint.nix {};
   jsonnet = super.callPackage ./jsonnet.nix {};
   pulumi-bin = super.pulumi-bin.overrideAttrs (_: previousAttrs:
     let

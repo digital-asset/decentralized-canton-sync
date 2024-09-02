@@ -26,10 +26,9 @@ import { useSvAdminClient } from '../../contexts/SvAdminServiceContext';
 import { useDsoInfos } from '../../contexts/SvContext';
 import { useAmuletPriceVotes } from '../../hooks/useAmuletPriceVotes';
 import { AmuletPriceVote } from '../../models/models';
-import { useSvConfig } from '../../utils';
+import { config } from '../../utils';
 
 const DesiredAmuletPrice: React.FC = () => {
-  const config = useSvConfig();
   const amuletPriceVotesQuery = useAmuletPriceVotes();
   const { updateDesiredAmuletPrice } = useSvAdminClient();
   const [curPriceText, setCurPriceText] = useState<string>('0');
@@ -205,7 +204,6 @@ const OtherAmuletPricesRow: React.FC<OtherAmuletPricesRowProps> = ({
 };
 
 const DesiredAmuletPriceWithContexts: React.FC = () => {
-  const config = useSvConfig();
   return (
     <SvClientProvider url={config.services.sv.url}>
       <DesiredAmuletPrice />

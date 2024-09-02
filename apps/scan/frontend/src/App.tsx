@@ -3,7 +3,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { ErrorRouterPage, theme } from 'common-frontend';
-import { replaceEqualDeep } from 'common-frontend-utils';
+import { cnReplaceEqualDeep } from 'common-frontend-utils';
 import { ScanClientProvider } from 'common-frontend/scan-api';
 import React from 'react';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
@@ -24,16 +24,15 @@ import DsoWithContexts from './routes/dso';
 import Root from './routes/root';
 import ValidatorFaucetsLeaderboard from './routes/validatorFaucetsLeaderboard';
 import ValidatorLeaderboard from './routes/validatorLeaderboard';
-import { useScanConfig } from './utils';
+import { config } from './utils';
 
 const Providers: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const config = useScanConfig();
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
         // rounds update every 2.5 minutes, but for testing it's better to refresh more often, e.g. every 5 seconds
         refetchInterval: 5 * 1000,
-        structuralSharing: replaceEqualDeep,
+        structuralSharing: cnReplaceEqualDeep,
       },
     },
   });
@@ -62,24 +61,21 @@ const router = createBrowserRouter(
   )
 );
 
-const App: React.FC = () => {
-  const config = useScanConfig();
-  const pageTitle = `${config.spliceInstanceNames.networkName} Scan`;
-  return (
-    <ThemeProvider theme={theme}>
-      <HelmetProvider>
-        <Helmet>
-          <title>{pageTitle}</title>
-          <meta name="description" content={pageTitle} />
-          <link rel="icon" href={config.spliceInstanceNames.networkFaviconUrl} />
-        </Helmet>
-        <CssBaseline />
-        <Providers>
-          <RouterProvider router={router} />
-        </Providers>
-      </HelmetProvider>
-    </ThemeProvider>
-  );
-};
+const pageTitle = `${config.spliceInstanceNames.networkName} Scan`;
+const App: React.FC = () => (
+  <ThemeProvider theme={theme}>
+    <HelmetProvider>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageTitle} />
+        <link rel="icon" href={config.spliceInstanceNames.networkFaviconUrl} />
+      </Helmet>
+      <CssBaseline />
+      <Providers>
+        <RouterProvider router={router} />
+      </Providers>
+    </HelmetProvider>
+  </ThemeProvider>
+);
 
 export default App;

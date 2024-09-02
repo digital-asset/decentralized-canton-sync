@@ -27,13 +27,14 @@ window.splice_config = {
       url: 'https://scan.sv-2.TARGET_HOSTNAME/api/scan',
     },
   },
+  clusterUrl: `https://TARGET_HOSTNAME`,
   spliceInstanceNames: {
-    networkName: 'Splice',
-    networkFaviconUrl: 'https://www.hyperledger.org/hubfs/hyperledgerfavicon.png',
-    amuletName: 'Amulet',
-    amuletNameAcronym: 'AMT',
-    nameServiceName: 'Amulet Name Service',
-    nameServiceNameAcronym: 'ANS',
+    networkName: 'Canton Network',
+    networkFaviconUrl: 'https://www.canton.network/hubfs/cn-favicon-05%201-1.png',
+    amuletName: 'Canton Coin',
+    amuletNameAcronym: 'CC',
+    nameServiceName: 'Canton Name Service',
+    nameServiceNameAcronym: 'CNS',
   },
   // END_WALLET_CLUSTER_BACKEND_CONFIG
 };

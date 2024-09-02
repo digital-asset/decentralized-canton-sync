@@ -8,10 +8,9 @@ import Typography from '@mui/material/Typography';
 
 import { useBalance } from '../hooks';
 import useAmuletPrice from '../hooks/scan-proxy/useAmuletPrice';
-import { useWalletConfig } from '../utils/config';
+import { config } from '../utils/config';
 
 const Hero: React.FC = () => {
-  const config = useWalletConfig();
   const balanceQuery = useBalance();
   const amuletPriceQuery = useAmuletPrice();
 

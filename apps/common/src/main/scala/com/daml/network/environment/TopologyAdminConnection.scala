@@ -24,7 +24,6 @@ import com.digitalasset.canton.admin.api.client.data.topology.{
   BaseResult,
   ListNamespaceDelegationResult,
   ListOwnerToKeyMappingResult,
-  ListVettedPackagesResult,
 }
 import com.digitalasset.canton.config.{ApiLoggingConfig, ClientConfig, NonNegativeFiniteDuration}
 import com.digitalasset.canton.config.RequireTypes.{NonNegativeInt, PositiveInt}
@@ -160,6 +159,28 @@ abstract class TopologyAdminConnection(
         ),
         filterParty,
         filterParticipant,
+      )
+    ).map(_.map(r => TopologyResult(r.context, r.item)))
+  }
+
+  def listPartyToKey(
+      filterStore: String = "",
+      operation: Option[TopologyChangeOp] = None,
+      filterParty: String = "",
+      timeQuery: TimeQuery = TimeQuery.HeadState,
+      proposals: TopologyTransactionType = AuthorizedState,
+  )(implicit traceContext: TraceContext): Future[Seq[TopologyResult[PartyToKeyMapping]]] = {
+    runCmd(
+      TopologyAdminCommands.Read.ListPartyToKeyMapping(
+        BaseQuery(
+          filterStore,
+          proposals = proposals.proposals,
+          timeQuery,
+          operation,
+          filterSigningKey = proposals.signingKey.getOrElse(""),
+          protocolVersion = None,
+        ),
+        filterParty,
       )
     ).map(_.map(r => TopologyResult(r.context, r.item)))
   }
@@ -464,25 +485,6 @@ abstract class TopologyAdminConnection(
       filterNamespace = participantId.namespace.filterString,
     )
 
-  def listVettedPackages(
-      participantId: ParticipantId,
-      domainId: DomainId,
-  )(implicit tc: TraceContext): Future[Seq[ListVettedPackagesResult]] = {
-    runCmd(
-      TopologyAdminCommands.Read.ListVettedPackages(
-        BaseQuery(
-          filterStore = TopologyStoreId.DomainStore(domainId).filterName,
-          proposals = false,
-          timeQuery = TimeQuery.HeadState,
-          ops = None,
-          filterSigningKey = "",
-          protocolVersion = None,
-        ),
-        filterParticipant = participantId.filterString,
-      )
-    )
-  }
-
   def proposeMapping[M <: TopologyMapping: ClassTag](
       store: TopologyStoreId,
       mapping: M,
@@ -515,6 +517,19 @@ abstract class TopologyAdminConnection(
       signedBy,
       serial,
       isProposal,
+    )
+
+  /** Prepare a transaction for external signing.
+    */
+  def generateTransactions(
+      proposals: Seq[TopologyAdminCommands.Write.GenerateTransactions.Proposal]
+  )(implicit
+      traceContext: TraceContext
+  ): Future[Seq[TopologyTransaction[TopologyChangeOp, TopologyMapping]]] =
+    runCmd(
+      TopologyAdminCommands.Write.GenerateTransactions(
+        proposals
+      )
     )
 
   /** Version of [[ensureTopologyMapping]] that also handles proposals:

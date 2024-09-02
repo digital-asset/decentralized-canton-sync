@@ -1,3 +1,5 @@
+clusterUrl: "TARGET_HOSTNAME"
+
 # Replace MIGRATION_ID with the current migration ID of the global synchronizer.
 migration:
   id: "MIGRATION_ID"
@@ -9,11 +11,3 @@ sequencerAddress: "global-domain-MIGRATION_ID-sequencer"
 persistence:
   host: apps-pg
   secretName: apps-pg-secret
-
-spliceInstanceNames:
-  networkName: # Please provide a value as provided in the docs
-  networkFaviconUrl: # Please provide a value as provided in the docs
-  amuletName: # Please provide a value as provided in the docs
-  amuletNameAcronym: # Please provide a value as provided in the docs
-  nameServiceName: # Please provide a value as provided in the docs
-  nameServiceNameAcronym: # Please provide a value as provided in the docs

@@ -13,6 +13,7 @@ import com.daml.network.codegen.java.splice.round.{
   IssuingMiningRound,
   OpenMiningRound,
 }
+import com.daml.network.codegen.java.splice.transferpreapproval.TransferPreapproval
 import com.daml.network.codegen.java.splice.ans.AnsRules
 import com.daml.network.config.NetworkAppClientConfig
 import com.daml.network.environment.SpliceConsoleEnvironment
@@ -24,13 +25,7 @@ import com.daml.network.scan.admin.api.client.commands.HttpScanAppClient
 import com.daml.network.scan.admin.api.client.commands.HttpScanAppClient.TransferContextWithInstances
 import com.daml.network.scan.config.{ScanAppBackendConfig, ScanAppClientConfig}
 import com.daml.network.scan.store.db.ScanAggregator
-import com.daml.network.util.{
-  AmuletConfigSchedule,
-  Contract,
-  ContractWithState,
-  PackageQualifiedName,
-  SpliceUtil,
-}
+import com.daml.network.util.{AmuletConfigSchedule, SpliceUtil, Contract, ContractWithState}
 import com.digitalasset.canton.console.{BaseInspection, ConsoleCommandResult, Help}
 import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.topology.{DomainId, Member, ParticipantId, PartyId}
@@ -136,6 +131,14 @@ abstract class ScanAppReference(
             ConsoleCommandResult.fromEither(optContract.toRight(s"Entry with name $name not found"))
           )
       }
+
+  @Help.Summary("Lookup a TransferPreapproval by the receiver party")
+  def lookupTransferPreapprovalByParty(
+      party: PartyId
+  ): Option[ContractWithState[TransferPreapproval.ContractId, TransferPreapproval]] =
+    consoleEnvironment.run {
+      httpCommand(HttpScanAppClient.LookupTransferPreapprovalByParty(party))
+    }
 
   @Help.Summary(
     "Get the (cached) amulet config effective now. Note that changes to the config might take some time to propagate due to the client-side caching."
@@ -318,63 +321,6 @@ abstract class ScanAppReference(
       )
     }
 
-  def forceAcsSnapshotNow() =
-    consoleEnvironment.run {
-      httpCommand(
-        HttpScanAppClient.ForceAcsSnapshotNow
-      )
-    }
-
-  def getDateOfMostRecentSnapshotBefore(before: CantonTimestamp, migrationId: Long) =
-    consoleEnvironment.run {
-      httpCommand(
-        HttpScanAppClient.GetDateOfMostRecentSnapshotBefore(
-          before.toInstant.atOffset(java.time.ZoneOffset.UTC),
-          migrationId,
-        )
-      )
-    }
-
-  def getAcsSnapshotAt(
-      at: CantonTimestamp,
-      migrationId: Long,
-      after: Option[Long] = None,
-      pageSize: Int = 100,
-      partyIds: Option[Vector[PartyId]] = None,
-      templates: Option[Vector[PackageQualifiedName]] = None,
-  ) =
-    consoleEnvironment.run {
-      httpCommand(
-        HttpScanAppClient.GetAcsSnapshotAt(
-          at.toInstant.atOffset(java.time.ZoneOffset.UTC),
-          migrationId,
-          after,
-          pageSize,
-          partyIds,
-          templates,
-        )
-      )
-    }
-
-  def getHoldingsStateAt(
-      at: CantonTimestamp,
-      migrationId: Long,
-      partyIds: Vector[PartyId],
-      after: Option[Long] = None,
-      pageSize: Int = 100,
-  ) =
-    consoleEnvironment.run {
-      httpCommand(
-        HttpScanAppClient.GetHoldingsStateAt(
-          at.toInstant.atOffset(java.time.ZoneOffset.UTC),
-          migrationId,
-          partyIds,
-          after,
-          pageSize,
-        )
-      )
-    }
-
   def getAggregatedRounds(): Option[ScanAggregator.RoundRange] =
     consoleEnvironment.run {
       httpCommand(
@@ -408,12 +354,6 @@ abstract class ScanAppReference(
       httpCommand(
         HttpScanAppClient.GetUpdate(updateId)
       )
-    }
-  }
-
-  def getSpliceInstanceNames() = {
-    consoleEnvironment.run {
-      httpCommand(HttpScanAppClient.GetSpliceInstanceNames())
     }
   }
 

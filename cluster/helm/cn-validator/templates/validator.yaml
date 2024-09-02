@@ -95,11 +95,6 @@ spec:
           value: |
             canton.validator-apps.validator_backend.scan-client.type = "trust-single"
             canton.validator-apps.validator_backend.scan-client.url = ${_scan.admin-api.address}
-        {{ else if .Values.nonSvValidatorTrustSingleScan | default false -}}
-        - name: ADDITIONAL_CONFIG_NON_VALIDATOR_TRUST_SINGLE_SCAN
-          value: |
-            canton.validator-apps.validator_backend.scan-client.type = "trust-single"
-            canton.validator-apps.validator_backend.scan-client.url = ${_scan.admin-api.address}
         {{ else -}}
         - name: ADDITIONAL_CONFIG_BFT_SCAN
           value: |

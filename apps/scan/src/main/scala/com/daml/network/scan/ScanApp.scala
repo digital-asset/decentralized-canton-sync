@@ -186,20 +186,15 @@ class ScanApp(
           logger,
         )
       }
-      dsoAnsResolver = new DsoAnsResolver(
-        dsoParty,
-        config.spliceInstanceNames.nameServiceNameAcronym.toLowerCase(),
-      )
+      dsoAnsResolver = new DsoAnsResolver(dsoParty)
       internalHandler = new HttpScanHandler(
         serviceUserPrimaryParty,
         config.svUser,
-        config.spliceInstanceNames,
         participantAdminConnection,
         store,
         acsSnapshotStore,
         dsoAnsResolver,
         config.miningRoundsCacheTimeToLiveOverride,
-        config.enableForcedAcsSnapshots,
         clock,
         loggerFactory,
       )

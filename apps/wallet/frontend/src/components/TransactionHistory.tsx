@@ -31,7 +31,7 @@ import { Party } from '@daml/types';
 import { usePrimaryParty, useTransactions } from '../hooks';
 import useAmuletPrice from '../hooks/scan-proxy/useAmuletPrice';
 import { Transaction, TransactionSubtype } from '../models/models';
-import { useWalletConfig } from '../utils/config';
+import { config } from '../utils/config';
 import BftAnsEntry from './BftAnsEntry';
 
 const TransactionHistory: React.FC = () => {
@@ -191,8 +191,6 @@ const TransactionIconAction: React.FC<TransactionIconInfoProps> = ({
 };
 
 const TransactionSubtypeText: React.FC<{ subtype: TransactionSubtype }> = ({ subtype }) => {
-  const config = useWalletConfig();
-  const { amuletName, nameServiceNameAcronym } = config.spliceInstanceNames;
   let text: string;
   // This should be replaced by localization in the future.
   switch (subtype.choice) {
@@ -210,7 +208,7 @@ const TransactionSubtypeText: React.FC<{ subtype: TransactionSubtype }> = ({ sub
           text = 'Automation';
           break;
         default:
-          console.warn(`Unknown Transaction ${amuletName} Operation`, subtype);
+          console.warn('Unknown Transaction Canton Coin Operation', subtype);
           text = subtype.choice;
       }
       break;
@@ -260,7 +258,7 @@ const TransactionSubtypeText: React.FC<{ subtype: TransactionSubtype }> = ({ sub
       break;
     case 'Amulet_Expire':
       // AmuletExpired
-      text = `${amuletName} Expired`;
+      text = `${config.spliceInstanceNames.amuletName} Expired`;
       break;
     case 'SvRewardCoupon_ArchiveAsBeneficiary':
       // SvRewardCollected
@@ -272,7 +270,7 @@ const TransactionSubtypeText: React.FC<{ subtype: TransactionSubtype }> = ({ sub
       break;
     case 'LockedAmulet_Unlock':
       // LockedAmuletUnlocked
-      text = `Locked ${amuletName} Unlocked`;
+      text = `Locked ${config.spliceInstanceNames.amuletName} Unlocked`;
       break;
     case 'SubscriptionInitialPayment_Reject':
       // SubscriptionInitialPaymentRejected
@@ -280,11 +278,11 @@ const TransactionSubtypeText: React.FC<{ subtype: TransactionSubtype }> = ({ sub
       break;
     case 'LockedAmulet_OwnerExpireLock':
       // LockedAmuletOwnerExpired
-      text = `Locked ${amuletName} Owner Expired`;
+      text = `Locked ${config.spliceInstanceNames.amuletName} Owner Expired`;
       break;
     case 'LockedAmulet_ExpireAmulet':
       // LockedAmuletExpired
-      text = `Locked ${amuletName} Expired`;
+      text = `Locked ${config.spliceInstanceNames.amuletName} Expired`;
       break;
     case 'AcceptedAppPayment_Reject':
       // AppPaymentRejected
@@ -308,11 +306,11 @@ const TransactionSubtypeText: React.FC<{ subtype: TransactionSubtype }> = ({ sub
       break;
     case 'AnsRules_CollectInitialEntryPayment':
       // AnsEntryInitialPaymentCollected
-      text = `${nameServiceNameAcronym.toUpperCase()} Entry Initial Payment Collected`;
+      text = `${config.spliceInstanceNames.nameServiceNameAcronym.toUpperCase()} Entry Initial Payment Collected`;
       break;
     case 'AnsRules_CollectEntryRenewalPayment':
       // AnsEntryRenewalPaymentCollected
-      text = `${nameServiceNameAcronym.toUpperCase()} Entry Renewal Payment Collected`;
+      text = `${config.spliceInstanceNames.nameServiceNameAcronym.toUpperCase()} Entry Renewal Payment Collected`;
       break;
     default:
       console.warn('Unknown Transaction Subtype', subtype);
