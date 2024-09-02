@@ -12,16 +12,16 @@ import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
 
 import { useEntriesWithPayData } from '../hooks';
-import { config } from '../utils';
+import { useAnsConfig } from '../utils';
 
 const AnsEntries: React.FC = () => {
+  const config = useAnsConfig();
+  const nameServiceAcronym = config.spliceInstanceNames.nameServiceNameAcronym;
   const { data: ownedEntries, isError, isLoading } = useEntriesWithPayData();
 
   return (
     <div id="ans-entries">
-      <Typography variant="h5">
-        Your {config.spliceInstanceNames.nameServiceNameAcronym.toUpperCase()} Entries
-      </Typography>
+      <Typography variant="h5">Your {nameServiceAcronym} Entries</Typography>
       {isLoading ? (
         <Loading />
       ) : isError ? (
