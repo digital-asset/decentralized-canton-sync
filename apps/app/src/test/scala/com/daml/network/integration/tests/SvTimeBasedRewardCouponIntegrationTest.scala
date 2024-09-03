@@ -251,6 +251,12 @@ class SvTimeBasedRewardCouponIntegrationTest
     val aliceParticipantId =
       aliceValidatorBackend.appState.participantAdminConnection.getParticipantId().futureValue
 
+    val sv4RewardCouponTrigger = sv4Backend.dsoAutomation.trigger[ReceiveSvRewardCouponTrigger]
+
+    clue("Pause SV4's SvRewardCouponTrigger") {
+      sv4RewardCouponTrigger.pause().futureValue
+    }
+
     actAndCheck(
       "Unvet the latest amulet package on Alice's participant with hash: " + latestAmuletDarHash,
       aliceValidatorBackend.appState.participantAdminConnection
@@ -271,12 +277,14 @@ class SvTimeBasedRewardCouponIntegrationTest
           .map(_.darHash.toHexString) should not contain latestAmuletDarHash
       },
     )
+
     loggerFactory.assertLogsSeq(SuppressionRule.LevelAndAbove(Level.WARN))(
       within = {
 
         eventually() {
           clue("No SvRewardCoupon should be issued to Alice's participant") {
             advanceRoundsByOneTick
+            sv4RewardCouponTrigger.runOnce().futureValue
             val openRounds = eventually() {
               val openRounds = sv1ScanBackend
                 .getOpenAndIssuingMiningRounds()
@@ -323,6 +331,10 @@ class SvTimeBasedRewardCouponIntegrationTest
         )
       },
     )
+
+    clue("Resume SV4's SvRewardCouponTrigger") {
+      sv4RewardCouponTrigger.resume()
+    }
 
   }
 
