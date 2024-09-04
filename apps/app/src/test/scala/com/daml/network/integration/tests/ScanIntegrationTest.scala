@@ -88,21 +88,21 @@ class ScanIntegrationTest
         scan.svNodeStates should be(svNodeStates.map(_._2.toHttp))
     }
     // sanity checks
-    scan.dsoRules.contractId should be(
+    scan.dsoRules.contract.contractId should be(
       sv1Backend.participantClient.ledger_api_extensions.acs
         .filterJava(DsoRules.COMPANION)(dsoParty)
         .loneElement
         .id
         .contractId
     )
-    scan.amuletRules.contractId should be(
+    scan.amuletRules.contract.contractId should be(
       sv1Backend.participantClient.ledger_api_extensions.acs
         .filterJava(AmuletRules.COMPANION)(dsoParty)
         .loneElement
         .id
         .contractId
     )
-    scan.svNodeStates.map(_.contractId) should be(
+    scan.svNodeStates.map(_.contract.contractId) should be(
       sv1Backend.participantClient.ledger_api_extensions.acs
         .filterJava(SvNodeState.COMPANION)(dsoParty)
         .map(_.id.contractId)
@@ -112,14 +112,14 @@ class ScanIntegrationTest
   "returns expected splice instance names" in { implicit env =>
     val spliceInstanceNames = sv1ScanBackend.getSpliceInstanceNames()
 
-    spliceInstanceNames.networkName should be("Canton Network")
+    spliceInstanceNames.networkName should be("Splice")
     spliceInstanceNames.networkFaviconUrl should be(
-      "https://www.canton.network/hubfs/cn-favicon-05%201-1.png"
+      "https://www.hyperledger.org/hubfs/hyperledgerfavicon.png"
     )
-    spliceInstanceNames.amuletName should be("Canton Coin")
-    spliceInstanceNames.amuletNameAcronym should be("CC")
-    spliceInstanceNames.nameServiceName should be("Canton Name Service")
-    spliceInstanceNames.nameServiceNameAcronym should be("CNS")
+    spliceInstanceNames.amuletName should be("Amulet")
+    spliceInstanceNames.amuletNameAcronym should be("AMT")
+    spliceInstanceNames.nameServiceName should be("Amulet Name Service")
+    spliceInstanceNames.nameServiceNameAcronym should be("ANS")
   }
 
   "list transaction pages in ascending and descending order" in { implicit env =>
