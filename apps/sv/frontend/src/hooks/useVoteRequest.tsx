@@ -9,13 +9,12 @@ import { ContractId } from '@daml/types';
 import { useSvAdminClient } from '../contexts/SvAdminServiceContext';
 
 export const useVoteRequest = (
-  contractId: ContractId<VoteRequest> | undefined
-): UseQueryResult<Contract<VoteRequest> | undefined> => {
+  contractId: ContractId<VoteRequest>
+): UseQueryResult<Contract<VoteRequest>> => {
   const { lookupDsoRulesVoteRequest } = useSvAdminClient();
   return useQuery({
     refetchInterval: PollingStrategy.FIXED,
     queryKey: ['listDsoRulesVoteRequests', contractId],
-    queryFn: async () =>
-      contractId ? (await lookupDsoRulesVoteRequest(contractId)).dso_rules_vote_request : undefined,
+    queryFn: async () => (await lookupDsoRulesVoteRequest(contractId)).dso_rules_vote_request,
   });
 };
