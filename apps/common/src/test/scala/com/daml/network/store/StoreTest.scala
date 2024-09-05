@@ -136,7 +136,7 @@ abstract class StoreTest extends AsyncWordSpec with BaseTest {
         new RelTime(1_000_000),
         new RelTime(1_000_000),
         new java.math.BigDecimal(1.0).setScale(10),
-        "CNS entry: ",
+        "ANS entry: ",
       ),
     )
     contract(
@@ -304,6 +304,19 @@ abstract class StoreTest extends AsyncWordSpec with BaseTest {
       identifier = validatorLicenseCodegen.ValidatorFaucetCoupon.TEMPLATE_ID,
       contractId = new validatorLicenseCodegen.ValidatorFaucetCoupon.ContractId(nextCid()),
       payload = new validatorLicenseCodegen.ValidatorFaucetCoupon(
+        dsoParty.toProtoPrimitive,
+        validator.toProtoPrimitive,
+        new Round(round),
+      ),
+    )
+  }
+
+  protected def validatorLivenessActivityRecord(validator: PartyId, round: Long = 1L) = {
+    contract(
+      identifier = validatorLicenseCodegen.ValidatorLivenessActivityRecord.TEMPLATE_ID,
+      contractId =
+        new validatorLicenseCodegen.ValidatorLivenessActivityRecord.ContractId(nextCid()),
+      payload = new validatorLicenseCodegen.ValidatorLivenessActivityRecord(
         dsoParty.toProtoPrimitive,
         validator.toProtoPrimitive,
         new Round(round),

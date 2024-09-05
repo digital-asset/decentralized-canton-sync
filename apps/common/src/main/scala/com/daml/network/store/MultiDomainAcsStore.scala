@@ -136,6 +136,15 @@ trait MultiDomainAcsStore extends HasIngestionSink with AutoCloseable with Named
   ): Future[Contract[TCid, T]] =
     orContractIdNotFound(lookupContractByIdOnDomain(companion)(domain, id))(companion, id)
 
+  def listContractsPaginated[C, TCid <: ContractId[_], T](
+      companion: C,
+      after: Option[Long],
+      limit: Limit,
+  )(implicit
+      companionClass: ContractCompanion[C, TCid, T],
+      traceContext: TraceContext,
+  ): Future[ResultsPage[ContractWithState[TCid, T]]]
+
   def listContracts[C, TCid <: ContractId[_], T](
       companion: C,
       limit: Limit = Limit.DefaultLimit,
@@ -245,6 +254,8 @@ object MultiDomainAcsStore {
   /** Static specification of a set of create events in scope for ingestion into an MultiDomainAcsStore. */
   trait ContractFilter[R <: AcsRowData] {
 
+    def templateIds: Set[PackageQualifiedName]
+
     /** The filter required for ingestion into this store. */
     def ingestionFilter: IngestionFilter
 
@@ -323,10 +334,11 @@ object MultiDomainAcsStore {
         name.qualifiedName -> filter
       }.toMap
 
+    override val templateIds = templateFilters.keySet
+
     override val ingestionFilter =
       IngestionFilter(
-        primaryParty,
-        templateIds = templateFilters.keySet,
+        primaryParty
       )
 
     override def contains(ev: CreatedEvent): Boolean =
@@ -407,29 +419,20 @@ object MultiDomainAcsStore {
     */
   final case class IngestionFilter(
       primaryParty: PartyId,
-      templateIds: Set[PackageQualifiedName],
+      includeCreatedEventBlob: Boolean = true,
   ) {
 
     def toTransactionFilter: LapiTransactionFilter =
       LapiTransactionFilter(
         Map(
           primaryParty.toProtoPrimitive -> com.daml.ledger.api.v2.transaction_filter.Filters(
-            templateIds.map { templateId =>
+            Seq(
               CumulativeFilter(
-                CumulativeFilter.IdentifierFilter.TemplateFilter(
-                  com.daml.ledger.api.v2.transaction_filter.TemplateFilter(
-                    templateId = Some(
-                      com.daml.ledger.api.v2.value.Identifier(
-                        packageId = s"#${templateId.packageName}",
-                        moduleName = templateId.qualifiedName.moduleName,
-                        entityName = templateId.qualifiedName.entityName,
-                      )
-                    ),
-                    includeCreatedEventBlob = true,
-                  )
+                CumulativeFilter.IdentifierFilter.WildcardFilter(
+                  com.daml.ledger.api.v2.transaction_filter.WildcardFilter(includeCreatedEventBlob)
                 )
               )
-            }.toSeq
+            )
           )
         )
       )

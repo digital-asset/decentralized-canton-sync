@@ -270,6 +270,22 @@ trait UserWalletStore extends AppStore with NamedLogging {
     )
   ]]
 
+  /** Returns the validator activity records sorted by their round in ascending order and their value in descending order.
+    * Only up to `maxNumInputs` rewards are returned and all rewards are from the given `activeIssuingRounds`.
+    */
+  def listSortedLivenessActivityRecords(
+      issuingRoundsMap: Map[splice.types.Round, roundCodegen.IssuingMiningRound],
+      limit: Limit = Limit.DefaultLimit,
+  )(implicit tc: TraceContext): Future[Seq[
+    (
+        Contract[
+          validatorCodegen.ValidatorLivenessActivityRecord.ContractId,
+          validatorCodegen.ValidatorLivenessActivityRecord,
+        ],
+        BigDecimal,
+    )
+  ]]
+
   /** Returns the SV reward coupons sorted by their round in ascending order and their value in descending order.
     * Only up to `maxNumInputs` rewards are returned and all rewards are from the given `activeIssuingRounds`.
     */
@@ -457,6 +473,7 @@ object UserWalletStore {
       amuletCodegen.LockedAmulet.COMPANION,
       amuletCodegen.ValidatorRewardCoupon.COMPANION,
       validatorCodegen.ValidatorFaucetCoupon.COMPANION,
+      validatorCodegen.ValidatorLivenessActivityRecord.COMPANION,
       amuletCodegen.SvRewardCoupon.COMPANION,
       subsCodegen.Subscription.COMPANION,
       subsCodegen.SubscriptionRequest.COMPANION,
@@ -526,6 +543,12 @@ object UserWalletStore {
           UserWalletAcsStoreRowData(co, None, rewardCouponRound = Some(co.payload.round.number))
         ),
         mkFilter(validatorCodegen.ValidatorFaucetCoupon.COMPANION)(co =>
+          co.payload.dso == dso &&
+            co.payload.validator == endUser
+        )(co =>
+          UserWalletAcsStoreRowData(co, None, rewardCouponRound = Some(co.payload.round.number))
+        ),
+        mkFilter(validatorCodegen.ValidatorLivenessActivityRecord.COMPANION)(co =>
           co.payload.dso == dso &&
             co.payload.validator == endUser
         )(co =>
