@@ -21,15 +21,17 @@ function _info(){
 }
 
 function usage() {
-  echo "Usage: $0 -s <sponsor_sv_address> -o <onboarding_secret> -p <party_hint> [-a] [-b] [-c <scan_address>] [-q <sequencer_address>] [-n <network_name>] [-m <migration_id>] [-M]"
+  echo "Usage: $0 -s <sponsor_sv_address> -o <onboarding_secret> -p <party_hint> [-a] [-b] [-c <scan_address>] [-q <sequencer_address>] [-n <network_name>] [-m <migration_id>] [-M] [-i <identities_dump>] [-P <participant_id>]"
   echo "  -s <sponsor_sv_address>: The full URL of the sponsor SV"
   echo "  -o <onboarding_secret>: The onboarding secret to use. If not provided, it will be fetched from the sponsor SV (possible on DevNet only)"
-  echo "  -p <party_hint>: The party hint to use for the validator operator, will also act as the participant identifier."
+  echo "  -p <party_hint>: The party hint to use for the validator operator, by default also your participant identifier."
+  echo "  -P <participant_id>: The participant identifier."
   echo "  -a: Use this flag to enable authentication"
   echo "  -c <scan_address>: The full URL of a Scan app. If not provided, it will be derived from the sponsor SV address."
   echo "  -n <network_name>: The name of an existing docker network to use. If not provided, the default network will be created used."
   echo "  -m <migration_id>: The migration ID to use. Must be a non-negative integer."
   echo "  -M: Use this flag when bumping the migration ID as part of a migration."
+  echo "  -i <identities_dump>: restore identities from a dump file. Requires a new participant identifier to be provided."
 
   echo ""
   echo "Testing flags:"
@@ -51,7 +53,9 @@ network_name=""
 migration_id=0
 migrating=0
 party_hint=""
-while getopts 'has:c:t:o:n:bq:m:Mp:' arg; do
+participant_id=""
+restore_identities_dump=""
+while getopts 'has:c:t:o:n:bq:m:Mp:P:i:' arg; do
   case ${arg} in
     h)
       usage
@@ -86,6 +90,12 @@ while getopts 'has:c:t:o:n:bq:m:Mp:' arg; do
       ;;
     p)
       party_hint="${OPTARG}"
+      ;;
+    P)
+      participant_id="${OPTARG}"
+      ;;
+    i)
+      restore_identities_dump="${OPTARG}"
       ;;
     ?)
       usage
@@ -129,17 +139,34 @@ if [[ ! "${migration_id}" =~ ^[0-9]+$ ]]; then
   exit 1
 fi
 
+if [ -n "${restore_identities_dump}" ] && [ -z "${participant_id}" ]; then
+  _error_msg "Please provide a new participant identifier when restoring identities from a dump file"
+  usage
+  exit 1
+fi
+
 export ONBOARDING_SECRET
 export SPONSOR_SV_ADDRESS
 export SCAN_ADDRESS
 export SEQUENCER_ADDRESS
 export MIGRATION_ID=${migration_id}
-export PARTICIPANT_IDENTIFIER=${party_hint}
 export PARTY_HINT=${party_hint}
+if [ -n "${participant_id}" ]; then
+  export PARTICIPANT_IDENTIFIER=${participant_id}
+else
+  export PARTICIPANT_IDENTIFIER=${party_hint}
+fi
 
-# TODO(#14303): release tag should be injected by the release pipeline
-# IMAGE_TAG=$("${REPO_ROOT}/build-tools/get-snapshot-version")
-# export IMAGE_TAG
+if [ -z "${IMAGE_TAG:-}" ]; then
+  if [ ! -f "${script_dir}/../VERSION" ]; then
+    _error_msg "Could not derive image tags automatically, ${script_dir}/../VERSION is missing. Please make sure that file exists, or export an image tag in IMAGE_TAG"
+    exit 1
+  else
+    IMAGE_TAG=$(cat "${script_dir}/../VERSION")
+    _info "Using version ${IMAGE_TAG}"
+    export IMAGE_TAG
+  fi
+fi
 
 if [ -z "${SPLICE_INSTANCE_NAMES:-}" ]; then
   splice_instance_names=$(curl -sSLf "${SCAN_ADDRESS}/api/scan/v0/splice-instance-names")
@@ -171,10 +198,16 @@ if [ $migrating -eq 1 ]; then
   extra_compose_files+=("-f" "${script_dir}/compose-migrate.yaml")
 fi
 if [ -n "${network_name}" ]; then
-  # TODO(#14303): we take a network_name argument, but the name "onvpn" is hardcoded in the compose-onvpn-network.yaml file.
-  # I don't think there's a way to parameterize it, so we should either auto-generate that, or at least parse it and confirm that
-  # it declares the same name as the network_name argument.
-  extra_compose_files+=("-f" "${script_dir}/compose-onvpn-network.yaml")
   export DOCKER_NETWORK="${network_name}"
+  if ! docker compose -f compose.yaml -f compose-onvpn-network.yaml config -q 2>/dev/null; then
+    _error_msg "When using a custom network name, please edit compose-onvpn-network.yaml to use that name instead of 'onvpn'"
+    exit 1
+  fi
+  extra_compose_files+=("-f" "${script_dir}/compose-onvpn-network.yaml")
+fi
+if [ -n "${restore_identities_dump}" ]; then
+  extra_compose_files+=("-f" "${script_dir}/compose-restore-from-id.yaml")
+  export VALIDATOR_NEW_PARTICIPANT_IDENTIFIER=${PARTICIPANT_IDENTIFIER}
+  export VALIDATOR_PARTICIPANT_IDENTITIES_DUMP=${restore_identities_dump}
 fi
 docker compose -f "${script_dir}/compose.yaml" "${extra_compose_files[@]}" up -d
