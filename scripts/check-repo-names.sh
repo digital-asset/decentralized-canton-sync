@@ -34,7 +34,8 @@ function check_patterns_locally() {
   for pattern in "${disallowed_patterns[@]}"; do
     echo "Checking for occurrences of '$pattern' (case sensitive)"
     set +e
-    matches="$(rg --line-number --engine=pcre2 --regexp="$pattern" --glob='!'"$rename_script" --glob='!/canton/**/*' \
+    matches="$(rg --no-require-git --line-number --engine=pcre2 --regexp="$pattern" \
+                  --glob='!'"$rename_script" --glob='!/canton/**/*' \
                 | rg --invert-match --engine=pcre2 "${exceptions_args[@]}")"
     set -e
     if [[ -n $matches ]]; then
