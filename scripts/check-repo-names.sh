@@ -7,7 +7,7 @@ set -euo pipefail
 
 rename_script="scripts/check-repo-names.sh"
 
-function check_patterns() {
+function check_patterns_locally() {
   # removing NEVERMATCHES alternative causes these to never match
   local disallowed_patterns=(
     '(\b|[`_])(cn|NEVERMATCHES)(\b|[A-Z`_])'
@@ -51,4 +51,30 @@ function check_patterns() {
   fi
 }
 
-check_patterns
+function setup_temp_splice() {
+  local src="$1" tempsplice="$(mktemp -d)"
+  cd "$src"
+  direnv exec . scripts/copy-to-splice.sh "$tempsplice"
+  cd "$tempsplice"
+}
+
+function check_patterns() {
+  while getopts 'hs:' arg; do
+    case "$arg" in
+      h)
+        echo '  Options: [-s SPLICE_REPO]
+    -s: Run copy-to-splice from SPLICE_REPO first, and scan the result' 1>&2
+        exit 0;;
+      s)
+        if [[ ! -d $OPTARG ]]; then
+          echo "-s requires a splice repo directory" 1>&2
+          exit 1
+        fi
+        setup_temp_splice "$OPTARG";;
+      :|?) exit 1;;
+    esac
+  done
+  check_patterns_locally
+}
+
+check_patterns "$@"
