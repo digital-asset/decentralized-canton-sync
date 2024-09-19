@@ -5,8 +5,6 @@
 
 set -euo pipefail
 
-SCRIPTNAME=${0##*/}
-
 rename_script="scripts/check-repo-names.sh"
 
 function check_patterns() {
