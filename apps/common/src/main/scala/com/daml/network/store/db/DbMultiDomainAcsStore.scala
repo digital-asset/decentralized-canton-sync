@@ -201,41 +201,23 @@ final class DbMultiDomainAcsStore[TXE](
   )(implicit
       companionClass: ContractCompanion[C, TCid, T],
       traceContext: TraceContext,
-  ): Future[Seq[ContractWithState[TCid, T]]] = {
-    listContractsPaginated(companion, None, limit, SortOrder.Ascending).map(_.resultsInPage)
-  }
-
-  override def listContractsPaginated[C, TCid <: ContractId[_], T](
-      companion: C,
-      after: Option[Long],
-      limit: Limit,
-      sortOrder: SortOrder,
-  )(implicit
-      companionClass: ContractCompanion[C, TCid, T],
-      traceContext: TraceContext,
-  ): Future[ResultsPage[ContractWithState[TCid, T]]] = waitUntilAcsIngested {
+  ): Future[Seq[ContractWithState[TCid, T]]] = waitUntilAcsIngested {
     val templateId = companionClass.typeId(companion)
     val opName = s"listContracts:${templateId.getEntityName}"
-    val afterCondition =
-      after.fold(sql"")(a => (sql" and " ++ sortOrder.whereEventNumber(a)).toActionBuilder)
     for {
       result <- storage.query( // index: acs_store_template_sid_mid_tid_en
         selectFromAcsTableWithState(
           acsTableName,
           storeId,
           domainMigrationId,
-          where = (sql"""template_id_qualified_name = ${QualifiedName(
-              templateId
-            )} """ ++ afterCondition).toActionBuilder,
-          orderLimit =
-            (sortOrder.orderByAcsEventNumber ++ sql""" limit ${sqlLimit(limit)}""").toActionBuilder,
+          where = sql"""template_id_qualified_name = ${QualifiedName(templateId)}""",
+          orderLimit = sql"""order by event_number limit ${sqlLimit(limit)}""",
         ),
         opName,
       )
       limited = applyLimit(opName, limit, result)
-      afterToken = limited.lastOption.map(_.acsRow.eventNumber)
       withState = limited.map(contractWithStateFromRow(companion)(_))
-    } yield ResultsPage(withState, afterToken)
+    } yield withState
   }
 
   override def listAssignedContracts[C, TCid <: ContractId[_], T](

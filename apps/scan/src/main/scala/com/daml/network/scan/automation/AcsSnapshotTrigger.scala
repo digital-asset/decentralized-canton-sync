@@ -42,7 +42,7 @@ class AcsSnapshotTrigger(
     if (!updateHistory.isReady) {
       Future.successful(Seq.empty)
     } else {
-      val now = context.clock.now
+      val now = context.pollingClock.now
       for {
         lastSnapshot <- store.lookupSnapshotBefore(store.migrationId, CantonTimestamp.MaxValue)
         possibleTask <- lastSnapshot match {
@@ -61,14 +61,13 @@ class AcsSnapshotTrigger(
             Future.successful(None)
           case Some(task) if task.snapshotRecordTime > now =>
             logger.info(
-              s"Still not time to take a snapshot. Now: ${now}. Next snapshot time: ${task.snapshotRecordTime}."
+              s"Still not time to take a snapshot. Next snapshot time: ${task.snapshotRecordTime}."
             )
             Future.successful(None)
           case Some(task) =>
             updateHistory
               .getUpdates(
                 Some((store.migrationId, task.snapshotRecordTime)),
-                includeImportUpdates = true,
                 PageLimit.tryCreate(1),
               )
               .map(_.headOption)
@@ -91,11 +90,6 @@ class AcsSnapshotTrigger(
       store
         .insertNewSnapshot(lastSnapshot, snapshotRecordTime)
         .map { insertCount =>
-          if (insertCount == 0) {
-            logger.error(
-              s"No entries were inserted for snapshot $snapshotRecordTime. This is very likely a bug."
-            )
-          }
           TaskSuccess(
             s"Successfully inserted $insertCount entries for snapshot $snapshotRecordTime."
           )
@@ -119,11 +113,10 @@ class AcsSnapshotTrigger(
         Some(
           (
             store.migrationId,
-            // exclude ACS imports, which have record_time=MinValue
-            CantonTimestamp.MinValue.plusSeconds(1L),
+            // exclude ACS imports, which have record_time=epoch
+            CantonTimestamp.Epoch.plusSeconds(1L),
           )
         ),
-        includeImportUpdates = true,
         PageLimit.tryCreate(1),
       )
       .map(_.headOption)
@@ -134,13 +127,10 @@ class AcsSnapshotTrigger(
         case Some(firstNonAcsImport) =>
           val firstNonAcsImportRecordTime =
             firstNonAcsImport.update.update.recordTime.toInstant.atOffset(ZoneOffset.UTC)
-          val (hourForSnapshot, plusDays) = timesToDoSnapshot
-            .find(_ > firstNonAcsImportRecordTime.get(ChronoField.HOUR_OF_DAY)) match {
-            case Some(hour) => hour -> 0 // current day at hour
-            case None => 0 -> 1 // next day at 00:00
-          }
+          val hourForSnapshot = timesToDoSnapshot
+            .find(_ > firstNonAcsImportRecordTime.get(ChronoField.HOUR_OF_DAY))
+            .getOrElse(0)
           val until = firstNonAcsImportRecordTime.toLocalDate
-            .plusDays(plusDays.toLong)
             .atTime(hourForSnapshot, 0)
             .toInstant(ZoneOffset.UTC)
           Some(AcsSnapshotTrigger.Task(CantonTimestamp.assertFromInstant(until), None))

@@ -23,31 +23,11 @@ final case class NodeIdentitiesDump(
     version: Option[String],
 ) extends PrettyPrinting {
   def toHttp: http.NodeIdentitiesDump = {
-    val httpKeys = keys.map {
-      case NodeIdentitiesDump.NodeKey.KeyPair(keyPair, name) =>
-        http.NodeKey.members.KeyPair(
-          http.KeyPair(Base64.getEncoder.encodeToString(keyPair.toArray), name)
-        ): http.NodeKey
-      case NodeIdentitiesDump.NodeKey.KmsKeyId(
-            NodeIdentitiesDump.NodeKey.KeyType.Signing,
-            keyId,
-            name,
-          ) =>
-        http.NodeKey.members.KmsKeyId(
-          http.KmsKeyId(http.KmsKeyId.Type.Signing, keyId, name)
-        ): http.NodeKey
-      case NodeIdentitiesDump.NodeKey.KmsKeyId(
-            NodeIdentitiesDump.NodeKey.KeyType.Encryption,
-            keyId,
-            name,
-          ) =>
-        http.NodeKey.members.KmsKeyId(
-          http.KmsKeyId(http.KmsKeyId.Type.Encryption, keyId, name)
-        ): http.NodeKey
-    }.toVector
     http.NodeIdentitiesDump(
       id.toProtoPrimitive,
-      httpKeys,
+      keys
+        .map(key => http.NodeKey(Base64.getEncoder.encodeToString(key.keyPair.toArray), key.name))
+        .toVector,
       Base64.getEncoder.encodeToString(authorizedStoreSnapshot.toByteArray),
       version,
     )
@@ -75,18 +55,8 @@ object NodeIdentitiesDump {
     Try(
       NodeIdentitiesDump(
         id = id(response.id),
-        keys = response.keys.toSeq.map {
-          case http.NodeKey.members.KmsKeyId(
-                http.KmsKeyId(http.KmsKeyId.Type.members.Signing, keyId, name)
-              ) =>
-            NodeKey.KmsKeyId(NodeKey.KeyType.Signing, keyId, name)
-          case http.NodeKey.members.KmsKeyId(
-                http.KmsKeyId(http.KmsKeyId.Type.members.Encryption, keyId, name)
-              ) =>
-            NodeKey.KmsKeyId(NodeKey.KeyType.Encryption, keyId, name)
-          case http.NodeKey.members.KeyPair(http.KeyPair(keyPair, name)) =>
-            NodeKey.KeyPair(Base64.getDecoder.decode(keyPair).toSeq, name)
-        },
+        keys =
+          response.keys.toSeq.map(k => NodeKey(Base64.getDecoder.decode(k.keyPair).toSeq, k.name)),
         authorizedStoreSnapshot =
           ByteString.copyFrom(Base64.getDecoder.decode(response.authorizedStoreSnapshot)),
         version = response.version,
@@ -109,26 +79,8 @@ object NodeIdentitiesDump {
       .flatMap(fromHttp(id, _))
   }
 
-  sealed trait NodeKey {
-    def name: Option[String]
-  }
-
-  object NodeKey {
-    sealed trait KeyType
-    object KeyType {
-      case object Signing extends KeyType
-      case object Encryption extends KeyType
-    }
-
-    final case class KeyPair(
-        keyPair: Seq[Byte],
-        name: Option[String],
-    ) extends NodeKey
-
-    final case class KmsKeyId(
-        keyType: KeyType,
-        keyId: String,
-        name: Option[String],
-    ) extends NodeKey
-  }
+  final case class NodeKey(
+      keyPair: Seq[Byte],
+      name: Option[String],
+  )
 }

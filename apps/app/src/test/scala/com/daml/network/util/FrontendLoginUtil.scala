@@ -8,25 +8,17 @@ import scala.util.Using
 
 trait FrontendLoginUtil { self: FrontendTestCommon =>
 
-  protected def login(port: Int, ledgerApiUser: String, hostname: String = "localhost")(implicit
-      webDriver: WebDriver
-  ) = {
-    go to s"http://$hostname:$port"
+  protected def login(port: Int, ledgerApiUser: String)(implicit webDriver: WebDriver) = {
+    go to s"http://localhost:$port"
     waitForQuery(id("user-id-field"))
-    loginOnCurrentPage(port, ledgerApiUser, hostname)
+    loginOnCurrentPage(port, ledgerApiUser)
   }
 
-  protected def loginOnCurrentPage(
-      port: Int,
-      ledgerApiUser: String,
-      hostname: String = "localhost",
-  )(implicit
+  protected def loginOnCurrentPage(port: Int, ledgerApiUser: String)(implicit
       webDriver: WebDriver
   ) = {
     eventually() {
-      val url = if (port == 80) { s"http://$hostname" }
-      else { s"http://$hostname:$port" }
-      currentUrl should startWith(url)
+      currentUrl should startWith(s"http://localhost:$port")
     }
     // We reuse frontends across tests so we might need to log out first.
     find(id("logout-button")).foreach(click on _)
@@ -80,7 +72,7 @@ trait FrontendLoginUtil { self: FrontendTestCommon =>
   )(
       afterLoginChecks: (Auth0User, PartyId, WebDriverType) => A
   )(implicit env: SpliceTests.SpliceTestConsoleEnvironment): A = {
-    val auth0 = auth0UtilFromEnvVars("test")
+    val auth0 = auth0UtilFromEnvVars("https://canton-network-test.us.auth0.com", "test")
     Using.resource(retryAuth0Calls(auth0.createUser())) { user =>
       logger.debug(s"Created user ${user.email} with password ${user.password} (id: ${user.id})")
       if (!onboardThroughWalletUI) {

@@ -39,7 +39,7 @@ import com.daml.network.util.{
   ConfigScheduleUtil,
   Contract,
   ContractWithState,
-  UpdateHistoryTestUtil,
+  UpdateHistoryComparator,
   WalletTestUtil,
 }
 import com.daml.network.validator.config.AppManagerConfig
@@ -60,7 +60,7 @@ class DecentralizedSynchronizerSoftDomainMigrationIntegrationTest
     extends SvIntegrationTestBase
     with ConfigScheduleUtil
     with WalletTestUtil
-    with UpdateHistoryTestUtil {
+    with UpdateHistoryComparator {
 
   // Fails with unexpected CreatedEvent roots
   override protected def runUpdateHistorySanityCheck: Boolean = false
@@ -479,16 +479,6 @@ class DecentralizedSynchronizerSoftDomainMigrationIntegrationTest
         )
       )
 
-      createSampleAndEnsurePresence(
-        splice.validatorlicense.ValidatorLivenessActivityRecord.COMPANION
-      )(
-        new splice.validatorlicense.ValidatorLivenessActivityRecord(
-          dsoParty.toProtoPrimitive,
-          validator.toProtoPrimitive,
-          dummyRound,
-        )
-      )
-
       createSampleAndEnsurePresence(splice.amulet.SvRewardCoupon.COMPANION)(
         new splice.amulet.SvRewardCoupon(
           dsoParty.toProtoPrimitive,
@@ -685,6 +675,7 @@ class DecentralizedSynchronizerSoftDomainMigrationIntegrationTest
           filterNot Set(
             spw.subscriptions.TerminatedSubscription.COMPANION, // TODO (#8386)
             splice.round.SummarizingMiningRound.COMPANION, // TODO (#10705)
+            splice.transferpreapproval.TransferPreapproval.COMPANION,
           )
           map (c(_)): _*
       )

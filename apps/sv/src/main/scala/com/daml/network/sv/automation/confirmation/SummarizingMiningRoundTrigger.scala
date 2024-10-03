@@ -161,10 +161,6 @@ class SummarizingMiningRoundTrigger(
         round,
         domain,
       )
-      validatorLivenessActivityRecords <- store.countValidatorLivenessActivityRecordsOnDomain(
-        round,
-        domain,
-      )
       svRewardCouponsWeightSum <- store.sumSvRewardCouponWeightsOnDomain(
         round,
         domain,
@@ -175,8 +171,7 @@ class SummarizingMiningRoundTrigger(
         featuredAppRewardCoupons = appRewardCoupons.featured,
         unfeaturedAppRewardCoupons = appRewardCoupons.unfeatured,
         validatorRewardCoupons = validatorRewardCoupons,
-        validatorLivenessActivityRecords =
-          validatorFaucetCoupons + validatorLivenessActivityRecords,
+        validatorFaucetCoupons = validatorFaucetCoupons,
         svRewardCouponsWeightSum = svRewardCouponsWeightSum,
       )
     }
@@ -189,7 +184,7 @@ object SummarizingMiningRoundTrigger {
       featuredAppRewardCoupons: BigDecimal,
       unfeaturedAppRewardCoupons: BigDecimal,
       validatorRewardCoupons: BigDecimal,
-      validatorLivenessActivityRecords: Long,
+      validatorFaucetCoupons: Long,
       svRewardCouponsWeightSum: Long,
   ) extends PrettyPrinting {
     lazy val summary: splice.issuance.OpenMiningRoundSummary =
@@ -198,7 +193,7 @@ object SummarizingMiningRoundTrigger {
         featuredAppRewardCoupons.bigDecimal,
         unfeaturedAppRewardCoupons.bigDecimal,
         svRewardCouponsWeightSum,
-        Optional.of(validatorLivenessActivityRecords),
+        Optional.of(validatorFaucetCoupons),
       )
 
     override def pretty: Pretty[this.type] =
@@ -206,7 +201,7 @@ object SummarizingMiningRoundTrigger {
         param("featuredAppRewardCoupons", _.featuredAppRewardCoupons),
         param("unfeaturedAppRewardCoupons", _.unfeaturedAppRewardCoupons),
         param("validatorRewardCoupons", _.validatorRewardCoupons),
-        param("validatorLivenessActivityRecords", _.validatorLivenessActivityRecords),
+        param("validatorFaucetCoupons", _.validatorFaucetCoupons),
         param("svRewardCouponsWeightSum", _.svRewardCouponsWeightSum),
       )
   }

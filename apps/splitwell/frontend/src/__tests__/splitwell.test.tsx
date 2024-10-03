@@ -11,7 +11,6 @@ import {
 import { test, expect, describe } from 'vitest';
 
 import App from '../App';
-import { SplitwellStaticConfigProvider } from '../utils/config';
 import {
   alicePartyId,
   bobPartyId,
@@ -20,23 +19,12 @@ import {
   splitwellProviderPartyId,
 } from './mocks/constants';
 import { makeAcceptedGroupInvite, makeBalanceUpdate, makeGroupInvite } from './mocks/templates';
-import { config } from './setup/config';
 import { server } from './setup/setup';
-
-const amuletNameAcronym = config.spliceInstanceNames.amuletNameAcronym;
-
-const AppWithConfig = () => {
-  return (
-    <SplitwellStaticConfigProvider>
-      <App />
-    </SplitwellStaticConfigProvider>
-  );
-};
 
 describe('alice can', () => {
   test('login and see her party ID', async () => {
     const user = userEvent.setup();
-    render(<AppWithConfig />);
+    render(<App />);
 
     const input = screen.getByRole('textbox');
     await user.type(input, 'alice_wallet_user');
@@ -49,7 +37,7 @@ describe('alice can', () => {
 
   test('submit a group create request', async () => {
     const user = userEvent.setup();
-    render(<AppWithConfig />);
+    render(<App />);
 
     const input = await screen.findByRole('textbox', { name: 'Group ID' });
     await user.type(input, groupName);
@@ -59,14 +47,14 @@ describe('alice can', () => {
   });
 
   test('see a group', async () => {
-    render(<AppWithConfig />);
+    render(<App />);
 
     await expect(screen.findByText(groupName)).resolves.toBeDefined();
   });
 
   test('request a membership invite', async () => {
     const user = userEvent.setup();
-    render(<AppWithConfig />);
+    render(<App />);
 
     await expect(screen.findByText(groupName)).resolves.toBeDefined();
 
@@ -99,7 +87,7 @@ describe('alice can', () => {
   });
 
   test('see pending membership request', async () => {
-    render(<AppWithConfig />);
+    render(<App />);
 
     server.use(
       rest.get(
@@ -125,7 +113,7 @@ describe('alice can', () => {
   });
 
   test('view balance updates', async () => {
-    render(<AppWithConfig />);
+    render(<App />);
 
     server.use(
       rest.get(`${window.splice_config.services.splitwell.url}/balance-updates`, (_, res, ctx) => {
@@ -192,21 +180,21 @@ describe('alice can', () => {
       within(balanceUpdatesList[0]).findByText('alice.unverified.tns')
     ).resolves.toBeDefined();
     await expect(
-      within(balanceUpdatesList[0]).findByText(`paid 30.0 ${amuletNameAcronym} for expenses`)
+      within(balanceUpdatesList[0]).findByText('paid 30.0 TLM for expenses')
     ).resolves.toBeDefined();
 
     await expect(
       within(balanceUpdatesList[1]).findByText('bob.unverified.tns')
     ).resolves.toBeDefined();
     await expect(
-      within(balanceUpdatesList[1]).findByText(`sent 40.0 ${amuletNameAcronym} to`)
+      within(balanceUpdatesList[1]).findByText('sent 40.0 TLM to')
     ).resolves.toBeDefined();
 
     await expect(
       within(balanceUpdatesList[2]).findByText('alice.unverified.tns')
     ).resolves.toBeDefined();
     await expect(
-      within(balanceUpdatesList[2]).findByText(`paid 15.0 ${amuletNameAcronym} for dinner`)
+      within(balanceUpdatesList[2]).findByText('paid 15.0 TLM for dinner')
     ).resolves.toBeDefined();
   });
 });

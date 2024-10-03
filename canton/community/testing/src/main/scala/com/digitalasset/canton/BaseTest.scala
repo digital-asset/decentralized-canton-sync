@@ -213,7 +213,7 @@ trait BaseTest
     optionTAssertion.getOrElse(fail(s"Unexpected None value"))
 
   def eventually[T](
-      timeUntilSuccess: FiniteDuration = BaseTest.DefaultEventuallyTimeUntilSuccess,
+      timeUntilSuccess: FiniteDuration = 20.seconds,
       maxPollInterval: FiniteDuration = 100.millis,
       retryOnTestFailuresOnly: Boolean = true,
   )(testCode: => T): T =
@@ -430,7 +430,7 @@ object BaseTest {
     )
   )
   def eventually[T](
-      timeUntilSuccess: FiniteDuration = DefaultEventuallyTimeUntilSuccess,
+      timeUntilSuccess: FiniteDuration = 20.seconds,
       maxPollInterval: FiniteDuration = 100.millis,
       retryOnTestFailuresOnly: Boolean = true,
   )(testCode: => T): T = {
@@ -457,8 +457,6 @@ object BaseTest {
     }
     testCode // try one last time and throw exception, if assertion keeps failing
   }
-
-  val DefaultEventuallyTimeUntilSuccess: FiniteDuration = 20.seconds
 
   // Uses SymbolicCrypto for the configured crypto schemes
   lazy val defaultStaticDomainParameters: StaticDomainParameters =

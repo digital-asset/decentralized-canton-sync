@@ -7,13 +7,13 @@ let
 
   # No macOS support for firefox
   linuxOnly = if stdenv.isDarwin then [ ] else with pkgs; [ firefox iproute2 util-linux ];
-
 in pkgs.mkShell {
   PULUMI_SKIP_UPDATE_CHECK = 1;
   SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
   packages = with pkgs; [
 
     # NOTE: please keep this list sorted for an easy overview and to avoid merge noise.
+
     istioctl
     ammonite
     auth0-cli
@@ -59,34 +59,26 @@ in pkgs.mkShell {
                                              doCheck = false;
                                              doInstallCheck = false;
                                      }))
-    python3Packages.GitPython
-    python3Packages.marshmallow-dataclass
-    python3Packages.polib
-    python3Packages.pyjwt
-    python3Packages.pyyaml
-    python3Packages.regex
-    python3Packages.requests
     python3Packages.sphinx_rtd_theme
     python3Packages.sphinx-copybutton
+    python3Packages.pycryptodome
+    python3Packages.pyyaml
+    python3Packages.pycryptodome
     git-search-replace
     python3.pkgs.sphinx-reredirects
     ripgrep
     rsync
     sbt
-    scala_2_13
+    scala
     selenium-server-standalone
     shellcheck
     sphinx
-    sphinx-lint
     tmux
     toxiproxy
     unzip
     which
     x86Pkgs.sphinx-autobuild
     zip
-
-    # Package required to install daml studio
-    yq-go
   ] ++ linuxOnly;
 
   CANTON = "${pkgs.canton}";
@@ -104,7 +96,5 @@ in pkgs.mkShell {
                         else null;
 
   PROTOC = "${pkgs.protobuf}";
-
-  PULUMI_VERSION="${pkgs.pulumi-bin.version}";
 
 }

@@ -16,17 +16,20 @@ import java.time.format.DateTimeFormatter
 import java.time.{LocalDateTime, ZoneOffset}
 import scala.concurrent.duration.DurationInt
 import scala.jdk.CollectionConverters.*
+import com.daml.ledger.javaapi.data.codegen.json.JsonLfReader
+import com.daml.network.codegen.java.splice.amuletconfig.AmuletConfig
 import com.daml.network.codegen.java.splice.dsorules.voterequestoutcome.VRO_AcceptedButActionFailed
+import com.daml.network.codegen.java.splice.wallet.payment.Unit as DamlUnit
 import com.daml.network.sv.automation.delegatebased.CloseVoteRequestTrigger
+
+import java.util.Optional
 
 class SvFrontendIntegrationTest
     extends SvFrontendCommonIntegrationTest
     with SvTestUtil
     with SvFrontendTestUtil
     with FrontendLoginUtil
-    with WalletTestUtil
-    with VotesFrontendTestUtil
-    with ValidatorLicensesFrontendTestUtil {
+    with WalletTestUtil {
 
   override def environmentDefinition
       : BaseEnvironmentDefinition[EnvironmentImpl, SpliceTestConsoleEnvironment] =
@@ -96,8 +99,8 @@ class SvFrontendIntegrationTest
             inside(find(id("information-tab-dso-info"))) { case Some(e) =>
               e.text shouldBe "DSO Info"
             }
-            inside(find(id("information-tab-amulet-info"))) { case Some(e) =>
-              e.text shouldBe s"$amuletName Info"
+            inside(find(id("information-tab-cc-info"))) { case Some(e) =>
+              e.text shouldBe "Canton Coin Info"
             }
             inside(find(id("information-tab-cometBft-debug"))) { case Some(e) =>
               e.text shouldBe "CometBFT Debug Info"
@@ -168,7 +171,7 @@ class SvFrontendIntegrationTest
           },
         )
 
-        val licenseRows = getLicensesTableRows
+        val licenseRows = findAll(className("validator-licenses-table-row")).toList
         val newValidatorParty = allocateRandomSvParty("validatorX")
 
         actAndCheck(
@@ -181,11 +184,19 @@ class SvFrontendIntegrationTest
         )(
           "a new validator row is added",
           _ => {
-            checkLastValidatorLicenseRow(
-              licenseRows.size.toLong,
-              sv1Backend.getDsoInfo().svParty,
-              newValidatorParty,
-            )
+            val newLicenseRows = findAll(className("validator-licenses-table-row")).toList
+            newLicenseRows should have size (licenseRows.size + 1L)
+            val row: Element = inside(newLicenseRows) { case row :: _ =>
+              row
+            }
+            val sponsor =
+              seleniumText(row.childElement(className("validator-licenses-sponsor")))
+
+            val validator =
+              seleniumText(row.childElement(className("validator-licenses-validator")))
+
+            sponsor shouldBe sv1Backend.getDsoInfo().svParty.toProtoPrimitive
+            validator shouldBe newValidatorParty.toProtoPrimitive
           },
         )
       }
@@ -195,7 +206,7 @@ class SvFrontendIntegrationTest
       withFrontEnd("sv1") { implicit webDriver =>
         actAndCheck(
           "sv1 operator can login and browse to the amulet price tab", {
-            go to s"http://localhost:$sv1UIPort/amulet-price"
+            go to s"http://localhost:$sv1UIPort/cc-price"
             loginOnCurrentPage(sv1UIPort, sv1Backend.config.ledgerApiUser)
           },
         )(
@@ -988,7 +999,8 @@ class SvFrontendIntegrationTest
             )(
               "sv1 can see the new vote request",
               _ => {
-                closeVoteModalsIfOpen
+                // if the modal was open due to a previous eventually-call, close it
+                scala.util.Try(click on "vote-request-modal-close-button")
                 click on "tab-panel-in-progress"
 
                 val rows = getAllVoteRows("sv-voting-in-progress-table-body")
@@ -1003,15 +1015,25 @@ class SvFrontendIntegrationTest
                     tb.text
                   }
 
-                BigDecimal(parseAmuletConfigValue("createFee")) should be(
-                  BigDecimal(requestNewTransferConfigFeeValue)
-                )
-                BigDecimal(parseAmuletConfigValue("optValidatorFaucetCap", false)) should be(
-                  BigDecimal("2.85")
-                )
-                BigDecimal(parseAmuletConfigValue("optValidatorFaucetCap")) should be(
-                  BigDecimal(optValidatorFaucetValue)
-                )
+                inside(find(id("pretty-json"))) { case Some(json) =>
+                  val amuletConfig =
+                    AmuletConfig
+                      .jsonDecoder(DamlUnit.jsonDecoder())
+                      .decode(new JsonLfReader(json.text))
+                  BigDecimal(amuletConfig.transferConfig.createFee.fee) should be(
+                    BigDecimal(requestNewTransferConfigFeeValue)
+                  )
+                  amuletConfig.issuanceCurve.initialValue.optValidatorFaucetCap should be(
+                    Optional.empty
+                  )
+                  amuletConfig.issuanceCurve.futureValues
+                    .get(0)
+                    ._2
+                    .optValidatorFaucetCap
+                    .map(BigDecimal(_)) should be(
+                    Optional.of(BigDecimal(optValidatorFaucetValue))
+                  )
+                }
 
                 requestId
               },
@@ -1314,13 +1336,13 @@ class SvFrontendIntegrationTest
       withFrontEnd("sv1") { implicit webDriver =>
         actAndCheck(
           "sv1 operator can login and browse to the delegate election tab", {
-            go to s"http://localhost:$sv1UIPort/delegate"
+            go to s"http://localhost:$sv1UIPort/leader"
             loginOnCurrentPage(sv1UIPort, sv1Backend.config.ledgerApiUser)
           },
         )(
           "We see a button for requesting a delegate election",
           _ => {
-            find(id("submit-ranking-delegate-election")) should not be empty
+            find(id("submit-ranking-leader-election")) should not be empty
           },
         )
 
@@ -1335,15 +1357,15 @@ class SvFrontendIntegrationTest
         loggerFactory.assertEventuallyLogsSeq(SuppressionRule.LevelAndAbove(Level.INFO))(
           actAndCheck(
             "sv1 operator makes his own ranking for his delegate preference", {
-              click on "submit-ranking-delegate-election"
+              click on "submit-ranking-leader-election"
             },
           )(
             "The epoch advances by one and the delegate name is changed.",
             _ => {
-              find(id("delegate-election-epoch")).value.text should include(
+              find(id("leader-election-epoch")).value.text should include(
                 sv1Backend.getDsoInfo().dsoRules.payload.epoch.toString
               )
-              find(id("delegate-election-current-delegate")).value.text should include(newLeader)
+              find(id("leader-election-current-leader")).value.text should include(newLeader)
             },
           ),
           entries => {
@@ -1530,6 +1552,24 @@ class SvFrontendIntegrationTest
     tbodyInProgress
       .map(_.findAllChildElements(className("vote-row-action")).toSeq.size)
       .getOrElse(0)
+  }
+
+  def getAllVoteRows(tableBodyId: String)(implicit webDriver: WebDriverType) = {
+    def tableBody = find(id(tableBodyId))
+    inside(tableBody) { case Some(tb) =>
+      val rows = tb.findAllChildElements(className("vote-row-action")).toSeq
+      if (rows.size < 5) {
+        rows
+      } else {
+        tb
+          .findChildElement(className("MuiSelect-select"))
+          .valueOrFail("Could not find 'Rows per page' input")
+          .underlying
+          .click()
+        webDriver.findElement(By.xpath("//li[@data-value='25']")).click()
+        tb.findAllChildElements(className("vote-row-action")).toSeq
+      }
+    }
   }
 
   private def svAmuletPriceShouldMatch(

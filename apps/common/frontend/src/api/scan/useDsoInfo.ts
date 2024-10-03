@@ -7,10 +7,10 @@ import { SvNodeState } from '@daml.js/splice-dso-governance/lib/Splice/DSO/SvSta
 import { DsoRules } from '@daml.js/splice-dso-governance/lib/Splice/DsoRules';
 
 import { Contract, PollingStrategy } from '../../../utils';
-import { DsoInfo } from '../../components';
+import { SvUiState } from '../../components';
 import { useScanClient } from './ScanClientContext';
 
-export const useDsoInfo = (): UseQueryResult<DsoInfo> => {
+export const useDsoInfo = (): UseQueryResult<SvUiState> => {
   const scanClient = useScanClient();
   return useQuery({
     refetchInterval: PollingStrategy.FIXED,
@@ -22,9 +22,9 @@ export const useDsoInfo = (): UseQueryResult<DsoInfo> => {
         svPartyId: resp.sv_party_id,
         dsoPartyId: resp.dso_party_id,
         votingThreshold: resp.voting_threshold,
-        amuletRules: Contract.decodeOpenAPI(resp.amulet_rules.contract, AmuletRules),
-        dsoRules: Contract.decodeOpenAPI(resp.dso_rules.contract, DsoRules),
-        nodeStates: resp.sv_node_states.map(c => Contract.decodeOpenAPI(c.contract, SvNodeState)),
+        amuletRules: Contract.decodeOpenAPI(resp.amulet_rules, AmuletRules),
+        dsoRules: Contract.decodeOpenAPI(resp.dso_rules, DsoRules),
+        nodeStates: resp.sv_node_states.map(c => Contract.decodeOpenAPI(c, SvNodeState)),
       };
     },
   });

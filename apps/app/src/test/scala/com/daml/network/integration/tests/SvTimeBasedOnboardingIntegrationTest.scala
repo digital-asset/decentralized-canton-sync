@@ -21,7 +21,6 @@ import com.daml.network.sv.util.SvUtil
 import com.daml.network.util.TriggerTestUtil
 
 import java.time.Duration as JavaDuration
-import scala.concurrent.duration.DurationInt
 import scala.jdk.CollectionConverters.*
 import scala.util.Random
 
@@ -58,8 +57,7 @@ class SvTimeBasedOnboardingIntegrationTest
           sv4Backend.start()
         }
         clue("An `SvOnboardingRequest` contract is created") {
-          // Increased timeout, because SV4 takes a while to start up
-          eventually(timeUntilSuccess = 60.seconds)(
+          eventually()(
             // The onboarding is requested by SV4 during SvApp init.
             sv1Backend.participantClientWithAdminToken.ledger_api_extensions.acs
               .filterJava(splice.svonboarding.SvOnboardingRequest.COMPANION)(

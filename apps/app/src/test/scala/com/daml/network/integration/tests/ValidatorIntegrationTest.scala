@@ -1,5 +1,9 @@
 package com.daml.network.integration.tests
 
+import org.apache.pekko.http.scaladsl.Http
+import org.apache.pekko.http.scaladsl.client.RequestBuilding.{Get, Post}
+import org.apache.pekko.http.scaladsl.model.StatusCodes
+import org.apache.pekko.http.scaladsl.model.headers.{Authorization, OAuth2BearerToken}
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.daml.network.auth.AuthUtil
@@ -12,18 +16,12 @@ import com.daml.network.integration.tests.SpliceTests.{
   SpliceTestConsoleEnvironment,
 }
 import com.daml.network.util.WalletTestUtil
-import com.digitalasset.canton.config.CantonRequireTypes.InstanceName
-import com.digitalasset.canton.config.NonNegativeFiniteDuration
 import com.digitalasset.canton.config.RequireTypes.PositiveInt
 import com.digitalasset.canton.integration.BaseEnvironmentDefinition
 import com.digitalasset.canton.logging.SuppressionRule
 import com.digitalasset.canton.sequencing.SubmissionRequestAmplification
+import com.digitalasset.canton.config.NonNegativeFiniteDuration
 import com.digitalasset.canton.topology.PartyId
-import com.digitalasset.canton.topology.transaction.ParticipantPermission
-import org.apache.pekko.http.scaladsl.Http
-import org.apache.pekko.http.scaladsl.client.RequestBuilding.{Get, Post}
-import org.apache.pekko.http.scaladsl.model.StatusCodes
-import org.apache.pekko.http.scaladsl.model.headers.{Authorization, OAuth2BearerToken}
 import org.slf4j.event.Level
 
 import scala.concurrent.Future
@@ -32,29 +30,12 @@ import scala.util.{Random, Try}
 
 class ValidatorIntegrationTest extends IntegrationTest with WalletTestUtil {
 
-  private val invalidValidator = "aliceValidatorInvalid"
-  private val validatorPartyHint = s"imnotvalid_${(new scala.util.Random).nextInt(10000)}"
-
   override def environmentDefinition
       : BaseEnvironmentDefinition[EnvironmentImpl, SpliceTestConsoleEnvironment] =
     EnvironmentDefinition
       .simpleTopology4Svs(this.getClass.getSimpleName)
       .withManualStart
       .withoutInitialManagerApps // TODO (#7539): this should no longer be required once app-instances is removed
-      .addConfigTransformToFront((_, config) => {
-        val aliceValidatorConfig = config
-          .validatorApps(InstanceName.tryCreate("aliceValidator"))
-        config.copy(
-          validatorApps = config.validatorApps + (
-            InstanceName.tryCreate(invalidValidator) ->
-              aliceValidatorConfig
-                .copy(
-                  validatorPartyHint = Some(validatorPartyHint),
-                  ledgerApiUser = s"${aliceValidatorConfig.ledgerApiUser}2",
-                )
-          )
-        )
-      })
 
   "start and restart cleanly" in { implicit env =>
     initDsoWithSv1Only()
@@ -307,7 +288,7 @@ class ValidatorIntegrationTest extends IntegrationTest with WalletTestUtil {
     val aliceParty = aliceValidatorBackend.onboardUser(aliceWalletClient.config.ledgerApiUser)
     aliceWalletClient.tap(10)
 
-    val name = s"alice.unverified.$ansAcronym"
+    val name = "alice.unverified.cns"
     val url = "https://alice-url.com"
     val description = "A test CNS entry for alice"
 
@@ -464,28 +445,4 @@ class ValidatorIntegrationTest extends IntegrationTest with WalletTestUtil {
     }
 
   }
-
-  "support existing party with invalid hit" in { implicit env =>
-    initDsoWithSv1Only()
-    val validator = v(invalidValidator)
-    val participantClientWithAdminToken = validator.participantClientWithAdminToken
-    participantClientWithAdminToken.topology.party_to_participant_mappings.propose(
-      PartyId.tryCreate(validatorPartyHint, participantClientWithAdminToken.id.namespace),
-      Seq(
-        (
-          participantClientWithAdminToken.id,
-          ParticipantPermission.Submission,
-        )
-      ),
-    )
-    val configuredUser = validator.config.ledgerApiUser
-
-    def getUser = {
-      participantClientWithAdminToken.ledger_api.users.get(configuredUser)
-    }
-    getUser.primaryParty shouldBe None
-    validator.startSync()
-    getUser.primaryParty.value.uid.identifier shouldBe validatorPartyHint
-  }
-
 }

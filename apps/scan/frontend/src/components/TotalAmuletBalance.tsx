@@ -4,11 +4,10 @@ import BigNumber from 'bignumber.js';
 import { ErrorDisplay, Loading } from 'common-frontend';
 import { useAmuletPrice, useTotalAmuletBalance } from 'common-frontend/scan-api';
 
-import { useScanConfig } from '../utils/config';
+import { config } from '../utils/config';
 import AmountSummary from './AmountSummary';
 
 export const TotalAmuletBalance: React.FC = () => {
-  const config = useScanConfig();
   const totalAmuletBalanceQuery = useTotalAmuletBalance();
   const amuletPriceQuery = useAmuletPrice();
 
@@ -24,7 +23,7 @@ export const TotalAmuletBalance: React.FC = () => {
     <AmountSummary
       title={title}
       amount={new BigNumber(totalAmuletBalanceQuery.data.total_balance)}
-      idCC="total-amulet-balance-amulet"
+      idCC="total-amulet-balance-cc"
       idUSD="total-amulet-balance-usd"
       amuletPrice={amuletPriceQuery.data}
     />

@@ -16,6 +16,7 @@ import com.daml.ledger.api.v2.admin.party_management_service.{
   GetPartiesRequest,
   PartyManagementServiceGrpc,
 }
+import com.daml.ledger.api.v2.interactive_submission_service.InteractiveSubmissionServiceGrpc
 import com.daml.ledger.api.v2.command_service.CommandServiceGrpc
 import com.daml.ledger.api.v2.package_service.{ListPackagesRequest, PackageServiceGrpc}
 import com.daml.ledger.javaapi.data.{Command, CreateUserResponse, ListUserRightsResponse, User}
@@ -28,9 +29,10 @@ import com.daml.network.util.DisclosedContracts
 import com.digitalasset.canton.DomainAlias
 import com.digitalasset.canton.admin.api.client.data.PartyDetails
 import com.digitalasset.canton.config.NonNegativeFiniteDuration
+import com.digitalasset.canton.crypto.Fingerprint
 import com.digitalasset.canton.ledger.client.{GrpcChannel, LedgerCallCredentials}
 import com.digitalasset.canton.logging.{ErrorLoggingContext, NamedLoggerFactory, NamedLogging}
-import com.digitalasset.canton.logging.pretty.{Pretty, PrettyPrinting}
+import com.digitalasset.canton.logging.pretty.Pretty
 import com.digitalasset.canton.participant.pretty.Implicits.prettyContractId
 import com.digitalasset.canton.topology.{DomainId, PartyId}
 import com.digitalasset.canton.tracing.{TraceContext, TraceContextGrpc}
@@ -47,36 +49,15 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.jdk.CollectionConverters.*
 
-sealed abstract class DedupConfig extends PrettyPrinting {}
+sealed abstract class DedupConfig
 
-final case object NoDedup extends DedupConfig {
-  override def pretty = prettyOfObject[this.type]
-}
+final case object NoDedup extends DedupConfig
 
-final case class DedupOffset(offset: String) extends DedupConfig {
-  override def pretty = prettyOfClass(
-    param("offset", _.offset.unquoted)
-  )
-}
+final case class DedupOffset(offset: String) extends DedupConfig
 
-final case object DedupBeginOffset extends DedupConfig {
-  override def pretty = prettyOfObject[this.type]
-}
+final case object DedupBeginOffset extends DedupConfig
 
-final case class DedupDuration(duration: Duration) extends DedupConfig {
-  override def pretty = {
-    import com.digitalasset.canton.ledger.api.util.DurationConversion
-    prettyOfClass(
-      param(
-        "duration",
-        p =>
-          DurationConversion.fromProto(
-            com.google.protobuf.duration.Duration.fromJavaProto(p.duration)
-          ),
-      )
-    )
-  }
-}
+final case class DedupDuration(duration: Duration) extends DedupConfig
 
 /** Ledger client built on top of the Java bindings. The Java equivalent of
   * com.daml.ledger.client.LedgerClient.
@@ -148,6 +129,9 @@ private[environment] class LedgerClient(
   private val identityProviderConfigServiceStub
       : identity_provider_config_service.IdentityProviderConfigServiceGrpc.IdentityProviderConfigServiceStub =
     identity_provider_config_service.IdentityProviderConfigServiceGrpc.stub(channel)
+  private val interactiveSubmissionServiceStub
+      : InteractiveSubmissionServiceGrpc.InteractiveSubmissionServiceStub =
+    InteractiveSubmissionServiceGrpc.stub(channel)
 
   private def toSource[T](f: Future[Source[T, NotUsed]]) =
     Source.futureSource(f).mapMaterializedValue(_ => NotUsed)
@@ -255,6 +239,68 @@ private[environment] class LedgerClient(
         waitFor.stubSubmit(stub, request, ec).map(waitFor.mapResponse)
     } yield res
   }
+
+  def prepareSubmission(
+      domainId: Option[String],
+      applicationId: String,
+      commandId: String,
+      actAs: Seq[String],
+      readAs: Seq[String],
+      commands: Seq[Command],
+      disclosedContracts: DisclosedContracts,
+  )(implicit
+      ec: ExecutionContext,
+      tc: TraceContext,
+  ): Future[lapi.interactive_submission_service.PrepareSubmissionResponse] = {
+    val cmds = lapi.commands.Commands(
+      domainId = domainId.getOrElse(""),
+      applicationId = applicationId,
+      commandId = commandId,
+      actAs = actAs,
+      readAs = readAs,
+      commands = commands.map(c => lapi.commands.Command.fromJavaProto(c.toProtoCommand)),
+      disclosedContracts = disclosedContracts.toLedgerApiDisclosedContracts.map(
+        lapi.commands.DisclosedContract.fromJavaProto(_)
+      ),
+    )
+    for {
+      stub <- withCredentialsAndTraceContext(interactiveSubmissionServiceStub)
+      result <- stub.prepareSubmission(
+        lapi.interactive_submission_service.PrepareSubmissionRequest(
+          Some(cmds)
+        )
+      )
+    } yield result
+  }
+
+  def executeSubmission(
+      preparedTransaction: ByteString,
+      partySignatures: Map[PartyId, LedgerClient.Signature],
+  )(implicit
+      ec: ExecutionContext,
+      tc: TraceContext,
+  ): Future[lapi.interactive_submission_service.ExecuteSubmissionResponse] =
+    for {
+      stub <- withCredentialsAndTraceContext(interactiveSubmissionServiceStub)
+      result <- stub.executeSubmission(
+        lapi.interactive_submission_service.ExecuteSubmissionRequest(
+          preparedTransaction,
+          Some(lapi.interactive_submission_service.PartySignatures(partySignatures.toList.map {
+            case (party, signature) =>
+              lapi.interactive_submission_service.SinglePartySignatures(
+                party.toProtoPrimitive,
+                Seq(
+                  lapi.interactive_submission_service.Signature(
+                    lapi.interactive_submission_service.SignatureFormat.SIGNATURE_FORMAT_RAW,
+                    signature.signature,
+                    signature.signedBy.toProtoPrimitive,
+                  )
+                ),
+              )
+          })),
+        )
+      )
+    } yield result
 
   def listPackages()(implicit ec: ExecutionContext, tc: TraceContext): Future[Seq[String]] = {
     val request = ListPackagesRequest()
@@ -771,6 +817,11 @@ object LedgerClient {
     }
   }
 
+  final case class Signature(
+      signature: ByteString,
+      signedBy: Fingerprint,
+  )
+
   final case class CompletionStreamResponse(laterOffset: String, completion: Completion)
 
   object CompletionStreamResponse {
@@ -795,13 +846,14 @@ object LedgerClient {
       applicationId: String,
       commandId: String,
       submissionId: String,
+      updateId: String,
       status: GrpcStatus,
       errorDetails: Seq[ErrorDetail],
   ) {
     def matchesSubmission(applicationId: String, commandId: String, submissionId: String): Boolean =
       this.applicationId == applicationId &&
-        this.commandId == commandId &&
-        this.submissionId == submissionId
+        commandId == this.commandId &&
+        submissionId == this.submissionId
   }
 
   object Completion {
@@ -815,6 +867,7 @@ object LedgerClient {
         applicationId = spb.applicationId,
         commandId = spb.commandId,
         submissionId = spb.submissionId,
+        updateId = spb.updateId,
         status = grpcStatus,
         errorDetails = errors,
       )

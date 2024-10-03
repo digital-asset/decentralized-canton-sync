@@ -2,7 +2,7 @@ import * as React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { AuthProvider, ErrorRouterPage, theme, UserProvider } from 'common-frontend';
-import { replaceEqualDeep } from 'common-frontend-utils';
+import { cnReplaceEqualDeep } from 'common-frontend-utils';
 import { ScanClientProvider } from 'common-frontend/scan-api';
 import {
   createBrowserRouter,
@@ -21,15 +21,14 @@ import Apps from './routes/Apps';
 import Authorize from './routes/Authorize';
 import AuthCheck from './routes/authCheck';
 import Root from './routes/root';
-import { useAppManagerConfig } from './utils/config';
+import { config } from './utils/config';
 
 const Providers: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const config = useAppManagerConfig();
   const navigate = useNavigate();
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
-        structuralSharing: replaceEqualDeep,
+        structuralSharing: cnReplaceEqualDeep,
       },
     },
     logger: {
@@ -55,31 +54,29 @@ const Providers: React.FC<React.PropsWithChildren> = ({ children }) => {
   );
 };
 
-const App: React.FC = () => {
-  const config = useAppManagerConfig();
-  const router = createBrowserRouter(
-    createRoutesFromElements(
-      <Route
-        errorElement={<ErrorRouterPage />}
-        element={
-          <Providers>
-            <AuthCheck authConfig={config.auth} testAuthConfig={config.testAuth} />
-          </Providers>
-        }
-      >
-        <Route path="/" element={<Root />}>
-          <Route index element={<Apps />} />
-          <Route path="authorize" element={<Authorize />} />
-        </Route>
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <Route
+      errorElement={<ErrorRouterPage />}
+      element={
+        <Providers>
+          <AuthCheck authConfig={config.auth} testAuthConfig={config.testAuth} />
+        </Providers>
+      }
+    >
+      <Route path="/" element={<Root />}>
+        <Route index element={<Apps />} />
+        <Route path="authorize" element={<Authorize />} />
       </Route>
-    )
-  );
-  return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <RouterProvider router={router} />
-    </ThemeProvider>
-  );
-};
+    </Route>
+  )
+);
+
+const App: React.FC = () => (
+  <ThemeProvider theme={theme}>
+    <CssBaseline />
+    <RouterProvider router={router} />
+  </ThemeProvider>
+);
 
 export default App;

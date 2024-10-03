@@ -7,8 +7,6 @@ import { useGetTopValidatorsByValidatorRewards } from 'common-frontend/scan-api'
 
 import { Stack, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
 
-import { useScanConfig } from '../utils';
-
 export const ValidatorLeaderboardTable: React.FC = () => {
   const topValidatorsQuery = useGetTopValidatorsByValidatorRewards();
 
@@ -54,13 +52,10 @@ const ValidatorRow: React.FC<{
   name: string;
   totalRewards: BigNumber;
 }> = ({ name, totalRewards }) => {
-  const config = useScanConfig();
-  const amuletNameAcronym = config.spliceInstanceNames.amuletNameAcronym;
-
   return (
     <TableRow
       className="validator-leaderboard-row"
-      data-selenium-text={`${name} ${totalRewards} ${amuletNameAcronym}`}
+      data-selenium-text={`${name} ${totalRewards} CC`}
     >
       <TableCell>
         <PartyId partyId={name} />

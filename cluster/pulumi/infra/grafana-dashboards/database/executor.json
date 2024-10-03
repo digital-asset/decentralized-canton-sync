@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 1760,
+  "id": 1181,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -99,7 +99,7 @@
       },
       "gridPos": {
         "h": 15,
-        "w": 8,
+        "w": 24,
         "x": 0,
         "y": 1
       },
@@ -233,7 +233,7 @@
       },
       "gridPos": {
         "h": 10,
-        "w": 8,
+        "w": 24,
         "x": 0,
         "y": 16
       },
@@ -330,7 +330,7 @@
       },
       "gridPos": {
         "h": 10,
-        "w": 8,
+        "w": 24,
         "x": 0,
         "y": 26
       },
@@ -377,17 +377,17 @@
         "current": {
           "selected": true,
           "text": [
-            "sv-1"
+            "All"
           ],
           "value": [
-            "sv-1"
+            "$__all"
           ]
         },
         "datasource": {
           "type": "prometheus",
           "uid": "prometheus"
         },
-        "definition": "label_values(daml_db_commit_duration_seconds,namespace)",
+        "definition": "label_values(daml_db_wait_duration_seconds_count,namespace)",
         "hide": 0,
         "includeAll": true,
         "multi": true,
@@ -395,7 +395,7 @@
         "options": [],
         "query": {
           "qryType": 1,
-          "query": "label_values(daml_db_commit_duration_seconds,namespace)",
+          "query": "label_values(daml_db_wait_duration_seconds_count,namespace)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 1,
@@ -408,11 +408,9 @@
         "current": {
           "selected": true,
           "text": [
-            "daml",
             "cn"
           ],
           "value": [
-            "daml",
             "cn"
           ]
         },
@@ -427,7 +425,7 @@
             "value": "cn"
           },
           {
-            "selected": true,
+            "selected": false,
             "text": "daml",
             "value": "daml"
           }
@@ -441,14 +439,10 @@
         "current": {
           "selected": true,
           "text": [
-            "general",
-            "write",
-            "locks"
+            "general"
           ],
           "value": [
-            "general",
-            "write",
-            "locks"
+            "general"
           ]
         },
         "hide": 0,
@@ -462,12 +456,12 @@
             "value": "general"
           },
           {
-            "selected": true,
+            "selected": false,
             "text": "write",
             "value": "write"
           },
           {
-            "selected": true,
+            "selected": false,
             "text": "locks",
             "value": "locks"
           }
@@ -487,6 +481,6 @@
   "timezone": "",
   "title": "Executor",
   "uid": "d7498b3f-c5e4-41ba-9fe2-2874aa683f51",
-  "version": 1,
+  "version": 3,
   "weekStart": ""
 }

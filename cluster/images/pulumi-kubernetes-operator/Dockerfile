@@ -5,16 +5,14 @@
 # used to control he underlyign pulumi version
 ARG pulumi_version
 
-FROM pulumi/pulumi:${pulumi_version}
+# use the nix version back once it's >3.113 (has required ts support)
+FROM pulumi/pulumi:3.113.3
 
-RUN apt-get update \
-    && apt-get install tini \
-    && apt-get clean
-
+RUN apt-get install tini
 ENTRYPOINT ["tini", "--", "/usr/local/bin/pulumi-kubernetes-operator"]
 
 # install operator binary
-RUN wget -O - -c "https://github.com/pulumi/pulumi-kubernetes-operator/releases/download/v1.16.0/pulumi-kubernetes-operator_.1.16.0_.Linux_x86_64.tar.gz" | tar -xz -C /usr/local/bin/
+RUN wget -O - -c "https://github.com/pulumi/pulumi-kubernetes-operator/releases/download/v1.15.0/pulumi-kubernetes-operator_.1.15.0_.Linux_x86_64.tar.gz" | tar -xz -C /usr/local/bin/
 
 COPY pulumi-override.sh /usr/bin/pulumi-override.sh
 RUN useradd -m pulumi-kubernetes-operator

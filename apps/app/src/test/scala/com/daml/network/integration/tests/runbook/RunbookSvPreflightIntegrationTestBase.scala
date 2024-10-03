@@ -85,7 +85,7 @@ abstract class RunbookSvPreflightIntegrationTestBase
     }
   }
 
-  "The SV can log in to their wallet" in { implicit env =>
+  "The SV can log in to their wallet" in { _ =>
     withFrontEnd("sv") { implicit webDriver =>
       actAndCheck(
         s"Logging in to wallet at ${walletUrl}", {
@@ -108,8 +108,7 @@ abstract class RunbookSvPreflightIntegrationTestBase
     }
   }
 
-  // TODO (#15162): re-enable after base version is 0.2.5
-  "The SV rewards are claimed by the SV, with 33.33% going to validator1" ignore { implicit env =>
+  "The SV rewards are claimed by the SV, with 33.33% going to validator1" in { implicit env =>
     val svClient = sv_client("sv")
     val sv1ScanClient = scancl("sv1Scan")
 
@@ -226,9 +225,9 @@ abstract class RunbookSvPreflightIntegrationTestBase
           val round =
             Try(asOfRound.split(" ").last.toLong)
               .getOrElse(fail(s"Failed parsing round number from: $asOfRound"))
-          val totalAmuletBalanceSv = find(id("total-amulet-balance-amulet")).value.text
+          val totalAmuletBalanceSv = find(id("total-amulet-balance-cc")).value.text
           val totalAmuletBalanceSv1 = sv1ScanClient.getTotalAmuletBalance(round)
-          parseAmountText(totalAmuletBalanceSv, amuletNameAcronym) shouldBe totalAmuletBalanceSv1
+          parseAmountText(totalAmuletBalanceSv, "CC") shouldBe totalAmuletBalanceSv1
         }
       }
     } else {
@@ -236,11 +235,10 @@ abstract class RunbookSvPreflightIntegrationTestBase
     }
   }
 
-  "The Name Service UI is working" in { implicit env =>
+  "The CNS UI is working" in { implicit env =>
     val ansUrl = s"https://cns.sv.${sys.env("NETWORK_APPS_ADDRESS")}"
     val svPassword = sys.env(s"SV_DEV_NET_WEB_UI_PASSWORD");
-    val ansName =
-      s"da-test-${Random.alphanumeric.take(10).mkString.toLowerCase}.unverified.$ansAcronym"
+    val ansName = s"da-test-${Random.alphanumeric.take(10).mkString.toLowerCase}.unverified.cns"
 
     withFrontEnd("sv") { implicit webDriver =>
       def login(): Unit = {
@@ -261,14 +259,13 @@ abstract class RunbookSvPreflightIntegrationTestBase
         )
 
       }
-      if (isDevNet) { // SV missing Amulet in NonDevNet
+      if (isDevNet) { // SV missing CC in NonDevNet
         reserveAnsNameFor(
           () => login(),
           ansName,
           "1.0000000000",
           "USD",
           "90 days",
-          ansAcronym,
         )
         clue(s"Reserved ANS name can be looked up via scan") {
           val svScanClient = scancl("svTestScan")
@@ -281,10 +278,10 @@ abstract class RunbookSvPreflightIntegrationTestBase
   }
 
   "Key API endpoints are reachable and functional" in { implicit env =>
-    val auth0 = auth0UtilFromEnvVars("sv")
+    val auth0 = auth0UtilFromEnvVars("https://canton-network-sv-test.us.auth0.com", "sv")
     val token = eventuallySucceeds() {
       getAuth0ClientCredential(
-        sys.env("SPLICE_OAUTH_SV_TEST_CLIENT_ID_VALIDATOR"),
+        "bUfFRpl2tEfZBB7wzIo9iRNGTj8wMeIn",
         "https://validator.example.com/api",
         auth0,
       )(noTracingLogger)

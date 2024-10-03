@@ -13,13 +13,11 @@ import com.daml.network.scan.store.AcsSnapshotStore.AcsSnapshot
 import com.daml.network.store.{PageLimit, TreeUpdateWithMigrationId, UpdateHistory}
 import com.digitalasset.canton.concurrent.FutureSupervisor
 import com.digitalasset.canton.data.CantonTimestamp
-import com.digitalasset.canton.logging.SuppressionRule
 import com.digitalasset.canton.time.SimClock
 import com.digitalasset.canton.topology.DomainId
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.{BaseTest, HasActorSystem, HasExecutionContext}
 import org.scalatest.wordspec.AnyWordSpec
-import org.slf4j.event.Level
 
 import scala.concurrent.Future
 
@@ -52,7 +50,6 @@ class AcsSnapshotTriggerTest
         when(
           updateHistory.getUpdates(
             eqTo(Some((migrationId, lastSnapshotTime.plusSeconds(3600L)))),
-            eqTo(true),
             eqTo(PageLimit.tryCreate(1)),
           )(any[TraceContext])
         ).thenReturn(Future.successful(Seq.empty))
@@ -71,7 +68,6 @@ class AcsSnapshotTriggerTest
         when(
           updateHistory.getUpdates(
             eqTo(Some((migrationId, lastSnapshotTime.plusSeconds(3600L)))),
-            eqTo(true),
             eqTo(PageLimit.tryCreate(1)),
           )(any[TraceContext])
         ).thenReturn(
@@ -103,8 +99,7 @@ class AcsSnapshotTriggerTest
 
         when(
           updateHistory.getUpdates(
-            eqTo(Some((migrationId, CantonTimestamp.MinValue.plusSeconds(1L)))),
-            eqTo(true),
+            eqTo(Some((migrationId, CantonTimestamp.Epoch.plusSeconds(1L)))),
             eqTo(PageLimit.tryCreate(1)),
           )(any[TraceContext])
         ).thenReturn(Future.successful(Seq.empty))
@@ -120,8 +115,7 @@ class AcsSnapshotTriggerTest
         // data after ACS
         when(
           updateHistory.getUpdates(
-            eqTo(Some((migrationId, CantonTimestamp.MinValue.plusSeconds(1L)))),
-            eqTo(true),
+            eqTo(Some((migrationId, CantonTimestamp.Epoch.plusSeconds(1L)))),
             eqTo(PageLimit.tryCreate(1)),
           )(any[TraceContext])
         ).thenReturn(
@@ -141,7 +135,6 @@ class AcsSnapshotTriggerTest
         when(
           updateHistory.getUpdates(
             eqTo(Some((migrationId, firstSnapshotTime))),
-            eqTo(true),
             eqTo(PageLimit.tryCreate(1)),
           )(any[TraceContext])
         ).thenReturn(Future.successful(Seq.empty))
@@ -157,8 +150,7 @@ class AcsSnapshotTriggerTest
         // data after ACS
         when(
           updateHistory.getUpdates(
-            eqTo(Some((migrationId, CantonTimestamp.MinValue.plusSeconds(1L)))),
-            eqTo(true),
+            eqTo(Some((migrationId, CantonTimestamp.Epoch.plusSeconds(1L)))),
             eqTo(PageLimit.tryCreate(1)),
           )(any[TraceContext])
         ).thenReturn(
@@ -179,7 +171,6 @@ class AcsSnapshotTriggerTest
         when(
           updateHistory.getUpdates(
             eqTo(Some((migrationId, firstSnapshotTime))),
-            eqTo(true),
             eqTo(PageLimit.tryCreate(1)),
           )(any[TraceContext])
         ).thenReturn(
@@ -197,64 +188,6 @@ class AcsSnapshotTriggerTest
           Seq(AcsSnapshotTrigger.Task(firstSnapshotTime, None))
         )
       }
-
-      "return the first task when due and no updates pending between 23:00 and 00:00" in new AcsSnapshotTriggerTestScope {
-        override def now =
-          CantonTimestamp.assertFromInstant(java.time.Instant.parse("2007-12-03T23:15:30.00Z"))
-        def snapshotPeriodHours = 1
-
-        noPreviousSnapshot()
-
-        // data after ACS
-        when(
-          updateHistory.getUpdates(
-            eqTo(Some((migrationId, CantonTimestamp.MinValue.plusSeconds(1L)))),
-            eqTo(true),
-            eqTo(PageLimit.tryCreate(1)),
-          )(any[TraceContext])
-        ).thenReturn(
-          Future.successful(
-            Seq(
-              TreeUpdateWithMigrationId(
-                GetTreeUpdatesResponse(treeUpdate(now.minusSeconds(1L)), dummyDomain),
-                1L,
-              )
-            )
-          )
-        )
-
-        val firstSnapshotTime =
-          CantonTimestamp.assertFromInstant(java.time.Instant.parse("2007-12-04T00:00:00.00Z"))
-
-        // no updates pending
-        when(
-          updateHistory.getUpdates(
-            eqTo(Some((migrationId, firstSnapshotTime))),
-            eqTo(true),
-            eqTo(PageLimit.tryCreate(1)),
-          )(any[TraceContext])
-        ).thenReturn(
-          Future.successful(
-            Seq(
-              TreeUpdateWithMigrationId(
-                GetTreeUpdatesResponse(treeUpdate(now.plusSeconds(1800L)), dummyDomain),
-                1L,
-              )
-            )
-          )
-        )
-
-        loggerFactory.assertLogsSeq(SuppressionRule.Level(Level.INFO))(
-          trigger.retrieveTasks().futureValue should be(Seq.empty),
-          lines => {
-            forExactly(1, lines) { line =>
-              line.message should be(
-                s"Still not time to take a snapshot. Now: $now. Next snapshot time: $firstSnapshotTime."
-              )
-            }
-          },
-        )
-      }
     }
 
   }
@@ -264,7 +197,7 @@ class AcsSnapshotTriggerTest
 
     val clock = new SimClock(loggerFactory = loggerFactory)
 
-    def now = CantonTimestamp.assertFromInstant(java.time.Instant.parse("2007-12-03T10:15:30.00Z"))
+    val now = CantonTimestamp.assertFromInstant(java.time.Instant.parse("2007-12-03T10:15:30.00Z"))
     clock.advanceTo(now)
 
     val dummyDomain = DomainId.tryFromString("dummy::domain")
@@ -296,7 +229,6 @@ class AcsSnapshotTriggerTest
     )
     val store: AcsSnapshotStore = mock[AcsSnapshotStore]
     val migrationId: Long = 0L
-    val historyId: Long = 1L
     when(store.migrationId).thenReturn(migrationId)
     val updateHistory: UpdateHistory = mock[UpdateHistory]
     when(updateHistory.isReady).thenReturn(true)
@@ -314,7 +246,7 @@ class AcsSnapshotTriggerTest
     }
 
     def previousSnapshot(time: CantonTimestamp): AcsSnapshot = {
-      val lastSnapshot = AcsSnapshot(time, migrationId, historyId, 0, 100)
+      val lastSnapshot = AcsSnapshot(time, migrationId, 0, 100)
       when(
         store.lookupSnapshotBefore(eqTo(migrationId), eqTo(CantonTimestamp.MaxValue))(
           any[TraceContext]

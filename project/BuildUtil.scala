@@ -14,16 +14,11 @@ object BuildUtil {
     private val stdoutBuffer = mutable.Buffer[String]()
 
     override def out(s: => String): Unit = {
-      synchronized {
-        buffer.append(s)
-        stdoutBuffer.append(s)
-      }
+      buffer.append(s)
+      stdoutBuffer.append(s)
     }
 
-    override def err(s: => String): Unit =
-      synchronized {
-        buffer.append(s)
-      }
+    override def err(s: => String): Unit = buffer.append(s)
 
     override def buffer[T](f: => T): T = f
 
@@ -31,16 +26,12 @@ object BuildUtil {
       * stdout and stderr are interleaved.
       */
     def output(linePrefix: String = ""): String =
-      synchronized {
-        buffer.map(l => s"$linePrefix$l").mkString(System.lineSeparator)
-      }
+      buffer.map(l => s"$linePrefix$l").mkString(System.lineSeparator)
 
     /** Like output but excludes stderr.
       */
     def outputStdout(linePrefix: String = ""): String =
-      synchronized {
-        stdoutBuffer.map(l => s"$linePrefix$l").mkString(System.lineSeparator)
-      }
+      stdoutBuffer.map(l => s"$linePrefix$l").mkString(System.lineSeparator)
   }
 
   /** Utility function to run a (shell) command. */

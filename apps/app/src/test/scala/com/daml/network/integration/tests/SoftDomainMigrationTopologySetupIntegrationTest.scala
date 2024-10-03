@@ -43,18 +43,12 @@ import com.daml.network.util.{
   ConfigScheduleUtil,
   SplitwellTestUtil,
   TriggerTestUtil,
-  UpdateHistoryTestUtil,
+  UpdateHistoryComparator,
   WalletTestUtil,
 }
 import com.daml.network.validator.automation.ReconcileSequencerConnectionsTrigger
 import com.digitalasset.canton.concurrent.FutureSupervisor
-import com.daml.network.sv.automation.delegatebased.{
-  AdvanceOpenMiningRoundTrigger,
-  ExpireIssuingMiningRoundTrigger,
-}
-import com.daml.network.sv.automation.singlesv.LocalSequencerConnectionsTrigger
-import com.digitalasset.canton.{BaseTest, DomainAlias, SequencerAlias}
-import com.digitalasset.canton.config.NonNegativeFiniteDuration
+import com.digitalasset.canton.{DomainAlias, SequencerAlias}
 import com.digitalasset.canton.config.RequireTypes.NonNegativeLong
 import com.digitalasset.canton.config.CantonRequireTypes.InstanceName
 import com.digitalasset.canton.config.{ClientConfig, NonNegativeDuration, ProcessingTimeout}
@@ -76,7 +70,7 @@ class SoftDomainMigrationTopologySetupIntegrationTest
     with SplitwellTestUtil
     with TriggerTestUtil
     with WalletTestUtil
-    with UpdateHistoryTestUtil {
+    with UpdateHistoryComparator {
 
   // Does not currently handle multiple synchronizers.
   override def runUpdateHistorySanityCheck = false
@@ -130,12 +124,6 @@ class SoftDomainMigrationTopologySetupIntegrationTest
           ConfigTransforms.updateAutomationConfig(ConfigTransforms.ConfigurableApp.Sv)(
             _.withResumedTrigger[AmuletConfigReassignmentTrigger]
               .withResumedTrigger[AssignTrigger]
-              .withPausedTrigger[AdvanceOpenMiningRoundTrigger]
-              .withPausedTrigger[ExpireIssuingMiningRoundTrigger]
-          )(conf),
-        (_, conf) =>
-          ConfigTransforms.updateAllSvAppFoundDsoConfigs_(
-            _.copy(initialTickDuration = NonNegativeFiniteDuration.ofMillis(500))
           )(conf),
         (_, conf) =>
           // At least for now we test the impact of soft domain migrations on an app
@@ -207,10 +195,14 @@ class SoftDomainMigrationTopologySetupIntegrationTest
       group,
       alice,
     )
-    // TODO(#14419) Remove this once the retries cover all required errors
+    // TODO(#13199) Remove this once our test code does retries
+    // Splitwell does direct ledger API submissions through test code which do not have retries so it is quite
+    // sensitive domain reconnects. We disable the trigger temporarily to avoid any weird interactions.
     setTriggersWithin(triggersToPauseAtStart =
-      Seq(aliceValidatorBackend, bobValidatorBackend, splitwellValidatorBackend).map(
-        _.validatorAutomation.trigger[ReconcileSequencerConnectionsTrigger]
+      Seq(
+        aliceValidatorBackend.validatorAutomation.trigger[ReconcileSequencerConnectionsTrigger],
+        bobValidatorBackend.validatorAutomation.trigger[ReconcileSequencerConnectionsTrigger],
+        splitwellValidatorBackend.validatorAutomation.trigger[ReconcileSequencerConnectionsTrigger],
       )
     ) {
       clue("Setup splitwell") {
@@ -280,24 +272,17 @@ class SoftDomainMigrationTopologySetupIntegrationTest
       },
     )("amulet config vote request has been created", _ => sv1Backend.listVoteRequests().loneElement)
 
-    // TODO(#8300) No need to pause once we can't get a timeout on a concurrent sequencer connection change anymore
-    setTriggersWithin(triggersToPauseAtStart =
-      Seq(sv2Backend, sv3Backend, sv4Backend).map(
-        _.dsoAutomation.trigger[LocalSequencerConnectionsTrigger]
+    clue(s"sv2-4 accept amulet config vote request") {
+      Seq(sv2Backend, sv3Backend, sv4Backend).map(sv =>
+        eventuallySucceeds() {
+          sv.castVote(
+            voteRequest.contractId,
+            true,
+            "url",
+            "description",
+          )
+        }
       )
-    ) {
-      clue(s"sv2-4 accept amulet config vote request") {
-        Seq(sv2Backend, sv3Backend, sv4Backend).map(sv =>
-          eventuallySucceeds() {
-            sv.castVote(
-              voteRequest.contractId,
-              true,
-              "url",
-              "description",
-            )
-          }
-        )
-      }
     }
 
     eventually() {
@@ -398,41 +383,31 @@ class SoftDomainMigrationTopologySetupIntegrationTest
           ),
           handshakeOnly = false,
         )
+        val domainId = participant.domains.id_of(domainAlias)
+        participant.health.ping(
+          participant.id,
+          domainId = Some(domainId),
+        )
       }
     }
-    actAndCheck(
-      "Sign DSO PartyToParticipant mapping", {
-        env.svs.local.foreach { sv =>
-          sv.signDsoPartyToParticipant(prefix)
-        }
-      },
-    )(
-      "DSO PartyToParticipant is updated on domain",
-      _ => {
-        sv1Backend.participantClient.topology.party_to_participant_mappings
-          .list(newDomainId, filterParty = dsoRules.payload.dso) should not be empty
-      },
-    )
+    clue("Sign DSO PartToParticipant mapping") {
+      env.svs.local.foreach { sv =>
+        sv.signDsoPartyToParticipant(prefix)
+      }
+    }
 
     // Ensure that the scheduled time has passed.
     // This is mainly to avoid putting a stupidly large time in the eventually below.
-    clue("Waiting for scheduled time") {
-      env.environment.clock
-        .scheduleAt(
-          _ => (),
-          CantonTimestamp.assertFromInstant(scheduledTime.plus(500, ChronoUnit.MILLIS)),
-        )
-        .unwrap
-        .futureValue
-    }
+    env.environment.clock
+      .scheduleAt(
+        _ => (),
+        CantonTimestamp.assertFromInstant(scheduledTime.plus(500, ChronoUnit.MILLIS)),
+      )
+      .unwrap
+      .futureValue
 
-    // It takes a pretty long time until the SVs vet the packages on the new domain
-    // and the reassignments go through.
-    eventually(40.seconds) {
-      val amuletRules = sv1ScanBackend.getAmuletRules()
-      inside(amuletRules) { case _ =>
-        amuletRules.state shouldBe ContractState.Assigned(newDomainId)
-      }
+    eventually() {
+      sv1ScanBackend.getAmuletRules().state shouldBe ContractState.Assigned(newDomainId)
       val (openRounds, issuingRounds) = sv1ScanBackend.getOpenAndIssuingMiningRounds()
       forAll(openRounds) { round =>
         round.state shouldBe ContractState.Assigned(newDomainId)
@@ -442,12 +417,27 @@ class SoftDomainMigrationTopologySetupIntegrationTest
       }
     }
 
-    clue("Round can be advanced") {
-      advanceRoundsByOneTickViaAutomation(BaseTest.DefaultEventuallyTimeUntilSuccess * 2)
+    p2pTransfer(
+      aliceWalletClient,
+      bobWalletClient,
+      bob,
+      42.0,
+    )
+
+    val aliceAmulets = aliceWalletClient.list().amulets
+    aliceAmulets should not be empty
+    forAll(aliceAmulets) {
+      _.contract.state shouldBe ContractState.Assigned(newDomainId)
     }
+
+    // Eventually to allow merging to also reassign
+    // any other contracts.
     eventually() {
-      sv1ScanBackend.getAmuletRules().state shouldBe ContractState.Assigned(newDomainId)
-      sv1ScanBackend.getDsoInfo().dsoRules.domainId.value shouldBe newDomainId.toProtoPrimitive
+      val bobAmulets = bobWalletClient.list().amulets
+      bobAmulets should not be empty
+      forAll(bobAmulets) {
+        _.contract.state shouldBe ContractState.Assigned(newDomainId)
+      }
     }
 
     clue("Alice validator tops up its traffic on new domain") {
@@ -495,30 +485,6 @@ class SoftDomainMigrationTopologySetupIntegrationTest
             .loneElement
             .extraTrafficPurchased shouldBe NonNegativeLong.maxValue
         }
-      }
-    }
-
-    p2pTransfer(
-      aliceWalletClient,
-      bobWalletClient,
-      bob,
-      42.0,
-      timeUntilSuccess = 40.seconds,
-    )
-
-    val aliceAmulets = aliceWalletClient.list().amulets
-    aliceAmulets should not be empty
-    forAll(aliceAmulets) {
-      _.contract.state shouldBe ContractState.Assigned(newDomainId)
-    }
-
-    // Eventually to allow merging to also reassign
-    // any other contracts.
-    eventually() {
-      val bobAmulets = bobWalletClient.list().amulets
-      bobAmulets should not be empty
-      forAll(bobAmulets) {
-        _.contract.state shouldBe ContractState.Assigned(newDomainId)
       }
     }
 

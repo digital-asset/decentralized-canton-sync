@@ -292,17 +292,17 @@ class HttpSvHandler(
     withSpan(s"$workflowId.getDsoInfo") { _ => _ =>
       for {
         latestOpenMiningRound <- dsoStore.getLatestActiveOpenMiningRound()
-        amuletRules <- dsoStore.getAssignedAmuletRules()
-        rulesAndStates <- dsoStore.getDsoRulesWithStateWithSvNodeStates()
+        amuletRules <- dsoStore.getAmuletRules()
+        rulesAndStates <- dsoStore.getDsoRulesWithSvNodeStates()
         dsoRules = rulesAndStates.dsoRules
       } yield definitions.GetDsoInfoResponse(
         svUser = svUserName,
         svPartyId = svParty.toProtoPrimitive,
         dsoPartyId = dsoParty.toProtoPrimitive,
         votingThreshold = Thresholds.requiredNumVotes(dsoRules),
-        latestMiningRound = latestOpenMiningRound.toContractWithState.toHttp,
-        amuletRules = amuletRules.toContractWithState.toHttp,
-        dsoRules = dsoRules.toHttp,
+        latestMiningRound = latestOpenMiningRound.contract.toHttp,
+        amuletRules = amuletRules.toHttp,
+        dsoRules = dsoRules.contract.toHttp,
         svNodeStates = rulesAndStates.svNodeStates.values.map(_.toHttp).toVector,
       )
     }

@@ -21,11 +21,9 @@ import com.daml.network.integration.plugins.{
 import com.daml.network.sv.config.{SvOnboardingConfig, SynchronizerFeesConfig}
 import com.daml.network.util.{Auth0Util, CommonAppInstanceReferences}
 import com.digitalasset.canton.BaseTest
-import com.digitalasset.canton.admin.api.client.commands.GrpcAdminCommand
 import com.digitalasset.canton.config.NonNegativeFiniteDuration
 import com.digitalasset.canton.integration.*
 import com.digitalasset.canton.logging.NamedLoggerFactory
-import com.digitalasset.canton.networking.grpc.GrpcError
 import com.digitalasset.canton.protocol.LfContractId
 import com.digitalasset.canton.telemetry.OpenTelemetryFactory
 import com.digitalasset.canton.tracing.TracingConfig.Tracer
@@ -40,7 +38,7 @@ import org.apache.pekko.http.scaladsl.Http
 import org.scalactic.source
 import org.scalatest.{AppendedClues, BeforeAndAfterEach}
 import org.scalatest.exceptions.TestFailedException
-import org.scalatest.matchers.{MatchResult, Matcher}
+import org.scalatest.matchers.{Matcher, MatchResult}
 
 import scala.annotation.nowarn
 import scala.concurrent.{ExecutionContext, Future}
@@ -228,8 +226,7 @@ object SpliceTests extends LazyLogging {
         env: SpliceTestConsoleEnvironment
     ): SplitwellAppClientReference = extendLedgerApiUserWithCaseId(super.rsw(name))(env.actorSystem)
 
-    override def perTestCaseName(name: String)(implicit env: SpliceTestConsoleEnvironment) =
-      s"${name}_tc$testCaseId.unverified.$ansAcronym"
+    override def perTestCaseName(name: String) = s"${name}_tc$testCaseId.unverified.cns"
     def perTestCaseNameWithoutUnverified(name: String) = s"${name}_tc$testCaseId"
 
     private def extendLedgerApiUserWithCaseId(
@@ -305,11 +302,6 @@ object SpliceTests extends LazyLogging {
       with CommonAppInstanceReferences
       with LedgerApiExtensions
       with AppendedClues {
-
-    protected def testEntryName(implicit env: SpliceTestConsoleEnvironment): String =
-      s"mycoolentry.unverified.$ansAcronym"
-    protected val testEntryUrl = "https://ans-dir-url.com"
-    protected val testEntryDescription = "Sample CNS Entry Description"
 
     protected def initDso()(implicit env: SpliceTestConsoleEnvironment): Unit = {
       env.fullDsoApps.local.foreach(_.start())
@@ -457,8 +449,7 @@ object SpliceTests extends LazyLogging {
     /** Changes `name` so it is unlikely to conflict with names used somewhere else.
       * Does nothing for isolated test environments, overloaded for shared environment.
       */
-    def perTestCaseName(name: String)(implicit env: SpliceTestConsoleEnvironment) =
-      s"${name}.unverified.$ansAcronym"
+    def perTestCaseName(name: String) = name
 
     private def readMandatoryEnvVar(name: String): String = {
       sys.env.get(name) match {
@@ -468,21 +459,20 @@ object SpliceTests extends LazyLogging {
       }
     }
 
-    def auth0UtilFromEnvVars(tenant: String): Auth0Util = {
-      val (mgmtPrefix, domainPrefix) = tenant match {
+    def auth0UtilFromEnvVars(domain: String, tenant: String): Auth0Util = {
+      val prefix = tenant match {
         // Used for preflight checks
-        case "dev" => ("AUTH0_CN", "SPLICE_OAUTH_DEV")
+        case "dev" => "AUTH0_CN"
         // Used for sv preflight checks
-        case "sv" => ("AUTH0_SV", "SPLICE_OAUTH_SV_TEST")
+        case "sv" => "AUTH0_SV"
         // Used for validator preflight checks
-        case "validator" => ("AUTH0_VALIDATOR", "SPLICE_OAUTH_VALIDATOR_TEST")
+        case "validator" => "AUTH0_VALIDATOR"
         // Used locally
-        case "test" => ("AUTH0_TESTS", "SPLICE_OAUTH_TEST")
+        case "test" => "AUTH0_TESTS"
         case _ => fail(s"Invalid tenant value: $tenant")
       }
-      val domain = s"https://${readMandatoryEnvVar(s"${domainPrefix}_AUTHORITY")}";
-      val clientId = readMandatoryEnvVar(s"${mgmtPrefix}_MANAGEMENT_API_CLIENT_ID");
-      val clientSecret = readMandatoryEnvVar(s"${mgmtPrefix}_MANAGEMENT_API_CLIENT_SECRET");
+      val clientId = readMandatoryEnvVar(s"${prefix}_MANAGEMENT_API_CLIENT_ID");
+      val clientSecret = readMandatoryEnvVar(s"${prefix}_MANAGEMENT_API_CLIENT_SECRET");
 
       retryAuth0Calls(new Auth0Util(domain, clientId, clientSecret, loggerFactory))
     }
@@ -502,25 +492,6 @@ object SpliceTests extends LazyLogging {
           }
           case ex: Throwable => throw ex // throw anything else
         }
-      }
-    }
-
-    /** Overrides the retry policy for ALL grpc commands executed in the given block */
-    def withCommandRetryPolicy[T](
-        policy: GrpcAdminCommand[?, ?, ?] => GrpcError => Boolean
-    )(block: => T)(implicit env: SpliceTestConsoleEnvironment): T = {
-      val prevD = env.grpcDomainCommandRunner.retryPolicy
-      val prevL = env.grpcLedgerCommandRunner.retryPolicy
-      val prevA = env.grpcAdminCommandRunner.retryPolicy
-      try {
-        env.grpcDomainCommandRunner.setRetryPolicy(policy)
-        env.grpcLedgerCommandRunner.setRetryPolicy(policy)
-        env.grpcAdminCommandRunner.setRetryPolicy(policy)
-        block
-      } finally {
-        env.grpcDomainCommandRunner.setRetryPolicy(prevD)
-        env.grpcLedgerCommandRunner.setRetryPolicy(prevL)
-        env.grpcAdminCommandRunner.setRetryPolicy(prevA)
       }
     }
 

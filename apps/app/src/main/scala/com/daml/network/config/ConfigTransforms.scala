@@ -271,19 +271,8 @@ object ConfigTransforms {
         c.domains.copy(global =
           c.domains.global.copy(buyExtraTraffic =
             c.domains.global.buyExtraTraffic
-              .copy(grpcDeadline = Some(NonNegativeFiniteDuration.ofSeconds(5)))
+              .copy(grpcDeadline = Some(NonNegativeFiniteDuration.ofSeconds(10)))
           )
-        )
-      )
-    )
-
-  def setGrpcDeadlineForTreasuryService(
-      grpcDeadline: Option[NonNegativeFiniteDuration]
-  ): ConfigTransform =
-    ConfigTransforms.updateAllValidatorAppConfigs_(c =>
-      c.copy(treasury =
-        c.treasury.copy(
-          grpcDeadline = grpcDeadline
         )
       )
     )

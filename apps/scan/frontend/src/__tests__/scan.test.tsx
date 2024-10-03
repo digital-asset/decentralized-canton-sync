@@ -1,31 +1,21 @@
 // Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { test, expect } from 'vitest';
 
 import App from '../App';
-import { ScanConfigProvider } from '../utils';
 import { config } from './setup/config';
 
 const spliceInstanceNames = config.spliceInstanceNames;
 
-const AppWithConfig: React.FC = () => {
-  return (
-    <ScanConfigProvider>
-      <App />
-    </ScanConfigProvider>
-  );
-};
-
 test('home screen shows up', async () => {
-  render(<AppWithConfig />);
+  render(<App />);
   const a = await screen.findByText(`${spliceInstanceNames.amuletName} Scan`);
   expect(a).toBeDefined();
 });
 
 test('recent activity link from tab opens a tab', async () => {
-  render(<AppWithConfig />);
+  render(<App />);
   const appLeaderboardLink = screen.getByRole('tab', { name: 'App Leaderboard' });
   fireEvent.click(appLeaderboardLink);
   expect(screen.queryAllByTestId('activity-table')).toHaveLength(0);
@@ -48,29 +38,9 @@ test('recent activity link from tab opens a tab', async () => {
 });
 
 test('recent activity looks up entries', async () => {
-  render(
-    <ScanConfigProvider>
-      <App />
-    </ScanConfigProvider>
-  );
+  render(<App />);
   const ansNameElement = await screen.findByText(
     `charlie.unverified.${spliceInstanceNames.nameServiceNameAcronym.toLowerCase()}`
   );
   expect(ansNameElement).toBeDefined();
-});
-
-test('validator licenses are displayed and paginable', async () => {
-  const user = userEvent.setup();
-  render(<AppWithConfig />);
-  await user.click(screen.getByText('Validators'));
-
-  expect(await screen.findByText('Validator Licenses')).toBeDefined();
-
-  expect(await screen.findByDisplayValue('validator::1')).toBeDefined();
-  expect(screen.queryByText('validator::15')).toBeNull();
-
-  expect(await screen.findByText('View More')).toBeDefined();
-  await user.click(screen.getByText('View More'));
-
-  expect(await screen.findByDisplayValue('validator::15')).toBeDefined();
 });

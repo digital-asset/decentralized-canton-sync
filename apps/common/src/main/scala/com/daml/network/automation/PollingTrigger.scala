@@ -30,7 +30,7 @@ trait PollingTrigger extends Trigger with FlagCloseableAsync {
   private implicit val mc: MetricsContext = MetricsContext(
     "trigger_name" -> this.getClass.getSimpleName,
     "trigger_type" -> "polling",
-  ).withExtraLabels(extraMetricLabels*)
+  )
 
   protected def isRewardOperationTrigger: Boolean = false
 
@@ -68,19 +68,20 @@ trait PollingTrigger extends Trigger with FlagCloseableAsync {
           runningTaskFinishedVar = Some(Promise())
           // TODO(#8526) refactor for better latency reporting
           val latencyTimer = metrics.latency.startAsync()
-          metrics.iterations.mark()
           waitForReadyToWork()
             .flatMap(_ => performWorkIfAvailable())
-            .transform { performedWork =>
+            .andThen { case performedWork =>
               MetricsContext.withExtraMetricLabels(("work_done", performedWork.toString)) { m =>
                 latencyTimer.stop()(m)
               }
 
-              assert(runningTaskFinishedVar.nonEmpty)
-              runningTaskFinishedVar.foreach(_.success(()))
-              runningTaskFinishedVar = None
-
-              performedWork
+              blocking {
+                synchronized {
+                  assert(runningTaskFinishedVar.nonEmpty)
+                  runningTaskFinishedVar.foreach(_.success(()))
+                  runningTaskFinishedVar = None
+                }
+              }
             }
         }
       }
@@ -217,23 +218,15 @@ trait PollingTrigger extends Trigger with FlagCloseableAsync {
   @SuppressWarnings(Array("org.wartremover.warts.Var"))
   private var runningTaskFinishedVar: Option[Promise[Unit]] = None
 
-  override def pause(): Future[Unit] = {
-    withNewTrace(this.getClass.getSimpleName) { implicit traceContext => _ =>
-      logger.debug("Pausing trigger.")
-      blocking {
-        synchronized {
-          pausedVar = true
-          runningTaskFinishedVar.fold(Future.unit)(_.future.map { _ =>
-            logger.debug("Trigger completely paused.")
-          })
-        }
-      }
+  override def pause(): Future[Unit] = blocking {
+    synchronized {
+      pausedVar = true
+      runningTaskFinishedVar.fold(Future.unit)(_.future)
     }
   }
 
   override def resume(): Unit = blocking {
     synchronized {
-      logger.debug("Resuming trigger.")(TraceContext.empty)
       pausedVar = false
     }
   }

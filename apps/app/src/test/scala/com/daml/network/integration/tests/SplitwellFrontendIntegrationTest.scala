@@ -151,25 +151,25 @@ class SplitwellFrontendIntegrationTest
             forExactly(1, rows)(row =>
               matchRow(
                 Seq("sender", "description", "receiver"),
-                Seq(bobParty, s"sent 111.0 $amuletNameAcronym to", charlieParty),
+                Seq(bobParty, "sent 111.0 TLM to", charlieParty),
               )(row)
             )
             forExactly(1, rows)(row =>
               matchRow(
                 Seq("sender", "description", "receiver"),
-                Seq(bobParty, s"sent 400.0 $amuletNameAcronym to", aliceParty),
+                Seq(bobParty, "sent 400.0 TLM to", aliceParty),
               )(row)
             )
             forExactly(1, rows)(row =>
               matchRow(
                 Seq("sender", "description"),
-                Seq(charlieParty, s"paid 333.0 $amuletNameAcronym for Digestivs"),
+                Seq(charlieParty, "paid 333.0 TLM for Digestivs"),
               )(row)
             )
             forExactly(1, rows)(row =>
               matchRow(
                 Seq("sender", "description"),
-                Seq(aliceParty, s"paid 1200.0 $amuletNameAcronym for Team lunch"),
+                Seq(aliceParty, "paid 1200.0 TLM for Team lunch"),
               )(row)
             )
           }
@@ -244,12 +244,12 @@ class SplitwellFrontendIntegrationTest
             case Seq(row1, row2) =>
               matchRow(
                 Seq("ans-entry", "description"),
-                Seq(aliceAns, s"paid 1000.0 $amuletNameAcronym for Team lunch"),
+                Seq(aliceAns, "paid 1000.0 TLM for Team lunch"),
               )(row1)
 
               matchRow(
                 Seq("sender", "description", "receiver"),
-                Seq(bobAns, s"sent 500.0 $amuletNameAcronym to", aliceAns),
+                Seq(bobAns, "sent 500.0 TLM to", aliceAns),
               )(row2)
           }
         }

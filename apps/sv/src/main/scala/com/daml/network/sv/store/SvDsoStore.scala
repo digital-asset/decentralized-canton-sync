@@ -10,8 +10,8 @@ import com.daml.network.automation.MultiDomainExpiredContractTrigger.ListExpired
 import com.daml.network.automation.TransferFollowTrigger.Task as FollowTask
 import com.daml.network.codegen.java.splice.amulet.UnclaimedReward
 import com.daml.network.codegen.java.splice.amuletrules.{
-  AmuletRules_MiningRound_Archive,
   AppTransferContext,
+  AmuletRules_MiningRound_Archive,
 }
 import com.daml.network.codegen.java.splice.types.Round
 import com.daml.network.codegen.java.splice.validatorlicense as vl
@@ -27,11 +27,11 @@ import com.daml.network.codegen.java.splice.dsorules.{
   ActionRequiringConfirmation,
   DsoRules_ConfirmSvOnboarding,
   VoteRequest,
+  DsoRules_CloseVoteRequestResult,
 }
 import com.daml.network.codegen.java.splice.svonboarding as so
 import com.daml.network.codegen.java.splice.wallet.subscriptions as sub
 import com.daml.network.codegen.java.splice
-import com.daml.network.codegen.java.splice.validatorlicense.ValidatorLicense
 import com.daml.network.environment.{PackageIdResolver, RetryProvider}
 import com.daml.network.migration.DomainMigrationInfo
 import com.daml.network.scan.admin.api.client.ScanConnection.GetAmuletRulesDomain
@@ -60,8 +60,7 @@ trait SvDsoStore
     extends AppStore
     with PackageIdResolver.HasAmuletRules
     with DsoRulesStore
-    with MiningRoundsStore
-    with VotesStore {
+    with MiningRoundsStore {
   import SvDsoStore.{amuletRulesFollowers, dsoRulesFollowers}
 
   protected val outerLoggerFactory: NamedLoggerFactory
@@ -76,6 +75,17 @@ trait SvDsoStore
   def key: SvStore.Key
 
   def domainMigrationId: Long
+
+  def listVoteRequestResults(
+      actionName: Option[String],
+      accepted: Option[Boolean],
+      requester: Option[String],
+      effectiveFrom: Option[String],
+      effectiveTo: Option[String],
+      limit: Limit = Limit.DefaultLimit,
+  )(implicit
+      tc: TraceContext
+  ): Future[Seq[DsoRules_CloseVoteRequestResult]]
 
   def lookupSvStatusReport(svPartyId: PartyId)(implicit
       tc: TraceContext
@@ -253,23 +263,7 @@ trait SvDsoStore
     ]]
   ]
 
-  def listValidatorLivenessActivityRecordsOnDomain(
-      round: Long,
-      domainId: DomainId,
-      limit: Limit,
-  )(implicit tc: TraceContext): Future[
-    Seq[Contract[
-      splice.validatorlicense.ValidatorLivenessActivityRecord.ContractId,
-      splice.validatorlicense.ValidatorLivenessActivityRecord,
-    ]]
-  ]
-
   def countValidatorFaucetCouponsOnDomain(
-      round: Long,
-      domainId: DomainId,
-  )(implicit tc: TraceContext): Future[Long]
-
-  def countValidatorLivenessActivityRecordsOnDomain(
       round: Long,
       domainId: DomainId,
   )(implicit tc: TraceContext): Future[Long]
@@ -281,17 +275,6 @@ trait SvDsoStore
       tc: TraceContext
   ): Future[
     Seq[SvDsoStore.RoundCounterpartyBatch[splice.validatorlicense.ValidatorFaucetCoupon.ContractId]]
-  ]
-
-  def listValidatorLivenessActivityRecordsGroupedByCounterparty(
-      domain: DomainId,
-      totalCouponsLimit: Limit,
-  )(implicit
-      tc: TraceContext
-  ): Future[
-    Seq[SvDsoStore.RoundCounterpartyBatch[
-      splice.validatorlicense.ValidatorLivenessActivityRecord.ContractId
-    ]]
   ]
 
   def listSvRewardCouponsOnDomain(
@@ -372,17 +355,12 @@ trait SvDsoStore
             totalCouponsLimit = totalCouponsLimit,
           )
         else Future.successful(Seq.empty)
-      validatorLivenessActivityRecordGroups <-
-        listValidatorLivenessActivityRecordsGroupedByCounterparty(
-          domain,
-          totalCouponsLimit = totalCouponsLimit,
-        )
       svRewardCouponGroups <- listSvRewardCouponsGroupedByCounterparty(
         domain,
         totalCouponsLimit = totalCouponsLimit,
       )
       roundNumbers =
-        (appRewardGroups ++ validatorRewardGroups ++ validatorFaucetGroups ++ validatorLivenessActivityRecordGroups ++ svRewardCouponGroups)
+        (appRewardGroups ++ validatorRewardGroups ++ validatorFaucetGroups ++ svRewardCouponGroups)
           .map(_.roundNumber)
           .toSet
       closedRounds <- listClosedRounds(roundNumbers, domain, totalCouponsLimit)
@@ -396,7 +374,6 @@ trait SvDsoStore
           appCoupons = batch,
           svRewardCoupons = Seq.empty,
           validatorFaucets = Seq.empty,
-          validatorLivenessActivityRecords = Seq.empty,
         )
     } ++
       filterRoundCounterpartyBatch(validatorRewardGroups, closedRoundMap).map {
@@ -408,7 +385,6 @@ trait SvDsoStore
             appCoupons = Seq.empty,
             svRewardCoupons = Seq.empty,
             validatorFaucets = Seq.empty,
-            validatorLivenessActivityRecords = Seq.empty,
           )
       } ++ filterRoundCounterpartyBatch(validatorFaucetGroups, closedRoundMap).map {
         case (closedRound, batch) =>
@@ -419,18 +395,6 @@ trait SvDsoStore
             appCoupons = Seq.empty,
             svRewardCoupons = Seq.empty,
             validatorFaucets = batch,
-            validatorLivenessActivityRecords = Seq.empty,
-          )
-      } ++ filterRoundCounterpartyBatch(validatorLivenessActivityRecordGroups, closedRoundMap).map {
-        case (closedRound, batch) =>
-          ExpiredRewardCouponsBatch(
-            closedRoundCid = closedRound.contractId,
-            closedRoundNumber = closedRound.payload.round.number,
-            validatorCoupons = Seq.empty,
-            appCoupons = Seq.empty,
-            svRewardCoupons = Seq.empty,
-            validatorFaucets = Seq.empty,
-            validatorLivenessActivityRecords = batch,
           )
       } ++ filterRoundCounterpartyBatch(svRewardCouponGroups, closedRoundMap).map {
         case (closedRound, batch) =>
@@ -441,7 +405,6 @@ trait SvDsoStore
             appCoupons = Seq.empty,
             svRewardCoupons = batch,
             validatorFaucets = Seq.empty,
-            validatorLivenessActivityRecords = Seq.empty,
           )
       }
   }
@@ -495,16 +458,13 @@ trait SvDsoStore
             domain,
             PageLimit.tryCreate(1),
           )
-          validatorLivenessActivityRecords <- listValidatorLivenessActivityRecordsOnDomain(
-            round.payload.round.number,
-            domain,
-            PageLimit.tryCreate(1),
-          )
           svRewardCoupons <- listSvRewardCouponsOnDomain(
             round.payload.round.number,
             domain,
             PageLimit.tryCreate(1),
           )
+          // Note: We ignore validator faucet coupons because we cannot run
+          // expiry automation for them because they have the owner as a signatory.
           action = new ARC_AmuletRules(
             new CRARC_MiningRound_Archive(
               new AmuletRules_MiningRound_Archive(
@@ -518,7 +478,7 @@ trait SvDsoStore
             // archivable if ...
             if (
               // ... there are no unclaimed rewards left in this round
-              appRewardCoupons.isEmpty && validatorRewardCoupons.isEmpty && validatorLivenessActivityRecords.isEmpty && svRewardCoupons.isEmpty &&
+              appRewardCoupons.isEmpty && validatorRewardCoupons.isEmpty && svRewardCoupons.isEmpty &&
               // ... and a confirmation to archive is not already created by this SV
               confirmationQueryResult.value.isEmpty
             ) Some(QueryResult(confirmationQueryResult.offset, AssignedContract(round, domain)))
@@ -732,9 +692,13 @@ trait SvDsoStore
       tc: TraceContext
   ): Future[QueryResult[Option[Contract[vl.ValidatorLicense.ContractId, vl.ValidatorLicense]]]]
 
-  def listValidatorLicensePerValidator(validator: String, limit: Limit)(implicit
+  /** List all ValidatorLicenses */
+  def listValidatorLicenses(limit: Limit = Limit.DefaultLimit)(implicit
       tc: TraceContext
-  ): Future[Seq[Contract[ValidatorLicense.ContractId, ValidatorLicense]]]
+  ): Future[Seq[Contract[vl.ValidatorLicense.ContractId, vl.ValidatorLicense]]] =
+    multiDomainAcsStore
+      .listContracts(vl.ValidatorLicense.COMPANION, limit)
+      .map(_ map (_.contract))
 
   def getTotalPurchasedMemberTraffic(memberId: Member, domainId: DomainId)(implicit
       tc: TraceContext
@@ -752,11 +716,44 @@ trait SvDsoStore
       .listContracts(splice.dso.amuletprice.AmuletPriceVote.COMPANION, limit)
       .map(_ map (_.contract))
 
+  def listVoteRequests(limit: Limit = Limit.DefaultLimit)(implicit tc: TraceContext): Future[
+    Seq[Contract[splice.dsorules.VoteRequest.ContractId, splice.dsorules.VoteRequest]]
+  ] =
+    multiDomainAcsStore
+      .listContracts(splice.dsorules.VoteRequest.COMPANION, limit)
+      .map(_ map (_.contract))
+
   def lookupVoteByThisSvAndVoteRequestWithOffset(
       voteRequestCid: splice.dsorules.VoteRequest.ContractId
   )(implicit
       tc: TraceContext
   ): Future[QueryResult[Option[splice.dsorules.Vote]]]
+
+  def lookupVoteRequest(contractId: splice.dsorules.VoteRequest.ContractId)(implicit
+      tc: TraceContext
+  ): Future[Option[Contract[splice.dsorules.VoteRequest.ContractId, splice.dsorules.VoteRequest]]]
+
+  def getVoteRequest(contractId: splice.dsorules.VoteRequest.ContractId)(implicit
+      tc: TraceContext
+  ): Future[Contract[splice.dsorules.VoteRequest.ContractId, splice.dsorules.VoteRequest]] = {
+    import com.digitalasset.canton.participant.pretty.Implicits.prettyContractId
+    lookupVoteRequest(contractId).map(
+      _.getOrElse(
+        throw Status.NOT_FOUND
+          .withDescription(show"Vote request not found for tracking-id $contractId")
+          .asRuntimeException()
+      )
+    )
+  }
+
+  def listVoteRequestsByTrackingCid(
+      voteRequestCids: Seq[splice.dsorules.VoteRequest.ContractId],
+      limit: Limit = Limit.DefaultLimit,
+  )(implicit
+      tc: TraceContext
+  ): Future[
+    Seq[Contract[VoteRequest.ContractId, VoteRequest]]
+  ]
 
   def lookupVoteRequestByThisSvAndActionWithOffset(action: ActionRequiringConfirmation)(implicit
       tc: TraceContext
@@ -996,6 +993,7 @@ object SvDsoStore {
     splice.ans.AnsEntry.COMPANION,
     splice.ans.AnsEntryContext.COMPANION,
     splice.ans.AnsRules.COMPANION,
+    splice.transferpreapproval.TransferPreapproval.COMPANION,
     splice.dso.amuletprice.AmuletPriceVote.COMPANION,
     splice.wallet.subscriptions.TerminatedSubscription.COMPANION, // TODO (#8782) move it to UserWalletStore.templatesMovedByMyAutomation
   )
@@ -1167,15 +1165,6 @@ object SvDsoStore {
           rewardParty = Some(PartyId.tryFromProtoPrimitive(contract.payload.validator)),
         )
       },
-      mkFilter(splice.validatorlicense.ValidatorLivenessActivityRecord.COMPANION)(co =>
-        co.payload.dso == dso
-      ) { contract =>
-        DsoAcsStoreRowData(
-          contract,
-          rewardRound = Some(contract.payload.round.number),
-          rewardParty = Some(PartyId.tryFromProtoPrimitive(contract.payload.validator)),
-        )
-      },
       mkFilter(splice.amulet.SvRewardCoupon.COMPANION)(co => co.payload.dso == dso) { contract =>
         DsoAcsStoreRowData(
           contract,
@@ -1285,6 +1274,13 @@ object SvDsoStore {
           subscriptionReferenceContractId = Some(contract.payload.reference),
         )
       },
+      mkFilter(splice.transferpreapproval.TransferPreapproval.COMPANION)(co =>
+        co.payload.dso == dso
+      ) { contract =>
+        DsoAcsStoreRowData(
+          contract
+        )
+      },
     )
 
     MultiDomainAcsStore.SimpleContractFilter(
@@ -1322,9 +1318,6 @@ case class ExpiredRewardCouponsBatch(
     appCoupons: Seq[splice.amulet.AppRewardCoupon.ContractId],
     svRewardCoupons: Seq[splice.amulet.SvRewardCoupon.ContractId],
     validatorFaucets: Seq[splice.validatorlicense.ValidatorFaucetCoupon.ContractId],
-    validatorLivenessActivityRecords: Seq[
-      splice.validatorlicense.ValidatorLivenessActivityRecord.ContractId
-    ],
 ) extends PrettyPrinting {
   override def pretty: Pretty[this.type] =
     prettyOfClass(
@@ -1334,9 +1327,6 @@ case class ExpiredRewardCouponsBatch(
       customParam(inst => s"appCoupons: ${inst.appCoupons}"),
       customParam(inst => s"svRewardCoupons: ${inst.svRewardCoupons}"),
       customParam(inst => s"validatorFaucetCoupons: ${inst.validatorFaucets}"),
-      customParam(inst =>
-        s"validatorLivenessActivityRecords: ${inst.validatorLivenessActivityRecords}"
-      ),
     )
 }
 

@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 import { DecoderError } from '@mojotech/json-type-validation/dist/types/decoder';
 import { useMutation } from '@tanstack/react-query';
-import { ActionView, DisableConditionally, SvClientProvider } from 'common-frontend';
+import { DisableConditionally, SvClientProvider } from 'common-frontend';
 import { getUTCWithOffset } from 'common-frontend-utils';
 import { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import {
   Box,
@@ -28,14 +28,14 @@ import { ActionRequiringConfirmation } from '@daml.js/splice-dso-governance/lib/
 import { useSvAdminClient } from '../../contexts/SvAdminServiceContext';
 import { useDsoInfos } from '../../contexts/SvContext';
 import { useListDsoRulesVoteRequests } from '../../hooks/useListVoteRequests';
-import { useSvConfig } from '../../utils';
+import { config } from '../../utils';
 import { Alerting, AlertState } from '../../utils/Alerting';
 import {
   isExpirationBeforeEffectiveDate,
   isScheduleDateTimeValid,
   VoteRequestValidity,
 } from '../../utils/validations';
-import SvListVoteRequests from './SvListVoteRequests';
+import ListVoteRequests from './ListVoteRequests';
 import AddFutureAmuletConfigSchedule from './actions/AddFutureAmuletConfigSchedule';
 import GrantFeaturedAppRight from './actions/GrantFeaturedAppRight';
 import OffboardSv from './actions/OffboardSv';
@@ -55,7 +55,7 @@ export function actionFromFormIsError(
   return !!(action as { formError: DecoderError }).formError;
 }
 
-export const CreateVoteRequest: React.FC = () => {
+const VoteRequest: React.FC = () => {
   // States related to vote requests
   const [actionName, setActionName] = useState('SRARC_OffboardSv');
   const [summary, setSummary] = useState<string>('');
@@ -119,42 +119,38 @@ export const CreateVoteRequest: React.FC = () => {
   ];
 
   const [action, setAction] = useState<ActionFromForm | undefined>(undefined);
-  const chooseAction = useCallback(
-    (action: ActionFromForm) => {
-      try {
-        ActionRequiringConfirmation.encode(action as ActionRequiringConfirmation);
-        setAction(action);
-      } catch (error) {
-        console.log('Caught expected DecoderError in case of null values: ', error);
-      }
-      const max = (time1: Dayjs, time2: Dayjs) => (time1 > time2 ? time1 : time2);
-      if (!actionFromFormIsError(action)) {
-        if (action.tag === 'ARC_AmuletRules') {
-          switch (action.value.amuletRulesAction.tag) {
-            case 'CRARC_AddFutureAmuletConfigSchedule': {
-              setMaxDateTimeIfAddFutureAmuletConfigSchedule(
-                max(dayjs(), dayjs(action.value.amuletRulesAction.value.newScheduleItem._1))
-              );
-              return;
-            }
-            case 'CRARC_UpdateFutureAmuletConfigSchedule': {
-              setMaxDateTimeIfAddFutureAmuletConfigSchedule(
-                max(dayjs(), dayjs(action.value.amuletRulesAction.value.scheduleItem._1))
-              );
-              return;
-            }
-            case 'CRARC_RemoveFutureAmuletConfigSchedule': {
-              setMaxDateTimeIfAddFutureAmuletConfigSchedule(
-                max(dayjs(), dayjs(action.value.amuletRulesAction.value.scheduleTime))
-              );
-              return;
-            }
+
+  function max(time1: Dayjs, time2: Dayjs): Dayjs {
+    return time1 > time2 ? time1 : time2;
+  }
+
+  const chooseAction = (action: ActionFromForm) => {
+    setAction(action);
+    if (!actionFromFormIsError(action)) {
+      if (action.tag === 'ARC_AmuletRules') {
+        switch (action.value.amuletRulesAction.tag) {
+          case 'CRARC_AddFutureAmuletConfigSchedule': {
+            setMaxDateTimeIfAddFutureAmuletConfigSchedule(
+              max(dayjs(), dayjs(action.value.amuletRulesAction.value.newScheduleItem._1))
+            );
+            return;
+          }
+          case 'CRARC_UpdateFutureAmuletConfigSchedule': {
+            setMaxDateTimeIfAddFutureAmuletConfigSchedule(
+              max(dayjs(), dayjs(action.value.amuletRulesAction.value.scheduleItem._1))
+            );
+            return;
+          }
+          case 'CRARC_RemoveFutureAmuletConfigSchedule': {
+            setMaxDateTimeIfAddFutureAmuletConfigSchedule(
+              max(dayjs(), dayjs(action.value.amuletRulesAction.value.scheduleTime))
+            );
+            return;
           }
         }
       }
-    },
-    [setAction, setMaxDateTimeIfAddFutureAmuletConfigSchedule]
-  );
+    }
+  };
 
   function validateAction(action: ActionRequiringConfirmation) {
     if (action?.tag !== 'ARC_AmuletRules') {
@@ -227,14 +223,6 @@ export const CreateVoteRequest: React.FC = () => {
       console.error(`Failed to send vote request to dso`, error);
     },
   });
-
-  // used and valid only for dsoRules-based actions
-  let expiresAt;
-  try {
-    expiresAt = expiration?.toISOString();
-  } catch (error) {
-    expiresAt = undefined;
-  }
 
   // TODO (#4966): add a popup to ask confirmation
   return (
@@ -332,49 +320,33 @@ export const CreateVoteRequest: React.FC = () => {
               closeOnSelect
             />
           </Stack>
-          {action && (
-            <Stack direction="column" mb={4} spacing={1}>
-              <Typography variant="h5">Review vote request</Typography>
-              <ActionView
-                action={
-                  ActionRequiringConfirmation.encode(
-                    action as ActionRequiringConfirmation
-                  ) as ActionRequiringConfirmation
-                }
-                expiresAt={expiresAt}
-              />
-            </Stack>
-          )}
           <Alerting alertState={alertMessage} />
-
-          <Stack direction="column" mb={4} spacing={1}>
-            <DisableConditionally
-              conditions={[
-                { disabled: createVoteRequestMutation.isLoading, reason: 'Loading...' },
-                {
-                  disabled: !action || actionFromFormIsError(action),
-                  reason: !action
-                    ? 'No action'
-                    : `Action is not valid: ${
-                        actionFromFormIsError(action) && JSON.stringify(action.formError)
-                      }`,
-                },
-                { disabled: summary === '', reason: 'No summary' },
-              ]}
+          <DisableConditionally
+            conditions={[
+              { disabled: createVoteRequestMutation.isLoading, reason: 'Loading...' },
+              {
+                disabled: !action || actionFromFormIsError(action),
+                reason: !action
+                  ? 'No action'
+                  : `Action is not valid: ${
+                      actionFromFormIsError(action) && JSON.stringify(action.formError)
+                    }`,
+              },
+              { disabled: summary === '', reason: 'No summary' },
+            ]}
+          >
+            <Button
+              id="create-voterequest-submit-button"
+              fullWidth
+              type={'submit'}
+              size="large"
+              onClick={() => {
+                createVoteRequestMutation.mutate();
+              }}
             >
-              <Button
-                id="create-voterequest-submit-button"
-                fullWidth
-                type={'submit'}
-                size="large"
-                onClick={() => {
-                  createVoteRequestMutation.mutate();
-                }}
-              >
-                Send request to collective
-              </Button>
-            </DisableConditionally>
-          </Stack>
+              Send request to collective
+            </Button>
+          </DisableConditionally>
         </CardContent>
       </Card>
     </Stack>
@@ -382,12 +354,10 @@ export const CreateVoteRequest: React.FC = () => {
 };
 
 const VoteRequestWithContexts: React.FC = () => {
-  const config = useSvConfig();
-
   return (
     <SvClientProvider url={config.services.sv.url}>
-      <CreateVoteRequest />
-      <SvListVoteRequests />
+      <VoteRequest />
+      <ListVoteRequests />
     </SvClientProvider>
   );
 };

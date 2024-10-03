@@ -460,22 +460,6 @@ paths:
           $ref: "../../../../common/src/main/openapi/common-external.yaml#/components/responses/404"
         "500":
           $ref: "../../../../common/src/main/openapi/common-external.yaml#/components/responses/500"
-  /v0/wallet/validator-liveness-activity-records:
-    get:
-      tags: [wallet]
-      x-jvm-package: wallet
-      operationId: "listValidatorLivenessActivityRecords"
-      responses:
-        "200":
-          description: ok
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ListValidatorLivenessActivityRecordsResponse"
-        "404":
-          $ref: "../../../../common/src/main/openapi/common-external.yaml#/components/responses/404"
-        "500":
-          $ref: "../../../../common/src/main/openapi/common-external.yaml#/components/responses/500"
   /v0/wallet/sv-reward-coupons:
     get:
       tags: [wallet]
@@ -524,6 +508,38 @@ paths:
           $ref: "../../../../common/src/main/openapi/common-external.yaml#/components/responses/404"
         "500":
           $ref: "../../../../common/src/main/openapi/common-external.yaml#/components/responses/500"
+  /v0/wallet/transfer-preapproval:
+    post:
+      tags: [ wallet ]
+      x-jvm-package: wallet
+      operationId: "createTransferPreapproval"
+      responses:
+        "200":
+          description: Transfer preapproval was created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateTransferPreapprovalResponse"
+        "409":
+          description: Transfer preapproval already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateTransferPreapprovalResponse"
+  /v0/wallet/transfer-preapproval/send:
+    post:
+      tags: [wallet]
+      x-jvm-package: wallet
+      operationId: "transferPreapprovalSend"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/TransferPreapprovalSendRequest"
+      responses:
+        "200":
+          description: ok
 components:
   schemas:
     UserStatusResponse:
@@ -582,9 +598,6 @@ components:
         - amount
       properties:
         amount:
-          type: string
-        command_id:
-          description: Command id used for deduplication, if not specified a random UUID is used
           type: string
 
     TapResponse:
@@ -787,17 +800,6 @@ components:
           items:
             $ref: "../../../../common/src/main/openapi/common-external.yaml#/components/schemas/Contract"
 
-    ListValidatorLivenessActivityRecordsResponse:
-      type: object
-      description: Includes only up to 1000 elements.
-      required:
-        - validator_liveness_activity_records
-      properties:
-        validator_liveness_activity_records:
-          type: array
-          items:
-            $ref: "../../../../common/src/main/openapi/common-external.yaml#/components/schemas/Contract"
-
     ListSvRewardCouponsResponse:
       type: object
       description: Includes only up to 1000 elements.
@@ -942,3 +944,22 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ListTransactionsResponseItem"
+
+    CreateTransferPreapprovalResponse:
+      type: object
+      required:
+        - transfer_preapproval_contract_id
+      properties:
+        transfer_preapproval_contract_id:
+          type: string
+
+    TransferPreapprovalSendRequest:
+      type: object
+      required:
+        - receiver_party_id
+        - amount
+      properties:
+        receiver_party_id:
+          type: string
+        amount:
+          type: string

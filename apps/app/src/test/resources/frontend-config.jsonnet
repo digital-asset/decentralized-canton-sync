@@ -1,37 +1,40 @@
+local auth0Authority = 'https://canton-network-test.us.auth0.com';
+local auth0ClientId = 'Ob8YZSBvbZR3vsM2vGKllg3KRlRgLQSw';
+local authAudience = 'https://canton.network.global';
 local authScope = 'daml_ledger_api';
 local authSecret = 'test';
 local testAuthSecret = 'test';
 
 
-local authHsUnsafe(secret, auth0Config) = {
+local authHsUnsafe(secret) = {
   algorithm: 'hs-256-unsafe',
   secret: secret,
-  token_audience: auth0Config.audience,
+  token_audience: authAudience,
   token_scope: authScope,
 };
 
-local authRs(auth0Config) = {
+local authRs() = {
   algorithm: 'rs-256',
-  authority: auth0Config.authority,
-  client_id: auth0Config.clientId,
-  token_audience: auth0Config.audience,
+  authority: auth0Authority,
+  client_id: auth0ClientId,
+  token_audience: authAudience,
   token_scope: authScope,
 };
 
 
-local auth(algorithm, auth0Config) =
+local auth(algorithm) =
   if (algorithm == 'rs-256') then
-    { auth: authRs(auth0Config) }
+    { auth: authRs() }
   else if (algorithm == 'hs-256-unsafe') then
-    { auth: authHsUnsafe(authSecret, auth0Config) }
+    { auth: authHsUnsafe(authSecret) }
   else if (algorithm == 'none') then
     {}
   else
     error 'Unknown auth algorithm' + algorithm;
 
-local testAuth(enabled, auth0Config) =
+local testAuth(enabled) =
   if (enabled) then
-    { testAuth: authHsUnsafe(testAuthSecret, auth0Config) }
+    { testAuth: authHsUnsafe(testAuthSecret) }
   else
     {};
 
@@ -103,14 +106,19 @@ local services(node, clusterProtocol, clusterAddress, port) =
   else
     error 'Unknown node name ' + node;
 
+local clusterUrl(app) =
+  if (app == 'wallet') then
+    { clusterUrl: 'https://TARGET_HOSTNAME' }
+  else
+    {};
+
 function(
   authAlgorithm='rs-256',
   enableTestAuth,
-  auth0Config,
   validatorNode,
   app,
   clusterProtocol,
   clusterAddress,
   spliceInstanceNames,
   port,
-) auth(authAlgorithm, auth0Config) + testAuth(std.parseJson(enableTestAuth), auth0Config) + services(validatorNode, clusterProtocol, clusterAddress, port) + spliceInstanceNames
+) auth(authAlgorithm) + testAuth(std.parseJson(enableTestAuth)) + services(validatorNode, clusterProtocol, clusterAddress, port) + spliceInstanceNames + clusterUrl(app)

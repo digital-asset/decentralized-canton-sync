@@ -24,7 +24,7 @@ class WalletFrontendIntegrationTest
 
     "tap" should {
 
-      def onboardAndTapTest(damlUser: String)(implicit env: SpliceTestConsoleEnvironment) = {
+      def onboardAndTapTest(damlUser: String) = {
         withFrontEnd("alice") { implicit webDriver =>
           actAndCheck(
             "User logs in", {
@@ -58,7 +58,7 @@ class WalletFrontendIntegrationTest
             val feeUpperBound = walletUsdToAmulet(feeUpperBoundUsd)
 
             val (ccTextBefore, usdTextBefore) = eventually() {
-              val ccTextBefore = find(id("wallet-balance-amulet")).value.text.trim
+              val ccTextBefore = find(id("wallet-balance-cc")).value.text.trim
               val usdTextBefore = find(id("wallet-balance-usd")).value.text.trim
               ccTextBefore should not be "..."
               usdTextBefore should not be "..."
@@ -68,13 +68,13 @@ class WalletFrontendIntegrationTest
             val usdBefore = BigDecimal(usdTextBefore.split(" ").head)
 
             actAndCheck(
-              s"User taps $amount Amulet in the wallet", {
+              s"User taps $amount CC in the wallet", {
                 tapAmulets(amountUsd)
               },
             )(
               "User sees the updated balance",
               _ => {
-                val ccText = find(id("wallet-balance-amulet")).value.text.trim
+                val ccText = find(id("wallet-balance-cc")).value.text.trim
                 val usdText = find(id("wallet-balance-usd")).value.text.trim
 
                 ccText should not be "..."
@@ -128,7 +128,7 @@ class WalletFrontendIntegrationTest
             "Alice has unchanged balance and sees error message",
             _ => {
               import WalletFrontendTestUtil.*
-              val ccText = find(id("wallet-balance-amulet")).value.text.trim
+              val ccText = find(id("wallet-balance-cc")).value.text.trim
               val usdText = find(id("wallet-balance-usd")).value.text.trim
               val errorMessage = find(className(errorDisplayElementClass)).value.text.trim
 
@@ -219,7 +219,7 @@ class WalletFrontendIntegrationTest
             browseToAliceWallet(aliceDamlUser)
           },
         )(
-          "Alice sees her Name Service entry name",
+          "Alice sees her CNS entry name",
           _ => {
             seleniumText(find(id("logged-in-user"))) should matchText(entryName)
           },

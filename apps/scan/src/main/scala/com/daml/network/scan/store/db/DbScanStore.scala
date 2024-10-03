@@ -10,25 +10,32 @@ import com.daml.network.codegen.java.splice.amulet.FeaturedAppRight
 import com.daml.network.codegen.java.splice.amuletrules.AmuletRules
 import com.daml.network.codegen.java.splice.ans.{AnsEntry, AnsRules}
 import com.daml.network.codegen.java.splice.decentralizedsynchronizer.MemberTraffic
+import com.daml.network.codegen.java.splice.transferpreapproval.TransferPreapproval
 import com.daml.network.codegen.java.splice.validatorlicense.ValidatorLicense
 import com.daml.network.codegen.java.splice.dso.svstate.SvNodeState
-import com.daml.network.codegen.java.splice.dsorules.{DsoRules_CloseVoteRequestResult, VoteRequest}
 import com.daml.network.environment.RetryProvider
 import com.daml.network.migration.DomainMigrationInfo
 import com.daml.network.scan.admin.api.client.commands.HttpScanAppClient
+import com.daml.network.scan.store.SortOrder.{Ascending, Descending}
 import com.daml.network.scan.store.TxLogEntry.EntryType
 import com.daml.network.scan.store.db.ScanTables.txLogTableName
 import com.daml.network.scan.store.{
   OpenMiningRoundTxLogEntry,
   ScanStore,
   ScanTxLogParser,
+  SortOrder,
   TxLogEntry,
-  VoteRequestTxLogEntry,
 }
 import com.daml.network.store.db.DbMultiDomainAcsStore.StoreDescriptor
 import com.daml.network.store.db.{AcsQueries, AcsTables, DbTxLogAppStore, TxLogQueries}
-import com.daml.network.store.{DbVotesStoreQueryBuilder, Limit, PageLimit, SortOrder, TxLogStore}
-import com.daml.network.util.{Contract, ContractWithState, QualifiedName, TemplateJsonDecoder}
+import com.daml.network.store.{Limit, LimitHelpers, PageLimit, TxLogStore}
+import com.daml.network.util.{
+  AssignedContract,
+  Contract,
+  ContractWithState,
+  QualifiedName,
+  TemplateJsonDecoder,
+}
 import com.digitalasset.canton.caching.CaffeineCache
 import com.digitalasset.canton.caching.CaffeineCache.FutureAsyncCacheLoader
 import com.digitalasset.canton.config.NonNegativeDuration
@@ -38,7 +45,7 @@ import com.digitalasset.canton.lifecycle.CloseContext
 import com.digitalasset.canton.lifecycle.FlagCloseableAsync
 import com.digitalasset.canton.lifecycle.AsyncCloseable
 import com.digitalasset.canton.lifecycle.AsyncOrSyncCloseable
-import com.digitalasset.canton.logging.NamedLoggerFactory
+import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.resource.DbStorage
 import com.digitalasset.canton.resource.DbStorage.Implicits.BuilderChain.toSQLActionBuilderChain
 import com.digitalasset.canton.topology.{DomainId, Member, ParticipantId, PartyId}
@@ -73,7 +80,7 @@ class DbScanStore(
       // Any change in the store descriptor will lead to previously deployed applications
       // forgetting all persisted data once they upgrade to the new version.
       storeDescriptor = StoreDescriptor(
-        version = 1, // TODO (#13454): bump when it will backfill.
+        version = 1,
         name = "DbScanStore",
         party = key.dsoParty,
         participant = participantId,
@@ -89,9 +96,10 @@ class DbScanStore(
     with AcsTables
     with AcsQueries
     with TxLogQueries[TxLogEntry]
+    with NamedLogging
+    with LimitHelpers
     with FlagCloseableAsync
-    with RetryProvider.Has
-    with DbVotesStoreQueryBuilder {
+    with RetryProvider.Has {
 
   import multiDomainAcsStore.waitUntilAcsIngested
   private val storeMetrics = new DbScanStoreMetrics(retryProvider.metricsFactory)
@@ -293,6 +301,33 @@ class DbScanStore(
     } yield contractWithStateFromRow(AnsEntry.COMPANION)(row)).value
   }
 
+  override def lookupTransferPreapprovalByParty(
+      partyId: PartyId
+  )(implicit tc: TraceContext): Future[
+    Option[ContractWithState[TransferPreapproval.ContractId, TransferPreapproval]]
+  ] = waitUntilAcsIngested {
+    (for {
+      row <- storage
+        .querySingle(
+          selectFromAcsTableWithState(
+            ScanTables.acsTableName,
+            storeId,
+            domainMigrationId,
+            where = sql"""
+                template_id_qualified_name = ${QualifiedName(
+                TransferPreapproval.COMPANION.TEMPLATE_ID
+              )}
+                and transfer_preapproval_receiver = $partyId
+            """,
+            orderLimit = sql"""
+                limit 1
+            """,
+          ).headOption,
+          "lookupTransferPreapprovalReceiver",
+        )
+    } yield contractWithStateFromRow(TransferPreapproval.COMPANION)(row)).value
+  }
+
   override def listTransactions(
       pageEndEventId: Option[String],
       sortOrder: SortOrder,
@@ -308,9 +343,9 @@ class DbScanStore(
                 )"""
       // Literal sort order since Postgres complains when trying to bind it to a parameter
       val (compareEntryNumber, orderLimit) = sortOrder match {
-        case SortOrder.Ascending =>
+        case Ascending =>
           (sql" > ", sql""" order by entry_number asc limit ${sqlLimit(limit)};""")
-        case SortOrder.Descending =>
+        case Descending =>
           (sql" < ", sql""" order by entry_number desc limit ${sqlLimit(limit)};""")
       }
 
@@ -758,7 +793,7 @@ class DbScanStore(
 
   def lookupSvNodeState(svPartyId: PartyId)(implicit
       tc: TraceContext
-  ): Future[Option[ContractWithState[SvNodeState.ContractId, SvNodeState]]] =
+  ): Future[Option[AssignedContract[SvNodeState.ContractId, SvNodeState]]] =
     lookupContractBySvParty(SvNodeState.COMPANION, svPartyId)
 
   private def lookupContractBySvParty[C, TCId <: ContractId[_], T](
@@ -767,7 +802,7 @@ class DbScanStore(
   )(implicit
       companionClass: ContractCompanion[C, TCId, T],
       tc: TraceContext,
-  ): Future[Option[ContractWithState[TCId, T]]] = {
+  ): Future[Option[AssignedContract[TCId, T]]] = {
     val templateId = companionClass.typeId(companion)
     waitUntilAcsIngested {
       for {
@@ -785,81 +820,7 @@ class DbScanStore(
             s"lookupContractBySvParty[$templateId]",
           )
           .value
-      } yield row.map(contractWithStateFromRow(companion)(_))
+      } yield row.map(assignedContractFromRow(companion)(_))
     }
-  }
-
-  override def listVoteRequestResults(
-      actionName: Option[String],
-      accepted: Option[Boolean],
-      requester: Option[String],
-      effectiveFrom: Option[String],
-      effectiveTo: Option[String],
-      limit: Limit,
-  )(implicit tc: TraceContext): Future[Seq[DsoRules_CloseVoteRequestResult]] = {
-    val query = listVoteRequestResultsQuery(
-      txLogTableName = ScanTables.txLogTableName,
-      storeId = storeId,
-      dbType = EntryType.VoteRequestTxLogEntry,
-      actionNameColumnName = "vote_action_name",
-      acceptedColumnName = "vote_accepted",
-      effectiveAtColumnName = "vote_effective_at",
-      requesterNameColumnName = "vote_requester_name",
-      actionName = actionName,
-      accepted = accepted,
-      requester = requester,
-      effectiveFrom = effectiveFrom,
-      effectiveTo = effectiveTo,
-      limit = limit,
-    )
-    for {
-      rows <- storage.query(query, "listVoteRequestResults")
-      recentVoteResults = applyLimit("listVoteRequestResults", limit, rows)
-        .map(
-          txLogEntryFromRow[VoteRequestTxLogEntry](txLogConfig)
-        )
-        .map(_.result.getOrElse(throw txMissingField()))
-    } yield recentVoteResults
-  }
-
-  override def listVoteRequestsByTrackingCid(
-      trackingCids: Seq[VoteRequest.ContractId],
-      limit: Limit,
-  )(implicit tc: TraceContext): Future[Seq[Contract[VoteRequest.ContractId, VoteRequest]]] = {
-    for {
-      result <- storage
-        .query(
-          listVoteRequestsByTrackingCidQuery(
-            acsTableName = ScanTables.acsTableName,
-            storeId = storeId,
-            domainMigrationId = domainMigrationId,
-            trackingCidColumnName = "vote_request_tracking_cid",
-            trackingCids = trackingCids,
-            limit = limit,
-          ),
-          "listVoteRequestsByTrackingCid",
-        )
-      records = applyLimit("listVoteRequestsByTrackingCid", limit, result)
-    } yield records
-      .map(contractFromRow(VoteRequest.COMPANION)(_))
-  }
-
-  override def lookupVoteRequest(voteRequestCid: VoteRequest.ContractId)(implicit
-      tc: TraceContext
-  ): Future[Option[Contract[VoteRequest.ContractId, VoteRequest]]] = {
-    for {
-      result <- storage
-        .querySingle(
-          lookupVoteRequestQuery(
-            ScanTables.acsTableName,
-            storeId,
-            domainMigrationId,
-            "vote_request_tracking_cid",
-            voteRequestCid,
-          ),
-          "lookupVoteRequest",
-        )
-        .value
-    } yield result.map(contractFromRow(VoteRequest.COMPANION)(_))
   }
 }

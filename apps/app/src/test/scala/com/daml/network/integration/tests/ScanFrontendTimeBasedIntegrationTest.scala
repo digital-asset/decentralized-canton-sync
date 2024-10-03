@@ -1,19 +1,13 @@
 package com.daml.network.integration.tests
 
-import com.daml.network.codegen.java.splice.amuletrules.AmuletRules_AddFutureAmuletConfigSchedule
-import com.daml.network.codegen.java.splice.dsorules.actionrequiringconfirmation.ARC_AmuletRules
-import com.daml.network.codegen.java.splice.dsorules.amuletrules_actionrequiringconfirmation.CRARC_AddFutureAmuletConfigSchedule
 import com.daml.network.config.ConfigTransforms.{ConfigurableApp, updateAutomationConfig}
 import com.daml.network.environment.EnvironmentImpl
 import com.daml.network.integration.EnvironmentDefinition
 import com.daml.network.integration.tests.SpliceTests.SpliceTestConsoleEnvironment
 import com.daml.network.util.*
 import com.daml.network.validator.automation.ReceiveFaucetCouponTrigger
-import com.digitalasset.canton.config.NonNegativeFiniteDuration
 import com.digitalasset.canton.integration.BaseEnvironmentDefinition
 import io.circe.JsonObject
-import org.openqa.selenium.By
-import spray.json.DefaultJsonProtocol.StringJsonFormat
 
 import java.time.{Duration, Instant}
 import scala.jdk.CollectionConverters.*
@@ -26,10 +20,7 @@ class ScanFrontendTimeBasedIntegrationTest
     with WalletFrontendTestUtil
     with TimeTestUtil
     with SynchronizerFeesTestUtil
-    with TriggerTestUtil
-    with VotesFrontendTestUtil
-    with ValidatorLicensesFrontendTestUtil
-    with SvTestUtil {
+    with TriggerTestUtil {
 
   val amuletPrice = 2
 
@@ -69,9 +60,7 @@ class ScanFrontendTimeBasedIntegrationTest
         aliceValidatorWalletClient.tap(100.0)
       }
 
-      clue(
-        s"Feature alice's validator and transfer some Amulet, to generate reward coupons"
-      )({
+      clue("Feature alice's validator and transfer some CC, to generate reward coupons")({
         p2pTransfer(aliceWalletClient, bobWalletClient, bobUserParty, 40.0)
         advanceRoundsByOneTick
         advanceRoundsByOneTick
@@ -100,7 +89,7 @@ class ScanFrontendTimeBasedIntegrationTest
         clue("Compare app leaderboard values") {
           compareLeaderboardTable(
             "app-leaderboard-row",
-            Seq(s"${aliceValidatorWalletParty} 0.249 $amuletNameAcronym"),
+            Seq(s"${aliceValidatorWalletParty} 0.249 CC"),
           )
         }
 
@@ -117,7 +106,7 @@ class ScanFrontendTimeBasedIntegrationTest
         clue("Compare validator leaderboard values") {
           compareLeaderboardTable(
             "validator-leaderboard-row",
-            Seq(s"${aliceValidatorWalletParty} 0.083 $amuletNameAcronym"),
+            Seq(s"${aliceValidatorWalletParty} 0.083 CC"),
           )
         }
       }
@@ -134,7 +123,7 @@ class ScanFrontendTimeBasedIntegrationTest
           "The tabs 'DSO Info' and 'Canton Coin Info' are visible",
           _ => {
             findAll(id("information-tab-dso-info")).length shouldBe 1
-            findAll(id("information-tab-amulet-info")).length shouldBe 1
+            findAll(id("information-tab-cc-info")).length shouldBe 1
           },
         )
 
@@ -159,8 +148,7 @@ class ScanFrontendTimeBasedIntegrationTest
               }
             contract should be(
               Some(
-                dsoInfo.dsoRules.contract.payload.asObject
-                  .valueOrFail("This is definitely an object.")
+                dsoInfo.dsoRules.payload.asObject.valueOrFail("This is definitely an object.")
               )
             )
           },
@@ -168,7 +156,7 @@ class ScanFrontendTimeBasedIntegrationTest
 
         actAndCheck(
           "Click on Canton Coin Info", {
-            click on "information-tab-amulet-info"
+            click on "information-tab-cc-info"
           },
         )(
           "The Canton Coin info is visible",
@@ -410,8 +398,8 @@ class ScanFrontendTimeBasedIntegrationTest
             Seq(
               s"${aliceValidatorWalletParty} 2 ${2 * trafficAmount} ${stripTrailingZeros(
                   2 * trafficCostCc
-                )} $amuletNameAcronym ${(firstRound + 1).toString}",
-              s"${bobValidatorWalletParty} 1 ${trafficAmount} ${stripTrailingZeros(trafficCostCc)} $amuletNameAcronym ${(firstRound + 1).toString}",
+                )} CC ${(firstRound + 1).toString}",
+              s"${bobValidatorWalletParty} 1 ${trafficAmount} ${stripTrailingZeros(trafficCostCc)} CC ${(firstRound + 1).toString}",
             ),
           )
         }
@@ -451,9 +439,9 @@ class ScanFrontendTimeBasedIntegrationTest
         )(
           "See valid total amulet balance",
           _ => {
-            val totalText = seleniumText(find(id("total-amulet-balance-amulet")))
+            val totalText = seleniumText(find(id("total-amulet-balance-cc")))
             val totalBalance = sv1ScanBackend.getTotalAmuletBalance(firstRound + 1)
-            parseAmountText(totalText, amuletNameAcronym) shouldBe totalBalance
+            parseAmountText(totalText, "CC") shouldBe totalBalance
             val totalUsdText = seleniumText(find(id("total-amulet-balance-usd")))
             val totalUsdBalance = totalBalance * amuletPrice
             parseAmountText(totalUsdText, "USD") shouldBe totalUsdBalance
@@ -480,7 +468,7 @@ class ScanFrontendTimeBasedIntegrationTest
         ) {
           eventually() {
             aliceValidatorWalletClient
-              .listValidatorLivenessActivityRecords() should have length openRounds.length.toLong
+              .listValidatorFaucetCoupons() should have length openRounds.length.toLong
           }
         }
       }
@@ -488,7 +476,7 @@ class ScanFrontendTimeBasedIntegrationTest
       openRounds.foreach(_ => advanceRoundsByOneTick)
       advanceRoundsByOneTick
       eventually() {
-        aliceValidatorWalletClient.listValidatorLivenessActivityRecords() should have length 0
+        aliceValidatorWalletClient.listValidatorFaucetCoupons() should have length 0
       }
 
       withFrontEnd("scan-ui") { implicit webDriver =>
@@ -524,116 +512,6 @@ class ScanFrontendTimeBasedIntegrationTest
               splitwellValidatorBackend.getValidatorPartyId().toProtoPrimitive,
               bobValidatorWalletParty,
             ).map(party => s"$party 0 0 0 0")
-          },
-        )
-      }
-    }
-
-    "see the votes" in { implicit env =>
-      val dsoInfo = sv1Backend.getDsoInfo()
-      val amuletRules = dsoInfo.amuletRules
-
-      val newMaxNumInputs =
-        amuletRules.payload.configSchedule.initialValue.transferConfig.maxNumInputs.toInt + 1
-      val mockVoteAction = new ARC_AmuletRules(
-        new CRARC_AddFutureAmuletConfigSchedule(
-          new AmuletRules_AddFutureAmuletConfigSchedule(
-            new com.daml.network.codegen.java.da.types.Tuple2(
-              getLedgerTime.toInstant.plusSeconds(
-                defaultTickDuration.minusSeconds(1).duration.toSeconds
-              ),
-              SpliceUtil.defaultAmuletConfig(
-                NonNegativeFiniteDuration.tryFromDuration(
-                  scala.concurrent.duration.Duration.fromNanos(
-                    amuletRules.payload.configSchedule.initialValue.tickDuration.microseconds * 1000
-                  )
-                ),
-                newMaxNumInputs,
-                decentralizedSynchronizerId,
-              ),
-            )
-          )
-        )
-      )
-
-      // only 1 SV in this test suite, so the vote is approved
-      sv1Backend.createVoteRequest(
-        dsoInfo.svParty.toProtoPrimitive,
-        mockVoteAction,
-        "url",
-        "Testing Testingaton",
-        dsoInfo.dsoRules.payload.config.voteRequestTimeout,
-      )
-
-      withFrontEnd("scan-ui") { implicit webDriver =>
-        actAndCheck(
-          "Go to Scan UI for votes",
-          go to s"http://localhost:$scanUIPort/governance",
-        )(
-          "See the vote as executed",
-          _ => {
-            closeVoteModalsIfOpen
-
-            click on "tab-panel-executed"
-            val rows = getAllVoteRows("sv-vote-results-executed-table-body")
-
-            forExactly(1, rows) { reviewButton =>
-              closeVoteModalsIfOpen
-              reviewButton.underlying.click()
-
-              // TODO(#14813): needs to be changed by using parseAmuletConfigValue() once the diff exists for the first change
-              try {
-                val newScheduleItem = webDriver.findElement(By.id("accordion-details"))
-                val json = newScheduleItem.findElement(By.tagName("pre")).getText
-                spray.json
-                  .JsonParser(json)
-                  .asJsObject("transferConfig")
-                  .fields("transferConfig")
-                  .asJsObject
-                  .fields("maxNumInputs")
-                  .convertTo[String] should be(newMaxNumInputs.toString)
-              } catch {
-                case _: NoSuchElementException => false
-              }
-            }
-          },
-        )
-      }
-    }
-
-    "see the validator licenses" in { implicit env =>
-      withFrontEnd("scan-ui") { implicit webDriver =>
-        actAndCheck(
-          "Go to Scan UI main page",
-          go to s"http://localhost:${scanUIPort}",
-        )(
-          "Switch to the validator licenses tab",
-          _ => {
-            inside(find(id("navlink-/validator-licenses"))) { case Some(navlink) =>
-              navlink.underlying.click()
-            }
-          },
-        )
-
-        val licenseRows = getLicensesTableRows
-        val newValidatorParty = allocateRandomSvParty("validatorX")
-        val newSecret = sv1Backend.devNetOnboardValidatorPrepare()
-
-        actAndCheck(
-          "onboard new validator using the secret",
-          sv1Backend.onboardValidator(
-            newValidatorParty,
-            newSecret,
-            s"${newValidatorParty.uid.identifier}@example.com",
-          ),
-        )(
-          "a new validator row is added",
-          _ => {
-            checkLastValidatorLicenseRow(
-              licenseRows.size.toLong,
-              sv1Backend.getDsoInfo().svParty,
-              newValidatorParty,
-            )
           },
         )
       }

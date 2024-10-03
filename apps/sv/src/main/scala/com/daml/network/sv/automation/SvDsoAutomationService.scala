@@ -15,7 +15,6 @@ import com.daml.network.codegen.java.splice.amuletrules.AmuletRules
 import com.daml.network.codegen.java.splice.dsorules.DsoRules
 import com.daml.network.codegen.java.splice.round.{IssuingMiningRound, OpenMiningRound}
 import com.daml.network.config.UpgradesConfig
-import com.daml.network.config.SpliceInstanceNamesConfig
 import com.daml.network.environment.*
 import com.daml.network.http.HttpClient
 import com.daml.network.store.{DomainTimeSynchronization, DomainUnpausedSynchronization}
@@ -35,7 +34,6 @@ import com.daml.network.sv.automation.singlesv.offboarding.{
 }
 import com.daml.network.sv.automation.singlesv.onboarding.*
 import com.daml.network.sv.cometbft.CometBftNode
-import com.daml.network.sv.config.SvOnboardingConfig.{FoundDso, InitialPackageConfig}
 import com.daml.network.sv.config.{SequencerPruningConfig, SvAppBackendConfig}
 import com.daml.network.sv.migration.DecentralizedSynchronizerMigrationTrigger
 import com.daml.network.sv.store.{SvDsoStore, SvSvStore}
@@ -66,7 +64,6 @@ class SvDsoAutomationService(
     localSynchronizerNode: Option[LocalSynchronizerNode],
     extraSynchronizerNodes: Map[String, ExtraSynchronizerNode],
     upgradesConfig: UpgradesConfig,
-    spliceInstanceNamesConfig: SpliceInstanceNamesConfig,
     override protected val loggerFactory: NamedLoggerFactory,
 )(implicit
     ec: ExecutionContextExecutor,
@@ -85,10 +82,7 @@ class SvDsoAutomationService(
           clock,
           dsoStore,
           loggerFactory,
-          SvDsoAutomationService.bootstrapPackageIdResolver(config.onboarding match {
-            case Some(foundDso: FoundDso) => Some(foundDso.initialPackageConfig)
-            case _ => None
-          }),
+          SvDsoAutomationService.bootstrapPackageIdResolver,
         ),
       ledgerClient,
       retryProvider,
@@ -136,133 +130,14 @@ class SvDsoAutomationService(
 
   // Triggers that require namespace permissions and the existence of the DsoRules and AmuletRules contracts
   def registerPostOnboardingTriggers(): Unit = {
+    registerTrigger(new SummarizingMiningRoundTrigger(triggerContext, dsoStore, connection))
     registerTrigger(
       new SvOnboardingRequestTrigger(triggerContext, dsoStore, svStore, config, connection)
     )
-    // Register optional BFT triggers
-    cometBft.foreach { node =>
-      if (triggerContext.config.enableCometbftReconciliation) {
-        registerTrigger(
-          new PublishLocalCometBftNodeConfigTrigger(
-            triggerContext,
-            dsoStore,
-            connection,
-            node,
-          )
-        )
-        registerTrigger(
-          new ReconcileCometBftNetworkConfigWithDsoRulesTrigger(
-            triggerContext,
-            dsoStore,
-            node,
-          )
-        )
-      }
-    }
-    registerTrigger(
-      new SvOffboardingPartyToParticipantProposalTrigger(
-        triggerContext,
-        dsoStore,
-        participantAdminConnection,
-      )
-    )
-    registerTrigger(
-      new SvOffboardingMediatorTrigger(
-        wallClockTriggerContext,
-        dsoStore,
-        participantAdminConnection,
-      )
-    )
-    registerTrigger(
-      new SvOffboardingSequencerTrigger(
-        wallClockTriggerContext,
-        dsoStore,
-        participantAdminConnection,
-      )
-    )
-    registerTrigger(
-      new SvOnboardingPromoteParticipantToSubmitterTrigger(
-        onboardingTriggerContext,
-        dsoStore,
-        participantAdminConnection,
-        config.enableOnboardingParticipantPromotionDelay,
-      )
-    )
-    registerTrigger(
-      new SvOnboardingPartyToParticipantProposalTrigger(
-        onboardingTriggerContext,
-        dsoStore,
-        participantAdminConnection,
-      )
-    )
-    registerTrigger(
-      new SvOnboardingSequencerTrigger(
-        onboardingTriggerContext,
-        dsoStore,
-        participantAdminConnection,
-      )
-    )
-    registerTrigger(
-      new SvOnboardingMediatorProposalTrigger(
-        onboardingTriggerContext,
-        dsoStore,
-        participantAdminConnection,
-      )
-    )
-
-    (localSynchronizerNode, config.domainMigrationDumpPath) match {
-      case (Some(synchronizerNode), Some(dumpPath)) =>
-        registerTrigger(
-          new DecentralizedSynchronizerMigrationTrigger(
-            config.domainMigrationId,
-            triggerContext,
-            config.domains.global.alias,
-            synchronizerNode,
-            dsoStore,
-            participantAdminConnection,
-            synchronizerNode.sequencerAdminConnection,
-            dumpPath: Path,
-          )
-        )
-      case _ => ()
-    }
-    registerTrigger(
-      new ReconcileDynamicDomainParametersTrigger(
-        triggerContext,
-        dsoStore,
-        participantAdminConnection,
-      )
-    )
-  }
-
-  def registerTrafficReconciliationTriggers(): Unit = {
-    registerTrigger(
-      new ReconcileSequencerLimitWithMemberTrafficTrigger(
-        triggerContext,
-        dsoStore,
-        localSynchronizerNode.map(_.sequencerAdminConnection),
-        extraSynchronizerNodes,
-        config.trafficBalanceReconciliationDelay,
-      )
-    )
-    registerTrigger(
-      new SvOnboardingUnlimitedTrafficTrigger(
-        onboardingTriggerContext,
-        dsoStore,
-        localSynchronizerNode.map(_.sequencerAdminConnection),
-        extraSynchronizerNodes,
-        config.trafficBalanceReconciliationDelay,
-      )
-    )
-  }
-
-  def registerPostUnlimitedTrafficTriggers(): Unit = {
-    registerTrigger(new SummarizingMiningRoundTrigger(triggerContext, dsoStore, connection))
     registerTrigger(
       new ReceiveSvRewardCouponTrigger(
         triggerContext,
         dsoStore,
-        participantAdminConnection,
         connection,
         config.extraBeneficiaries,
       )
@@ -336,12 +211,7 @@ class SvDsoAutomationService(
     }
     registerTrigger(new AssignTrigger(triggerContext, dsoStore, connection, store.key.dsoParty))
     registerTrigger(
-      new AnsSubscriptionInitialPaymentTrigger(
-        triggerContext,
-        dsoStore,
-        spliceInstanceNamesConfig,
-        connection,
-      )
+      new AnsSubscriptionInitialPaymentTrigger(triggerContext, dsoStore, connection)
     )
     registerTrigger(
       new SvPackageVettingTrigger(
@@ -361,7 +231,6 @@ class SvDsoAutomationService(
         connection,
         cometBft,
         localSynchronizerNode.map(_.mediatorAdminConnection),
-        extraSynchronizerNodes,
         participantAdminConnection,
       )
     )
@@ -378,6 +247,93 @@ class SvDsoAutomationService(
         dsoStore,
       )
     )
+    registerTrigger(
+      new SvOffboardingPartyToParticipantProposalTrigger(
+        triggerContext,
+        dsoStore,
+        participantAdminConnection,
+      )
+    )
+    registerTrigger(
+      new SvOffboardingMediatorTrigger(
+        wallClockTriggerContext,
+        dsoStore,
+        participantAdminConnection,
+      )
+    )
+    registerTrigger(
+      new SvOffboardingSequencerTrigger(
+        wallClockTriggerContext,
+        dsoStore,
+        participantAdminConnection,
+      )
+    )
+    registerTrigger(
+      new SvOnboardingPromoteParticipantToSubmitterTrigger(
+        onboardingTriggerContext,
+        dsoStore,
+        participantAdminConnection,
+        config.enableOnboardingParticipantPromotionDelay,
+      )
+    )
+    registerTrigger(
+      new SvOnboardingPartyToParticipantProposalTrigger(
+        onboardingTriggerContext,
+        dsoStore,
+        participantAdminConnection,
+      )
+    )
+    registerTrigger(
+      new SvOnboardingSequencerTrigger(
+        onboardingTriggerContext,
+        dsoStore,
+        participantAdminConnection,
+      )
+    )
+    registerTrigger(
+      new SvOnboardingMediatorProposalTrigger(
+        onboardingTriggerContext,
+        dsoStore,
+        participantAdminConnection,
+      )
+    )
+
+    (localSynchronizerNode, config.domainMigrationDumpPath) match {
+      case (Some(synchronizerNode), Some(dumpPath)) =>
+        registerTrigger(
+          new DecentralizedSynchronizerMigrationTrigger(
+            config.domainMigrationId,
+            triggerContext,
+            config.domains.global.alias,
+            synchronizerNode,
+            dsoStore,
+            participantAdminConnection,
+            synchronizerNode.sequencerAdminConnection,
+            dumpPath: Path,
+          )
+        )
+      case _ => ()
+    }
+    // Register optional BFT triggers
+    cometBft.foreach { node =>
+      if (triggerContext.config.enableCometbftReconciliation) {
+        registerTrigger(
+          new PublishLocalCometBftNodeConfigTrigger(
+            triggerContext,
+            dsoStore,
+            connection,
+            node,
+          )
+        )
+        registerTrigger(
+          new ReconcileCometBftNetworkConfigWithDsoRulesTrigger(
+            triggerContext,
+            dsoStore,
+            node,
+          )
+        )
+      }
+    }
 
     config.scan.foreach { scan =>
       registerTrigger(
@@ -391,6 +347,34 @@ class SvDsoAutomationService(
       )
     }
 
+    registerTrigger(
+      new ReconcileDynamicDomainParametersTrigger(
+        triggerContext,
+        dsoStore,
+        participantAdminConnection,
+      )
+    )
+  }
+
+  def registerPostSequencerInitTriggers(): Unit = {
+    registerTrigger(
+      new ReconcileSequencerLimitWithMemberTrafficTrigger(
+        triggerContext,
+        dsoStore,
+        localSynchronizerNode.map(_.sequencerAdminConnection),
+        extraSynchronizerNodes,
+        config.trafficBalanceReconciliationDelay,
+      )
+    )
+    registerTrigger(
+      new SvOnboardingUnlimitedTrafficTrigger(
+        onboardingTriggerContext,
+        dsoStore,
+        localSynchronizerNode.map(_.sequencerAdminConnection),
+        extraSynchronizerNodes,
+        config.trafficBalanceReconciliationDelay,
+      )
+    )
   }
 
   private val localSequencerClientContext: Option[LocalSequencerClientContext] =
@@ -462,20 +446,11 @@ object SvDsoAutomationService extends AutomationServiceCompanion {
       decentralizedSynchronizerAlias: DomainAlias,
   )
 
-  private[automation] def bootstrapPackageIdResolver(
-      initialPackageConfig: Option[InitialPackageConfig]
-  )(template: QualifiedName): Option[String] =
+  private[automation] def bootstrapPackageIdResolver(template: QualifiedName): Option[String] =
     template.moduleName match {
       // DsoBootstrap is how we create AmuletRules in the first place so we cannot infer the package id for that from AmuletRules.
-      // We could infer it from initialPackageConfig
       case "Splice.DsoBootstrap" =>
-        initialPackageConfig
-          .flatMap(config =>
-            DarResources.dsoGovernance.getPackageIdWithVersion(config.dsoGovernanceVersion)
-          )
-          .orElse(
-            Some(DarResources.dsoGovernance.bootstrap.packageId)
-          )
+        Some(DarResources.dsoGovernance.bootstrap.packageId)
       // ImportCrates are created before AmuletRules. Given that this is only a hack until we have upgrading
       // we can hardcode this.
       case "Splice.AmuletImport" =>

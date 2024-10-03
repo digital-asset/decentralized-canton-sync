@@ -2,10 +2,6 @@
   "$schema": "http://json-schema.org/schema#",
   "type": "object",
   "properties": {
-    "auth": {
-      "type": "object",
-      "description": "The authentication configuration for the application"
-    },
     "spliceInstanceNames": {
       "type": "object",
       "description": "The names unique for the splice instance, must be specified as provided in the docs"
@@ -13,17 +9,10 @@
   },
   "allOf": [
     {
-      "required": ["spliceInstanceNames", "auth"],
+      "required": [
+        "spliceInstanceNames"
+      ],
       "properties": {
-        "auth": {
-          "type": "object",
-          "properties": {
-            "audience": {
-              "type": "string",
-              "description": "The JWT audience for tokens used against the ledger API"
-            }
-          }
-        },
         "spliceInstanceNames": {
           "type": "object",
           "properties": {

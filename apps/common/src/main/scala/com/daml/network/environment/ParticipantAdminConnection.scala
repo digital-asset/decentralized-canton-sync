@@ -526,14 +526,6 @@ class ParticipantAdminConnection(
     } yield ()
   }
 
-  def unVetDar(darHash: String)(implicit traceContext: TraceContext): Future[Unit] = {
-    runCmd(ParticipantAdminCommands.Package.UnvetDar(darHash))
-  }
-
-  def vetDar(darHash: String)(implicit traceContext: TraceContext): Future[Unit] = {
-    runCmd(ParticipantAdminCommands.Package.VetDar(darHash, false))
-  }
-
   def ensureInitialPartyToParticipant(
       store: TopologyStoreId,
       partyId: PartyId,

@@ -5,19 +5,12 @@ package com.digitalasset.canton.integration
 
 import com.daml.metrics.Timed
 import com.digitalasset.canton.CloseableTest
-import com.digitalasset.canton.admin.api.client.commands.LedgerApiCommands.{
-  CommandService,
-  CommandSubmissionService,
-}
-import com.digitalasset.canton.admin.api.client.commands.ParticipantAdminCommands
-import com.digitalasset.canton.admin.api.client.commands.GrpcAdminCommand
 import com.digitalasset.canton.config.DefaultPorts
 import com.digitalasset.canton.config.RequireTypes.PositiveInt
 import com.digitalasset.canton.environment.Environment
 import com.digitalasset.canton.integration.EnvironmentSetup.EnvironmentSetupException
 import com.digitalasset.canton.logging.{LogEntry, NamedLogging, SuppressingLogger}
 import com.digitalasset.canton.metrics.{MetricsFactoryType, ScopedInMemoryMetricsFactory}
-import com.digitalasset.canton.networking.grpc.{CantonGrpcUtil, GrpcError}
 import com.digitalasset.canton.tracing.TraceContext
 import org.scalatest.{Assertion, BeforeAndAfterAll, Suite}
 
@@ -158,45 +151,6 @@ sealed trait EnvironmentSetup[E <: Environment, TCE <: TestConsoleEnvironment[E]
     try {
       val testEnvironment: TCE = step("Creating test console") {
         envDef.createTestConsole(environmentFixture, loggerFactory)
-      }
-
-      // In tests, we want to retry some commands to avoid flakiness
-      def commandRetryPolicy(command: GrpcAdminCommand[?, ?, ?])(error: GrpcError): Boolean = {
-        val decodedCantonError = command match {
-          // Command submissions are safe to retry - they are deduplicated by command ID
-          case _: CommandSubmissionService.BaseCommand[?, ?, ?] => error.decodedCantonError
-          case _: CommandService.BaseCommand[?, ?, ?] => error.decodedCantonError
-          // Package operations are idempotent so we can retry them
-          case _: ParticipantAdminCommands.Package.PackageCommand[?, ?, ?] =>
-            error.decodedCantonError
-          // Other commands might not be idempotent
-          case _ => None
-        }
-        // Ideally we would reuse the logic from RetryProvider.RetryableError but that produces a circular dependency
-        // so for now we go for an ad-hoc logic here.
-        val shouldRetry = decodedCantonError.exists { err =>
-          // Ideally we'd `case CantonGrpcUtil.GrpcErrors.AbortedDueToShutdown => true`
-          // but unfortunately `error.decodedCantonError` appears to wrap it in a `GenericErrorCode`, so the match doesn't work.
-          // We also cannot pattern match on GenericErrorCode because it's a private class.
-          if (
-            err.code.id == CantonGrpcUtil.GrpcErrors.AbortedDueToShutdown.id && err.code.category == CantonGrpcUtil.GrpcErrors.AbortedDueToShutdown.category
-          ) {
-            true
-          } else {
-            err.isRetryable
-          }
-        }
-
-        logger.debug(
-          s"Got canton error $decodedCantonError from command $command. Retrying: $shouldRetry"
-        )(tc)
-
-        shouldRetry
-      }
-
-      step("Updating retry policy") {
-        testEnvironment.grpcLedgerCommandRunner.setRetryPolicy(commandRetryPolicy)
-        testEnvironment.grpcAdminCommandRunner.setRetryPolicy(commandRetryPolicy)
       }
 
       step("Running plugins after") {

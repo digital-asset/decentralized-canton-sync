@@ -20,8 +20,6 @@ spec:
     type: "Recreate"
   template:
     metadata:
-      annotations:
-        {{- toYaml .Values.pod.annotations | nindent 8 }}
       labels:
         app: {{ $appIdentifier }}
         migration: {{ .Values.migration.id | quote }}
@@ -55,13 +53,13 @@ spec:
               valueFrom:
                 secretKeyRef:
                   key: public
-                  name: "splice-app-sv-key"
+                  name: "cn-app-sv-key"
                   optional: false
             - name: CN_APP_SV_PRIVATE_KEY
               valueFrom:
                 secretKeyRef:
                   key: private
-                  name: "splice-app-sv-key"
+                  name: "cn-app-sv-key"
                   optional: false
             {{- else }}
               {{- if eq .Values.onboardingType "found-dso" }}
@@ -93,10 +91,14 @@ spec:
             - name: CN_APP_SV_INITIAL_HOLDING_FEE
               value: {{ .Values.initialHoldingFee | quote }}
             {{- end }}
+            {{ if ((.Values.auth).audience) }}
             - name: CN_APP_SV_AUTH_AUDIENCE
               value: {{ .Values.auth.audience | quote }}
+            {{ end }}
+            {{ if ((.Values.auth).jwksUrl) }}
             - name: CN_APP_SV_AUTH_JWKS_URL
               value: {{ .Values.auth.jwksUrl | quote }}
+            {{ end }}
             {{ if .Values.disableIngestUpdateHistoryFromParticipantBegin }}
             - name: ADDITIONAL_CONFIG_UPDATE_HISTORY_INGESTION
               value: |
@@ -179,18 +181,6 @@ spec:
             - name: CN_APP_SV_COMETBFT_CONNECTION_URI
               value: {{ (.Values.cometBFT).connectionUri }}
             {{- end }}
-            - name: CN_APP_UI_NETWORK_NAME
-              value: {{ .Values.spliceInstanceNames.networkName | quote }}
-            - name: CN_APP_UI_NETWORK_FAVICON_URL
-              value: {{ .Values.spliceInstanceNames.networkFaviconUrl | quote }}
-            - name: CN_APP_UI_AMULET_NAME
-              value: {{ .Values.spliceInstanceNames.amuletName | quote }}
-            - name: CN_APP_UI_AMULET_NAME_ACRONYM
-              value: {{ .Values.spliceInstanceNames.amuletNameAcronym | quote }}
-            - name: CN_APP_UI_NAME_SERVICE_NAME
-              value: {{ .Values.spliceInstanceNames.nameServiceName | quote }}
-            - name: CN_APP_UI_NAME_SERVICE_NAME_ACRONYM
-              value: {{ .Values.spliceInstanceNames.nameServiceNameAcronym | quote }}
             {{- range $ii, $onboarding := .Values.expectedValidatorOnboardings }}
             - name: ADDITIONAL_CONFIG_VALIDATOR_ONBOARDING_{{ $ii }}
               value: |
@@ -271,11 +261,6 @@ spec:
                  base-rate-burst-window = {{ printf "%.0fm" .baseRateBurstWindowMins | quote }}
                  read-vs-write-scaling-factor = {{ printf "%.0f" .readVsWriteScalingFactor }}
                }
-            {{- end }}
-            {{- if .Values.initialPackageConfigJson }}
-            - name: ADDITIONAL_CONFIG_INITIAL_PACKAGE_CONFIG
-              value: |
-                canton.sv-apps.sv.onboarding.initial-package-config = {{ .Values.initialPackageConfigJson | quote }}
             {{- end }}
             - name: FAIL_ON_APP_VERSION_MISMATCH
               value: {{ .Values.failOnAppVersionMismatch | quote }}

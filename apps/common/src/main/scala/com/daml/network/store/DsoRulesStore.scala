@@ -5,7 +5,7 @@ package com.daml.network.store
 
 import com.daml.network.codegen.java.splice
 import com.daml.network.store.MultiDomainAcsStore.QueryResult
-import com.daml.network.util.{AssignedContract, Contract, ContractWithState}
+import com.daml.network.util.{AssignedContract, Contract}
 import com.digitalasset.canton.logging.pretty.{Pretty, PrettyPrinting}
 import com.digitalasset.canton.participant.pretty.Implicits.prettyContractId
 import com.digitalasset.canton.topology.{DomainId, MediatorId, Member, ParticipantId, PartyId}
@@ -21,40 +21,24 @@ import java.time.Instant
 
 trait DsoRulesStore extends AppStore {
 
-  def lookupDsoRulesWithStateWithOffset()(implicit tc: TraceContext): Future[
+  def lookupDsoRulesWithOffset()(implicit tc: TraceContext): Future[
     QueryResult[Option[
-      ContractWithState[splice.dsorules.DsoRules.ContractId, splice.dsorules.DsoRules]
+      AssignedContract[splice.dsorules.DsoRules.ContractId, splice.dsorules.DsoRules]
     ]]
   ] = multiDomainAcsStore
     .findAnyContractWithOffset(splice.dsorules.DsoRules.COMPANION)
-
-  def lookupDsoRulesWithState()(implicit
-      tc: TraceContext
-  ): Future[
-    Option[ContractWithState[splice.dsorules.DsoRules.ContractId, splice.dsorules.DsoRules]]
-  ] =
-    lookupDsoRulesWithStateWithOffset().map(_.value)
+    .map(_.map(_.flatMap(_.toAssignedContract)))
 
   def lookupDsoRules()(implicit
       tc: TraceContext
   ): Future[
     Option[AssignedContract[splice.dsorules.DsoRules.ContractId, splice.dsorules.DsoRules]]
   ] =
-    lookupDsoRulesWithState().map(
-      _.map(c =>
-        c.toAssignedContract.getOrElse(
-          throw Status.FAILED_PRECONDITION
-            .withDescription(
-              s"Could not convert DsoRules with cid ${c.contractId} to AssignedContract as it is in state ${c.state}"
-            )
-            .asRuntimeException
-        )
-      )
-    )
+    lookupDsoRulesWithOffset().map(_.value)
 
   def getDsoRulesWithOffset()(implicit tc: TraceContext): Future[QueryResult[
-    ContractWithState[splice.dsorules.DsoRules.ContractId, splice.dsorules.DsoRules]
-  ]] = lookupDsoRulesWithStateWithOffset().map(_.sequence getOrElse (throw noActiveDsoRules))
+    AssignedContract[splice.dsorules.DsoRules.ContractId, splice.dsorules.DsoRules]
+  ]] = lookupDsoRulesWithOffset().map(_.sequence getOrElse (throw noActiveDsoRules))
 
   def getDsoRulesWithSvNodeState(svParty: PartyId)(implicit
       tc: TraceContext
@@ -65,10 +49,10 @@ trait DsoRulesStore extends AppStore {
     } yield DsoRulesStore.DsoRulesWithSvNodeState(dsoRules, svParty, svNodeState.contract)
   }
 
-  def getDsoRulesWithState()(implicit
+  def getDsoRules()(implicit
       tc: TraceContext
-  ): Future[ContractWithState[splice.dsorules.DsoRules.ContractId, splice.dsorules.DsoRules]] =
-    lookupDsoRulesWithState().map(
+  ): Future[AssignedContract[splice.dsorules.DsoRules.ContractId, splice.dsorules.DsoRules]] =
+    lookupDsoRules().map(
       _.getOrElse(
         throw Status.NOT_FOUND
           .withDescription("No active DsoRules contract")
@@ -76,23 +60,10 @@ trait DsoRulesStore extends AppStore {
       )
     )
 
-  def getDsoRules()(implicit
-      tc: TraceContext
-  ): Future[AssignedContract[splice.dsorules.DsoRules.ContractId, splice.dsorules.DsoRules]] =
-    getDsoRulesWithState().map(c =>
-      c.toAssignedContract.getOrElse(
-        throw Status.FAILED_PRECONDITION
-          .withDescription(
-            s"Could not convert DsoRules with cid ${c.contractId} to AssignedContract as it is in state ${c.state}"
-          )
-          .asRuntimeException
-      )
-    )
-
   def lookupSvNodeState(svPartyId: PartyId)(implicit
       tc: TraceContext
   ): Future[Option[
-    ContractWithState[
+    AssignedContract[
       splice.dso.svstate.SvNodeState.ContractId,
       splice.dso.svstate.SvNodeState,
     ]
@@ -101,7 +72,7 @@ trait DsoRulesStore extends AppStore {
   def getSvNodeState(svPartyId: PartyId)(implicit
       tc: TraceContext
   ): Future[
-    ContractWithState[
+    AssignedContract[
       splice.dso.svstate.SvNodeState.ContractId,
       splice.dso.svstate.SvNodeState,
     ]
@@ -124,26 +95,10 @@ trait DsoRulesStore extends AppStore {
       svNodeStates <- Future
         .traverse(dsoSvParties) { svPartyStr =>
           val svParty = PartyId.tryFromProtoPrimitive(svPartyStr)
-          getSvNodeState(svParty).map(co => svParty -> co)
+          getSvNodeState(svParty).map(co => svParty -> co.contract)
         }
         .map(_.toMap)
     } yield DsoRulesStore.DsoRulesWithSvNodeStates(dsoRules, svNodeStates)
-  }
-
-  def getDsoRulesWithStateWithSvNodeStates()(implicit
-      tc: TraceContext
-  ): Future[DsoRulesStore.DsoRulesWithStateWithSvNodeStates] = {
-    for {
-      // Note: at a certain size of the DSO, we'll be better off doing this join in the DB. We'll find out from our logs and performance tests.
-      dsoRules <- getDsoRulesWithState()
-      dsoSvParties = dsoRules.payload.svs.keySet().asScala.toSeq
-      svNodeStates <- Future
-        .traverse(dsoSvParties) { svPartyStr =>
-          val svParty = PartyId.tryFromProtoPrimitive(svPartyStr)
-          getSvNodeState(svParty).map(co => svParty -> co)
-        }
-        .map(_.toMap)
-    } yield DsoRulesStore.DsoRulesWithStateWithSvNodeStates(dsoRules, svNodeStates)
   }
 
   private def noActiveDsoRules =
@@ -152,31 +107,16 @@ trait DsoRulesStore extends AppStore {
 
 object DsoRulesStore {
 
-  case class DsoRulesWithStateWithSvNodeStates(
-      dsoRules: ContractWithState[splice.dsorules.DsoRules.ContractId, splice.dsorules.DsoRules],
-      svNodeStates: Map[
-        PartyId,
-        ContractWithState[splice.dso.svstate.SvNodeState.ContractId, splice.dso.svstate.SvNodeState],
-      ],
-  ) extends PrettyPrinting {
-    override def pretty: Pretty[this.type] =
-      prettyOfClass(
-        param("state", _.dsoRules.state),
-        param("dsoRulesCid", _.dsoRules.contractId),
-        param("svNodeStates", _.svNodeStates),
-      )
-  }
-
   case class DsoRulesWithSvNodeStates(
       dsoRules: AssignedContract[splice.dsorules.DsoRules.ContractId, splice.dsorules.DsoRules],
       svNodeStates: Map[
         PartyId,
-        ContractWithState[splice.dso.svstate.SvNodeState.ContractId, splice.dso.svstate.SvNodeState],
+        Contract[splice.dso.svstate.SvNodeState.ContractId, splice.dso.svstate.SvNodeState],
       ],
   ) extends PrettyPrinting {
     override def pretty: Pretty[this.type] =
       prettyOfClass(
-        param("domain", _.dsoRules.domain),
+        param("domainId", _.dsoRules.domain),
         param("dsoRulesCid", _.dsoRules.contractId),
         param("svNodeStates", _.svNodeStates),
       )

@@ -44,6 +44,8 @@ class WalletManualRoundsIntegrationTest
     with TriggerTestUtil {
 
   private val splitwellDarPath = "daml/splitwell/.daml/dist/splitwell-current.dar"
+  private val testEntryUrl = "https://ans-dir-url.com"
+  private val testEntryDescription = "Sample CNS Entry Description"
 
   override def environmentDefinition
       : BaseEnvironmentDefinition[EnvironmentImpl, SpliceTestConsoleEnvironment] =
@@ -126,7 +128,7 @@ class WalletManualRoundsIntegrationTest
           )
         }
 
-        advanceRoundsByOneTickViaAutomation()
+        advanceRoundsByOneTickViaAutomation
 
         clue("Check wallet after advancing to next round") {
           val expectedFee =
@@ -161,7 +163,7 @@ class WalletManualRoundsIntegrationTest
       }
       val lockedQty = walletUsdToAmulet(25)
 
-      advanceRoundsByOneTickViaAutomation()
+      advanceRoundsByOneTickViaAutomation
 
       lockAmulets(
         aliceValidatorBackend,
@@ -239,7 +241,7 @@ class WalletManualRoundsIntegrationTest
 
         actAndCheck(
           "Advance rounds to make the round specified in SubscriptionInitialPayment closed", {
-            (1 to 3).foreach(_ => advanceRoundsByOneTickViaAutomation())
+            (1 to 3).foreach(_ => advanceRoundsByOneTickViaAutomation)
           },
         )(
           s"The round $roundCid is closed",
@@ -362,7 +364,7 @@ class WalletManualRoundsIntegrationTest
         {
           actAndCheck(
             "Advance rounds by 3 ticks",
-            Seq(1, 2, 3).foreach(_ => advanceRoundsByOneTickViaAutomation()),
+            Seq(1, 2, 3).foreach(_ => advanceRoundsByOneTickViaAutomation),
           )(
             s"Round $rewardRound is in issuing state",
             _ => {

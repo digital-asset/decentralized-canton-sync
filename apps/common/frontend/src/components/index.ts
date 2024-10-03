@@ -8,7 +8,7 @@ import CopyableTypography from './CopyableTypography';
 import Copyright from './Copyright';
 import DateDisplay from './DateDisplay';
 import DisableConditionally from './DisableConditionally';
-import DsoViewPrettyJSON, { DsoInfo } from './Dso';
+import DsoViewPrettyJSON, { SvUiState } from './Dso';
 import ErrorBoundary from './ErrorBoundary';
 import ErrorDisplay from './ErrorDisplay';
 import ErrorRouterPage from './ErrorRouterPage';
@@ -20,20 +20,9 @@ import LoginFailed from './LoginFailed';
 import PartyId from './PartyId';
 import RateDisplay from './RateDisplay';
 import TitledTable from './TitledTable';
-import ValidatorLicenses, { ValidatorLicensesPage } from './ValidatorLicenses';
-import ViewMoreButton from './ViewMoreButton';
 import { TransferButton, SubscriptionButton } from './WalletButtons';
-import {
-  VotesHooksContext,
-  BaseVotesHooks,
-  VotesHooks,
-  useVotesHooks,
-  ListVoteRequests,
-  ActionView,
-} from './votes';
 
 export {
-  ActionView,
   AmountDisplay,
   AuthProvider,
   AnsEntry,
@@ -61,13 +50,5 @@ export {
   TransferButton,
   SubscriptionButton,
   DsoViewPrettyJSON,
-  DsoInfo,
-  VotesHooksContext,
-  BaseVotesHooks,
-  VotesHooks,
-  useVotesHooks,
-  ListVoteRequests,
-  ViewMoreButton,
-  ValidatorLicenses,
-  ValidatorLicensesPage,
+  SvUiState,
 };

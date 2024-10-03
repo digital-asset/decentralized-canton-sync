@@ -5,14 +5,15 @@ window.splice_config = {
   auth: {
     algorithm: 'hs-256-unsafe',
     secret: 'test',
-    token_audience: 'https://validator.example.com',
+    token_audience: 'https://canton.network.global',
   },
   // OIDC client configuration, see https://authts.github.io/oidc-client-ts/interfaces/UserManagerSettings.html
   // auth: {
   //   algorithm: 'rs-256',
   //   authority: "",
   //   client_id: "",
-  //   token_audience: 'https://validator.example.com',
+  //   token_audience: 'https://ledger_api.example.com',
+  //   token_scope: 'daml_ledger_api',
   // },
   services: {
     wallet: {
@@ -25,11 +26,11 @@ window.splice_config = {
     },
   },
   spliceInstanceNames: {
-    networkName: 'Splice',
-    networkFaviconUrl: 'https://www.hyperledger.org/hubfs/hyperledgerfavicon.png',
-    amuletName: 'Amulet',
-    amuletNameAcronym: 'AMT',
-    nameServiceName: 'Amulet Name Service',
-    nameServiceNameAcronym: 'ANS',
+    networkName: 'Canton Network',
+    networkFaviconUrl: 'https://www.canton.network/hubfs/cn-favicon-05%201-1.png',
+    amuletName: 'Canton Coin',
+    amuletNameAcronym: 'CC',
+    nameServiceName: 'Canton Name Service',
+    nameServiceNameAcronym: 'CNS',
   },
 };

@@ -40,7 +40,7 @@ class ManualStartIntegrationTest
       .fromResources(Seq("simple-topology.conf"), this.getClass.getSimpleName)
       .withTrafficTopupsEnabled
       // This test makes sure apps can automatically initialize Canton instances.
-      // The Splice apps in this test should therefore completely ignore the shared canton instances
+      // The CN apps in this test should therefore completely ignore the shared canton instances
       // (which are auto-initialized), and only use the manually started fresh Canton instances.
       .addConfigTransforms(
         (_, conf) => ConfigTransforms.bumpCantonPortsBy(22_000)(conf),
@@ -61,11 +61,11 @@ class ManualStartIntegrationTest
       )
       // Add a suffix to the canton identifiers to avoid metric conflicts with the shared canton nodes
       .withCantonNodeNameSuffix("StandaloneManualStart")
-      // Splice apps should only start after the Canton instances are started
+      // CN apps should only start after the Canton instances are started
       .withManualStart
   }
 
-  "Splice apps" should {
+  "CN apps" should {
     "start with uninitialized Canton nodes" in { implicit env =>
       import env.environment.scheduler
       import env.executionContext
@@ -154,7 +154,7 @@ class ManualStartIntegrationTest
           allTopologyConnections.foreach(assertHasNoIdentity)
         }
 
-        clue("Starting all Splice apps") {
+        clue("Starting all CN apps") {
           startAllSync(allCnApps*)
         }
 
@@ -169,10 +169,10 @@ class ManualStartIntegrationTest
         )
 
         // Check whether restarting apps doesn't mess up the already running canton nodes
-        clue("Stopping all Splice apps") {
+        clue("Stopping all CN apps") {
           stopAllAsync(allCnApps*).futureValue
         }
-        clue("Starting all Splice apps") {
+        clue("Starting all CN apps") {
           startAllSync(allCnApps*)
         }
 

@@ -15,14 +15,14 @@ class AnsFrontendIntegrationTest
     EnvironmentDefinition
       .simpleTopology1Sv(this.getClass.getSimpleName)
 
-  "A Name Service UI" should {
+  "A CNS UI" should {
 
     "allow requesting an entry with subscription payments and then list it" in { implicit env =>
       val aliceDamlUser = aliceWalletClient.config.ledgerApiUser
       onboardWalletUser(aliceWalletClient, aliceValidatorBackend)
       aliceWalletClient.tap(100.0)
 
-      val entryName = s"mycool_entry.unverified.$ansAcronym"
+      val entryName = "mycool_entry.unverified.cns"
       val entryNameWithoutSufffix = "mycool_entry"
 
       aliceWalletClient.listSubscriptionRequests() shouldBe empty
@@ -37,7 +37,6 @@ class AnsFrontendIntegrationTest
           "1.0000000000",
           "USD",
           "90 days",
-          ansAcronym,
         )
 
         clue("requesting an existing name to check the already taken message") {
@@ -57,8 +56,7 @@ class AnsFrontendIntegrationTest
       onboardWalletUser(aliceWalletClient, aliceValidatorBackend)
       aliceWalletClient.tap(100.0)
 
-      val suffix = s".unverified.$ansAcronym"
-      val entryNameJustReachesLimit = "a" * (60 - suffix.length) + suffix
+      val entryNameJustReachesLimit = "a" * (60 - ".unverified.cns".length) + ".unverified.cns"
 
       aliceWalletClient.listSubscriptionRequests() shouldBe empty
 
@@ -72,7 +70,6 @@ class AnsFrontendIntegrationTest
           "1.0000000000",
           "USD",
           "90 days",
-          ansAcronym,
         )
       }
     }
@@ -111,7 +108,7 @@ class AnsFrontendIntegrationTest
       onboardWalletUser(aliceWalletClient, aliceValidatorBackend)
       aliceWalletClient.tap(100.0)
 
-      val entryNameJustOverLimit = "a" * (61 - s".unverified.$ansAcronym".length)
+      val entryNameJustOverLimit = "a" * (61 - ".unverified.cns".length)
 
       withFrontEnd("alice") { implicit webDriver =>
         // login to wallet UI once to create saved localstorage auth session

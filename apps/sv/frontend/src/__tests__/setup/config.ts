@@ -11,7 +11,7 @@ const config = {
   auth: {
     algorithm: 'hs-256-unsafe',
     secret: 'test',
-    token_audience: 'https://sv.example.com',
+    token_audience: 'https://canton.network.global',
   },
 
   services: {
@@ -20,12 +20,12 @@ const config = {
     },
   },
   spliceInstanceNames: {
-    amuletName: 'Teluma',
-    amuletNameAcronym: 'TLM',
-    nameServiceName: 'Teluma Name Service',
-    nameServiceNameAcronym: 'TNS',
-    networkFaviconUrl: 'https://www.hyperledger.org/hubfs/hyperledgerfavicon.png',
-    networkName: 'Ecilps',
+    networkName: 'Canton Network',
+    networkFaviconUrl: 'https://www.canton.network/hubfs/cn-favicon-05%201-1.png',
+    amuletName: 'Canton Coin',
+    amuletNameAcronym: 'CC',
+    nameServiceName: 'Canton Name Service',
+    nameServiceNameAcronym: 'CNS',
   },
 };
 

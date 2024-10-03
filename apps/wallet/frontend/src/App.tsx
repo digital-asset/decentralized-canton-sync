@@ -4,7 +4,7 @@ import * as React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { AuthProvider, ErrorRouterPage, theme, UserProvider } from 'common-frontend';
-import { replaceEqualDeep } from 'common-frontend-utils';
+import { cnReplaceEqualDeep } from 'common-frontend-utils';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 import {
   createBrowserRouter,
@@ -29,81 +29,79 @@ import Root from './routes/root';
 import Subscriptions from './routes/subscriptions';
 import Transactions from './routes/transactions';
 import Transfer from './routes/transfer';
-import { useWalletConfig } from './utils/config';
+import { config } from './utils/config';
 
-const App: React.FC = () => {
-  const config = useWalletConfig();
-  const Providers: React.FC<React.PropsWithChildren> = ({ children }) => {
-    const config = useWalletConfig();
-    const navigate = useNavigate();
-    const queryClient = new QueryClient({
-      defaultOptions: {
-        queries: {
-          structuralSharing: replaceEqualDeep,
-        },
+const Providers: React.FC<React.PropsWithChildren> = ({ children }) => {
+  const navigate = useNavigate();
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        structuralSharing: cnReplaceEqualDeep,
       },
-      logger: {
-        log: () => {},
-        error: () => {},
-        warn: () => {},
-      },
-    });
+    },
+    logger: {
+      log: () => {},
+      error: () => {},
+      warn: () => {},
+    },
+  });
 
-    return (
-      <AuthProvider authConf={config.auth} redirect={(path: string) => navigate(path)}>
-        <QueryClientProvider client={queryClient}>
-          <ReactQueryDevtools initialIsOpen={false} />
-          <UserProvider authConf={config.auth} testAuthConf={config.testAuth}>
-            <ValidatorClientProvider url={config.services.validator.url}>
-              <WalletClientProvider url={config.services.validator.url}>
-                <ValidatorScanProxyClientProvider validatorUrl={config.services.validator.url}>
-                  <CurrentUserProvider>{children}</CurrentUserProvider>
-                </ValidatorScanProxyClientProvider>
-              </WalletClientProvider>
-            </ValidatorClientProvider>
-          </UserProvider>
-        </QueryClientProvider>
-      </AuthProvider>
-    );
-  };
-  const router = createBrowserRouter(
-    createRoutesFromElements(
-      <Route
-        errorElement={<ErrorRouterPage />}
-        element={
-          <Providers>
-            <AuthCheck authConfig={config.auth} testAuthConfig={config.testAuth} />
-          </Providers>
-        }
-      >
-        <Route path="/" element={<Root />}>
-          <Route index element={<Transactions />} />
-          <Route path="transactions" element={<Transactions />} />
-          <Route path="transfer" element={<Transfer />} />
-          <Route path="subscriptions" element={<Subscriptions />} />
-          <Route path="faqs" element={<Faqs />} />
-        </Route>
-        <Route element={<Confirmation />}>
-          <Route path="confirm-payment/:cid/" element={<ConfirmPayment />} />
-          <Route path="confirm-subscription/:cid/" element={<ConfirmSubscription />} />
-        </Route>
-      </Route>
-    )
-  );
-  const pageTitle = `${config.spliceInstanceNames.networkName} Wallet Application`;
   return (
-    <ThemeProvider theme={theme}>
-      <HelmetProvider>
-        <Helmet>
-          <title>{pageTitle}</title>
-          <meta name="description" content={pageTitle} />
-          <link rel="icon" href={config.spliceInstanceNames.networkFaviconUrl} />
-        </Helmet>
-        <CssBaseline />
-        <RouterProvider router={router} />
-      </HelmetProvider>
-    </ThemeProvider>
+    <AuthProvider authConf={config.auth} redirect={(path: string) => navigate(path)}>
+      <QueryClientProvider client={queryClient}>
+        <ReactQueryDevtools initialIsOpen={false} />
+        <UserProvider authConf={config.auth} testAuthConf={config.testAuth}>
+          <ValidatorClientProvider url={config.services.validator.url}>
+            <WalletClientProvider url={config.services.validator.url}>
+              <ValidatorScanProxyClientProvider validatorUrl={config.services.validator.url}>
+                <CurrentUserProvider>{children}</CurrentUserProvider>
+              </ValidatorScanProxyClientProvider>
+            </WalletClientProvider>
+          </ValidatorClientProvider>
+        </UserProvider>
+      </QueryClientProvider>
+    </AuthProvider>
   );
 };
+
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <Route
+      errorElement={<ErrorRouterPage />}
+      element={
+        <Providers>
+          <AuthCheck authConfig={config.auth} testAuthConfig={config.testAuth} />
+        </Providers>
+      }
+    >
+      <Route path="/" element={<Root />}>
+        <Route index element={<Transactions />} />
+        <Route path="transactions" element={<Transactions />} />
+        <Route path="transfer" element={<Transfer />} />
+        <Route path="subscriptions" element={<Subscriptions />} />
+        <Route path="faqs" element={<Faqs />} />
+      </Route>
+      <Route element={<Confirmation />}>
+        <Route path="confirm-payment/:cid/" element={<ConfirmPayment />} />
+        <Route path="confirm-subscription/:cid/" element={<ConfirmSubscription />} />
+      </Route>
+    </Route>
+  )
+);
+
+const pageTitle = `${config.spliceInstanceNames.networkName} Wallet Application`;
+const App: React.FC = () => (
+  <ThemeProvider theme={theme}>
+    <HelmetProvider>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageTitle} />
+        <link rel="icon" href={config.spliceInstanceNames.networkFaviconUrl} />
+      </Helmet>
+      <CssBaseline />
+      <RouterProvider router={router} />
+    </HelmetProvider>
+  </ThemeProvider>
+);
 
 export default App;

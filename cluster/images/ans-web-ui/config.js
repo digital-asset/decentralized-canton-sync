@@ -1,4 +1,5 @@
 const host = window.location.hostname;
+const cluster = "${CN_APP_UI_CLUSTER}";
 window.splice_config = {
   auth: {
     algorithm: "rs-256",
@@ -8,11 +9,11 @@ window.splice_config = {
   },
   services: {
     validator: {
-      url: "https://" + window.location.host + "/api/validator",
+      url: "https://" + window.location.hostname + "/api/validator",
     },
     wallet: {
       // URL of the web-ui, used to forward payment workflows to wallet
-      uiUrl: "${SPLICE_APP_WALLET_REDIRECT}" || window.location.origin.replace(/\b.?ns\b/g, "wallet"),
+      uiUrl: window.location.origin.replace("cns", "wallet"),
     },
   },
   spliceInstanceNames: {

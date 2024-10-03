@@ -6,10 +6,9 @@ import { useState } from 'react';
 import { Button, Grid, Typography } from '@mui/material';
 
 import { useValidatorClient } from '../contexts/ValidatorServiceContext';
-import { useWalletConfig } from '../utils/config';
+import { config } from '../utils/config';
 
 const Onboarding: React.FC = () => {
-  const config = useWalletConfig();
   const validatorService = useValidatorClient();
   const { userId } = useUserState();
 

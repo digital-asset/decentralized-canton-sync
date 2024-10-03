@@ -7,12 +7,10 @@ import { useGetTopValidatorsByPurchasedTraffic } from 'common-frontend/scan-api'
 
 import { Stack, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
 
-import { useScanConfig } from '../utils';
+import { config } from '../utils';
 
 export const SynchronizerFeesLeaderboardTable: React.FC = () => {
   const topValidatorsQuery = useGetTopValidatorsByPurchasedTraffic();
-  const config = useScanConfig();
-  const amuletNameAcronym = config.spliceInstanceNames.amuletNameAcronym;
 
   switch (topValidatorsQuery.status) {
     case 'loading':
@@ -41,7 +39,9 @@ export const SynchronizerFeesLeaderboardTable: React.FC = () => {
               <TableCell>Name</TableCell>
               <TableCell align="right">Number of Purchases</TableCell>
               <TableCell align="right">Total Traffic Purchased</TableCell>
-              <TableCell align="right">Total {amuletNameAcronym} Spent</TableCell>
+              <TableCell align="right">
+                Total {config.spliceInstanceNames.amuletNameAcronym.toUpperCase()} Spent
+              </TableCell>
               <TableCell align="right">Last Purchased In Round</TableCell>
             </TableRow>
           </TableHead>
@@ -67,14 +67,12 @@ const ValidatorRow: React.FC<{
     lastPurchasedInRound: number;
   };
 }> = ({ validator }) => {
-  const config = useScanConfig();
-  const amuletNameAcronym = config.spliceInstanceNames.amuletNameAcronym;
   const { name, numPurchases, totalTrafficPurchased, totalCcSpent, lastPurchasedInRound } =
     validator;
   return (
     <TableRow
       className="synchronizer-fees-leaderboard-row"
-      data-selenium-text={`${name} ${numPurchases} ${totalTrafficPurchased} ${totalCcSpent} ${amuletNameAcronym} ${lastPurchasedInRound}`}
+      data-selenium-text={`${name} ${numPurchases} ${totalTrafficPurchased} ${totalCcSpent} CC ${lastPurchasedInRound}`}
     >
       <TableCell>{name}</TableCell>
       <TableCell align="right">{numPurchases}</TableCell>

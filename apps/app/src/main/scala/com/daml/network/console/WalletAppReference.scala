@@ -55,12 +55,9 @@ abstract class WalletAppReference(
     "This function will only be available in the devnet. It allows creating amulets for testing purposes." +
       "Returns the contract ID of the created contract. "
   )
-  def tap(
-      usdAmount: BigDecimal,
-      commandId: Option[String] = None,
-  ): amuletCodegen.Amulet.ContractId = {
+  def tap(usdAmount: BigDecimal): amuletCodegen.Amulet.ContractId = {
     consoleEnvironment.run {
-      httpCommand(HttpWalletAppClient.Tap(usdAmount, commandId))
+      httpCommand(HttpWalletAppClient.Tap(usdAmount))
     }
   }
 
@@ -404,20 +401,6 @@ abstract class WalletAppReference(
       httpCommand(HttpWalletAppClient.ListValidatorFaucetCoupons)
     }
 
-  @Help.Summary("List validator liveness activity records")
-  @Help.Description(
-    "List all open validator liveness activity records for the configured user based on the active ValidatorRights"
-  )
-  def listValidatorLivenessActivityRecords(): Seq[
-    Contract[
-      validatorLicenseCodegen.ValidatorLivenessActivityRecord.ContractId,
-      validatorLicenseCodegen.ValidatorLivenessActivityRecord,
-    ]
-  ] =
-    consoleEnvironment.run {
-      httpCommand(HttpWalletAppClient.ListValidatorLivenessActivityRecords)
-    }
-
   @Help.Summary("List SV reward coupons")
   @Help.Description(
     "List all open SV Reward coupons issued the authenticated SV user"
@@ -457,6 +440,22 @@ abstract class WalletAppReference(
       httpCommand(HttpWalletAppClient.ListTransactions(beginAfterId, pageSize))
     }
   }
+
+  @Help.Summary("Create transfer preapproval")
+  @Help.Description("Create transfer preapproval for the requesting party")
+  def createTransferPreapproval(): HttpWalletAppClient.CreateTransferPreapprovalResponse =
+    consoleEnvironment.run {
+      httpCommand(HttpWalletAppClient.CreateTransferPreapproval)
+    }
+
+  @Help.Summary("Send amulet to the receiver using their TransferPreapproval")
+  @Help.Description(
+    "Send the given amulet to the receiver using their TransferPreapproval contract, fails if they do not have one"
+  )
+  def transferPreapprovalSend(receiver: PartyId, amount: BigDecimal): Unit =
+    consoleEnvironment.run {
+      httpCommand(HttpWalletAppClient.TransferPreapprovalSend(receiver, amount))
+    }
 }
 
 /** Client (aka remote) reference to a wallet app in the style of ParticipantClientReference, i.e.,

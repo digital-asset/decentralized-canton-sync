@@ -12,7 +12,7 @@ import cats.syntax.functorFilter.*
 import cats.syntax.traverse.*
 import com.daml.network.codegen.java.da.time.types.RelTime
 import com.daml.network.codegen.java.splice
-import com.daml.network.config.{SpliceInstanceNamesConfig, UpgradesConfig}
+import com.daml.network.config.UpgradesConfig
 import com.daml.network.environment.*
 import com.daml.network.http.HttpClient
 import com.daml.network.migration.DomainMigrationInfo
@@ -25,7 +25,6 @@ import com.daml.network.store.MultiDomainAcsStore.*
 import com.daml.network.sv.{ExtraSynchronizerNode, LocalSynchronizerNode}
 import com.daml.network.sv.automation.{SvDsoAutomationService, SvSvAutomationService}
 import com.daml.network.sv.cometbft.CometBftNode
-import com.daml.network.sv.config.SvOnboardingConfig.InitialPackageConfig
 import com.daml.network.sv.config.{SvAppBackendConfig, SvCantonIdentifierConfig, SvOnboardingConfig}
 import com.daml.network.sv.onboarding.{
   DsoPartyHosting,
@@ -38,7 +37,7 @@ import com.daml.network.sv.onboarding.SynchronizerNodeReconciler.SynchronizerNod
 import com.daml.network.sv.onboarding.sv1.SV1Initializer.bootstrapTransactionOrdering
 import com.daml.network.sv.store.{SvDsoStore, SvStore, SvSvStore}
 import com.daml.network.sv.util.SvUtil
-import com.daml.network.util.{ContractWithState, TemplateJsonDecoder, UploadablePackage}
+import com.daml.network.util.{AssignedContract, TemplateJsonDecoder, UploadablePackage}
 import com.daml.network.util.SpliceUtil.{defaultAmuletConfig, defaultAnsConfig}
 import com.daml.nonempty.NonEmpty
 import com.digitalasset.canton.config.DomainTimeTrackerConfig
@@ -72,7 +71,6 @@ import com.digitalasset.canton.topology.transaction.TopologyMapping.Code
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.ShowUtil.*
 import com.digitalasset.canton.version.ProtocolVersion
-import com.digitalasset.daml.lf.data.Ref.PackageVersion
 import io.grpc.Status
 import io.opentelemetry.api.trace.Tracer
 import org.apache.pekko.stream.Materializer
@@ -86,6 +84,7 @@ class SV1Initializer(
     localSynchronizerNode: LocalSynchronizerNode,
     extraSynchronizerNodes: Map[String, ExtraSynchronizerNode],
     sv1Config: SvOnboardingConfig.FoundDso,
+    requiredDars: Seq[UploadablePackage],
     participantId: ParticipantId,
     override protected val config: SvAppBackendConfig,
     upgradesConfig: UpgradesConfig,
@@ -97,7 +96,6 @@ class SV1Initializer(
     override protected val domainUnpausedSync: DomainUnpausedSynchronization,
     override protected val storage: Storage,
     override protected val retryProvider: RetryProvider,
-    override protected val spliceInstanceNamesConfig: SpliceInstanceNamesConfig,
     override protected val loggerFactory: NamedLoggerFactory,
 )(implicit
     ec: ExecutionContextExecutor,
@@ -172,7 +170,7 @@ class SV1Initializer(
             .map(_.nonEmpty),
           participantAdminConnection
             .uploadDarFiles(
-              requiredDars(sv1Config.initialPackageConfig),
+              requiredDars,
               RetryFor.WaitingOnInitDependency,
             )
             .flatMap { _ =>
@@ -259,8 +257,7 @@ class SV1Initializer(
       )
       // Only start the triggers once DsoRules and AmuletRules have been bootstrapped
       _ = dsoAutomation.registerPostOnboardingTriggers()
-      _ = dsoAutomation.registerTrafficReconciliationTriggers()
-      _ = dsoAutomation.registerPostUnlimitedTrafficTriggers()
+      _ = dsoAutomation.registerPostSequencerInitTriggers()
       _ <- checkIsOnboardedAndStartSvNamespaceMembershipTrigger(dsoAutomation, dsoStore, domainId)
       // The previous foundDso step will set the domain node config if DsoRules is not yet bootstrapped.
       // This is for the case that DsoRules is already bootstrapped but setting the domain node config is required,
@@ -452,25 +449,6 @@ class SV1Initializer(
     }
   }
 
-  private def requiredDars(initialPackageConfig: InitialPackageConfig): Seq[UploadablePackage] = {
-    def darsUpToInitialConfig(packageResource: PackageResource, requiredVersion: String) = {
-      packageResource.others
-        .filter { darResource =>
-          val required = PackageVersion.assertFromString(requiredVersion)
-          darResource.metadata.version <= required
-        }
-        .map(UploadablePackage.fromResource)
-    }
-
-    Seq(
-      DarResources.amulet -> initialPackageConfig.amuletVersion,
-      DarResources.dsoGovernance -> initialPackageConfig.dsoGovernanceVersion,
-      DarResources.validatorLifecycle -> initialPackageConfig.validatorLifecycleVersion,
-    ).flatMap { case (packageResource, requiredVersion) =>
-      darsUpToInitialConfig(packageResource, requiredVersion)
-    }
-  }
-
   /** A private class to share the dsoStoreWithIngestion and the global domain-id
     * across setup methods.
     */
@@ -528,7 +506,7 @@ class SV1Initializer(
           participantAdminConnection.getParticipantId(),
           localSynchronizerNode.sequencerAdminConnection.listSequencerTrafficControlState(),
           dsoStore.lookupAmuletRules(),
-          dsoStore.lookupDsoRulesWithStateWithOffset(),
+          dsoStore.lookupDsoRulesWithOffset(),
         ).tupled
         _ <- dsoRules match {
           case QueryResult(offset, None) =>
@@ -548,7 +526,6 @@ class SV1Initializer(
                   sv1Config.initialSynchronizerFeesConfig.baseRateBurstAmount.value,
                   sv1Config.initialSynchronizerFeesConfig.baseRateBurstWindow,
                   sv1Config.initialSynchronizerFeesConfig.readVsWriteScalingFactor.value,
-                  sv1Config.initialPackageConfig.toPackageConfig,
                   sv1Config.initialHoldingFee,
                 )
                 for {
@@ -611,7 +588,7 @@ class SV1Initializer(
                     .yieldUnit()
                 } yield ()
             }
-          case QueryResult(_, Some(ContractWithState(dsoRules, _))) =>
+          case QueryResult(_, Some(AssignedContract(dsoRules, _))) =>
             amuletRules match {
               case Some(amuletRules) =>
                 if (dsoRules.payload.svs.keySet.contains(svParty.toProtoPrimitive)) {

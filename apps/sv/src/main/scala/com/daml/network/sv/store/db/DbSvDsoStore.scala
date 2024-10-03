@@ -16,7 +16,6 @@ import com.daml.network.codegen.java.splice.round.{ClosedMiningRound, Summarizin
 import com.daml.network.codegen.java.splice.validatorlicense.{
   ValidatorFaucetCoupon,
   ValidatorLicense,
-  ValidatorLivenessActivityRecord,
 }
 import com.daml.network.codegen.java.splice.ans.{AnsEntry, AnsEntryContext}
 import com.daml.network.codegen.java.splice.dso.amuletprice.AmuletPriceVote
@@ -39,9 +38,9 @@ import com.daml.network.store.db.AcsQueries.SelectFromAcsTableResult
 import com.daml.network.store.db.DbMultiDomainAcsStore.StoreDescriptor
 import com.daml.network.store.db.{AcsQueries, AcsTables, DbTxLogAppStore, TxLogQueries}
 import com.daml.network.store.{
-  DbVotesStoreQueryBuilder,
   IngestionSummary,
   Limit,
+  LimitHelpers,
   MultiDomainAcsStore,
   TxLogStore,
 }
@@ -61,12 +60,11 @@ import com.daml.network.util.*
 import com.daml.network.util.Contract.Companion.Template
 import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.lifecycle.CloseContext
-import com.digitalasset.canton.logging.NamedLoggerFactory
+import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.resource.DbStorage
 import com.digitalasset.canton.resource.DbStorage.Implicits.BuilderChain.toSQLActionBuilderChain
 import com.digitalasset.canton.topology.{DomainId, Member, ParticipantId, PartyId}
 import com.digitalasset.canton.tracing.TraceContext
-import io.grpc.Status
 import slick.jdbc.GetResult
 import slick.jdbc.canton.ActionBasedSQLInterpolation.Implicits.actionBasedSQLInterpolationCanton
 import slick.jdbc.canton.SQLActionBuilder
@@ -109,7 +107,8 @@ class DbSvDsoStore(
     with AcsTables
     with AcsQueries
     with TxLogQueries[TxLogEntry]
-    with DbVotesStoreQueryBuilder {
+    with LimitHelpers
+    with NamedLogging {
 
   val dsoStoreMetrics = new DbSvDsoStoreMetrics(retryProvider.metricsFactory)
 
@@ -297,17 +296,6 @@ class DbSvDsoStore(
   ): Future[Seq[Contract[ValidatorFaucetCoupon.ContractId, ValidatorFaucetCoupon]]] =
     listRewardCouponsOnDomain(ValidatorFaucetCoupon.COMPANION, round, domainId, limit)
 
-  override def listValidatorLivenessActivityRecordsOnDomain(
-      round: Long,
-      domainId: DomainId,
-      limit: Limit,
-  )(implicit
-      tc: TraceContext
-  ): Future[
-    Seq[Contract[ValidatorLivenessActivityRecord.ContractId, ValidatorLivenessActivityRecord]]
-  ] =
-    listRewardCouponsOnDomain(ValidatorLivenessActivityRecord.COMPANION, round, domainId, limit)
-
   override def listSvRewardCouponsOnDomain(round: Long, domainId: DomainId, limit: Limit)(implicit
       tc: TraceContext
   ): Future[Seq[Contract[SvRewardCoupon.ContractId, SvRewardCoupon]]] =
@@ -318,15 +306,6 @@ class DbSvDsoStore(
   ): Future[Long] = selectFromRewardCouponsOnDomain[Option[Long]](
     sql"select count(*)",
     ValidatorFaucetCoupon.COMPANION.TEMPLATE_ID,
-    round,
-    domainId,
-  ).map(_.headOption.flatten.getOrElse(0L))
-
-  override def countValidatorLivenessActivityRecordsOnDomain(round: Long, domainId: DomainId)(
-      implicit tc: TraceContext
-  ): Future[Long] = selectFromRewardCouponsOnDomain[Option[Long]](
-    sql"select count(*)",
-    ValidatorLivenessActivityRecord.COMPANION.TEMPLATE_ID,
     round,
     domainId,
   ).map(_.headOption.flatten.getOrElse(0L))
@@ -423,18 +402,6 @@ class DbSvDsoStore(
   ): Future[Seq[RoundCounterpartyBatch[ValidatorFaucetCoupon.ContractId]]] =
     listCouponsGroupedByCounterparty(
       ValidatorFaucetCoupon.COMPANION,
-      domain,
-      totalCouponsLimit,
-    )
-
-  override def listValidatorLivenessActivityRecordsGroupedByCounterparty(
-      domain: DomainId,
-      totalCouponsLimit: Limit,
-  )(implicit
-      tc: TraceContext
-  ): Future[Seq[RoundCounterpartyBatch[ValidatorLivenessActivityRecord.ContractId]]] =
-    listCouponsGroupedByCounterparty(
-      ValidatorLivenessActivityRecord.COMPANION,
       domain,
       totalCouponsLimit,
     )
@@ -893,26 +860,6 @@ class DbSvDsoStore(
     )).getOrRaise(offsetExpectedError())
   }
 
-  override def listValidatorLicensePerValidator(validator: String, limit: Limit)(implicit
-      tc: TraceContext
-  ): Future[Seq[Contract[ValidatorLicense.ContractId, ValidatorLicense]]] =
-    for {
-      result <- storage
-        .query(
-          selectFromAcsTable(
-            DsoTables.acsTableName,
-            storeId,
-            domainMigrationId,
-            where =
-              sql"""template_id_qualified_name = ${QualifiedName(ValidatorLicense.TEMPLATE_ID)}
-              AND validator = ${lengthLimited(validator)}
-            """,
-            orderLimit = sql"""limit ${sqlLimit(limit)}""",
-          ),
-          "listValidatorLicensePerValidator",
-        )
-    } yield result.map(contractFromRow(ValidatorLicense.COMPANION)(_))
-
   override def getTotalPurchasedMemberTraffic(memberId: Member, domainId: DomainId)(implicit
       tc: TraceContext
   ): Future[Long] = waitUntilAcsIngested {
@@ -941,13 +888,13 @@ class DbSvDsoStore(
     for {
       result <- storage
         .querySingle(
-          lookupVoteRequestQuery(
+          selectFromAcsTable(
             DsoTables.acsTableName,
             storeId,
             domainMigrationId,
-            "vote_request_tracking_cid",
-            voteRequestCid,
-          ),
+            where = (sql""" template_id_qualified_name = ${QualifiedName(VoteRequest.TEMPLATE_ID)}
+                       and vote_request_tracking_cid = $voteRequestCid """).toActionBuilder,
+          ).headOption,
           "lookupVoteRequest",
         )
         .value
@@ -960,16 +907,17 @@ class DbSvDsoStore(
   )(implicit
       tc: TraceContext
   ): Future[Seq[Contract[VoteRequest.ContractId, VoteRequest]]] = waitUntilAcsIngested {
+    val voteRequestTrackingCidsSql = inClause(trackingCids)
     for {
       result <- storage
         .query(
-          listVoteRequestsByTrackingCidQuery(
-            acsTableName = DsoTables.acsTableName,
-            storeId = storeId,
-            domainMigrationId = domainMigrationId,
-            trackingCidColumnName = "vote_request_tracking_cid",
-            trackingCids = trackingCids,
-            limit = limit,
+          selectFromAcsTable(
+            DsoTables.acsTableName,
+            storeId,
+            domainMigrationId,
+            where = (sql""" template_id_qualified_name = ${QualifiedName(VoteRequest.TEMPLATE_ID)}
+                          and vote_request_tracking_cid in """ ++ voteRequestTrackingCidsSql).toActionBuilder,
+            orderLimit = sql"""limit ${sqlLimit(limit)}""",
           ),
           "listVoteRequestsByTrackingCid",
         )
@@ -1294,23 +1242,45 @@ class DbSvDsoStore(
   )(implicit
       tc: TraceContext
   ): Future[Seq[DsoRules_CloseVoteRequestResult]] = {
-    val query = listVoteRequestResultsQuery(
-      txLogTableName = DsoTables.txLogTableName,
-      storeId = storeId,
-      dbType = EntryType.VoteRequestTxLogEntry,
-      actionNameColumnName = "action_name",
-      acceptedColumnName = "accepted",
-      effectiveAtColumnName = "effective_at",
-      requesterNameColumnName = "requester_name",
-      actionName = actionName,
-      accepted = accepted,
-      requester = requester,
-      effectiveFrom = effectiveFrom,
-      effectiveTo = effectiveTo,
-      limit = limit,
-    )
+    val dbType = EntryType.VoteRequestTxLogEntry
+    val actionNameCondition = actionName match {
+      case Some(actionName) =>
+        sql"""and action_name like ${lengthLimited(s"%${lengthLimited(actionName)}%")}"""
+      case None => sql""""""
+    }
+    val executedCondition = accepted match {
+      case Some(accepted) => sql"""and accepted = ${accepted}"""
+      case None => sql""""""
+    }
+    val effectivenessCondition = (effectiveFrom, effectiveTo) match {
+      case (Some(effectiveFrom), Some(effectiveTo)) =>
+        sql"""and effective_at between ${lengthLimited(effectiveFrom)} and ${lengthLimited(
+            effectiveTo
+          )}"""
+      case (Some(effectiveFrom), None) =>
+        sql"""and effective_at > ${lengthLimited(effectiveFrom)}"""
+      case (None, Some(effectiveTo)) => sql"""and effective_at < ${lengthLimited(effectiveTo)}"""
+      case (None, None) => sql""""""
+    }
+    val requesterCondition = requester match {
+      case Some(requester) =>
+        sql"""and requester_name like ${lengthLimited(s"%${lengthLimited(requester)}%")}"""
+      case None => sql""""""
+    }
     for {
-      rows <- storage.query(query, "listVoteRequestResults")
+      rows <- storage.query(
+        selectFromTxLogTable(
+          DsoTables.txLogTableName,
+          storeId,
+          where = (sql"""entry_type = ${dbType} """
+            ++ actionNameCondition
+            ++ executedCondition
+            ++ requesterCondition
+            ++ effectivenessCondition).toActionBuilder,
+          orderLimit = sql"""order by effective_at desc limit ${sqlLimit(limit)}""",
+        ),
+        "listVoteRequestResults",
+      )
       recentVoteResults = applyLimit("listVoteRequestResults", limit, rows)
         .map(
           txLogEntryFromRow[VoteRequestTxLogEntry](txLogConfig)
@@ -1374,23 +1344,13 @@ class DbSvDsoStore(
 
   def lookupSvNodeState(svPartyId: PartyId)(implicit
       tc: TraceContext
-  ): Future[Option[ContractWithState[SvNodeState.ContractId, SvNodeState]]] =
+  ): Future[Option[AssignedContract[SvNodeState.ContractId, SvNodeState]]] =
     lookupContractBySvParty(SvNodeState.COMPANION, svPartyId)
 
   override def lookupSvStatusReport(svPartyId: PartyId)(implicit
       tc: TraceContext
   ): Future[Option[AssignedContract[SvStatusReport.ContractId, SvStatusReport]]] =
-    lookupContractBySvParty(SvStatusReport.COMPANION, svPartyId).map(
-      _.map(c =>
-        c.toAssignedContract.getOrElse(
-          throw Status.FAILED_PRECONDITION
-            .withDescription(
-              s"Could not convert SvStatusReport ${c.contractId} to AssignedContract as it has state ${c.state}"
-            )
-            .asRuntimeException
-        )
-      )
-    )
+    lookupContractBySvParty(SvStatusReport.COMPANION, svPartyId)
 
   override def lookupSvRewardState(svName: String)(implicit
       tc: TraceContext
@@ -1422,7 +1382,7 @@ class DbSvDsoStore(
   )(implicit
       companionClass: ContractCompanion[C, TCId, T],
       tc: TraceContext,
-  ): Future[Option[ContractWithState[TCId, T]]] = {
+  ): Future[Option[AssignedContract[TCId, T]]] = {
     val templateId = companionClass.typeId(companion)
     waitUntilAcsIngested {
       for {
@@ -1440,7 +1400,7 @@ class DbSvDsoStore(
             s"lookupContractBySvParty[$templateId]",
           )
           .value
-      } yield row.map(contractWithStateFromRow(companion)(_))
+      } yield row.map(assignedContractFromRow(companion)(_))
     }
   }
 

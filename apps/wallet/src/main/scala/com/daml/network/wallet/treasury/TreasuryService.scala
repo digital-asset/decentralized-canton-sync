@@ -9,10 +9,9 @@ import com.daml.network.codegen.java.splice.amulet as amuletCodegen
 import com.daml.network.codegen.java.splice.amulet.ValidatorRight
 import com.daml.network.codegen.java.splice.amuletrules.transferinput.{
   ExtTransferInput,
-  InputAmulet,
   InputAppRewardCoupon,
+  InputAmulet,
   InputSvRewardCoupon,
-  InputValidatorLivenessActivityRecord,
   InputValidatorRewardCoupon,
 }
 import com.daml.network.codegen.java.splice.amuletrules.{
@@ -24,8 +23,8 @@ import com.daml.network.codegen.java.splice.round.IssuingMiningRound
 import com.daml.network.codegen.java.splice.types.Round
 import com.daml.network.codegen.java.splice.wallet.install.amuletoperationoutcome.COO_MergeTransferInputs
 import com.daml.network.codegen.java.splice.wallet.install.{
-  WalletAppInstall,
   WalletAppInstall_ExecuteBatchResult,
+  WalletAppInstall,
   amuletoperation,
 }
 import com.daml.network.codegen.java.splice.wallet.{
@@ -35,13 +34,11 @@ import com.daml.network.codegen.java.splice.wallet.{
   subscriptions as subsCodegen,
   transferoffer as transferOffersCodegen,
 }
-import com.daml.network.environment.{CommandPriority, RetryProvider, SpliceLedgerConnection}
-import SpliceLedgerConnection.CommandId
-import com.daml.network.environment.ledger.api.DedupConfig
+import com.daml.network.environment.{SpliceLedgerConnection, CommandPriority, RetryProvider}
 import com.daml.network.scan.admin.api.client.BftScanConnection
 import com.daml.network.store.PageLimit
 import com.daml.network.util.PrettyInstances.*
-import com.daml.network.util.{AssignedContract, DisclosedContracts, HasHealth, SpliceUtil}
+import com.daml.network.util.{AssignedContract, SpliceUtil, DisclosedContracts, HasHealth}
 import com.daml.network.wallet.UserWalletManager
 import com.daml.network.wallet.config.TreasuryConfig
 import com.daml.network.wallet.store.UserWalletStore
@@ -110,10 +107,8 @@ class TreasuryService(
       .batchWeighted(
         treasuryConfig.batchSize.toLong,
         operation =>
-          if (operation.priority == CommandPriority.High || operation.dedup.isDefined) {
-            // Setting the weight > batch size ensures they go in a batch of their own
-            treasuryConfig.batchSize.toLong + 1L
-          } else 1L,
+          if (operation.priority == CommandPriority.High) treasuryConfig.batchSize.toLong + 1L
+          else 1L,
         operation => AmuletOperationBatch(operation),
       )((batch, operation) => batch.addCOToBatch(operation))
       // Execute the batches sequentially to avoid contention
@@ -171,13 +166,15 @@ class TreasuryService(
   def enqueueAmuletOperation[T](
       operation: installCodegen.AmuletOperation,
       priority: CommandPriority = CommandPriority.Low,
-      dedup: Option[AmuletOperationDedupConfig] = None,
+      extraDisclosedContracts: DisclosedContracts = DisclosedContracts.Empty,
   )(implicit tc: TraceContext): Future[installCodegen.AmuletOperationOutcome] = {
     val p = Promise[installCodegen.AmuletOperationOutcome]()
     logger.debug(
       show"Received operation (queue size before adding this: ${queue.size()}): $operation"
     )
-    queue.offer(EnqueuedAmuletOperation(operation, p, tc, priority, dedup)) match {
+    queue.offer(
+      EnqueuedAmuletOperation(operation, p, tc, priority, extraDisclosedContracts)
+    ) match {
       case Enqueued =>
         logger.debug(show"Operation $operation enqueued successfully")
         p.future
@@ -255,6 +252,8 @@ class TreasuryService(
           )(op.trafficRequestCid)
         } yield ()
 
+      case _: amuletoperation.CO_TransferPreapprovalSend => Future.unit
+
       case op => throw new NotImplementedError(show"Unexpected amulet operation: $op")
     }
 
@@ -296,7 +295,6 @@ class TreasuryService(
       filteredNonMergeOperations
         .filter(_.isDefined)
         .map(_.getOrElse(throw new RuntimeException("Unexpected None value"))),
-      unfilteredBatch.dedup,
     )
 
   private def filterAndExecuteBatch(
@@ -399,21 +397,19 @@ class TreasuryService(
           Seq(walletManager.store.walletKey.validatorParty),
           userStore.key.endUserParty +: readAs.toSeq,
         )
-    val baseSubmission = connection
-      .submit(
-        actAsParties,
-        readAsParties,
-        cmd,
-        priority = batch.priority,
-        deadline = treasuryConfig.grpcDeadline,
-      )
-      .withDisclosedContracts(disclosedContracts)
     for {
-      (offset, result) <- batch.dedup match {
-        case None => baseSubmission.noDedup.yieldResultAndOffset()
-        case Some(dedup) =>
-          baseSubmission.withDedup(dedup.commandId, dedup.config).yieldResultAndOffset()
-      }
+      (offset, result) <- connection
+        .submit(
+          actAsParties,
+          readAsParties,
+          cmd,
+          priority = batch.priority,
+        )
+        .withDisclosedContracts(disclosedContracts.merge(batch.extraDisclosedContracts))
+        // The only operation that is not self-conflicting is Tap, therefore
+        // batch execution w/o command dedup is safe.
+        .noDedup
+        .yieldResultAndOffset()
 
       // wait for store to ingest the new amulet holdings, then return all outcomes to the callers
       _ <- waitForIngestion(offset, result).map(_ =>
@@ -534,11 +530,6 @@ class TreasuryService(
         maxNumInputs,
         issuingRoundsMap,
       )
-      (validatorLivenessActivityRecordsAmuletQuantity, validatorActivityRecordsInputs) <-
-        getValidatorLivenessActivityRecordsAndQuantity(
-          maxNumInputs,
-          issuingRoundsMap,
-        )
       (appRewardsTotalAmuletQuantity, appRewardInputs) <- getAppRewardsAndQuantity(
         maxNumInputs,
         issuingRoundsMap,
@@ -551,8 +542,7 @@ class TreasuryService(
       val createFeeCc = SpliceUtil.dollarsToCC(configUsd.createFee.fee, amuletPrice)
       if (
         isMergeOny && !shouldMergeOnlyTransferRun(
-          appRewardsTotalAmuletQuantity + validatorRewardsAmuletQuantity + validatorFaucetsAmuletQuantity +
-            validatorLivenessActivityRecordsAmuletQuantity + svRewardsTotalAmuletQuantity,
+          appRewardsTotalAmuletQuantity + validatorRewardsAmuletQuantity + validatorFaucetsAmuletQuantity + svRewardsTotalAmuletQuantity,
           amuletInputsAndQuantity,
           createFeeCc,
         )
@@ -565,16 +555,13 @@ class TreasuryService(
           validatorRewardInputs,
           appRewardInputs,
           validatorFaucetInputs,
-          validatorActivityRecordsInputs,
           svRewardInputs,
           numTapOperations,
         )
         val rewardInputRounds =
           appRewardInputs.map(_._1).toSet ++ validatorRewardInputs
             .map(_._1)
-            .toSet ++ validatorFaucetInputs.map(_._1).toSet ++ validatorActivityRecordsInputs
-            .map(_._1)
-            .toSet ++ svRewardInputs.map(_._1).toSet
+            .toSet ++ validatorFaucetInputs.map(_._1).toSet ++ svRewardInputs.map(_._1).toSet
         val transferContext = new TransferContext(
           openRound.contractId,
           openIssuingRounds.view
@@ -626,14 +613,11 @@ class TreasuryService(
       validatorRewardInputs: Seq[(Round, BigDecimal, InputValidatorRewardCoupon)],
       appRewardInputs: Seq[(Round, BigDecimal, InputAppRewardCoupon)],
       validatorFaucetInputs: Seq[(Round, BigDecimal, ExtTransferInput)],
-      validatorActivityRecordsInputs: Seq[
-        (Round, BigDecimal, InputValidatorLivenessActivityRecord)
-      ],
       svRewardCouponInputs: Seq[(Round, BigDecimal, InputSvRewardCoupon)],
       numTapOperations: Int,
   ): Seq[TransferInput] = {
     val sortedRewardInputs =
-      (validatorRewardInputs ++ appRewardInputs ++ validatorFaucetInputs ++ validatorActivityRecordsInputs ++ svRewardCouponInputs)
+      (validatorRewardInputs ++ appRewardInputs ++ validatorFaucetInputs ++ svRewardCouponInputs)
         .sorted(
           // prioritize the soonest-to-expire, most-valuable rewards.
           Ordering[(Long, BigDecimal)].on((rw: (Round, BigDecimal, _)) => (rw._1.number, -rw._2))
@@ -725,32 +709,6 @@ class TreasuryService(
     } yield (validatorFaucetsAmuletQuantity, validatorFaucetsInputs)
   }
 
-  private def getValidatorLivenessActivityRecordsAndQuantity(
-      maxNumInputs: Int,
-      issuingRoundsMap: Map[Round, IssuingMiningRound],
-  )(implicit
-      tc: TraceContext
-  ): Future[(BigDecimal, Seq[(Round, BigDecimal, InputValidatorLivenessActivityRecord)])] = {
-    for {
-      validatorLivenessActivityRecordsInputs <- userStore.listSortedLivenessActivityRecords(
-        issuingRoundsMap,
-        PageLimit.tryCreate(maxNumInputs),
-      )
-      validatorLivenessActivityRecordsAmuletQuantity = validatorLivenessActivityRecordsInputs
-        .map(_._2)
-        .sum
-      validatorActivityRecordsInputs = validatorLivenessActivityRecordsInputs.map(rw =>
-        (
-          rw._1.payload.round,
-          rw._2,
-          new splice.amuletrules.transferinput.InputValidatorLivenessActivityRecord(
-            rw._1.contractId
-          ),
-        )
-      )
-    } yield (validatorLivenessActivityRecordsAmuletQuantity, validatorActivityRecordsInputs)
-  }
-
   private def getSvRewardCouponsAndQuantity(
       maxNumInputs: Int,
       issuingRoundsMap: Map[Round, IssuingMiningRound],
@@ -809,13 +767,7 @@ object TreasuryService {
   private case class AmuletOperationBatch(
       mergeOperationOpt: Option[EnqueuedAmuletOperation],
       nonMergeOperations: Seq[EnqueuedAmuletOperation],
-      dedup: Option[AmuletOperationDedupConfig],
   ) extends PrettyPrinting {
-    require(
-      !(dedup.isDefined && (mergeOperationOpt.toList.size + nonMergeOperations.size) > 1),
-      "Operations requiring dedup are in their own batch",
-    )
-
     override def pretty: Pretty[AmuletOperationBatch.this.type] = prettyOfClass(
       paramIfDefined("mergeOperationOpt", _.mergeOperationOpt),
       paramIfNonEmpty("nonMergeOperations", _.nonMergeOperations),
@@ -846,33 +798,16 @@ object TreasuryService {
       if (
         (mergeOperationOpt.isEmpty && nonMergeOperations.isEmpty) || priority == operation.priority
       ) {
-        if (dedup.isDefined) {
-          throw new IllegalArgumentException(
-            s"Batch specifies dedup config, cannot contain more than one element"
-          )
-        }
-        if (
-          operation.dedup.isDefined && (mergeOperationOpt.isDefined || !nonMergeOperations.isEmpty)
-        ) {
-          throw new IllegalArgumentException(
-            s"Operation specifies dedup config, must be in a batch on its own"
-          )
-        }
         val isMergeOp = operation.isCO_MergeTransferInputs
         mergeOperationOpt match {
-          case None if isMergeOp =>
-            AmuletOperationBatch(Some(operation), nonMergeOperations, operation.dedup)
+          case None if isMergeOp => AmuletOperationBatch(Some(operation), nonMergeOperations)
           case Some(_) if isMergeOp =>
             // if we already have a merge operation in this batch; complete the new one immediately and
             // don't add it to the batch
             operation.outcomePromise.success(new COO_MergeTransferInputs(None.toJava))
             this
           case _ =>
-            AmuletOperationBatch(
-              mergeOperationOpt,
-              nonMergeOperations :+ operation,
-              operation.dedup,
-            )
+            AmuletOperationBatch(mergeOperationOpt, nonMergeOperations :+ operation)
         }
       } else sys.error("Cannot mix operations of different priorities in batch")
     }
@@ -904,11 +839,16 @@ object TreasuryService {
           op.outcomePromise.success(new COO_MergeTransferInputs(None.toJava))
         )
     }
+
+    lazy val extraDisclosedContracts: DisclosedContracts =
+      operationsToRun.foldLeft[DisclosedContracts](DisclosedContracts.Empty) {
+        case (acc, operation) => acc.merge(operation.extraDisclosedContracts)
+      }
   }
 
   private object AmuletOperationBatch {
     def apply(operation: EnqueuedAmuletOperation): AmuletOperationBatch = {
-      AmuletOperationBatch(None, Seq.empty, None).addCOToBatch(operation)
+      AmuletOperationBatch(None, Seq.empty).addCOToBatch(operation)
     }
   }
 
@@ -916,16 +856,14 @@ object TreasuryService {
       operation: installCodegen.AmuletOperation,
       outcomePromise: Promise[installCodegen.AmuletOperationOutcome],
       submittedFrom: TraceContext,
-      priority: CommandPriority,
-      dedup: Option[AmuletOperationDedupConfig],
+      priority: CommandPriority = CommandPriority.Low,
+      extraDisclosedContracts: DisclosedContracts,
   ) extends PrettyPrinting {
     override def pretty: Pretty[EnqueuedAmuletOperation.this.type] =
       prettyNode(
         "AmuletOperation",
         param("from", _.submittedFrom.showTraceId),
         param("op", _.operation.toValue),
-        param("priority", _.priority),
-        paramIfDefined("dedup", _.dedup),
       )
 
     lazy val isCO_MergeTransferInputs: Boolean =
@@ -939,13 +877,5 @@ object TreasuryService {
         case _: amuletoperation.CO_Tap => true
         case _ => false
       }
-  }
-
-  final case class AmuletOperationDedupConfig(
-      commandId: CommandId,
-      config: DedupConfig,
-  ) extends PrettyPrinting {
-    override def pretty: Pretty[AmuletOperationDedupConfig.this.type] =
-      prettyNode("DedupConfig", param("commandId", _.commandId), param("config", _.config))
   }
 }

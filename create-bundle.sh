@@ -11,7 +11,7 @@ set -eou pipefail
 
 # The app "binary" is just a shell script that calls the main JAR
 function adjust_shellscript_binary() {
-  REPLACE_VERSION=$(echo "$JAR" | sed -E 's/.*splice-node-([^-]+)-.*/\1/')
+  REPLACE_VERSION=$(echo "$JAR" | sed -E 's/.*cn-node-([^-]+)-.*/\1/')
   REPLACE_REVISION=$(git rev-parse HEAD)
   REPLACE_JVM_OPTS="-XX:+CrashOnOutOfMemoryError"
   REPLACE_JAR="lib\/$JAR"
@@ -19,7 +19,7 @@ function adjust_shellscript_binary() {
 #  REPLACE_MAC_ICON_FILE="lib\/canton.ico"
   cp -r "$RELEASE_DIR/../../../src/pack/bin" "$RELEASE_DIR"
   # shellcheck disable=SC2043
-  for file in "bin/splice-node" # TODO(#161): Canton supports windows. Do we want that too? "bin/splice-node.bat"
+  for file in "bin/cn-node" # TODO(#161): Canton supports windows. Do we want that too? "bin/cn-node.bat"
   do
       cat "$RELEASE_DIR"/$file |
         sed -e "s/REPLACE_VERSION/${REPLACE_VERSION}/" |
@@ -38,9 +38,9 @@ function adjust_shellscript_binary() {
 set -euo pipefail
 
 JARFILE=$1
-# e.g. splice-node.jar
+# e.g. cn-node-0.1.0-SNAPSHOT.jar
 JAR=$(basename "$JARFILE")
-# e.g. splice-node
+# e.g. cn-node-0.1.0-SNAPSHOT
 RELEASE="${JAR%.jar}"
 
 RELEASES_DIR=$(dirname "$JARFILE")/../release
@@ -52,7 +52,6 @@ mkdir -p "$RELEASE_DIR"/lib "$RELEASE_DIR"/bin
 
 cp -v "$JARFILE" "$RELEASE_DIR"/lib
 
-"${REPO_ROOT}/build-tools/get-snapshot-version" > "$RELEASE_DIR"/VERSION
 
 shift # shift JARFILE argument out-of-scope
 MAIN_CLASS=$1
@@ -84,7 +83,7 @@ do
             echo "skipping empty $arg"
           else
             echo "copying content from $arg"
-            cp -r "$arg"/. "$RELEASE_DIR"
+            cp -r "$arg"/* "$RELEASE_DIR"
           fi
         else
           echo "copying file $arg"
@@ -112,7 +111,7 @@ do
           if [[ ! -e $target ]]; then
               mkdir -p "$target"
           fi
-          cp -vr "$rename"/. "$target"
+          cp -vr "$rename"/* "$target"
       else
           target_dir=$(dirname "$target")
           if [[ ! -e $target_dir ]]; then
@@ -137,6 +136,10 @@ rm -f "${RELEASE}.zip"
 tar -zcf "${RELEASE}.tar.gz" "$RELEASE" &
 zip -rq "${RELEASE}.zip" "$RELEASE"/* &
 wait
+
+# finally, add a stable link to the directory
+rm -f cn-node
+ln -s "$RELEASE" cn-node
 
 echo "Successfully created release bundle for release $RELEASE"
 echo "Folders with binaries: $RELEASE_DIR/bin"

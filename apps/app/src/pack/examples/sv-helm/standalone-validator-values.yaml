@@ -1,10 +1,10 @@
 participantAddress: "participant"
 
-# URL of sponsoring SV for onboarding your validator
+# URL of sponsoring SV for onboarding your validator, e.g. sv.sv-2.dev.canton.network.global
 svSponsorAddress: "SPONSOR_SV_URL"
 onboardingSecretFrom:
   secretKeyRef:
-    name: splice-app-validator-onboarding-validator
+    name: cn-app-validator-onboarding-validator
     key: secret
     optional: false
 # Party ID hint for the validator operator party, should be of format <organization>-<function>-<enumerator>,
@@ -26,11 +26,11 @@ persistence:
 # PARTICIPANT_BOOTSTRAP_DUMP_START
 # Uncomment the following block if you want to restore from a participant dump
 # participantIdentitiesDumpImport:
-# secretName: participant-bootstrap-dump
+  # secretName: participant-bootstrap-dump
 # PARTICIPANT_BOOTSTRAP_DUMP_END
 # PARTICIPANT_BOOTSTRAP_MIGRATE_TO_NEW_PARTICIPANT_START
 # Uncomment the following line if you want to migrate the validator party to a new participant
-# newParticipantIdentifier: put-some-new-string-never-used-before
+  # newParticipantIdentifier: put-some-new-string-never-used-before
 # migrateValidatorParty: true
 # PARTICIPANT_BOOTSTRAP_MIGRATE_TO_NEW_PARTICIPANT_END
 

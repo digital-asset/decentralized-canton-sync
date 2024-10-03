@@ -10,8 +10,9 @@ nodeIdentifier: YOUR_SV_NAME
 # Replace MIGRATION_ID with the migration ID of the global synchronizer.
 decentralizedSynchronizerUrl: "https://sequencer-MIGRATION_ID.sv-2.TARGET_HOSTNAME"
 auth:
-  # replace OIDC_AUTHORITY_SV_AUDIENCE with the audience of your choice.
-  audience: "OIDC_AUTHORITY_SV_AUDIENCE"
+  # The default value of audience is ``https://canton.network.global``.
+  # If you want to configure a custom audience for SV app backend, uncomment this line and replace OIDC_AUTHORITY_SV_AUDIENCE with the audience of your choice.
+  # audience: "OIDC_AUTHORITY_SV_AUDIENCE"
   # replace OIDC_AUTHORITY_URL with your provider's OIDC URL
   jwksUrl: "https://OIDC_AUTHORITY_URL/.well-known/jwks.json"
 cometBFT:
@@ -78,11 +79,3 @@ extraBeneficiaries:
 # This can be a slack username or an email address.
 # If you do not wish to share this, set it to an empty string.
 contactPoint: "YOUR_CONTACT_POINT"
-
-spliceInstanceNames:
-  networkName: # Please provide a value as provided in the docs
-  networkFaviconUrl: # Please provide a value as provided in the docs
-  amuletName: # Please provide a value as provided in the docs
-  amuletNameAcronym: # Please provide a value as provided in the docs
-  nameServiceName: # Please provide a value as provided in the docs
-  nameServiceNameAcronym: # Please provide a value as provided in the docs

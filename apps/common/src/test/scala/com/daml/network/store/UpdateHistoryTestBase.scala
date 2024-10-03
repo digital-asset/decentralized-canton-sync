@@ -13,13 +13,13 @@ import com.daml.network.environment.ledger.api.{
 }
 import com.daml.network.migration.DomainMigrationInfo
 import com.daml.network.store.db.{AcsJdbcTypes, AcsTables, SplicePostgresTest}
-import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.resource.DbStorage
 import com.digitalasset.canton.topology.*
 import com.digitalasset.canton.{HasActorSystem, HasExecutionContext}
 import com.google.protobuf.ByteString
 import org.scalatest.Assertion
 
+import java.time.Instant
 import scala.concurrent.Future
 import scala.jdk.CollectionConverters.*
 
@@ -40,7 +40,7 @@ abstract class UpdateHistoryTestBase
       offset: String,
       party: PartyId,
       store: UpdateHistory,
-      txEffectiveAt: CantonTimestamp,
+      txEffectiveAt: Instant = defaultEffectiveAt,
   ) = {
     DomainSyntax(domain).create(
       c = appRewardCoupon(
@@ -49,9 +49,9 @@ abstract class UpdateHistoryTestBase
         contractId = contractId,
       ),
       offset = offset,
-      txEffectiveAt = txEffectiveAt.toInstant,
+      txEffectiveAt = txEffectiveAt,
       createdEventSignatories = Seq(party),
-      recordTime = txEffectiveAt.toInstant,
+      recordTime = txEffectiveAt,
     )(
       store
     )
@@ -63,7 +63,7 @@ abstract class UpdateHistoryTestBase
       offset: String,
       party: PartyId,
       stores: Seq[UpdateHistory],
-      txEffectiveAt: CantonTimestamp,
+      txEffectiveAt: Instant = defaultEffectiveAt,
   ) = {
     DomainSyntax(domain).createMulti(
       c = appRewardCoupon(
@@ -72,9 +72,9 @@ abstract class UpdateHistoryTestBase
         contractId = contractId,
       ),
       offset = offset,
-      txEffectiveAt = txEffectiveAt.toInstant,
+      txEffectiveAt = txEffectiveAt,
       createdEventSignatories = Seq(party),
-      recordTime = txEffectiveAt.toInstant,
+      recordTime = txEffectiveAt,
     )(
       stores
     )
@@ -85,8 +85,7 @@ abstract class UpdateHistoryTestBase
     "%08d".format(i)
   }
 
-  protected def time(i: Int): CantonTimestamp =
-    CantonTimestamp.assertFromInstant(defaultEffectiveAt.plusMillis(i.toLong))
+  protected def time(i: Int): Instant = defaultEffectiveAt.plusMillis(i.toLong)
 
   // Universal begin offset (strictly smaller than any offset used in this suite)
   protected val beginOffset = "0".repeat(16)
@@ -202,49 +201,27 @@ object UpdateHistoryTestBase {
   final case class ExpectedUnassign(cid: String, domainId: DomainId, targetDomain: DomainId)
       extends ExpectedUpdate
 
-  sealed trait LostDataMode
-
-  /** Data lost during ingestion into the UpdateHistory database,
-    * because the database schema does not store all fields.
-    */
-  final case object LostInStoreIngestion extends LostDataMode
-
-  /** Data lost during encoding of data read from the database into HTTP scan API responses.
-    *
-    * Currently, this affects the `commandId` field in the `TransactionTree` object.
-    * For debug purposes, it is useful to have this field in the DB, but
-    * since it's participant-local, it does not make sense to expose it in scan -
-    * otherwise different scan instances would return different data.
-    */
-  final case object LostInScanApi extends LostDataMode
-
-  def withoutLostData(
-      update: TreeUpdateWithMigrationId,
-      mode: LostDataMode,
-  ): TreeUpdateWithMigrationId = {
-    TreeUpdateWithMigrationId(
-      UpdateHistoryTestBase.withoutLostData(update.update, mode),
-      update.migrationId,
-    )
-  }
-
+  // Discards data that is not maintained in the update history DB, thus cannot be compared to ledger API.
+  // If forBackfill is true, drops also data we do not preserve for backfilling Scan, at the time of writing,
+  // this is only the commandId. Not that for debug purposes, it is useful to have this field in the DB, but
+  // since it's participant-local, it does not make sense for backfilling.
   def withoutLostData(
       response: GetTreeUpdatesResponse,
-      mode: LostDataMode,
+      forBackfill: Boolean = false,
   ): GetTreeUpdatesResponse = {
     response match {
       case GetTreeUpdatesResponse(TransactionTreeUpdate(tree), domain) =>
-        GetTreeUpdatesResponse(TransactionTreeUpdate(withoutLostData(tree, mode)), domain)
+        GetTreeUpdatesResponse(TransactionTreeUpdate(withoutLostData(tree, forBackfill)), domain)
       case GetTreeUpdatesResponse(ReassignmentUpdate(transfer), domain) =>
         GetTreeUpdatesResponse(ReassignmentUpdate(withoutLostData(transfer)), domain)
       case _ => throw new RuntimeException("Invalid update type")
     }
   }
 
-  private def withoutLostData(tree: TransactionTree, mode: LostDataMode): TransactionTree = {
+  private def withoutLostData(tree: TransactionTree, forBackfill: Boolean): TransactionTree = {
     new TransactionTree(
       /*updateId = */ tree.getUpdateId,
-      /*commandId = */ if (mode == LostInScanApi) { "" }
+      /*commandId = */ if (forBackfill) { "" }
       else {
         tree.getCommandId
       }, // Command IDs are participant-local, so not preserved for backfills

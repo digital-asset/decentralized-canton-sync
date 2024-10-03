@@ -8,10 +8,9 @@ import Typography from '@mui/material/Typography';
 
 import { useBalance } from '../hooks';
 import useAmuletPrice from '../hooks/scan-proxy/useAmuletPrice';
-import { useWalletConfig } from '../utils/config';
+import { config } from '../utils/config';
 
 const Hero: React.FC = () => {
-  const config = useWalletConfig();
   const balanceQuery = useBalance();
   const amuletPriceQuery = useAmuletPrice();
 
@@ -28,7 +27,7 @@ const Hero: React.FC = () => {
         ) : (
           <Box>
             <Typography variant="h6">Total Available Balance</Typography>
-            <Typography id="wallet-balance-amulet" variant="h4">
+            <Typography id="wallet-balance-cc" variant="h4">
               <AmountDisplay amount={balanceQuery.data.availableCC} currency="AmuletUnit" />
             </Typography>
             <Typography id="wallet-balance-usd" variant="caption" style={{ marginRight: 12 }}>

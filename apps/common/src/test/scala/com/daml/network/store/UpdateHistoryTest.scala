@@ -9,14 +9,12 @@ import com.daml.network.environment.ledger.api.{
   TransactionTreeUpdate,
 }
 import com.daml.network.store.TreeUpdateWithMigrationId
-import com.daml.network.util.DomainRecordTimeRange
 import com.digitalasset.canton.concurrent.Threading
 import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.util.MonadUtil
 import com.google.rpc.status.Status
 import com.google.rpc.status.Status.toJavaProto
 
-import cats.syntax.traverse.*
 import java.time.Instant
 import scala.concurrent.Future
 import scala.jdk.CollectionConverters.*
@@ -31,7 +29,7 @@ class UpdateHistoryTest extends UpdateHistoryTestBase {
       migrationId: Long = migration1,
   ): Future[Seq[LedgerClient.GetTreeUpdatesResponse]] = {
     store
-      .getUpdates(None, includeImportUpdates = true, PageLimit.tryCreate(1000))
+      .getUpdates(None, PageLimit.tryCreate(1000))
       .map(_.filter(_.migrationId == migrationId).map(_.update))
   }
 
@@ -43,7 +41,7 @@ class UpdateHistoryTest extends UpdateHistoryTestBase {
         val store = mkStore()
         for {
           _ <- initStore(store)
-          _ <- create(domain1, cid1, offset1, party1, store, time(1))
+          _ <- create(domain1, cid1, offset1, party1, store)
           updates <- updates(store)
         } yield checkUpdates(
           updates,
@@ -125,10 +123,10 @@ class UpdateHistoryTest extends UpdateHistoryTestBase {
               domain1,
             )
           )
-          val actualWithoutLostData = updates.map(withoutLostData(_, mode = LostInStoreIngestion))
-          val expectedWithoutLostData =
-            expectedUpdates.map(withoutLostData(_, mode = LostInStoreIngestion))
-          actualWithoutLostData should contain theSameElementsInOrderAs expectedWithoutLostData
+          updates.map(withoutLostData(_)) should contain theSameElementsInOrderAs expectedUpdates
+            .map(
+              withoutLostData(_)
+            )
         }
       }
 
@@ -399,7 +397,6 @@ class UpdateHistoryTest extends UpdateHistoryTestBase {
                 after.map { case (migrationId, recordTime) =>
                   (migrationId, CantonTimestamp.assertFromInstant(recordTime))
                 },
-                includeImportUpdates = true,
                 PageLimit.tryCreate(1),
               )
               .futureValue
@@ -447,16 +444,8 @@ class UpdateHistoryTest extends UpdateHistoryTestBase {
             },
             maxCount = updates.size,
           )
-          all <- storeMigrationId1.getUpdates(
-            None,
-            includeImportUpdates = true,
-            PageLimit.tryCreate(1000),
-          )
-          all2 <- storeMigrationId2.getUpdates(
-            None,
-            includeImportUpdates = true,
-            PageLimit.tryCreate(1000),
-          )
+          all <- storeMigrationId1.getUpdates(None, PageLimit.tryCreate(1000))
+          all2 <- storeMigrationId2.getUpdates(None, PageLimit.tryCreate(1000))
         } yield {
           // It doesn't matter through which store we query since the migration id only matters for ingestion
           all shouldBe all2
@@ -473,109 +462,6 @@ class UpdateHistoryTest extends UpdateHistoryTestBase {
             (migrationId, u.update.recordTime)
           } shouldBe expected
         }
-      }
-
-      "getRecordTimeRange works" in {
-        val storeMigrationId1 = mkStore(party1, migration1, participant1)
-        val storeMigrationId2 = mkStore(party1, migration2, participant1)
-
-        for {
-          _ <- initStore(storeMigrationId1)
-          _ <- storeMigrationId1
-            .getRecordTimeRange(1)
-            .map(_ shouldBe Map.empty)
-          _ <-
-            (1 to 10).toList.traverse(i =>
-              create(
-                domain1,
-                validContractId(i),
-                validOffset(i),
-                party1,
-                storeMigrationId1,
-                time(i),
-              )
-            )
-          _ <- initStore(storeMigrationId2)
-          _ <- storeMigrationId1
-            .getRecordTimeRange(1)
-            .map(
-              _ shouldBe Map(
-                domain1 -> DomainRecordTimeRange(
-                  CantonTimestamp.assertFromInstant(defaultEffectiveAt.plusMillis(1)),
-                  CantonTimestamp.assertFromInstant(defaultEffectiveAt.plusMillis(10)),
-                )
-              )
-            )
-          _ <- storeMigrationId2
-            .getRecordTimeRange(1)
-            .map(
-              _ shouldBe Map(
-                domain1 -> DomainRecordTimeRange(
-                  CantonTimestamp.assertFromInstant(defaultEffectiveAt.plusMillis(1)),
-                  CantonTimestamp.assertFromInstant(defaultEffectiveAt.plusMillis(10)),
-                )
-              )
-            )
-          _ <- storeMigrationId2.getRecordTimeRange(2).map(_ shouldBe Map())
-
-          // We exclude CantonTimestamp.MinValue which are the transactions imported as part of the HDM as opposed to transactions actually sequenced.
-          _ <- create(
-            domain1,
-            validContractId(11),
-            validOffset(11),
-            party1,
-            storeMigrationId2,
-            CantonTimestamp.MinValue,
-          )
-
-          _ <- storeMigrationId2.getRecordTimeRange(2).map(_ shouldBe Map())
-
-          // insert a transaction after CantonTimestamp.MinValue which now advances the record timestamp boundaries.
-          _ <- create(
-            domain1,
-            validContractId(12),
-            validOffset(12),
-            party1,
-            storeMigrationId2,
-            time(12),
-          )
-
-          _ <- storeMigrationId2
-            .getRecordTimeRange(2)
-            .map(
-              _ shouldBe Map(
-                domain1 -> DomainRecordTimeRange(
-                  CantonTimestamp.assertFromInstant(defaultEffectiveAt.plusMillis(12)),
-                  CantonTimestamp.assertFromInstant(defaultEffectiveAt.plusMillis(12)),
-                )
-              )
-            )
-
-          // ingest on different domain
-          _ <- create(
-            domain2,
-            validContractId(13),
-            validOffset(13),
-            party1,
-            storeMigrationId2,
-            time(0),
-          )
-          _ <- storeMigrationId2
-            .getRecordTimeRange(2)
-            .map(
-              _ shouldBe Map(
-                domain1 -> DomainRecordTimeRange(
-                  CantonTimestamp.assertFromInstant(defaultEffectiveAt.plusMillis(12)),
-                  CantonTimestamp.assertFromInstant(defaultEffectiveAt.plusMillis(12)),
-                ),
-                domain2 -> DomainRecordTimeRange(
-                  CantonTimestamp.assertFromInstant(defaultEffectiveAt),
-                  CantonTimestamp.assertFromInstant(defaultEffectiveAt),
-                ),
-              )
-            )
-
-        } yield succeed
       }
 
     }

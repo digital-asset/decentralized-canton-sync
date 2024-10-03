@@ -8,7 +8,7 @@ import cats.data.OptionT
 import cats.syntax.either.*
 import com.digitalasset.daml.lf.data.Time.Timestamp
 import com.daml.network.admin.http.HttpErrorHandler
-import com.daml.network.codegen.java.splice.amulet
+import com.daml.network.codegen.java.splice.amulet.FeaturedAppRight
 import com.daml.network.codegen.java.splice.amuletrules.AmuletRules
 import com.daml.network.codegen.java.splice.round.{
   ClosedMiningRound,
@@ -18,19 +18,11 @@ import com.daml.network.codegen.java.splice.round.{
 }
 import com.daml.network.codegen.java.splice.ans as ansCodegen
 import com.daml.network.config.Thresholds
-import com.daml.network.config.SpliceInstanceNamesConfig
 import com.daml.network.environment.ParticipantAdminConnection
 import com.daml.network.http.v0.{definitions, scan as v0}
-import com.daml.network.http.v0.definitions.{
-  AcsRequest,
-  BatchListVotesByVoteRequestsRequest,
-  HoldingsStateRequest,
-  HoldingsSummaryRequest,
-  ListVoteResultsRequest,
-  MaybeCachedContractWithState,
-}
+import com.daml.network.http.v0.definitions.{AcsRequest, MaybeCachedContractWithState}
 import com.daml.network.http.v0.scan.ScanResource
-import com.daml.network.scan.store.{AcsSnapshotStore, ScanHistoryBackfilling, ScanStore, TxLogEntry}
+import com.daml.network.scan.store.{AcsSnapshotStore, ScanStore, SortOrder, TxLogEntry}
 import com.daml.network.util.{
   Codec,
   Contract,
@@ -39,10 +31,10 @@ import com.daml.network.util.{
   QualifiedName,
 }
 import com.daml.network.util.PrettyInstances.*
-import com.digitalasset.canton.logging.NamedLoggerFactory
+import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.participant.admin.data.ActiveContract
 import com.digitalasset.canton.topology.PartyId
-import com.digitalasset.canton.tracing.TraceContext
+import com.digitalasset.canton.tracing.{Spanning, TraceContext}
 import com.digitalasset.canton.util.ShowUtil.*
 import com.google.protobuf.ByteString
 import io.grpc.Status
@@ -60,34 +52,29 @@ import com.daml.network.http.v0.definitions.TransactionHistoryResponseItem.Trans
   Mint,
   Transfer,
 }
-import com.daml.network.http.{HttpValidatorLicensesHandler, HttpVotesHandler, UrlValidator}
+import com.daml.network.http.UrlValidator
 import com.daml.network.scan.dso.DsoAnsResolver
-import com.daml.network.store.{AppStore, PageLimit, SortOrder, VotesStore}
+import com.daml.network.store.PageLimit
 import com.digitalasset.canton.config.NonNegativeFiniteDuration
 import com.digitalasset.canton.time.Clock
 
 class HttpScanHandler(
     svParty: PartyId,
     svUserName: String,
-    spliceInstanceNames: SpliceInstanceNamesConfig,
     participantAdminConnection: ParticipantAdminConnection,
-    protected val store: ScanStore,
+    store: ScanStore,
     snapshotStore: AcsSnapshotStore,
     dsoAnsResolver: DsoAnsResolver,
     miningRoundsCacheTimeToLiveOverride: Option[NonNegativeFiniteDuration],
-    enableForcedAcsSnapshots: Boolean,
     clock: Clock,
     protected val loggerFactory: NamedLoggerFactory,
 )(implicit
     ec: ExecutionContextExecutor,
-    protected val tracer: Tracer,
+    tracer: Tracer,
 ) extends v0.ScanHandler[TraceContext]
-    with HttpVotesHandler
-    with HttpValidatorLicensesHandler {
-
-  override protected val workflowId: String = this.getClass.getSimpleName
-  override protected val votesStore: VotesStore = store
-  override protected val validatorLicensesStore: AppStore = store
+    with Spanning
+    with NamedLogging {
+  private val workflowId = this.getClass.getSimpleName
 
   def getDsoPartyId(
       response: v0.ScanResource.GetDsoPartyIdResponse.type
@@ -105,17 +92,17 @@ class HttpScanHandler(
     withSpan(s"$workflowId.getDsoInfo") { _ => _ =>
       for {
         latestOpenMiningRound <- store.getLatestActiveOpenMiningRound()
-        amuletRules <- store.getAmuletRulesWithState()
-        rulesAndStates <- store.getDsoRulesWithStateWithSvNodeStates()
+        amuletRules <- store.getAmuletRules()
+        rulesAndStates <- store.getDsoRulesWithSvNodeStates()
         dsoRules = rulesAndStates.dsoRules
       } yield definitions.GetDsoInfoResponse(
         svUser = svUserName,
         svPartyId = svParty.toProtoPrimitive,
         dsoPartyId = store.key.dsoParty.toProtoPrimitive,
         votingThreshold = Thresholds.requiredNumVotes(dsoRules),
-        latestMiningRound = latestOpenMiningRound.toContractWithState.toHttp,
+        latestMiningRound = latestOpenMiningRound.contract.toHttp,
         amuletRules = amuletRules.toHttp,
-        dsoRules = dsoRules.toHttp,
+        dsoRules = dsoRules.contract.toHttp,
         svNodeStates = rulesAndStates.svNodeStates.values.map(_.toHttp).toVector,
       )
     }
@@ -301,7 +288,7 @@ class HttpScanHandler(
     withSpan(s"$workflowId.listFeaturedAppRights") { _ => _ =>
       for {
         apps <- store.multiDomainAcsStore.listContracts(
-          amulet.FeaturedAppRight.COMPANION
+          FeaturedAppRight.COMPANION
         )
       } yield {
         definitions.ListFeaturedAppRightsResponse(apps.toVector.map(a => a.contract.toHttp))
@@ -556,16 +543,6 @@ class HttpScanHandler(
     }
   }
 
-  override def listValidatorLicenses(
-      respond: ScanResource.ListValidatorLicensesResponse.type
-  )(after: Option[Long], limit: Option[Int])(
-      extracted: TraceContext
-  ): Future[ScanResource.ListValidatorLicensesResponse] = {
-    this
-      .listValidatorLicenses(after, limit)(extracted, ec)
-      .map(ScanResource.ListValidatorLicensesResponse.OK)
-  }
-
   // TODO: (#7809) Add caching for sequencers per domain
   override def listDsoSequencers(
       respond: v0.ScanResource.ListDsoSequencersResponse.type
@@ -593,7 +570,7 @@ class HttpScanHandler(
               legacyConfig.sequencerId,
               legacyConfig.url,
               nodeState.svName,
-              OffsetDateTime.MIN,
+              OffsetDateTime.now,
             )
             sequencerConfig <- (legacySequencers ++ sequencers).distinct
           } yield sequencerConfig
@@ -690,29 +667,8 @@ class HttpScanHandler(
       updateHistory
         .getUpdates(
           afterO,
-          includeImportUpdates = false,
           PageLimit.tryCreate(request.pageSize),
         )
-        .flatMap { txs =>
-          // TODO(#14076: replace this with a better check for whether this scan instance has replicated all data)
-          if (
-            afterO.isEmpty && txs.headOption.exists(u =>
-              !ScanHistoryBackfilling
-                .isFoundingTransactionTreeUpdate(u.update, store.key.dsoParty.toProtoPrimitive)
-            )
-          ) {
-            logger.debug(s"Expected founding transaction, found ${txs.headOption}")
-            Future.failed(
-              Status.FAILED_PRECONDITION
-                .withDescription(
-                  s"This scan instance has not yet replicated all data. Wait before retrying, or connect to a different scan instance."
-                )
-                .asRuntimeException()
-            )
-          } else {
-            Future.successful(txs)
-          }
-        }
         .map { txs =>
           {
             val lossless = request.lossless.getOrElse(false)
@@ -720,7 +676,7 @@ class HttpScanHandler(
               if (lossless) LosslessScanHttpEncodings else LossyScanHttpEncodings
             definitions.UpdateHistoryResponse(
               txs
-                .map(encodings.lapiToHttpUpdate(_))
+                .map(encodings.ledgerTreeUpdateToHttp(_))
                 .toVector
             )
           }
@@ -914,6 +870,33 @@ class HttpScanHandler(
     }
   }
 
+  override def lookupTransferPreapprovalByParty(
+      respond: ScanResource.LookupTransferPreapprovalByPartyResponse.type
+  )(
+      party: String
+  )(extracted: TraceContext): Future[ScanResource.LookupTransferPreapprovalByPartyResponse] = {
+    implicit val tc = extracted
+    withSpan(s"$workflowId.lookupTransferPreapprovalByParty") { _ => _ =>
+      val partyId = PartyId.tryFromProtoPrimitive(party)
+      store
+        .lookupTransferPreapprovalByParty(
+          partyId
+        )
+        .map {
+          case Some(c) =>
+            v0.ScanResource.LookupTransferPreapprovalByPartyResponse.OK(
+              definitions.LookupTransferPreapprovalByPartyResponse(
+                c.toHttp
+              )
+            )
+          case None =>
+            v0.ScanResource.LookupTransferPreapprovalByPartyResponse.NotFound(
+              definitions.ErrorResponse(s"No TransferPreapproval found for party: $party")
+            )
+        }
+    }
+  }
+
   /** Filter the given ACS snapshot to contracts the given party is a stakeholder on */
   // TODO(#9340) Move this logic inside a Canton gRPC API.
   private def filterAcsSnapshot(input: ByteString, stakeholder: PartyId): ByteString = {
@@ -993,195 +976,41 @@ class HttpScanHandler(
     }
   }
 
-  override def forceAcsSnapshotNow(
-      respond: ScanResource.ForceAcsSnapshotNowResponse.type
-  )()(extracted: TraceContext): Future[ScanResource.ForceAcsSnapshotNowResponse] = {
-    implicit val tc: TraceContext = extracted
-    withSpan(s"$workflowId.forceAcsSnapshotNow") { _ => _ =>
-      if (!enableForcedAcsSnapshots) {
-        Future.successful(
-          ScanResource.ForceAcsSnapshotNowResponse.BadRequest(
-            definitions.ErrorResponse("Forced ACS snapshots are disabled.")
-          )
-        )
-      } else {
-        for {
-          domainId <- store
-            .lookupAmuletRules()
-            .map(
-              _.getOrElse(
-                throw io.grpc.Status.FAILED_PRECONDITION
-                  .withDescription("No amulet rules.")
-                  .asRuntimeException()
-              ).state.fold(
-                identity,
-                throw io.grpc.Status.FAILED_PRECONDITION
-                  .withDescription("Amulet rules are in flight.")
-                  .asRuntimeException(),
-              )
-            )
-          snapshotTime <- snapshotStore.updateHistory
-            .getUpdatesBefore(
-              snapshotStore.migrationId,
-              domainId,
-              CantonTimestamp.MaxValue,
-              PageLimit.tryCreate(1),
-            )
-            .map(
-              _.headOption
-                .getOrElse(
-                  throw io.grpc.Status.FAILED_PRECONDITION
-                    .withDescription("No updates ever happened for a snapshot.")
-                    .asRuntimeException()
-                )
-                .update
-                .update
-                .recordTime
-            )
-          lastSnapshot <- snapshotStore.lookupSnapshotBefore(
-            snapshotStore.migrationId,
-            snapshotTime,
-          )
-          // note that this will make it so that the next snapshot is taken N hours after THIS snapshot.
-          // this is, in principle, not a problem:
-          // - this will only be used in tests
-          // - wall clock tests must take manual snapshots anyway, because they can't wait
-          // - simtime tests will advanceTime(N.hours)
-          _ = logger.info(s"Forcing ACS snapshot at $snapshotTime. Last snapshot: $lastSnapshot")
-          _ <- snapshotStore.insertNewSnapshot(lastSnapshot, snapshotTime)
-        } yield ScanResource.ForceAcsSnapshotNowResponse.OK(
-          definitions.ForceAcsSnapshotResponse(
-            snapshotTime.toInstant.atOffset(ZoneOffset.UTC),
-            snapshotStore.migrationId,
-          )
-        )
-      }
-    }
-  }
-
   override def getAcsSnapshotAt(respond: ScanResource.GetAcsSnapshotAtResponse.type)(
       body: AcsRequest
-  )(extracted: TraceContext): Future[ScanResource.GetAcsSnapshotAtResponse] = {
-    implicit val tc: TraceContext = extracted
-    withSpan(s"$workflowId.getAcsSnapshotAt") { _ => _ =>
-      body match {
-        case AcsRequest(migrationId, recordTime, after, pageSize, partyIds, templates) =>
-          snapshotStore
-            .queryAcsSnapshot(
+  )(extracted: TraceContext): Future[ScanResource.GetAcsSnapshotAtResponse] = body match {
+    case AcsRequest(migrationId, recordTime, after, pageSize, partyIds, templates) =>
+      implicit val tc: TraceContext = extracted
+      snapshotStore
+        .queryAcsSnapshot(
+          migrationId,
+          CantonTimestamp.assertFromInstant(recordTime.toInstant),
+          after,
+          PageLimit.tryCreate(pageSize),
+          partyIds
+            .getOrElse(Seq.empty)
+            .map(PartyId.tryFromProtoPrimitive),
+          templates
+            .getOrElse(Seq.empty)
+            .map(_.split(":") match {
+              case Array(packageName, moduleName, entityName) =>
+                PackageQualifiedName(packageName, QualifiedName(moduleName, entityName))
+              case _ =>
+                throw HttpErrorHandler.badRequest(
+                  s"Malformed template_id, expected 'package_id:module_name:entity_name'"
+                )
+            }),
+        )
+        .map { result =>
+          ScanResource.GetAcsSnapshotAtResponseOK(
+            definitions.AcsResponse(
+              recordTime,
               migrationId,
-              CantonTimestamp.assertFromInstant(recordTime.toInstant),
-              after,
-              PageLimit.tryCreate(pageSize),
-              partyIds
-                .getOrElse(Seq.empty)
-                .map(PartyId.tryFromProtoPrimitive),
-              templates
-                .getOrElse(Seq.empty)
-                .map(_.split(":") match {
-                  case Array(packageName, moduleName, entityName) =>
-                    PackageQualifiedName(packageName, QualifiedName(moduleName, entityName))
-                  case _ =>
-                    throw HttpErrorHandler.badRequest(
-                      s"Malformed template_id, expected 'package_name:module_name:entity_name'"
-                    )
-                }),
-            )
-            .map { result =>
-              ScanResource.GetAcsSnapshotAtResponseOK(
-                definitions.AcsResponse(
-                  recordTime,
-                  migrationId,
-                  result.createdEventsInPage.map(LossyScanHttpEncodings.javaToHttpCreatedEvent(_)),
-                  result.afterToken,
-                )
-              )
-            }
-      }
-    }
-  }
-
-  override def getHoldingsStateAt(respond: ScanResource.GetHoldingsStateAtResponse.type)(
-      body: HoldingsStateRequest
-  )(extracted: TraceContext): Future[ScanResource.GetHoldingsStateAtResponse] = {
-    implicit val tc: TraceContext = extracted
-    withSpan(s"$workflowId.getAmuletStateAt") { _ => _ =>
-      body match {
-        case HoldingsStateRequest(migrationId, recordTime, after, pageSize, ownerPartyIds) =>
-          snapshotStore
-            .getHoldingsState(
-              migrationId,
-              CantonTimestamp.assertFromInstant(recordTime.toInstant),
-              after,
-              PageLimit.tryCreate(pageSize),
-              ownerPartyIds.map(PartyId.tryFromProtoPrimitive),
-            )
-            .map { result =>
-              ScanResource.GetHoldingsStateAtResponseOK(
-                definitions.AcsResponse(
-                  recordTime,
-                  migrationId,
-                  result.createdEventsInPage.map(LossyScanHttpEncodings.javaToHttpCreatedEvent(_)),
-                  result.afterToken,
-                )
-              )
-            }
-      }
-    }
-  }
-
-  override def getHoldingsSummaryAt(respond: ScanResource.GetHoldingsSummaryAtResponse.type)(
-      body: HoldingsSummaryRequest
-  )(extracted: TraceContext): Future[ScanResource.GetHoldingsSummaryAtResponse] = {
-    implicit val tc: TraceContext = extracted
-    withSpan(s"$workflowId.getHoldingsSummaryAt") { _ => _ =>
-      body match {
-        case HoldingsSummaryRequest(migrationId, recordTime, partyIds, asOfRound) =>
-          for {
-            round <- asOfRound match {
-              case Some(round) => Future.successful(round)
-              case None =>
-                // gives the earliest mining round, as listContracts orders by event_number ASC
-                store.multiDomainAcsStore
-                  .listContracts(OpenMiningRound.COMPANION, PageLimit.tryCreate(1))
-                  .map(
-                    _.headOption.getOrElse(
-                      throw Status.FAILED_PRECONDITION
-                        .withDescription("No open mining rounds found.")
-                        .asRuntimeException()
-                    )
-                  )
-                  .map(_.contract.payload.round.number.toLong)
-            }
-            result <- snapshotStore
-              .getHoldingsSummary(
-                migrationId,
-                CantonTimestamp.assertFromInstant(recordTime.toInstant),
-                partyIds.map(PartyId.tryFromProtoPrimitive),
-                round,
-              )
-          } yield ScanResource.GetHoldingsSummaryAtResponse.OK(
-            definitions.HoldingsSummaryResponse(
-              result.recordTime.toInstant.atOffset(ZoneOffset.UTC),
-              result.migrationId,
-              result.asOfRound,
-              result.summaries.map { case (partyId, holdings) =>
-                definitions.HoldingsSummary(
-                  partyId = Codec.encode(partyId),
-                  totalUnlockedCoin = Codec.encode(holdings.totalUnlockedCoin),
-                  totalLockedCoin = Codec.encode(holdings.totalLockedCoin),
-                  totalCoinHoldings = Codec.encode(holdings.totalCoinHoldings),
-                  accumulatedHoldingFeesUnlocked =
-                    Codec.encode(holdings.accumulatedHoldingFeesUnlocked),
-                  accumulatedHoldingFeesLocked =
-                    Codec.encode(holdings.accumulatedHoldingFeesLocked),
-                  accumulatedHoldingFeesTotal = Codec.encode(holdings.accumulatedHoldingFeesTotal),
-                  totalAvailableCoin = Codec.encode(holdings.totalAvailableCoin),
-                )
-              }.toVector,
+              result.createdEventsInPage.map(LossyScanHttpEncodings.createdEventToHttp(_)),
+              result.afterToken,
             )
           )
-      }
-    }
+        }
   }
 
   override def getAggregatedRounds(respond: ScanResource.GetAggregatedRoundsResponse.type)()(
@@ -1219,7 +1048,7 @@ class HttpScanHandler(
           )
         )(txWithMigration =>
           v0.ScanResource.GetUpdateByIdResponse.OK(
-            LossyScanHttpEncodings.lapiToHttpUpdate(txWithMigration)
+            LossyScanHttpEncodings.ledgerTreeUpdateToHttp(txWithMigration)
           )
         )
       }
@@ -1363,62 +1192,5 @@ class HttpScanHandler(
           )
         )
     }
-  }
-
-  override def getSpliceInstanceNames(
-      respond: ScanResource.GetSpliceInstanceNamesResponse.type
-  )()(extracted: TraceContext): Future[ScanResource.GetSpliceInstanceNamesResponse] = {
-    implicit val tc = extracted
-    withSpan(s"$workflowId.getSpliceInstanceNames") { _ => _ =>
-      Future.successful {
-        ScanResource.GetSpliceInstanceNamesResponse.OK(
-          definitions.GetSpliceInstanceNamesResponse(
-            networkName = spliceInstanceNames.networkName,
-            networkFaviconUrl = spliceInstanceNames.networkFaviconUrl,
-            amuletName = spliceInstanceNames.amuletName,
-            amuletNameAcronym = spliceInstanceNames.amuletNameAcronym,
-            nameServiceName = spliceInstanceNames.nameServiceName,
-            nameServiceNameAcronym = spliceInstanceNames.nameServiceNameAcronym,
-          )
-        )
-      }
-    }
-  }
-
-  override def listDsoRulesVoteRequests(
-      respond: ScanResource.ListDsoRulesVoteRequestsResponse.type
-  )()(extracted: TraceContext): Future[ScanResource.ListDsoRulesVoteRequestsResponse] = {
-    this
-      .listDsoRulesVoteRequests(extracted, ec)
-      .map(ScanResource.ListDsoRulesVoteRequestsResponse.OK)
-  }
-
-  override def listVoteRequestResults(respond: ScanResource.ListVoteRequestResultsResponse.type)(
-      body: ListVoteResultsRequest
-  )(extracted: TraceContext): Future[ScanResource.ListVoteRequestResultsResponse] = {
-    implicit val tc: TraceContext = extracted
-    this.listVoteRequestResults(body).map(ScanResource.ListVoteRequestResultsResponse.OK)
-  }
-
-  override def listVoteRequestsByTrackingCid(
-      respond: ScanResource.ListVoteRequestsByTrackingCidResponse.type
-  )(body: BatchListVotesByVoteRequestsRequest)(
-      extracted: TraceContext
-  ): Future[ScanResource.ListVoteRequestsByTrackingCidResponse] = {
-    implicit val tc: TraceContext = extracted
-    this
-      .listVoteRequestsByTrackingCid(body)
-      .map(ScanResource.ListVoteRequestsByTrackingCidResponse.OK)
-  }
-
-  override def lookupDsoRulesVoteRequest(
-      respond: ScanResource.LookupDsoRulesVoteRequestResponse.type
-  )(voteRequestContractId: String)(
-      extracted: TraceContext
-  ): Future[ScanResource.LookupDsoRulesVoteRequestResponse] = {
-    implicit val tc: TraceContext = extracted
-    this
-      .lookupDsoRulesVoteRequest(voteRequestContractId)
-      .map(ScanResource.LookupDsoRulesVoteRequestResponse.OK)
   }
 }

@@ -3,7 +3,7 @@
 
 ARG base_version
 
-FROM canton:${base_version}
+FROM --platform=linux/amd64 canton:${base_version}
 
 EXPOSE 5001
 EXPOSE 5002
@@ -11,6 +11,3 @@ EXPOSE 7575
 EXPOSE 10013
 
 COPY app.conf /app/
-
-HEALTHCHECK --start-period=10m \
-  CMD grpcurl -plaintext localhost:5061 grpc.health.v1.Health/Check || exit 1

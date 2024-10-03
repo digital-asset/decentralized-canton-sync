@@ -2,14 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useMutation } from '@tanstack/react-query';
 import BigNumber from 'bignumber.js';
-import {
-  AmountDisplay,
-  DateDisplay,
-  Loading,
-  PartyId,
-  SvClientProvider,
-  AmuletPriceVote,
-} from 'common-frontend';
+import { AmountDisplay, DateDisplay, Loading, PartyId, SvClientProvider } from 'common-frontend';
 import React, { useCallback, useState } from 'react';
 
 import EditIcon from '@mui/icons-material/Edit';
@@ -32,10 +25,10 @@ import { Numeric, Optional, Party } from '@daml/types';
 import { useSvAdminClient } from '../../contexts/SvAdminServiceContext';
 import { useDsoInfos } from '../../contexts/SvContext';
 import { useAmuletPriceVotes } from '../../hooks/useAmuletPriceVotes';
-import { useSvConfig } from '../../utils';
+import { AmuletPriceVote } from '../../models/models';
+import { config } from '../../utils';
 
 const DesiredAmuletPrice: React.FC = () => {
-  const config = useSvConfig();
   const amuletPriceVotesQuery = useAmuletPriceVotes();
   const { updateDesiredAmuletPrice } = useSvAdminClient();
   const [curPriceText, setCurPriceText] = useState<string>('0');
@@ -211,7 +204,6 @@ const OtherAmuletPricesRow: React.FC<OtherAmuletPricesRowProps> = ({
 };
 
 const DesiredAmuletPriceWithContexts: React.FC = () => {
-  const config = useSvConfig();
   return (
     <SvClientProvider url={config.services.sv.url}>
       <DesiredAmuletPrice />

@@ -88,38 +88,25 @@ class ScanIntegrationTest
         scan.svNodeStates should be(svNodeStates.map(_._2.toHttp))
     }
     // sanity checks
-    scan.dsoRules.contract.contractId should be(
+    scan.dsoRules.contractId should be(
       sv1Backend.participantClient.ledger_api_extensions.acs
         .filterJava(DsoRules.COMPANION)(dsoParty)
         .loneElement
         .id
         .contractId
     )
-    scan.amuletRules.contract.contractId should be(
+    scan.amuletRules.contractId should be(
       sv1Backend.participantClient.ledger_api_extensions.acs
         .filterJava(AmuletRules.COMPANION)(dsoParty)
         .loneElement
         .id
         .contractId
     )
-    scan.svNodeStates.map(_.contract.contractId) should be(
+    scan.svNodeStates.map(_.contractId) should be(
       sv1Backend.participantClient.ledger_api_extensions.acs
         .filterJava(SvNodeState.COMPANION)(dsoParty)
         .map(_.id.contractId)
     )
-  }
-
-  "returns expected splice instance names" in { implicit env =>
-    val spliceInstanceNames = sv1ScanBackend.getSpliceInstanceNames()
-
-    spliceInstanceNames.networkName should be("Splice")
-    spliceInstanceNames.networkFaviconUrl should be(
-      "https://www.hyperledger.org/hubfs/hyperledgerfavicon.png"
-    )
-    spliceInstanceNames.amuletName should be("Amulet")
-    spliceInstanceNames.amuletNameAcronym should be("AMT")
-    spliceInstanceNames.nameServiceName should be("Amulet Name Service")
-    spliceInstanceNames.nameServiceNameAcronym should be("ANS")
   }
 
   "list transaction pages in ascending and descending order" in { implicit env =>

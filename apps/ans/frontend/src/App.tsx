@@ -3,7 +3,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { AuthProvider, theme, UserProvider, ErrorRouterPage } from 'common-frontend';
-import { replaceEqualDeep } from 'common-frontend-utils';
+import { cnReplaceEqualDeep } from 'common-frontend-utils';
 import React from 'react';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 import {
@@ -22,14 +22,13 @@ import AuthCheck from './routes/authCheck';
 import Home from './routes/home';
 import PostPayment from './routes/postPayment';
 import Root from './routes/root';
-import { useAnsConfig } from './utils';
+import { config } from './utils';
 
 const Providers: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const config = useAnsConfig();
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
-        structuralSharing: replaceEqualDeep,
+        structuralSharing: cnReplaceEqualDeep,
       },
     },
   });
@@ -52,40 +51,38 @@ const Providers: React.FC<React.PropsWithChildren> = ({ children }) => {
   );
 };
 
-const App: React.FC = () => {
-  const config = useAnsConfig();
-  const router = createBrowserRouter(
-    createRoutesFromElements(
-      <Route
-        errorElement={<ErrorRouterPage />}
-        element={
-          <Providers>
-            <AuthCheck authConfig={config.auth} testAuthConfig={config.testAuth} />
-          </Providers>
-        }
-      >
-        <Route path="/" element={<Root />}>
-          <Route index element={<Home />} />
-          <Route path="home" element={<Home />} />
-          <Route path="post-payment" element={<PostPayment />} />
-        </Route>
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <Route
+      errorElement={<ErrorRouterPage />}
+      element={
+        <Providers>
+          <AuthCheck authConfig={config.auth} testAuthConfig={config.testAuth} />
+        </Providers>
+      }
+    >
+      <Route path="/" element={<Root />}>
+        <Route index element={<Home />} />
+        <Route path="home" element={<Home />} />
+        <Route path="post-payment" element={<PostPayment />} />
       </Route>
-    )
-  );
-  const pageTitle = config.spliceInstanceNames.nameServiceName;
-  return (
-    <ThemeProvider theme={theme}>
-      <HelmetProvider>
-        <Helmet>
-          <title>{pageTitle}</title>
-          <meta name="description" content={pageTitle} />
-          <link rel="icon" href={config.spliceInstanceNames.networkFaviconUrl} />
-        </Helmet>
-        <CssBaseline />
-        <RouterProvider router={router} />
-      </HelmetProvider>
-    </ThemeProvider>
-  );
-};
+    </Route>
+  )
+);
+
+const pageTitle = config.spliceInstanceNames.nameServiceName;
+const App: React.FC = () => (
+  <ThemeProvider theme={theme}>
+    <HelmetProvider>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageTitle} />
+        <link rel="icon" href={config.spliceInstanceNames.networkFaviconUrl} />
+      </Helmet>
+      <CssBaseline />
+      <RouterProvider router={router} />
+    </HelmetProvider>
+  </ThemeProvider>
+);
 
 export default App;

@@ -49,8 +49,9 @@ export const BaseAnsField: React.FC<BaseAnsFieldProps> = ({
   ...props
 }) => {
   const [resolvedPartyId, setResolvedPartyId] = React.useState<string>('');
+  //TODO(#13480): remove this fallback once we have a proper config in all apps
   const nameServiceAcronym =
-    window.splice_config.spliceInstanceNames?.nameServiceNameAcronym.toLowerCase();
+    window.splice_config.spliceInstanceNames?.nameServiceNameAcronym.toLowerCase() || 'cns';
   const dsoEntryName = `dso.${nameServiceAcronym}`;
   const filteredAnsEntriesData = ansEntries.data?.filter(entry => entry.name !== dsoEntryName);
 

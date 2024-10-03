@@ -5,7 +5,6 @@ package com.digitalasset.canton.crypto.store
 
 import cats.data.EitherT
 import com.daml.error.{ErrorCategory, ErrorCode, Explanation, Resolution}
-import com.digitalasset.canton.config.CantonRequireTypes.String300
 import com.digitalasset.canton.config.ProcessingTimeout
 import com.digitalasset.canton.crypto.*
 import com.digitalasset.canton.crypto.store.db.DbCryptoPrivateStore
@@ -72,17 +71,6 @@ trait CryptoPrivateStore extends AutoCloseable {
     case extended: CryptoPrivateStoreExtended => Some(extended)
     case _ => None
   }
-
-  /** Returns the KMS key id that corresponds to a given private key fingerprint
-    * or None if the private key is not stored in a KMS.
-    *
-    * @param keyId the private key fingerprint
-    * @return the KMS key id that matches the fingerprint, or None if key is not stored in a KMS
-    */
-  def queryKmsKeyId(keyId: Fingerprint)(implicit
-      traceContext: TraceContext
-  ): EitherT[FutureUnlessShutdown, CryptoPrivateStoreError, Option[String300]]
-
 }
 
 object CryptoPrivateStore {

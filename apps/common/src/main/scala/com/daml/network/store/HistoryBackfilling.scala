@@ -3,13 +3,18 @@
 
 package com.daml.network.store
 
+import cats.kernel.Semigroup
 import com.daml.network.store.HistoryBackfilling.Outcome.{
   BackfillingIsComplete,
   MoreWorkAvailableLater,
   MoreWorkAvailableNow,
 }
-import com.daml.network.store.HistoryBackfilling.{DestinationHistory, Outcome, SourceHistory}
-import com.daml.network.util.DomainRecordTimeRange
+import com.daml.network.store.HistoryBackfilling.{
+  DestinationHistory,
+  DomainRecordTimeRange,
+  Outcome,
+  SourceHistory,
+}
 import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.topology.DomainId
@@ -42,7 +47,8 @@ final class HistoryBackfilling[T](
     batchSize: Int,
     override protected val loggerFactory: NamedLoggerFactory,
 )(implicit
-    ec: ExecutionContext
+    ec: ExecutionContext,
+    tc: TraceContext,
 ) extends NamedLogging {
 
   /** Backfill a small part of the local history, making sure that the local history won't have any gaps.
@@ -52,7 +58,7 @@ final class HistoryBackfilling[T](
     *
     * This function is *NOT* safe to call concurrently from multiple threads.
     */
-  def backfill()(implicit tc: TraceContext): Future[Outcome] = {
+  def backfill(): Future[Outcome] = {
     if (!source.isReady) {
       logger.info("Source history is not ready, skipping backfill for now")
       Future.successful(MoreWorkAvailableLater)
@@ -80,7 +86,7 @@ final class HistoryBackfilling[T](
 
   private def backfillMigrationIdRange(
       destMigrationIdRange: (Long, Long)
-  )(implicit tc: TraceContext): Future[Outcome] = {
+  ): Future[Outcome] = {
     // Start backfilling the oldest migration id - since there are no gaps,
     // all other migrations do not need to be backfilled.
     val migrationId = destMigrationIdRange._1
@@ -109,7 +115,7 @@ final class HistoryBackfilling[T](
   private def backfillMigrationId(
       migrationId: Long,
       destMigrationIdRange: (Long, Long),
-  )(implicit tc: TraceContext): Future[Outcome] = {
+  ): Future[Outcome] = {
     for {
       remoteRecordTimes <- source.recordTimeRange(migrationId)
       localRecordTimes <- destination.recordTimeRange(migrationId)
@@ -153,7 +159,7 @@ final class HistoryBackfilling[T](
       srcRecordTimes: Map[DomainId, DomainRecordTimeRange],
       migrationId: Long,
       destMigrationIdRange: (Long, Long),
-  )(implicit tc: TraceContext): Seq[(DomainId, CantonTimestamp)] = {
+  ): Seq[(DomainId, CantonTimestamp)] = {
     srcRecordTimes
       .map {
         case (domainId, srcRecordTime) => {
@@ -213,7 +219,7 @@ final class HistoryBackfilling[T](
       migrationId: Long,
       domainId: DomainId,
       backfillFrom: CantonTimestamp,
-  )(implicit tc: TraceContext): Future[Outcome] = {
+  ): Future[Outcome] = {
     for {
       items <- source.items(migrationId, domainId, backfillFrom, batchSize)
       _ <- destination.insert(migrationId, domainId, items)
@@ -248,11 +254,13 @@ object HistoryBackfilling {
     final case object BackfillingIsComplete extends Outcome
   }
 
-  final case class MigrationInfo(
-      previousMigrationId: Option[Long],
-      recordTimeRange: Map[DomainId, DomainRecordTimeRange],
-      complete: Boolean,
+  final case class DomainRecordTimeRange(
+      min: CantonTimestamp,
+      max: CantonTimestamp,
   )
+  implicit def domainTimeRangeSemigroupUnion: Semigroup[DomainRecordTimeRange] =
+    (x: DomainRecordTimeRange, y: DomainRecordTimeRange) =>
+      DomainRecordTimeRange(x.min min y.min, x.max max y.max)
 
   trait SourceHistory[T] {
 

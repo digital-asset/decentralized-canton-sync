@@ -14,14 +14,11 @@ import com.daml.network.store.{
   MiningRoundsStore,
   MultiDomainAcsStore,
   PageLimit,
-  SortOrder,
-  VotesStore,
 }
 import com.daml.network.codegen.java.splice.amulet.FeaturedAppRight
 import com.daml.network.migration.DomainMigrationInfo
 import com.daml.network.scan.store.db.{DbScanStore, ScanAggregatesReader, ScanAggregator}
 import com.daml.network.scan.store.db.ScanTables.ScanAcsStoreRowData
-import com.daml.network.store.db.AcsJdbcTypes
 import com.daml.network.util.{
   AmuletConfigSchedule,
   Contract,
@@ -42,6 +39,12 @@ import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
 import java.time.Instant
 
+sealed trait SortOrder
+
+object SortOrder {
+  case object Ascending extends SortOrder
+  case object Descending extends SortOrder
+}
 final case class ScanInfo(publicUrl: String, svName: String)
 
 /** Utility class grouping the two kinds of stores managed by the DsoApp. */
@@ -49,8 +52,7 @@ trait ScanStore
     extends AppStore
     with PackageIdResolver.HasAmuletRules
     with DsoRulesStore
-    with MiningRoundsStore
-    with VotesStore {
+    with MiningRoundsStore {
 
   def aggregate()(implicit
       tc: TraceContext
@@ -75,7 +77,7 @@ trait ScanStore
     ]
   ]
 
-  def getAmuletRulesWithState()(implicit
+  private def getAmuletRulesWithState()(implicit
       tc: TraceContext
   ): Future[
     ContractWithState[splice.amuletrules.AmuletRules.ContractId, splice.amuletrules.AmuletRules]
@@ -95,7 +97,7 @@ trait ScanStore
       f: splice.dso.svstate.SvNodeState => Vector[(String, T)]
   )(implicit tc: TraceContext): Future[Vector[(String, Vector[T])]] = {
     for {
-      dsoRules <- getDsoRulesWithState()
+      dsoRules <- getDsoRules()
       nodeStates <- Future.traverse(dsoRules.payload.svs.asScala.keys) { svPartyId =>
         getSvNodeState(PartyId.tryFromProtoPrimitive(svPartyId))
       }
@@ -216,6 +218,15 @@ trait ScanStore
 
   def lookupEntryByName(name: String, now: CantonTimestamp)(implicit tc: TraceContext): Future[
     Option[ContractWithState[splice.ans.AnsEntry.ContractId, splice.ans.AnsEntry]]
+  ]
+
+  def lookupTransferPreapprovalByParty(
+      partyId: PartyId
+  )(implicit tc: TraceContext): Future[
+    Option[ContractWithState[
+      splice.transferpreapproval.TransferPreapproval.ContractId,
+      splice.transferpreapproval.TransferPreapproval,
+    ]]
   ]
 
   def listTransactions(
@@ -389,15 +400,13 @@ object ScanStore {
               svParty = Some(PartyId.tryFromProtoPrimitive(contract.payload.sv)),
             )
         },
-        mkFilter(splice.dsorules.VoteRequest.COMPANION)(co => co.payload.dso == dso) { contract =>
+        mkFilter(splice.transferpreapproval.TransferPreapproval.COMPANION)(co =>
+          co.payload.dso == dso
+        ) { contract =>
           ScanAcsStoreRowData(
             contract,
-            contractExpiresAt = Some(Timestamp.assertFromInstant(contract.payload.voteBefore)),
-            voteActionRequiringConfirmation =
-              Some(AcsJdbcTypes.payloadJsonFromDefinedDataType(contract.payload.action)),
-            voteRequesterName = Some(contract.payload.requester),
-            voteRequestTrackingCid =
-              Some(contract.payload.trackingCid.toScala.getOrElse(contract.contractId)),
+            transferPreapprovalReceiver =
+              Some(PartyId.tryFromProtoPrimitive(contract.payload.receiver)),
           )
         },
       ),

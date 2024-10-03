@@ -33,7 +33,8 @@ cli_handler.setFormatter(
         },
     )
 )
-file_handler = None  # set in main() based on CLI args
+file_handler = logging.FileHandler("log/scan_txlog.log")
+file_handler.setFormatter(logging.Formatter("%(levelname)s:%(name)s:%(message)s"))
 
 # Set precision and rounding mode
 getcontext().prec = 38
@@ -53,7 +54,7 @@ def _default_logger(name, loglevel):
 
 
 # Global logger, always accessible
-LOG = None
+LOG = _default_logger("global", "INFO")
 
 
 def _party_enabled(args, p):
@@ -124,9 +125,6 @@ class TemplateQualifiedNames:
     validator_reward_coupon = "Splice.Amulet:ValidatorRewardCoupon"
     sv_reward_coupon = "Splice.Amulet:SvRewardCoupon"
     validator_faucet_coupon = "Splice.ValidatorLicense:ValidatorFaucetCoupon"
-    validator_liveness_activity_record = (
-        "Splice.ValidatorLicense:ValidatorLivenessActivityRecord"
-    )
     open_mining_round = "Splice.Round:OpenMiningRound"
     summarizing_mining_round = "Splice.Round:SummarizingMiningRound"
     issuing_mining_round = "Splice.Round:IssuingMiningRound"
@@ -136,8 +134,7 @@ class TemplateQualifiedNames:
     dso_rules = "Splice.DsoRules:DsoRules"
     dso_bootstrap = "Splice.DsoBootstrap:DsoBootstrap"
     amulet_rules = "Splice.AmuletRules:AmuletRules"
-
-    unclaimed_reward = "Splice.Amulet:UnclaimedReward"
+    transfer_preapproval = "Splice.TransferPreapproval:TransferPreapproval"
 
     all_tracked = set(
         [
@@ -147,31 +144,11 @@ class TemplateQualifiedNames:
             validator_reward_coupon,
             sv_reward_coupon,
             validator_faucet_coupon,
-            validator_liveness_activity_record,
             open_mining_round,
             summarizing_mining_round,
             issuing_mining_round,
             ans_entry_context,
             subscription_idle_state,
-            unclaimed_reward,
-        ]
-    )
-
-    all_tracked_with_package_name = set(
-        [
-            "splice-amulet:" + amulet,
-            "splice-amulet:" + locked_amulet,
-            "splice-amulet:" + app_reward_coupon,
-            "splice-amulet:" + validator_reward_coupon,
-            "splice-amulet:" + sv_reward_coupon,
-            "splice-amulet:" + validator_faucet_coupon,
-            "splice-amulet:" + validator_liveness_activity_record,
-            "splice-amulet:" + open_mining_round,
-            "splice-amulet:" + summarizing_mining_round,
-            "splice-amulet:" + issuing_mining_round,
-            "splice-amulet-name-service:" + ans_entry_context,
-            "splice-wallet-payments:" + subscription_idle_state,
-            "splice-amulet:" + unclaimed_reward,
         ]
     )
 
@@ -295,26 +272,6 @@ class ScanClient:
             *[self.balance(party, round_number) for party in parties]
         )
         return dict(balances)
-
-    async def get_acs_snapshot_page_at(
-        self, migration_id, record_time, templates, after
-    ):
-        payload = {
-            "migration_id": migration_id,
-            "record_time": record_time.isoformat(),
-            "page_size": 1000,
-            "templates": list(templates),
-        }
-        if after:
-            payload["after"] = after
-
-        response = await self.session.post(
-            f"{self.url}/api/scan/v0/state/acs",
-            json=payload,
-        )
-        response.raise_for_status()
-        json = await response.json()
-        return json
 
 
 # Daml Decimals have a precision of 38 and a scale of 10, i.e., 10 digits after the decimal point.
@@ -749,24 +706,12 @@ class LfValue:
     def get_receive_validator_faucet_coupon_result_coupon_cid(self):
         return self.__get_record_field("couponCid").get_contract_id()
 
-    # data ValidatorLicense_RecordValidatorLivenessActivityResult -> livenessActivityRecord
-    def get_record_validator_liveness_activity_result_record_cid(self):
-        return self.__get_record_field("couponCid").get_contract_id()
-
     # template ValidatorFaucetCoupon -> validator
     def get_validator_faucet_validator(self):
         return self.__get_record_field("validator").__get_party()
 
     # template ValidatorFaucetCoupon -> round
     def get_validator_faucet_round(self):
-        return self.__get_record_field("round").__get_round_number()
-
-    # template ValidatorLivenessActivityRecord -> validator
-    def get_validator_liveness_activity_record_validator(self):
-        return self.__get_record_field("validator").__get_party()
-
-    # template ValidatorLivenessActivityRecord -> round
-    def get_validator_liveness_activity_record_round(self):
         return self.__get_record_field("round").__get_round_number()
 
     # template ValidatorRewardCoupon -> user
@@ -873,10 +818,6 @@ class LfValue:
 
     # template AppRewardCoupon -> amount
     def get_app_reward_amount(self):
-        return self.__get_record_field("amount").__get_numeric()
-
-    # template UnclaimedReward -> amount
-    def get_unclaimed_reward_amount(self):
         return self.__get_record_field("amount").__get_numeric()
 
     # template AppRewardCoupon -> round
@@ -1238,7 +1179,6 @@ class TransferInputs:
         app_rewards,
         validator_rewards,
         validator_faucets,
-        validator_liveness_activity_records,
         sv_rewards,
         amulets,
         round_number,
@@ -1247,7 +1187,6 @@ class TransferInputs:
         self.app_rewards = app_rewards
         self.validator_rewards = validator_rewards
         self.validator_faucets = validator_faucets
-        self.validator_liveness_activity_records = validator_liveness_activity_records
         self.sv_rewards = sv_rewards
         self.amulets = amulets
         self.round_number = round_number
@@ -1348,20 +1287,6 @@ class TransferInputs:
         output += validator_faucet_outputs
         effective_inputs += validator_faucet_inputs
 
-        (
-            validator_liveness_activity_record_outputs,
-            validator_liveness_activity_record_inputs,
-            validator_liveness_activity_record_total_cc,
-            all_validator_liveness_activity_record,
-        ) = self.summarize_reward_type(
-            "validator_faucet_activity_record",
-            self.validator_liveness_activity_records,
-            lambda r: r.get_issuing_mining_round_issuance_per_validator_faucet(),
-            lambda r: DamlDecimal(1),  # records always have value 1
-        )
-        output += validator_liveness_activity_record_outputs
-        effective_inputs += validator_liveness_activity_record_inputs
-
         (sv_outputs, sv_inputs, sv_total_cc, all_sv_activity) = (
             self.summarize_reward_type(
                 "sv_activity_record",
@@ -1378,7 +1303,6 @@ class TransferInputs:
             + featured_total_cc
             + validator_total_cc
             + validator_faucet_total_cc
-            + validator_liveness_activity_record_total_cc
             + sv_total_cc
         )
 
@@ -1415,7 +1339,6 @@ class TransferInputs:
             + all_featured
             + all_validator
             + all_validator_faucet
-            + all_validator_liveness_activity_record
             + all_sv_activity
             + all_amulet
         )
@@ -1439,7 +1362,6 @@ class PerPartyState:
     featured_app_reward_coupons: dict
     validator_reward_coupons: list
     validator_faucet_coupons: list
-    validator_activity_record: list
 
     open_mining_round_numbers: list
 
@@ -1452,7 +1374,6 @@ class PerPartyState:
         self.featured_app_reward_coupons = {}
         self.validator_reward_coupons = {}
         self.validator_faucet_coupons = {}
-        self.validator_activity_records = {}
         self.open_mining_round_numbers = open_mining_round_numbers
 
     def __effective_amount__(self, amount, round_number):
@@ -1523,9 +1444,9 @@ class PerPartyState:
             ]
         if self.validator_reward_coupons:
             lines += [f"validator_activity_records: {self.validator_reward_coupons}"]
-        if self.validator_faucet_coupons or self.validator_activity_records:
+        if self.validator_faucet_coupons:
             lines += [
-                f"validator_liveness_activity_records: {self.validator_faucet_coupons | self.validator_activity_records} "
+                f"validator_liveness_activity_records: {self.validator_faucet_coupons}"
             ]
         return "\n".join(lines)
 
@@ -1548,18 +1469,9 @@ class State:
     synchronizer_id: Optional[str]
     csv_report: CSVReport
     for_round: Optional[int]
-    total_minted: DamlDecimal
-    total_burnt: DamlDecimal
 
     def __init__(
-        self,
-        args,
-        active_contracts,
-        record_time,
-        synchronizer_id,
-        csv_report,
-        total_minted,
-        total_burnt,
+        self, args, active_contracts, record_time, synchronizer_id, csv_report
     ):
         self.args = args
         self.active_contracts = active_contracts
@@ -1567,8 +1479,6 @@ class State:
         self.synchronizer_id = synchronizer_id
         self.csv_report = csv_report
         self.for_round = None
-        self.total_minted = total_minted
-        self.total_burnt = total_burnt
 
     def clone(self):
         return State(
@@ -1577,8 +1487,6 @@ class State:
             self.record_time,
             self.synchronizer_id,
             self.csv_report,
-            self.total_minted,
-            self.total_burnt,
         )
 
     def clone_for_round(self, for_round):
@@ -1597,8 +1505,6 @@ class State:
             datetime.fromisoformat(json["record_time"]),
             json["synchronizer_id"],
             csv_report,
-            DamlDecimal(json["total_minted"]),
-            DamlDecimal(json["total_burnt"]),
         )
 
     def to_json(self):
@@ -1609,8 +1515,6 @@ class State:
             },
             "record_time": self.record_time.isoformat(),
             "synchronizer_id": self.synchronizer_id,
-            "total_minted": str(self.total_minted),
-            "total_burnt": str(self.total_burnt),
         }
 
     def _txinfo(self, transaction, operation, message, parties=None):
@@ -1668,9 +1572,6 @@ class State:
         )
         validator_faucets = self.list_contracts(
             TemplateQualifiedNames.validator_faucet_coupon
-        )
-        validator_activity_records = self.list_contracts(
-            TemplateQualifiedNames.validator_liveness_activity_record
         )
         sv_rewards = self.list_contracts(TemplateQualifiedNames.sv_reward_coupon)
         open_mining_rounds = self.list_contracts(
@@ -1758,20 +1659,6 @@ class State:
                 round_number, 0
             )
             per_party_states[validator].validator_faucet_coupons[round_number] += 1
-        for validator_activity_record in validator_activity_records.values():
-            validator = (
-                validator_activity_record.payload.get_validator_liveness_activity_record_validator()
-            )
-            per_party_states.setdefault(
-                validator, PerPartyState(self.args, open_mining_round_numbers)
-            )
-            round_number = (
-                validator_activity_record.payload.get_validator_liveness_activity_record_round()
-            )
-            per_party_states[validator].validator_activity_records.setdefault(
-                round_number, 0
-            )
-            per_party_states[validator].validator_activity_records[round_number] += 1
         for sv_reward in sv_rewards.values():
             beneficiary = sv_reward.payload.get_sv_reward_coupon_beneficiary()
             per_party_states.setdefault(
@@ -1793,19 +1680,6 @@ class State:
                 f"    {party}:\n{textwrap.indent(str(state), '      ')}"
                 for party, state in sorted(per_party_states.items())
                 if _party_enabled(self.args, party)
-            ]
-        )
-
-    def total_summary(self):
-        unminted_coins = self.list_contracts(TemplateQualifiedNames.unclaimed_reward)
-        unminted_total = DamlDecimal(0)
-        for unminted_coin in unminted_coins.values():
-            unminted_total += unminted_coin.payload.get_unclaimed_reward_amount()
-        return "\n".join(
-            [
-                f"    Total Unminted: {unminted_total}"
-                f"    Total Minted: {self.total_minted}"
-                f"    Total Burnt: {self.total_burnt}"
             ]
         )
 
@@ -1921,9 +1795,6 @@ class State:
         if not self.args.disable_state_summaries and result.for_open_round:
             self._txinfo(transaction, "Transaction", self.summary())
 
-        if result.for_open_round:
-            self._txinfo(transaction, "Transaction Total", self.total_summary())
-
         return result
 
     def handle_root_event(self, transaction, event):
@@ -1944,6 +1815,8 @@ class State:
 
         match event.template_id.qualified_name:
             case TemplateQualifiedNames.dso_bootstrap:
+                pass
+            case TemplateQualifiedNames.transfer_preapproval:
                 pass
             case _:
                 self._fail(transaction, f"Unexpected root CreatedEvent: {event}")
@@ -1993,32 +1866,12 @@ class State:
 
         return HandleTransactionResult.for_open_round(round_number)
 
-    def handle_record_validator_liveness_activity_record(self, transaction, event):
-        coupon_cid = (
-            event.exercise_result.get_record_validator_liveness_activity_result_record_cid()
-        )
-        coupon = transaction.by_contract_id[coupon_cid]
-        self.active_contracts[coupon_cid] = coupon
-
-        round_number = coupon.payload.get_validator_liveness_activity_record_round()
-        validator = coupon.payload.get_validator_liveness_activity_record_validator()
-
-        self._txinfo(
-            transaction,
-            "ValidatorLivenessActivityRecord",
-            f"Validator liveness activity recorded in round {round_number} for validator {validator}",
-            parties=[validator],
-        )
-
-        return HandleTransactionResult.for_open_round(round_number)
-
     def handle_transfer_inputs(
         self, transaction, sender, transfer_round_number, inputs
     ):
         app_rewards = {}
         validator_rewards = {}
         validator_faucets = {}
-        validator_liveness_activity_records = {}
         sv_rewards = {}
         amulets = []
         for i in inputs:
@@ -2061,23 +1914,12 @@ class State:
                         validator_faucets.setdefault(round_number, []).append(
                             validator_faucet
                         )
-                case "InputValidatorLivenessActivityRecord":
-                    cid = value.get_contract_id()
-                    validator_liveness_activity_record = self.active_contracts[cid]
-                    round_number = (
-                        validator_liveness_activity_record.payload.get_validator_liveness_activity_record_round()
-                    )
-                    validator_liveness_activity_records.setdefault(
-                        round_number, []
-                    ).append(validator_liveness_activity_record)
-                    del self.active_contracts[cid]
                 case _:
                     self._fail(transaction, f"Unexpected transfer input: {tag}")
         return TransferInputs(
             app_rewards,
             validator_rewards,
             validator_faucets,
-            validator_liveness_activity_records,
             sv_rewards,
             amulets,
             transfer_round_number,
@@ -2303,9 +2145,6 @@ class State:
             ),
             parties=interested_parties,
         )
-        self.total_burnt += summary.get_fees_total() + (
-            initial_amulet_cc_input - amulet_cc_input
-        )
 
         self._report_line(
             transaction,
@@ -2315,7 +2154,6 @@ class State:
                 "record_time": transaction.record_time,
                 "provider": provider,
                 "sender": sender,
-                "round": round_number,
                 "input_reward_cc_total": reward_cc_input,
                 "input_amulet_cc_total": amulet_cc_input,
                 "holding_fees_total": initial_amulet_cc_input - amulet_cc_input,
@@ -2346,21 +2184,6 @@ class State:
                 },
                 parties=interested_parties,
             )
-            match i.source:
-                case "validator_faucet_activity_record":
-                    self.total_minted += i.effective_amount
-                case "validator_activity_record":
-                    self.total_minted += i.effective_amount
-                case "unfeatured_app_activity_record":
-                    self.total_minted += i.effective_amount
-                case "featured_app_activity_record":
-                    self.total_minted += i.effective_amount
-                case "sv_activity_record":
-                    self.total_minted += i.effective_amount
-                case "amulet":
-                    pass
-                case _:
-                    self._fail(transaction, f"Unknown input source: {i.source}")
 
         for o in all_outputs:
             self._report_line(
@@ -2471,7 +2294,6 @@ class State:
             all_outputs,
             [sender_change_fee, amulet_paid],
         )
-
         if transfer_error := summary.get_error("buy_traffic"):
             self._fail(transaction, f"Buy Traffic Error: {transfer_error}")
 
@@ -2520,10 +2342,6 @@ class State:
                 "tx_fees_total": summary.get_fees_total(),
             },
             parties=interested_parties,
-        )
-
-        self.total_burnt += summary.get_fees_total() + (
-            initial_amulet_cc_input - amulet_cc_input
         )
 
         for i in all_inputs:
@@ -2718,8 +2536,6 @@ class State:
                     match event.template_id.qualified_name:
                         case TemplateQualifiedNames.open_mining_round:
                             del self.active_contracts[event.contract_id]
-                        case TemplateQualifiedNames.unclaimed_reward:
-                            del self.active_contracts[event.contract_id]
                         case _:
                             pass
             else:
@@ -2814,9 +2630,6 @@ class State:
             ),
             parties=[user],
         )
-
-        self.total_burnt += amount.get_expiring_amount_initial_amount()
-
         return HandleTransactionResult.for_open_round(round_number)
 
     def handle_execute_confirmed_action(self, transaction, event):
@@ -2851,15 +2664,6 @@ class State:
                         self.active_contracts[issuing_mining_round_cid] = (
                             issuing_mining_round
                         )
-                        for event_id in amulet_rules_event.child_event_ids:
-                            event = transaction.events_by_id[event_id]
-                            match event.template_id.qualified_name:
-                                case TemplateQualifiedNames.unclaimed_reward:
-                                    if isinstance(event, CreatedEvent):
-                                        self.active_contracts[event.contract_id] = event
-                                    else:
-                                        del self.active_contracts[event.contract_id]
-
                         if not self.args.hide_round_events:
                             self._txinfo(
                                 transaction,
@@ -2898,18 +2702,6 @@ class State:
             case _:
                 self._fail(transaction, f"Unexpected action: {action}")
 
-    def handle_merge_unclaimed_rewards(self, transaction, event):
-        for event_id in transaction.events_by_id:
-            event = transaction.events_by_id[event_id]
-            match event.template_id.qualified_name:
-                case TemplateQualifiedNames.unclaimed_reward:
-                    if isinstance(event, CreatedEvent):
-                        self.active_contracts[event.contract_id] = event
-                    else:
-                        del self.active_contracts[event.contract_id]
-
-        return HandleTransactionResult.empty()
-
     def handle_claim_expired_rewards(self, transaction, event):
         assert len(event.child_event_ids) == 1
         amulet_rules_event = transaction.events_by_id[event.child_event_ids[0]]
@@ -2918,10 +2710,6 @@ class State:
         round = 0
         for event_id in amulet_rules_event.child_event_ids:
             event = transaction.events_by_id[event_id]
-            if isinstance(event, CreatedEvent):
-                match event.template_id.qualified_name:
-                    case TemplateQualifiedNames.unclaimed_reward:
-                        self.active_contracts[event.contract_id] = event
             if isinstance(event, ExercisedEvent):
                 cid = event.contract_id
                 match event.choice_name:
@@ -2950,20 +2738,6 @@ class State:
                         )
                         validator = (
                             validator_faucet_coupon.payload.get_validator_faucet_validator()
-                        )
-                        if _party_enabled(self.args, validator):
-                            rewards_lines += [
-                                f"  validator_liveness_record: validator: {validator}"
-                            ]
-                        del self.active_contracts[cid]
-                    case "ValidatorLivenessActivityRecord_DsoExpire":
-                        validator_liveness_activity_record = self.active_contracts[cid]
-                        rewards += [validator_liveness_activity_record]
-                        round = validator = (
-                            validator_liveness_activity_record.payload.get_validator_faucet_round()
-                        )
-                        validator = (
-                            validator_liveness_activity_record.payload.get_validator_faucet_validator()
                         )
                         if _party_enabled(self.args, validator):
                             rewards_lines += [
@@ -3141,10 +2915,6 @@ class State:
                 return self.handle_receive_sv_reward_coupon(transaction, event)
             case "ValidatorLicense_ReceiveFaucetCoupon":
                 return self.handle_receive_validator_faucet_coupon(transaction, event)
-            case "ValidatorLicense_RecordValidatorLivenessActivity":
-                return self.handle_record_validator_liveness_activity_record(
-                    transaction, event
-                )
             case "ValidatorLicense_UpdateMetadata":
                 return HandleTransactionResult.empty()
             case "ValidatorLicense_ReportActive":
@@ -3195,7 +2965,8 @@ class State:
             case "DsoRules_ClaimExpiredRewards":
                 return self.handle_claim_expired_rewards(transaction, event)
             case "DsoRules_MergeUnclaimedRewards":
-                return self.handle_merge_unclaimed_rewards(transaction, event)
+                # No change to the tracked ACS.
+                return HandleTransactionResult.empty()
             case "DsoRules_AdvanceOpenMiningRounds":
                 return self.handle_advance_open_mining_rounds(transaction, event)
             case "DsoRules_ExecuteConfirmedAction":
@@ -3257,8 +3028,6 @@ class State:
             case "AmuletRules_AddFutureAmuletConfigSchedule":
                 return HandleTransactionResult.empty()
             case "DsoRules_PruneAmuletConfigSchedule":
-                return HandleTransactionResult.empty()
-            case "DsoRules_MergeValidatorLicense":
                 return HandleTransactionResult.empty()
             case choice:
                 choice_str = f"{event.template_id.qualified_name}:{choice}"
@@ -3330,7 +3099,7 @@ class AppState:
 
     @classmethod
     def empty(cls, args, csv_report):
-        state = State(args, {}, None, None, csv_report, DamlDecimal(0), DamlDecimal(0))
+        state = State(args, {}, None, None, csv_report)
         return cls(state, {}, None)
 
     @classmethod
@@ -3428,12 +3197,6 @@ def _parse_cli_args():
         "Otherwise, processing will start from beginning of the network.",
     )
     parser.add_argument(
-        "--log-file-path",
-        default="log/scan_txlog.log",
-        help="File path to save application log to. "
-        "If the file exists, processing will append to file.",
-    )
-    parser.add_argument(
         "--page-size",
         type=int,
         default=100,
@@ -3476,14 +3239,6 @@ def _parse_cli_args():
     parser.add_argument(
         "--report-output",
         help="The name of a file to which a CSV report stream should be written. (Specific report structure a work in progress)",
-    )
-    parser.add_argument(
-        "--stop-at-record-time",
-        help="The script will stop once the it reaches the given record time. Expected in ISO format.",
-    )
-    parser.add_argument(
-        "--compare-acs-with-snapshot",
-        help="Compares the ACS at the end of the script with the ACS snapshot of the given record_time",
     )
     return parser.parse_args()
 
@@ -3585,13 +3340,9 @@ async def _process_transaction(args, app_state, scan_client, transaction):
 
 
 async def main():
-    global file_handler, LOG
     args = _parse_cli_args()
 
     # Set up logging
-    file_handler = logging.FileHandler(args.log_file_path)
-    file_handler.setFormatter(logging.Formatter("%(levelname)s:%(name)s:%(message)s"))
-    LOG = _default_logger("global", "INFO")
     LOG.setLevel(args.loglevel.upper())
     _log_uncaught_exceptions()
 
@@ -3600,7 +3351,7 @@ async def main():
     report_stream = None
     try:
         if args.report_output:
-            report_stream = open(args.report_output, "a", buffering=1)
+            report_stream = open(args.report_output, "w", buffering=1)
 
         app_state = AppState.create_or_restore_from_cache(
             args, CSVReport(report_stream)
@@ -3611,25 +3362,14 @@ async def main():
 
         async with aiohttp.ClientSession() as session:
             scan_client = ScanClient(session, args.scan_url, args.page_size)
-            stop_at_record_time = (
-                datetime.fromisoformat(args.stop_at_record_time)
-                if args.stop_at_record_time
-                else None
-            )
-            last_migration_id = None
             while True:
-                json_batch = await scan_client.updates(app_state.pagination_key)
-                batch = [
-                    TransactionTree.parse(tx)
-                    for tx in json_batch
-                    if (stop_at_record_time is None)
-                    or (datetime.fromisoformat(tx["record_time"]) < stop_at_record_time)
-                ]
+                batch = await scan_client.updates(app_state.pagination_key)
                 LOG.debug(
                     f"Processing batch of size {len(batch)} starting at {app_state.pagination_key}"
                 )
 
-                for transaction in batch:
+                for transaction_json in batch:
+                    transaction = TransactionTree.parse(transaction_json)
                     await _process_transaction(
                         args, app_state, scan_client, transaction
                     )
@@ -3638,48 +3378,12 @@ async def main():
                 if len(batch) >= 1:
                     last = batch[-1]
                     app_state.pagination_key = PaginationKey(
-                        last.migration_id, last.record_time.isoformat()
+                        last["migration_id"], last["record_time"]
                     )
                     app_state.save_to_cache(args)
-                    last_migration_id = last.migration_id
                 if len(batch) < scan_client.page_size:
                     LOG.debug(f"Reached end of stream at {app_state.pagination_key}")
                     break
-            if (
-                args.compare_acs_with_snapshot is not None
-                and last_migration_id is not None
-            ):
-                snapshot_time = datetime.fromisoformat(args.compare_acs_with_snapshot)
-                after = None
-                expected_contracts = app_state.state.active_contracts
-                found_in_snapshot = {}
-                while True:
-                    snapshot_page = await scan_client.get_acs_snapshot_page_at(
-                        last_migration_id,
-                        snapshot_time,
-                        TemplateQualifiedNames.all_tracked_with_package_name,
-                        after,
-                    )
-                    for event in snapshot_page["created_events"]:
-                        cid = event["contract_id"]
-                        found_in_snapshot[cid] = event
-
-                    if snapshot_page["next_page_token"] is None:
-                        break
-                    else:
-                        after = snapshot_page["next_page_token"]
-                missing_in_snapshot = set(expected_contracts.keys()).difference(
-                    set(found_in_snapshot.keys())
-                )
-                missing_in_script = set(found_in_snapshot.keys()).difference(
-                    set(expected_contracts.keys())
-                )
-                if len(missing_in_snapshot) > 0:
-                    missing = [expected_contracts[cid] for cid in missing_in_snapshot]
-                    LOG.error(f"Contracts missing in snapshot: {missing}")
-                if len(missing_in_script) > 0:
-                    missing = [found_in_snapshot[cid] for cid in missing_in_script]
-                    LOG.error(f"Contracts missing in script ACS: {missing}")
         duration = time.time() - begin_t
         LOG.info(
             f"End run. ({duration:.2f} sec., {tx_count} transaction(s), {scan_client.call_count} Scan API call(s), {scan_client.retry_count} retries)"

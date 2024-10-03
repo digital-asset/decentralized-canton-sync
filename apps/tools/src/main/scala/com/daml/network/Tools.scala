@@ -11,14 +11,14 @@ object Tools extends NoTracing {
     val loggerFactory = NamedLoggerFactory.root
 
     Auth0TestUserCleaner.run(
-      s"https://${Tools.readMandatoryEnvVar("SPLICE_OAUTH_DEV_AUTHORITY")}",
+      "https://canton-network-dev.us.auth0.com",
       Tools.readMandatoryEnvVar("AUTH0_CN_MANAGEMENT_API_CLIENT_ID"),
       Tools.readMandatoryEnvVar("AUTH0_CN_MANAGEMENT_API_CLIENT_SECRET"),
       loggerFactory,
     )
 
     Auth0TestUserCleaner.run(
-      s"https://${Tools.readMandatoryEnvVar("SPLICE_OAUTH_TEST_AUTHORITY")}",
+      "https://canton-network-test.us.auth0.com",
       Tools.readMandatoryEnvVar("AUTH0_TESTS_MANAGEMENT_API_CLIENT_ID"),
       Tools.readMandatoryEnvVar("AUTH0_TESTS_MANAGEMENT_API_CLIENT_SECRET"),
       loggerFactory,

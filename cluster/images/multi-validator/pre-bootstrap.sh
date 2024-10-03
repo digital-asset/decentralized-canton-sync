@@ -21,7 +21,7 @@ function request_onboarding_secret() {
 
         until [ $n -gt $MAX_RETRY ]; do
 
-            if SECRET=$(wget --post-data="" -q -O - "${ONBOARD_SECRET_URL}"); then
+            if SECRET=$(curl -sSfL -X POST "${ONBOARD_SECRET_URL}" 2> /dev/null); then
                 echo "$SECRET"
                 break
             else
@@ -50,10 +50,6 @@ function write_validator_config() {
     local validator_admin_port=$(( base_port + 3 ))
 
     local user="${VALIDATOR_USERNAME_PREFIX}_${index}"
-    local partyHint="Digital_Asset-load_test-${index}"
-    if [ -n "${CN_APP_LEGACY_PARTY_HINT:-}" ]; then
-        partyHint="$user"
-    fi
 
     secret="$(request_onboarding_secret)"
 
@@ -103,18 +99,20 @@ canton.validator-apps.validator_backend_$index = {
                 user = $user
                 secret = "test"
                 # TODO(#2052) use actual audience of the target participant
-                audience = \${CN_APP_VALIDATOR_LEDGER_API_AUTH_AUDIENCE}
+                audience = "https://canton.network.global"
+                audience = \${?CN_APP_VALIDATOR_LEDGER_API_AUTH_AUDIENCE}
             }
         }
     }
 
     ledger-api-user = $user
     validator-wallet-user = $user
-    validator-party-hint = $partyHint
+    validator-party-hint = $user
 
     auth {
         algorithm = "hs-256-unsafe"
-        audience = \${CN_APP_VALIDATOR_AUTH_AUDIENCE}
+        audience = "https://canton.network.global"
+        audience = \${?CN_APP_VALIDATOR_AUTH_AUDIENCE}
         secret = "test"
     }
 

@@ -65,9 +65,6 @@ class AdvanceOpenMiningRoundTrigger(
           Seq(store.key.dsoParty),
           cmd,
         )
-        // We explicitly reassign open rounds so we can use them
-        // as the target domain here.
-        .withDomainId(task.work.openRounds.domain)
         .noDedup
         .yieldResultAndOffset()
     } yield TaskSuccess(

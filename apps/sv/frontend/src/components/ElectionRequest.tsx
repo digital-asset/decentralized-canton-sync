@@ -13,7 +13,7 @@ import { ElectionRequest } from '@daml.js/splice-dso-governance/lib/Splice/DsoRu
 
 import { useSvAdminClient } from '../contexts/SvAdminServiceContext';
 import { useElectionContext, useDsoInfos } from '../contexts/SvContext';
-import { useSvConfig } from '../utils';
+import { config } from '../utils';
 import { Alerting, AlertState } from '../utils/Alerting';
 import RankingForm, { User } from '../utils/RankingForm';
 
@@ -96,13 +96,13 @@ const ElectionRequests: React.FC = () => {
         <TableBody>
           <TableRow>
             <TableCell>Epoch:</TableCell>
-            <TableCell id={'delegate-election-epoch'}>
+            <TableCell id={'leader-election-epoch'}>
               {dsoInfosQuery.data?.dsoRules.payload.epoch}
             </TableCell>
           </TableRow>
           <TableRow>
-            <TableCell>Delegate:</TableCell>
-            <TableCell id={'delegate-election-current-delegate'}>
+            <TableCell>Leader:</TableCell>
+            <TableCell id={'leader-election-current-leader'}>
               {dsoInfosQuery.data?.dsoRules.payload.dsoDelegate}
             </TableCell>
           </TableRow>
@@ -137,7 +137,7 @@ const ElectionRequests: React.FC = () => {
         ]}
       >
         <Button
-          id={'submit-ranking-delegate-election'}
+          id={'submit-ranking-leader-election'}
           type={'submit'}
           size="large"
           onClick={() => {
@@ -152,7 +152,6 @@ const ElectionRequests: React.FC = () => {
 };
 
 const ElectionRequestWithContexts: React.FC = () => {
-  const config = useSvConfig();
   return (
     <SvClientProvider url={config.services.sv.url}>
       <ElectionRequests />

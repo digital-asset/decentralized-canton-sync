@@ -12,7 +12,6 @@ images := \
 	\
 	splice-app \
 	splice-debug \
-	splice-web-ui \
 	sv-app \
 	sv-web-ui \
 	scan-app \
@@ -33,12 +32,10 @@ images := \
 
 canton-image := cluster/images/canton
 splice-image := cluster/images/splice-app
-splice-ui-image := cluster/images/splice-web-ui
 
 ifdef CI
     # never use the cache in CI on the master branch
     cache_opt := --no-cache
-    platform_opt := --platform=linux/amd64,linux/arm64
 else
     # Local builds (which may be on an M1) are explicitly constrained
     # to x86.
@@ -81,7 +78,6 @@ $$(prefix)/docker-check: $$(prefix)/$(docker-image-tag)
 .PHONY: $$(prefix)/clean
 $$(prefix)/clean:
 	-rm -vfr $$(@D)/target
-
 endef # end DEFINE_PHONY_RULES
 
 $(foreach image,$(images),$(eval $(call DEFINE_PHONY_RULES,$(image))))
@@ -99,10 +95,9 @@ $(foreach image,$(images),$(eval $(call DEFINE_PHONY_RULES,$(image))))
 	get-docker-image-name $$(basename $$(dirname $(@D))) > $@
 
 %/$(docker-build): %/$(docker-local-image-tag) %/Dockerfile
-	docker-check-multi-arch
 	mkdir -pv $(@D)
 	@echo docker build triggered because these files changed: $?
-	docker buildx build $(platform_opt) --iidfile $@ $(cache_opt) $(build_arg) -t $$(cat $<) $(@D)/..
+	docker build $(platform_opt) --iidfile $@ $(cache_opt) $(build_arg) -t $$(cat $<) $(@D)/..
 
 %/$(docker-push):  %/$(docker-image-tag) %/$(docker-build)
 	cd $(@D)/.. && docker-push $$(cat $(abspath $<))

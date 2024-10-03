@@ -1,6 +1,5 @@
 // Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
-import { validatorLicensesHandler, dsoInfoHandler } from 'common-test-utils';
 import { RestHandler, rest } from 'msw';
 import {
   ErrorResponse,
@@ -16,12 +15,7 @@ import {
 import { AmuletRules } from '@daml.js/splice-amulet/lib/Splice/AmuletRules/module';
 import damlTypes from '@daml/types';
 
-import { config } from '../../setup/config';
-
-const amuletNameServiceAcronym = config.spliceInstanceNames.nameServiceNameAcronym;
-
 export const buildScanMock = (scanUrl: string): RestHandler[] => [
-  dsoInfoHandler(scanUrl),
   rest.get(`${scanUrl}/v0/dso-party-id`, (_, res, ctx) => {
     return res(
       ctx.json<GetDsoPartyIdResponse>({
@@ -257,7 +251,7 @@ export const buildScanMock = (scanUrl: string): RestHandler[] => [
               contract_id:
                 '00a0e1386b02ea75f0ddcfc7c4fbfb8eba09cd3c3748b160de1f17450bb99faaa7ca0212209680fb7e9526ddccf5931db169bf8ba16e4e60d7e23a74c28e9492e8b62d1194',
               user: 'google-oauth2_007c106265882859845879513::122033667ff9ec083bf5a6b512655bd7986dfc4d6644978c944129a0f46489bc41d4',
-              name: `charlie.unverified.${amuletNameServiceAcronym.toLowerCase()}`,
+              name: 'charlie.unverified.cns',
               url: '',
               description: '',
               expires_at: new Date('2024-01-04T07:37:05.004139Z'),
@@ -275,5 +269,4 @@ export const buildScanMock = (scanUrl: string): RestHandler[] => [
       }
     }
   ),
-  validatorLicensesHandler(scanUrl),
 ];

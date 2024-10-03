@@ -543,7 +543,7 @@ trait FrontendTestCommon extends TestCommon with WebBrowser with CustomMatchers 
   ) = {
     // Sometimes the whole auth0 login workflow gets stuck for unknown reasons.
     // Therefore we retry the whole workflow and take screenshots on each failed attempt.
-    eventually(1.minutes) {
+    eventually(timeUntilSuccess = 1.minutes) {
       try {
         dumpDebugInfoOnFailure {
           silentActAndCheck(

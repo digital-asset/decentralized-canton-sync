@@ -212,12 +212,11 @@ trait WalletTestUtil extends TestCommon with AnsTestUtil {
       receiverWallet: WalletAppClientReference,
       receiver: PartyId,
       amount: BigDecimal,
-      timeUntilSuccess: FiniteDuration = 20.seconds,
   ) = {
     val expiration = CantonTimestamp.now().plus(Duration.ofMinutes(1))
     val trackingId = UUID.randomUUID.toString
 
-    val (transferOfferId, _) = actAndCheck(timeUntilSuccess)(
+    val (transferOfferId, _) = actAndCheck(
       "create a transfer offer", {
         senderWallet.createTransferOffer(
           receiver,
@@ -241,7 +240,7 @@ trait WalletTestUtil extends TestCommon with AnsTestUtil {
       },
     )
 
-    actAndCheck(timeUntilSuccess)(
+    actAndCheck(
       "the transfer offer is accepted", {
         receiverWallet.acceptTransferOffer(transferOfferId)
       },
@@ -438,7 +437,7 @@ trait WalletTestUtil extends TestCommon with AnsTestUtil {
     )
   }
   protected def expectedDsoAns(implicit env: SpliceTestConsoleEnvironment): String = {
-    expectedAns(dsoParty, DsoAnsResolver.dsoAnsName(ansAcronym))
+    expectedAns(dsoParty, DsoAnsResolver.dsoAnsName)
   }
 
   protected def createAnsEntry(
@@ -446,8 +445,8 @@ trait WalletTestUtil extends TestCommon with AnsTestUtil {
       entryName: String,
       wallet: WalletAppClientReference,
       tapAmount: BigDecimal = 5.0,
-      entryUrl: String = testEntryUrl,
-      entryDescription: String = testEntryDescription,
+      entryUrl: String = "https://ans-dir-url.com",
+      entryDescription: String = "Sample CNS Entry Description",
   )(implicit
       env: SpliceTestConsoleEnvironment
   ): Unit = {
@@ -478,8 +477,8 @@ trait WalletTestUtil extends TestCommon with AnsTestUtil {
   protected def requestAnsEntry(
       ansExternalApp: AnsExternalAppReference,
       entryName: String,
-      entryUrl: String = testEntryUrl,
-      entryDescription: String = testEntryDescription,
+      entryUrl: String = "https://ans-dir-url.com",
+      entryDescription: String = "Sample CNS Entry Description",
   ) = {
     // TODO(#8300) global domain can be disconnected and reconnected after config of sequencer connections changed
     retryCommandSubmission(
@@ -762,11 +761,13 @@ trait WalletTestUtil extends TestCommon with AnsTestUtil {
       userId: String,
       userParty: PartyId,
   )(implicit env: SpliceTestConsoleEnvironment) = {
+    val entryUrl = "https://ans-dir-url.com"
+    val entryDescription = "Sample CNS Entry Description"
     val ansRules = sv1ScanBackend.getAnsRules()
     val update = ansRules.contractId.exerciseAnsRules_RequestEntry(
       entryName,
-      testEntryUrl,
-      testEntryDescription,
+      entryUrl,
+      entryDescription,
       userParty.toProtoPrimitive,
     )
     val disclosure = DisclosedContracts.forTesting(ansRules)
@@ -1006,8 +1007,8 @@ trait WalletTestUtil extends TestCommon with AnsTestUtil {
   protected def requestEntry(
       refs: DynamicUserRefs,
       entryName: String,
-      entryUrl: String = testEntryUrl,
-      entryDescription: String = testEntryDescription,
+      entryUrl: String = "https://ans-dir-url.com",
+      entryDescription: String = "Sample CNS Entry Description",
   )(implicit env: SpliceTestConsoleEnvironment) = {
     val ansRules = sv1ScanBackend.getAnsRules()
 
@@ -1032,8 +1033,8 @@ trait WalletTestUtil extends TestCommon with AnsTestUtil {
   protected def requestAndPayForEntry(
       refs: DynamicUserRefs,
       entryName: String,
-      entryUrl: String = testEntryUrl,
-      entryDescription: String = testEntryDescription,
+      entryUrl: String = "https://ans-dir-url.com",
+      entryDescription: String = "Sample CNS Entry Description",
   )(implicit env: SpliceTestConsoleEnvironment) = {
     // for paying the ans entry initial payment.
     refs.wallet.tap(5.0)
@@ -1055,7 +1056,7 @@ trait WalletTestUtil extends TestCommon with AnsTestUtil {
     )
   }
 
-  def ensureValidatorLivenessActivityRecordReceivedForCurrentRound(
+  def ensureValidatorFaucetCouponReceivedForCurrentRound(
       scanBackend: ScanAppBackendReference,
       walletClient: WalletAppClientReference,
   ): Assertion = {
@@ -1069,20 +1070,20 @@ trait WalletTestUtil extends TestCommon with AnsTestUtil {
         .round
         .number
     (walletClient
-      .listValidatorLivenessActivityRecords()
+      .listValidatorFaucetCoupons()
       .map(_.payload.round.number) should contain(currentRound))
       .withClue(
-        s"Wallet: ${walletClient.name} did not receive a ValidatorLivenessActivityRecord for round $currentRound."
+        s"Wallet: ${walletClient.name} did not receive a ValidatorFaucetCoupon for round $currentRound."
       )
   }
 
-  def ensureNoValidatorLivenessActivityRecordExistsForRound(
+  def ensureNoValidatorFaucetCouponExistsForRound(
       round: Long,
       walletClient: WalletAppClientReference,
   ): Assertion = {
     inside(
       walletClient
-        .listValidatorLivenessActivityRecords()
+        .listValidatorFaucetCoupons()
     ) { case coupons =>
       coupons.map(_.payload.round.number) should not(contain(round))
     }

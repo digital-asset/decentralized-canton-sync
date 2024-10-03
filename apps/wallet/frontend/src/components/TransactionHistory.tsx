@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import * as React from 'react';
 import BigNumber from 'bignumber.js';
-import { AmountDisplay, ErrorDisplay, RateDisplay, Loading, ViewMoreButton } from 'common-frontend';
+import { AmountDisplay, ErrorDisplay, RateDisplay, Loading } from 'common-frontend';
 import formatISO from 'date-fns/formatISO';
 
 import {
@@ -14,6 +14,7 @@ import {
   InfoOutlined,
 } from '@mui/icons-material';
 import {
+  Button,
   Icon,
   Stack,
   TableBody,
@@ -30,7 +31,7 @@ import { Party } from '@daml/types';
 import { usePrimaryParty, useTransactions } from '../hooks';
 import useAmuletPrice from '../hooks/scan-proxy/useAmuletPrice';
 import { Transaction, TransactionSubtype } from '../models/models';
-import { useWalletConfig } from '../utils/config';
+import { config } from '../utils/config';
 import BftAnsEntry from './BftAnsEntry';
 
 const TransactionHistory: React.FC = () => {
@@ -102,7 +103,6 @@ const TransactionHistory: React.FC = () => {
         }
         loadMore={() => txQuery.fetchNextPage()}
         disabled={!txQuery.hasNextPage}
-        idSuffix="transactions"
       />
     </Stack>
   );
@@ -191,8 +191,6 @@ const TransactionIconAction: React.FC<TransactionIconInfoProps> = ({
 };
 
 const TransactionSubtypeText: React.FC<{ subtype: TransactionSubtype }> = ({ subtype }) => {
-  const config = useWalletConfig();
-  const { amuletName, nameServiceNameAcronym } = config.spliceInstanceNames;
   let text: string;
   // This should be replaced by localization in the future.
   switch (subtype.choice) {
@@ -210,7 +208,7 @@ const TransactionSubtypeText: React.FC<{ subtype: TransactionSubtype }> = ({ sub
           text = 'Automation';
           break;
         default:
-          console.warn(`Unknown Transaction ${amuletName} Operation`, subtype);
+          console.warn('Unknown Transaction Canton Coin Operation', subtype);
           text = subtype.choice;
       }
       break;
@@ -260,7 +258,7 @@ const TransactionSubtypeText: React.FC<{ subtype: TransactionSubtype }> = ({ sub
       break;
     case 'Amulet_Expire':
       // AmuletExpired
-      text = `${amuletName} Expired`;
+      text = `${config.spliceInstanceNames.amuletName} Expired`;
       break;
     case 'SvRewardCoupon_ArchiveAsBeneficiary':
       // SvRewardCollected
@@ -272,7 +270,7 @@ const TransactionSubtypeText: React.FC<{ subtype: TransactionSubtype }> = ({ sub
       break;
     case 'LockedAmulet_Unlock':
       // LockedAmuletUnlocked
-      text = `Locked ${amuletName} Unlocked`;
+      text = `Locked ${config.spliceInstanceNames.amuletName} Unlocked`;
       break;
     case 'SubscriptionInitialPayment_Reject':
       // SubscriptionInitialPaymentRejected
@@ -280,11 +278,11 @@ const TransactionSubtypeText: React.FC<{ subtype: TransactionSubtype }> = ({ sub
       break;
     case 'LockedAmulet_OwnerExpireLock':
       // LockedAmuletOwnerExpired
-      text = `Locked ${amuletName} Owner Expired`;
+      text = `Locked ${config.spliceInstanceNames.amuletName} Owner Expired`;
       break;
     case 'LockedAmulet_ExpireAmulet':
       // LockedAmuletExpired
-      text = `Locked ${amuletName} Expired`;
+      text = `Locked ${config.spliceInstanceNames.amuletName} Expired`;
       break;
     case 'AcceptedAppPayment_Reject':
       // AppPaymentRejected
@@ -308,11 +306,11 @@ const TransactionSubtypeText: React.FC<{ subtype: TransactionSubtype }> = ({ sub
       break;
     case 'AnsRules_CollectInitialEntryPayment':
       // AnsEntryInitialPaymentCollected
-      text = `${nameServiceNameAcronym.toUpperCase()} Entry Initial Payment Collected`;
+      text = `${config.spliceInstanceNames.nameServiceNameAcronym.toUpperCase()} Entry Initial Payment Collected`;
       break;
     case 'AnsRules_CollectEntryRenewalPayment':
       // AnsEntryRenewalPaymentCollected
-      text = `${nameServiceNameAcronym.toUpperCase()} Entry Renewal Payment Collected`;
+      text = `${config.spliceInstanceNames.nameServiceNameAcronym.toUpperCase()} Entry Renewal Payment Collected`;
       break;
     default:
       console.warn('Unknown Transaction Subtype', subtype);
@@ -386,7 +384,7 @@ const RewardCollectedInfo: React.FC<{ transaction: Transaction }> = ({ transacti
 
   const row = (type: string, label: string, amount: BigNumber) => [
     <Typography key={`tx-reward-${type}-label`}>{label}:</Typography>,
-    <Typography key={`tx-reward-${type}-amulet`} className={`tx-reward-${type}-amulet`}>
+    <Typography key={`tx-reward-${type}-cc`} className={`tx-reward-${type}-cc`}>
       <AmountDisplay amount={amount} currency="AmuletUnit" />
     </Typography>,
   ];
@@ -396,6 +394,26 @@ const RewardCollectedInfo: React.FC<{ transaction: Transaction }> = ({ transacti
       {!validatorRewards.isZero() && row('validator', 'Validator Rewards', validatorRewards)}
       {!svRewards.isZero() && row('sv', 'SV Rewards', svRewards)}
     </Stack>
+  );
+};
+
+interface ViewMoreButtonProps {
+  loadMore: () => void;
+  label: string;
+  disabled: boolean;
+}
+const ViewMoreButton: React.FC<ViewMoreButtonProps> = ({ loadMore, label, disabled = false }) => {
+  return (
+    <Button
+      id="view-more-transactions"
+      variant="outlined"
+      size="small"
+      color="secondary"
+      onClick={loadMore}
+      disabled={disabled}
+    >
+      {label}
+    </Button>
   );
 };
 
@@ -431,7 +449,7 @@ const TransactionAmount: React.FC<TransactionAmountProps> = ({ transaction, prim
 
   return (
     <Stack direction="column">
-      <Typography className="tx-amount-amulet">
+      <Typography className="tx-amount-cc">
         {sign}
         <AmountDisplay amount={amountAmulet} currency="AmuletUnit" />
       </Typography>

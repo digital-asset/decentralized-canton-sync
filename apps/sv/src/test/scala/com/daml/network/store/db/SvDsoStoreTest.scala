@@ -1,6 +1,7 @@
 package com.daml.network.store.db
 
 import com.daml.ledger.javaapi.data.codegen.ContractId
+import com.daml.ledger.javaapi.data.DamlRecord
 import com.daml.metrics.api.noop.NoOpMetricsFactory
 import com.daml.network.codegen.java.splice
 import com.daml.network.codegen.java.splice.amuletrules.{
@@ -32,6 +33,7 @@ import com.daml.network.codegen.java.splice.dsorules.dsorules_actionrequiringcon
   SRARC_AddSv,
   SRARC_OffboardSv,
 }
+import com.daml.network.codegen.java.splice.dsorules.voterequestoutcome.VRO_Accepted
 import com.daml.network.codegen.java.splice.svonboarding.{
   SvOnboardingConfirmed,
   SvOnboardingRequest,
@@ -51,7 +53,7 @@ import com.daml.network.migration.DomainMigrationInfo
 import com.daml.network.store.{Limit, MiningRoundsStore, PageLimit, StoreTest}
 import com.daml.network.store.MultiDomainAcsStore.QueryResult
 import com.daml.network.sv.config.{SvDecentralizedSynchronizerConfig, SvSynchronizerConfig}
-import com.daml.network.store.events.DsoRulesCloseVoteRequest
+import com.daml.network.sv.history.DsoRulesCloseVoteRequest
 import com.daml.network.sv.store.db.DbSvDsoStore
 import com.daml.network.sv.store.SvDsoStore.{IdleAnsSubscription, RoundCounterpartyBatch}
 import com.daml.network.sv.store.{SvDsoStore, SvStore}
@@ -72,6 +74,7 @@ import com.digitalasset.canton.util.MonadUtil
 
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import java.util
 import java.util.{Collections, Optional}
 import scala.concurrent.Future
 import scala.jdk.CollectionConverters.*
@@ -114,7 +117,7 @@ abstract class SvDsoStoreTest extends StoreTest with HasExecutionContext {
       }
     }
 
-    lookupTests("lookupDsoRulesWithOffset")(dsoRules())(_.lookupDsoRulesWithStateWithOffset())
+    lookupTests("lookupDsoRulesWithOffset")(dsoRules())(_.lookupDsoRulesWithOffset())
     lookupTests("lookupAmuletRulesWithOffset")(amuletRules())(_.lookupAmuletRulesWithOffset())
     lookupTests("lookupAnsRulesWithOffset")(ansRules())(
       _.lookupAnsRulesWithOffset()
@@ -446,38 +449,6 @@ abstract class SvDsoStoreTest extends StoreTest with HasExecutionContext {
 
     }
 
-    "list & sum ValidatorLivenessActivityRecordsOnDomain" should {
-
-      "list all the validator liveness activity records on the domain" in {
-        val inRound = (1 to 5).map(n => validatorLivenessActivityRecord(userParty(n), round = 3))
-        val outOfRound = (1 to 3).map(n => validatorLivenessActivityRecord(userParty(n), round = 2))
-        val inRoundOtherDomain =
-          (1 to 3).map(n => validatorLivenessActivityRecord(userParty(n), round = 3))
-        for {
-          store <- mkStore()
-          _ <- MonadUtil.sequentialTraverse(inRound ++ outOfRound)(
-            dummyDomain.create(_)(store.multiDomainAcsStore)
-          )
-          _ <- MonadUtil.sequentialTraverse(inRoundOtherDomain)(
-            dummy2Domain.create(_)(store.multiDomainAcsStore)
-          )
-          result <- store.listValidatorLivenessActivityRecordsOnDomain(
-            round = 3,
-            dummyDomain,
-            Limit.DefaultLimit,
-          )
-          countResult <- store.countValidatorLivenessActivityRecordsOnDomain(
-            round = 3,
-            dummyDomain,
-          )
-        } yield {
-          result should contain theSameElementsAs inRound
-          countResult should be(inRound.size.toLong)
-        }
-      }
-
-    }
-
     "listAppRewardCouponsGroupedByCounterparty" should {
 
       "return all app reward coupons in a round grouped by counterparty" in {
@@ -633,63 +604,7 @@ abstract class SvDsoStoreTest extends StoreTest with HasExecutionContext {
           }
         }
       }
-    }
 
-    "listValidatorLivenessActivityRecordsGroupedByCounterparty" should {
-
-      "return all validator liveness activity records in a round grouped by counterparty" in {
-        val validator1InRound =
-          (1 to 3).map(_ => validatorLivenessActivityRecord(userParty(1), round = 3))
-        val validator2InRound =
-          (1 to 3).map(_ => validatorLivenessActivityRecord(userParty(2), round = 3))
-        val validator1OutOfRound =
-          (1 to 3).map(_ => validatorLivenessActivityRecord(userParty(1), round = 2))
-        val validator2OutOfRound =
-          (1 to 3).map(_ => validatorLivenessActivityRecord(userParty(2), round = 2))
-        val validator1OtherDomain =
-          (1 to 3).map(_ => validatorLivenessActivityRecord(userParty(1), round = 3))
-        val validator2OtherDomain =
-          (1 to 3).map(_ => validatorLivenessActivityRecord(userParty(2), round = 3))
-        for {
-          store <- mkStore()
-          _ <- MonadUtil.sequentialTraverse(
-            validator1InRound ++ validator2InRound ++ validator1OutOfRound ++ validator2OutOfRound
-          )(
-            dummyDomain.create(_)(store.multiDomainAcsStore)
-          )
-          _ <- MonadUtil.sequentialTraverse(
-            validator1OtherDomain ++ validator2OtherDomain
-          )(
-            dummy2Domain.create(_)(store.multiDomainAcsStore)
-          )
-          result <- store.listValidatorLivenessActivityRecordsGroupedByCounterparty(
-            domain = dummyDomain,
-            totalCouponsLimit = PageLimit.tryCreate(1000),
-          )
-        } yield {
-          result should have size 4
-          forExactly(1, result) { case RoundCounterpartyBatch(user, round, cids) =>
-            user shouldBe userParty(1)
-            round shouldBe 2
-            cids.toSet shouldBe validator1OutOfRound.map(_.contractId).toSet
-          }
-          forExactly(1, result) { case RoundCounterpartyBatch(user, round, cids) =>
-            user shouldBe userParty(2)
-            round shouldBe 2
-            cids.toSet shouldBe validator2OutOfRound.map(_.contractId).toSet
-          }
-          forExactly(1, result) { case RoundCounterpartyBatch(user, round, cids) =>
-            user shouldBe userParty(1)
-            round shouldBe 3
-            cids.toSet shouldBe validator1InRound.map(_.contractId).toSet
-          }
-          forExactly(1, result) { case RoundCounterpartyBatch(user, round, cids) =>
-            user shouldBe userParty(2)
-            round shouldBe 3
-            cids.toSet shouldBe validator2InRound.map(_.contractId).toSet
-          }
-        }
-      }
     }
 
     "getExpiredRewards" in {
@@ -787,12 +702,11 @@ abstract class SvDsoStoreTest extends StoreTest with HasExecutionContext {
         val hasValidatorCoupon = closedMiningRound(dsoParty, round = 4)
         val hasAppCoupon = closedMiningRound(dsoParty, round = 5)
         val hasConfirmation = closedMiningRound(dsoParty, round = 6)
-        val hasValidatorLivenessActivityRecord = closedMiningRound(dsoParty, round = 7)
         for {
           store <- mkStore()
           _ <- dummyDomain.create(dsoRules())(store.multiDomainAcsStore)
           _ <- MonadUtil.sequentialTraverse(
-            goodClosed :+ hasValidatorCoupon :+ hasAppCoupon :+ hasConfirmation :+ hasValidatorLivenessActivityRecord
+            goodClosed :+ hasValidatorCoupon :+ hasAppCoupon :+ hasConfirmation
           )(
             dummyDomain.create(_)(store.multiDomainAcsStore)
           )
@@ -817,9 +731,6 @@ abstract class SvDsoStoreTest extends StoreTest with HasExecutionContext {
               ),
             )
           )(store.multiDomainAcsStore)
-          _ <- dummyDomain.create(validatorLivenessActivityRecord(userParty(1), round = 7))(
-            store.multiDomainAcsStore
-          )
           result <- store.listArchivableClosedMiningRounds()
         } yield {
           result.map(_.value) should contain theSameElementsAs goodClosed.map(
@@ -1216,6 +1127,18 @@ abstract class SvDsoStoreTest extends StoreTest with HasExecutionContext {
     }
 
   }
+
+  lazy val addUser666Action = new ARC_DsoRules(
+    new SRARC_AddSv(
+      new DsoRules_AddSv(
+        userParty(666).toProtoPrimitive,
+        "user666",
+        SvUtil.DefaultSV1Weight,
+        "user666ParticipantId",
+        new Round(1L),
+      )
+    )
+  )
 
   lazy val addUser667Action = new ARC_DsoRules(
     new SRARC_AddSv(
@@ -1766,6 +1689,50 @@ class DbSvDsoStoreTest
         result.value should be(Some(goodVote))
       }
     }
+  }
+
+  private def mkCloseVoteRequest(
+      requestId: VoteRequest.ContractId
+  ): DamlRecord = {
+    new DsoRules_CloseVoteRequest(
+      requestId,
+      Optional.empty(),
+    ).toValue
+  }
+
+  private def mkVoteRequestResult(
+      voteRequestContract: Contract[VoteRequest.ContractId, VoteRequest],
+      effectiveAt: Instant = Instant.now().truncatedTo(ChronoUnit.MICROS),
+  ): DsoRules_CloseVoteRequestResult = new DsoRules_CloseVoteRequestResult(
+    voteRequestContract.payload,
+    Instant.now().truncatedTo(ChronoUnit.MICROS),
+    util.List.of(),
+    util.List.of(),
+    new VRO_Accepted(effectiveAt),
+  )
+
+  private def voteRequest(
+      requester: PartyId,
+      votes: Seq[Vote],
+      expiry: Instant = Instant.now().truncatedTo(ChronoUnit.MICROS).plusSeconds(3600L),
+      action: ActionRequiringConfirmation = addUser666Action,
+  ) = {
+    val cid = new VoteRequest.ContractId(nextCid())
+    val template = new VoteRequest(
+      dsoParty.toProtoPrimitive,
+      requester.toProtoPrimitive,
+      action,
+      new Reason("https://www.example.com", ""),
+      expiry,
+      votes.map(e => (e.sv, e)).toMap.asJava,
+      Optional.of(cid),
+    )
+
+    contract(
+      VoteRequest.TEMPLATE_ID,
+      cid,
+      template,
+    )
   }
 
   override protected def cleanDb(storage: DbStorage): Future[?] =

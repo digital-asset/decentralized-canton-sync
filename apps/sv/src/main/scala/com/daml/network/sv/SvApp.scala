@@ -53,7 +53,13 @@ import com.daml.network.sv.onboarding.joining.JoiningNodeInitializer
 import com.daml.network.sv.onboarding.sponsor.DsoPartyMigration
 import com.daml.network.sv.store.{SvDsoStore, SvSvStore}
 import com.daml.network.sv.util.SvOnboardingToken
-import com.daml.network.util.{BackupDump, Contract, HasHealth, TemplateJsonDecoder}
+import com.daml.network.util.{
+  BackupDump,
+  Contract,
+  HasHealth,
+  TemplateJsonDecoder,
+  UploadablePackage,
+}
 import com.digitalasset.canton.concurrent.FutureSupervisor
 import com.digitalasset.canton.config.{
   CommunityCryptoConfig,
@@ -302,7 +308,6 @@ class SvApp(
           storage,
           loggerFactory,
           retryProvider,
-          config.spliceInstanceNames,
         )
       // Ensure DSO party, DsoRules, AmuletRules, Mediator, and Sequencer nodes are setup
       // -------------------------------------------------------------------------------
@@ -340,6 +345,7 @@ class SvApp(
                 ),
                 extraSynchronizerNodes,
                 sv1Config,
+                darFilesToBootstrapNetwork,
                 participantId,
                 config,
                 amuletAppParameters.upgradesConfig,
@@ -351,7 +357,6 @@ class SvApp(
                 domainParamsAutomationService.domainUnpausedSync,
                 storage,
                 retryProvider,
-                config.spliceInstanceNames,
                 loggerFactory,
               )
               initializer.bootstrapDso()
@@ -394,7 +399,6 @@ class SvApp(
               storage,
               loggerFactory,
               retryProvider,
-              config.spliceInstanceNames,
               newJoiningNodeInitializer,
             ).migrateDomain()
           }
@@ -627,6 +631,13 @@ class SvApp(
 
   protected[this] override def automationServices(st: SvApp.State) =
     Seq(DsoDelegateBasedAutomationService, st.svAutomation, st.dsoAutomation)
+
+  private val darFilesToBootstrapNetwork: Seq[UploadablePackage] =
+    Seq(
+      SvApp.amuletPackage,
+      SvApp.dsoGovernancePackage,
+      SvApp.validatorLifecyclePackage,
+    )
 
   private def newTrafficBalanceService(participantAdminConnection: ParticipantAdminConnection) = {
     TrafficBalanceService(
@@ -1321,4 +1332,11 @@ object SvApp {
       } yield ()
     })
   }
+
+  val amuletPackage: UploadablePackage =
+    UploadablePackage.fromResource(DarResources.amulet.bootstrap)
+  val dsoGovernancePackage: UploadablePackage =
+    UploadablePackage.fromResource(DarResources.dsoGovernance.bootstrap)
+  val validatorLifecyclePackage: UploadablePackage =
+    UploadablePackage.fromResource(DarResources.validatorLifecycle.bootstrap)
 }

@@ -4,7 +4,6 @@ import com.daml.ledger.api.v2.TraceContextOuterClass
 import com.daml.ledger.javaapi.data.codegen.{ContractId, DamlRecord as CodegenDamlRecord}
 import com.daml.ledger.javaapi.data.{
   CreatedEvent,
-  DamlRecord,
   ExercisedEvent,
   Identifier,
   ParticipantOffset,
@@ -26,7 +25,6 @@ import com.daml.network.codegen.java.splice.types.Round
 import com.daml.network.codegen.java.splice.ans as ansCodegen
 import com.daml.network.codegen.java.splice.wallet.subscriptions as subCodegen
 import com.daml.network.codegen.java.splice.wallet.payment as paymentCodegen
-import com.daml.network.environment.{DarResource, DarResources}
 import com.daml.network.environment.ledger.api.{
   ActiveContract,
   IncompleteReassignmentEvent,
@@ -45,21 +43,9 @@ import org.scalatest.wordspec.AsyncWordSpec
 import com.digitalasset.daml.lf.data.Numeric
 import com.daml.network.codegen.java.splice.amulet.FeaturedAppRight
 import com.daml.network.codegen.java.splice.amuletconfig.{AmuletConfig, USD}
-import com.daml.network.codegen.java.splice.dso.svstate.{RewardState, SvRewardState}
+import com.daml.network.codegen.java.splice.dso.svstate.{SvRewardState, RewardState}
 import com.daml.network.codegen.java.da.time.types.RelTime
-import com.daml.network.codegen.java.splice.dsorules.actionrequiringconfirmation.ARC_DsoRules
-import com.daml.network.codegen.java.splice.dsorules.dsorules_actionrequiringconfirmation.SRARC_AddSv
-import com.daml.network.codegen.java.splice.dsorules.voterequestoutcome.VRO_Accepted
-import com.daml.network.codegen.java.splice.dsorules.{
-  ActionRequiringConfirmation,
-  DsoRules_AddSv,
-  DsoRules_CloseVoteRequest,
-  DsoRules_CloseVoteRequestResult,
-  Reason,
-  Vote,
-  VoteRequest,
-}
-import com.daml.network.history.{AmuletCreate, AppRewardCreate}
+import com.daml.network.history.{AppRewardCreate, AmuletCreate}
 import com.daml.network.store.MultiDomainAcsStore.HasIngestionSink
 import com.daml.network.store.db.TxLogRowData
 import com.digitalasset.canton.config.CantonRequireTypes.String3
@@ -71,8 +57,6 @@ import org.slf4j.event.Level
 
 import java.time.{Duration, Instant}
 import java.time.temporal.ChronoUnit
-import java.util
-import java.util.Optional
 import scala.concurrent.blocking
 import scala.concurrent.Future
 import scala.jdk.CollectionConverters.*
@@ -137,7 +121,7 @@ abstract class StoreTest extends AsyncWordSpec with BaseTest {
         new RelTime(1_000_000),
         new RelTime(1_000_000),
         new java.math.BigDecimal(1.0).setScale(10),
-        "ANS entry: ",
+        "CNS entry: ",
       ),
     )
     contract(
@@ -192,13 +176,8 @@ abstract class StoreTest extends AsyncWordSpec with BaseTest {
       amount: BigDecimal,
       createdAtRound: Long,
       ratePerRound: BigDecimal,
-      version: DarResource = DarResources.amulet_current,
   ) = {
-    val templateId = new Identifier(
-      version.packageId,
-      amuletCodegen.Amulet.TEMPLATE_ID.getModuleName,
-      amuletCodegen.Amulet.TEMPLATE_ID.getEntityName,
-    )
+    val templateId = amuletCodegen.Amulet.TEMPLATE_ID
     val template = new amuletCodegen.Amulet(
       dsoParty.toProtoPrimitive,
       owner.toProtoPrimitive,
@@ -220,13 +199,8 @@ abstract class StoreTest extends AsyncWordSpec with BaseTest {
       amount: BigDecimal,
       createdAtRound: Long,
       ratePerRound: BigDecimal,
-      version: DarResource = DarResources.amulet_current,
   ) = {
-    val templateId = new Identifier(
-      version.packageId,
-      amuletCodegen.LockedAmulet.TEMPLATE_ID.getModuleName,
-      amuletCodegen.LockedAmulet.TEMPLATE_ID.getEntityName,
-    )
+    val templateId = amuletCodegen.LockedAmulet.TEMPLATE_ID
     val amuletTemplate = amulet(owner, amount, createdAtRound, ratePerRound).payload
     val template = new amuletCodegen.LockedAmulet(
       amuletTemplate,
@@ -322,19 +296,6 @@ abstract class StoreTest extends AsyncWordSpec with BaseTest {
     )
   }
 
-  protected def validatorLivenessActivityRecord(validator: PartyId, round: Long = 1L) = {
-    contract(
-      identifier = validatorLicenseCodegen.ValidatorLivenessActivityRecord.TEMPLATE_ID,
-      contractId =
-        new validatorLicenseCodegen.ValidatorLivenessActivityRecord.ContractId(nextCid()),
-      payload = new validatorLicenseCodegen.ValidatorLivenessActivityRecord(
-        dsoParty.toProtoPrimitive,
-        validator.toProtoPrimitive,
-        new Round(round),
-      ),
-    )
-  }
-
   protected def subscriptionInitialPayment(
       reference: subCodegen.SubscriptionRequest.ContractId,
       paymentId: subCodegen.SubscriptionInitialPayment.ContractId,
@@ -416,67 +377,10 @@ abstract class StoreTest extends AsyncWordSpec with BaseTest {
       ),
     )
 
-  protected def mkVoteRequestResult(
-      voteRequestContract: Contract[VoteRequest.ContractId, VoteRequest],
-      effectiveAt: Instant = Instant.now().truncatedTo(ChronoUnit.MICROS),
-  ): DsoRules_CloseVoteRequestResult = new DsoRules_CloseVoteRequestResult(
-    voteRequestContract.payload,
-    Instant.now().truncatedTo(ChronoUnit.MICROS),
-    util.List.of(),
-    util.List.of(),
-    new VRO_Accepted(effectiveAt),
-  )
-
-  protected def mkCloseVoteRequest(
-      requestId: VoteRequest.ContractId
-  ): DamlRecord = {
-    new DsoRules_CloseVoteRequest(
-      requestId,
-      Optional.empty(),
-    ).toValue
-  }
-
-  protected lazy val addUser666Action = new ARC_DsoRules(
-    new SRARC_AddSv(
-      new DsoRules_AddSv(
-        userParty(666).toProtoPrimitive,
-        "user666",
-        10_000L,
-        "user666ParticipantId",
-        new Round(1L),
-      )
-    )
-  )
-
-  protected def voteRequest(
-      requester: PartyId,
-      votes: Seq[Vote],
-      expiry: Instant = Instant.now().truncatedTo(ChronoUnit.MICROS).plusSeconds(3600L),
-      action: ActionRequiringConfirmation = addUser666Action,
-  ) = {
-    val cid = new VoteRequest.ContractId(nextCid())
-    val template = new VoteRequest(
-      dsoParty.toProtoPrimitive,
-      requester.toProtoPrimitive,
-      action,
-      new Reason("https://www.example.com", ""),
-      expiry,
-      votes.map(e => (e.sv, e)).toMap.asJava,
-      Optional.of(cid),
-    )
-
-    contract(
-      VoteRequest.TEMPLATE_ID,
-      cid,
-      template,
-    )
-  }
-
   protected def toCreatedEvent(
       contract: Contract[?, ?],
       signatories: Seq[PartyId] = Seq.empty,
       packageName: String = dummyPackageName,
-      observers: Seq[PartyId] = Seq.empty,
   ): CreatedEvent = {
     new CreatedEvent(
       Seq.empty[String].asJava,
@@ -490,7 +394,7 @@ abstract class StoreTest extends AsyncWordSpec with BaseTest {
       new java.util.HashMap(),
       None.toJava,
       signatories.map(_.toProtoPrimitive).asJava,
-      observers.map(_.toProtoPrimitive).asJava,
+      Seq.empty.asJava,
       contract.createdAt,
     )
   }
@@ -697,12 +601,9 @@ abstract class StoreTest extends AsyncWordSpec with BaseTest {
       workflowId: String,
       recordTime: Instant = defaultEffectiveAt,
       packageName: String = dummyPackageName,
-      createdEventObservers: Seq[PartyId] = Seq.empty,
   ) = mkTx(
     offset,
-    createRequests.map[TreeEvent](
-      toCreatedEvent(_, createdEventSignatories, packageName, createdEventObservers)
-    ),
+    createRequests.map[TreeEvent](toCreatedEvent(_, createdEventSignatories, packageName)),
     domainId,
     effectiveAt,
     workflowId,

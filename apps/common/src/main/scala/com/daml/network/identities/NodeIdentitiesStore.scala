@@ -29,12 +29,11 @@ class NodeIdentitiesStore(
     for {
       id <- adminConnection.identity()
       keysMetadata <- adminConnection.listMyKeys()
-      // TODO(#14916): We should support key ids when we consume the change (DACH-NY/canton#21429) from Canton
       keys <- keysMetadata.traverse(keyM =>
         adminConnection
           .exportKeyPair(keyM.publicKeyWithName.publicKey.id)
           .map(keyBytes =>
-            NodeIdentitiesDump.NodeKey.KeyPair(
+            NodeIdentitiesDump.NodeKey(
               keyBytes.toByteArray.toSeq,
               keyM.publicKeyWithName.name.map(_.unwrap),
             )

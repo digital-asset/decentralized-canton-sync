@@ -59,25 +59,6 @@ class AcsSnapshotStoreTest
         } yield result should be(None)
       }
 
-      "only return the last snapshot of the active history id" in {
-        for {
-          originalUpdateHistory <- mkUpdateHistory(participantId = "original")
-          originalStore = mkStore(originalUpdateHistory)
-          activeUpdateHistory <- mkUpdateHistory(participantId = "active")
-          activeStore = mkStore(activeUpdateHistory)
-          _ <- ingestCreate(
-            originalUpdateHistory,
-            amuletRules(),
-            timestamp1.minusSeconds(1L),
-          )
-          _ <- originalStore.insertNewSnapshot(None, timestamp1)
-          result <- activeStore.lookupSnapshotBefore(
-            migrationId = activeStore.migrationId,
-            CantonTimestamp.MaxValue,
-          )
-        } yield result should be(None)
-      }
-
       "return the latest snapshot before the given timestamp" in {
         for {
           updateHistory <- mkUpdateHistory()
@@ -122,23 +103,6 @@ class AcsSnapshotStoreTest
               Failure(ex)
           }
         } yield result should be("OK")
-      }
-
-      "allow two snapshots with the same record time, different migration_ids" in {
-        MonadUtil
-          .sequentialTraverse(Seq(1, 2)) { migrationId =>
-            for {
-              updateHistory <- mkUpdateHistory(migrationId = migrationId.toLong)
-              store = mkStore(updateHistory, migrationId = migrationId.toLong)
-              _ <- ingestCreate(
-                updateHistory,
-                amuletRules(),
-                timestamp1.minusSeconds(1L),
-              )
-              _ <- store.insertNewSnapshot(None, timestamp1)
-            } yield succeed
-          }
-          .map(_ => succeed)
       }
 
       "build snapshots incrementally" in {
@@ -276,7 +240,7 @@ class AcsSnapshotStoreTest
             0L,
             timestamp1,
             None,
-            PageLimit.tryCreate(10),
+            PageLimit.tryCreate(2),
             Seq(providerParty(1)),
             Seq.empty,
           )
@@ -284,16 +248,8 @@ class AcsSnapshotStoreTest
             0L,
             timestamp1,
             None,
-            PageLimit.tryCreate(10),
+            PageLimit.tryCreate(2),
             Seq(providerParty(2)),
-            Seq.empty,
-          )
-          resultBothParties <- store.queryAcsSnapshot(
-            0L,
-            timestamp1,
-            None,
-            PageLimit.tryCreate(10),
-            Seq(providerParty(1), providerParty(2)),
             Seq.empty,
           )
         } yield {
@@ -302,9 +258,6 @@ class AcsSnapshotStoreTest
           )
           resultParty2.createdEventsInPage.map(_.getContractId) should be(
             Seq(p2, bothParties).map(_.contractId.contractId)
-          )
-          resultBothParties.createdEventsInPage.map(_.getContractId) should be(
-            Seq(p1, p2, bothParties).map(_.contractId.contractId)
           )
         }
       }
@@ -333,7 +286,7 @@ class AcsSnapshotStoreTest
             0L,
             timestamp1,
             None,
-            PageLimit.tryCreate(10),
+            PageLimit.tryCreate(2),
             Seq.empty,
             Seq(PackageQualifiedName(t1.identifier)),
           )
@@ -341,7 +294,7 @@ class AcsSnapshotStoreTest
             0L,
             timestamp1,
             None,
-            PageLimit.tryCreate(10),
+            PageLimit.tryCreate(2),
             Seq.empty,
             Seq(PackageQualifiedName(t2.identifier)),
           )
@@ -386,7 +339,7 @@ class AcsSnapshotStoreTest
             0L,
             timestamp1,
             None,
-            PageLimit.tryCreate(10),
+            PageLimit.tryCreate(2),
             Seq(providerParty(1)),
             Seq(PackageQualifiedName(ok.identifier)),
           )
@@ -443,253 +396,14 @@ class AcsSnapshotStoreTest
 
     }
 
-    "getHoldingsState" should {
-
-      "only include contracts where the parties provided are owners, not just stakeholders" in {
-        val wantedParty1 = providerParty(1)
-        val wantedParty2 = providerParty(2)
-        val ignoredParty = providerParty(3)
-        // We include amulets and locked amulets in an older version
-        // as a regression test for #14758
-        val amulet1 = amulet(wantedParty1, 10, 1L, 1.0, version = DarResources.amulet_0_1_4)
-        val amulet2 = amulet(wantedParty2, 20, 2L, 1.0)
-        val ignoredAmulet = amulet(ignoredParty, 666, 1L, 1.0)
-        val lockedAmulet1 =
-          lockedAmulet(wantedParty1, 30, 1L, 0.5, version = DarResources.amulet_0_1_4)
-        val lockedAmulet2 = lockedAmulet(wantedParty2, 40, 2L, 0.5)
-        val ignoredLocked = lockedAmulet(ignoredParty, 666, 1, 0.5)
-        for {
-          updateHistory <- mkUpdateHistory()
-          store = mkStore(updateHistory)
-          _ <- MonadUtil.sequentialTraverse(Seq(amulet1, amulet2, ignoredAmulet)) { amulet =>
-            ingestCreate(
-              updateHistory,
-              amulet,
-              timestamp1.minusSeconds(10L),
-              Seq(PartyId.tryFromProtoPrimitive(amulet.payload.owner), dsoParty),
-            )
-          }
-          _ <- MonadUtil.sequentialTraverse(Seq(lockedAmulet1, lockedAmulet2, ignoredLocked)) {
-            locked =>
-              ingestCreate(
-                updateHistory,
-                locked,
-                timestamp1.minusSeconds(10L),
-                Seq(PartyId.tryFromProtoPrimitive(locked.payload.amulet.owner), dsoParty),
-              )
-          }
-          _ <- store.insertNewSnapshot(None, timestamp1)
-          resultDso <- store.getHoldingsState(
-            0L,
-            timestamp1,
-            None,
-            PageLimit.tryCreate(10),
-            Seq(dsoParty),
-          )
-          resultWanteds <- store.getHoldingsState(
-            0L,
-            timestamp1,
-            None,
-            PageLimit.tryCreate(10),
-            Seq(wantedParty1, wantedParty2),
-          )
-        } yield {
-          resultDso.createdEventsInPage should be(empty)
-          resultWanteds.createdEventsInPage.map(_.getContractId).toSet should be(
-            Set(amulet1, amulet2, lockedAmulet1, lockedAmulet2).map(_.contractId.contractId)
-          )
-        }
-      }
-
-      "lock holders don't see locked coins where they're not the owner" in {
-        val owner = providerParty(1)
-        val holder = providerParty(2)
-        val amulet = lockedAmulet(owner, 10, 1L, 0.5)
-        for {
-          updateHistory <- mkUpdateHistory()
-          store = mkStore(updateHistory)
-          _ <- ingestCreate(
-            updateHistory,
-            amulet,
-            timestamp1.minusSeconds(10L),
-            Seq(owner, holder),
-          )
-          _ <- store.insertNewSnapshot(None, timestamp1)
-          resultOwner <- store.getHoldingsState(
-            0L,
-            timestamp1,
-            None,
-            PageLimit.tryCreate(10),
-            Seq(owner),
-          )
-          resultHolder <- store.getHoldingsState(
-            0L,
-            timestamp1,
-            None,
-            PageLimit.tryCreate(10),
-            Seq(holder),
-          )
-        } yield {
-          resultHolder.createdEventsInPage should be(empty)
-          resultOwner.createdEventsInPage.map(_.getContractId) should be(
-            Seq(amulet.contractId.contractId)
-          )
-        }
-      }
-
-    }
-
-    "getHoldingsSummary" should {
-
-      "return the summary for the given parties in the given snapshot; computed as of provided round" in {
-        val wantedParty1 = providerParty(1)
-        val wantedParty2 = providerParty(2)
-        val ignoredParty = providerParty(3)
-        val amulets1 = (1 to 3).map(n => amulet(wantedParty1, 10, n.toLong, 1.0))
-        val amulets2 = (1 to 3).map(n => amulet(wantedParty2, 20, n.toLong, 1.0))
-        val ignoredAmulet = amulet(ignoredParty, 666, 1, 1.0)
-        val lockedAmulets1 = (1 to 3).map(n => lockedAmulet(wantedParty1, 30, n.toLong, 0.5))
-        val lockedAmulets2 = (1 to 3).map(n => lockedAmulet(wantedParty2, 40, n.toLong, 0.5))
-        val ignoredLocked = lockedAmulet(ignoredParty, 666, 1, 0.5)
-        for {
-          updateHistory <- mkUpdateHistory()
-          store = mkStore(updateHistory)
-          _ <- MonadUtil.sequentialTraverse(amulets1 ++ amulets2 :+ ignoredAmulet) { amulet =>
-            ingestCreate(
-              updateHistory,
-              amulet,
-              timestamp1.minusSeconds(10L),
-              Seq(PartyId.tryFromProtoPrimitive(amulet.payload.owner)),
-            )
-          }
-          _ <- MonadUtil.sequentialTraverse(lockedAmulets1 ++ lockedAmulets2 :+ ignoredLocked) {
-            locked =>
-              ingestCreate(
-                updateHistory,
-                locked,
-                timestamp1.minusSeconds(5L),
-                Seq(PartyId.tryFromProtoPrimitive(locked.payload.amulet.owner)),
-              )
-          }
-          _ <- store.insertNewSnapshot(None, timestamp1)
-          summaryAtRound3 <- store.getHoldingsSummary(
-            0L,
-            timestamp1,
-            Seq(wantedParty1, wantedParty2),
-            asOfRound = 3L,
-          )
-          summaryAtRound10 <- store.getHoldingsSummary(
-            0L,
-            timestamp1,
-            Seq(wantedParty1, wantedParty2),
-            asOfRound = 10L,
-          )
-          summaryAtRound100 <- store.getHoldingsSummary(
-            0L,
-            timestamp1,
-            Seq(wantedParty1, wantedParty2),
-            asOfRound = 100L,
-          )
-        } yield {
-          summaryAtRound3 should be(
-            AcsSnapshotStore.HoldingsSummaryResult(
-              0L,
-              timestamp1,
-              3L,
-              Map(
-                wantedParty1 -> AcsSnapshotStore.HoldingsSummary(
-                  totalUnlockedCoin = 10 * 3,
-                  totalLockedCoin = 30 * 3,
-                  totalCoinHoldings = 10 * 3 + 30 * 3,
-                  accumulatedHoldingFeesUnlocked = 1.0 * 2 + 1.0 * 1,
-                  accumulatedHoldingFeesLocked = 0.5 * 2 + 0.5 * 1,
-                  accumulatedHoldingFeesTotal = 1.0 * 2 + 1.0 * 1 + 0.5 * 2 + 0.5 * 1,
-                  totalAvailableCoin = (10 * 3) - (1.0 * 2 + 1.0 * 1),
-                ),
-                wantedParty2 -> AcsSnapshotStore.HoldingsSummary(
-                  totalUnlockedCoin = 20 * 3,
-                  totalLockedCoin = 40 * 3,
-                  totalCoinHoldings = 20 * 3 + 40 * 3,
-                  accumulatedHoldingFeesUnlocked = 1.0 * 2 + 1.0 * 1,
-                  accumulatedHoldingFeesLocked = 0.5 * 2 + 0.5 * 1,
-                  accumulatedHoldingFeesTotal = 1.0 * 2 + 1.0 * 1 + 0.5 * 2 + 0.5 * 1,
-                  totalAvailableCoin = (20 * 3) - (1.0 * 2 + 1.0 * 1),
-                ),
-              ),
-            )
-          )
-          summaryAtRound10 should be(
-            AcsSnapshotStore.HoldingsSummaryResult(
-              0L,
-              timestamp1,
-              10L,
-              Map(
-                wantedParty1 -> AcsSnapshotStore.HoldingsSummary(
-                  totalUnlockedCoin = 10 * 3,
-                  totalLockedCoin = 30 * 3,
-                  totalCoinHoldings = 10 * 3 + 30 * 3,
-                  accumulatedHoldingFeesUnlocked = 1.0 * 9 + 1.0 * 8 + 1.0 * 7,
-                  accumulatedHoldingFeesLocked = 0.5 * 9 + 0.5 * 8 + 0.5 * 7,
-                  accumulatedHoldingFeesTotal =
-                    1.0 * 9 + 1.0 * 8 + 1.0 * 7 + 0.5 * 9 + 0.5 * 8 + 0.5 * 7,
-                  totalAvailableCoin = (10 * 3) - (1.0 * 9 + 1.0 * 8 + 1.0 * 7),
-                ),
-                wantedParty2 -> AcsSnapshotStore.HoldingsSummary(
-                  totalUnlockedCoin = 20 * 3,
-                  totalLockedCoin = 40 * 3,
-                  totalCoinHoldings = 20 * 3 + 40 * 3,
-                  accumulatedHoldingFeesUnlocked = 1.0 * 9 + 1.0 * 8 + 1.0 * 7,
-                  accumulatedHoldingFeesLocked = 0.5 * 9 + 0.5 * 8 + 0.5 * 7,
-                  accumulatedHoldingFeesTotal =
-                    1.0 * 9 + 1.0 * 8 + 1.0 * 7 + 0.5 * 9 + 0.5 * 8 + 0.5 * 7,
-                  totalAvailableCoin = (20 * 3) - (1.0 * 9 + 1.0 * 8 + 1.0 * 7),
-                ),
-              ),
-            )
-          )
-          summaryAtRound100 should be(
-            AcsSnapshotStore.HoldingsSummaryResult(
-              0L,
-              timestamp1,
-              100L,
-              Map(
-                wantedParty1 -> AcsSnapshotStore.HoldingsSummary(
-                  totalUnlockedCoin = 10 * 3,
-                  totalLockedCoin = 30 * 3,
-                  totalCoinHoldings = 10 * 3 + 30 * 3,
-                  accumulatedHoldingFeesUnlocked = 10 * 3,
-                  accumulatedHoldingFeesLocked = 30 * 3,
-                  accumulatedHoldingFeesTotal = 10 * 3 + 30 * 3,
-                  totalAvailableCoin = 0,
-                ),
-                wantedParty2 -> AcsSnapshotStore.HoldingsSummary(
-                  totalUnlockedCoin = 20 * 3,
-                  totalLockedCoin = 40 * 3,
-                  totalCoinHoldings = 20 * 3 + 40 * 3,
-                  accumulatedHoldingFeesUnlocked = 20 * 3,
-                  accumulatedHoldingFeesLocked = 40 * 3,
-                  accumulatedHoldingFeesTotal = 20 * 3 + 40 * 3,
-                  totalAvailableCoin = 0,
-                ),
-              ),
-            )
-          )
-        }
-      }
-
-    }
-
   }
 
-  private def mkUpdateHistory(
-      migrationId: Long = 0L,
-      participantId: String = "whatever",
-  ): Future[UpdateHistory] = {
+  private def mkUpdateHistory(migrationId: Long = 0L): Future[UpdateHistory] = {
     val updateHistory = new UpdateHistory(
       storage.underlying, // not under test
       new DomainMigrationInfo(migrationId, None),
       "update_history_acs_snapshot_test",
-      mkParticipantId(participantId),
+      mkParticipantId("whatever"),
       dsoParty,
       loggerFactory,
       true,
@@ -763,7 +477,7 @@ class AcsSnapshotStoreTest
   ): Future[Unit] = {
     MonadUtil
       .sequentialTraverse(acs) { contract =>
-        ingestCreate(updateHistory, contract, recordTime = CantonTimestamp.MinValue)
+        ingestCreate(updateHistory, contract, recordTime = CantonTimestamp.Epoch)
       }
       .map(_ => ())
   }

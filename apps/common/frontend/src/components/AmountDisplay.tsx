@@ -36,7 +36,8 @@ const AmountDisplay: React.FC<AmountDisplayProps> = props => {
         break;
       case props.currency === 'USDUnit' && props.convert === 'USDtoCC':
         _amount = _amount.div(props.amuletPrice);
-        _currency = window.splice_config.spliceInstanceNames?.amuletNameAcronym;
+        //TODO(#13480): remove this fallback once we have a proper config in all apps
+        _currency = window.splice_config.spliceInstanceNames?.amuletNameAcronym || 'CC';
         break;
       default:
         throw Error(

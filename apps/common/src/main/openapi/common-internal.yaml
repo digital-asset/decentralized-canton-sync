@@ -82,30 +82,11 @@ components:
           type: string
 
     NodeKey:
-      oneOf:
-        - $ref: "#/components/schemas/KeyPair"
-        - $ref: "#/components/schemas/KmsKeyId"
-
-    KeyPair:
       type: object
       required:
         - keyPair
       properties:
         keyPair:
-          type: string
-        name:
-          type: string
-
-    KmsKeyId:
-      type: object
-      required:
-        - type
-        - keyId
-      properties:
-        type:
-          type: string
-          enum: [ "signing", "encryption" ]
-        keyId:
           type: string
         name:
           type: string
@@ -144,95 +125,18 @@ components:
         # Threshold required to pass vote requests
         voting_threshold:
           type: integer
+        # Contract ID of the OpenMiningRound contract of the latest Mining Round
         latest_mining_round:
-          $ref: "#/components/schemas/ContractWithState"
+          $ref: "../../../../common/src/main/openapi/common-external.yaml#/components/schemas/Contract"
+        # Contract ID of the AmuletRules contract associated with the DSO
         amulet_rules:
-          $ref: "#/components/schemas/ContractWithState"
+          $ref: "../../../../common/src/main/openapi/common-external.yaml#/components/schemas/Contract"
+        # Contract IDs of the DsoRules contract associated with the DSO
         dso_rules:
-          $ref: "#/components/schemas/ContractWithState"
+          $ref: "../../../../common/src/main/openapi/common-external.yaml#/components/schemas/Contract"
         # States the SVs' nodes
         sv_node_states:
           type: array
           items:
-            $ref: "#/components/schemas/ContractWithState"
-
-    BatchListVotesByVoteRequestsRequest:
-      type: object
-      required:
-        - vote_request_contract_ids
-      properties:
-        vote_request_contract_ids:
-          type: array
-          items:
-            type: string
-
-    ListVoteRequestByTrackingCidResponse:
-      type: object
-      required:
-        - vote_requests
-      properties:
-        vote_requests:
-          type: array
-          items:
-            $ref: "./common-external.yaml#/components/schemas/Contract"
-
-    LookupDsoRulesVoteRequestResponse:
-      type: object
-      required:
-        - dso_rules_vote_request
-      properties:
-        dso_rules_vote_request:
-          $ref: "./common-external.yaml#/components/schemas/Contract"
-
-    ListDsoRulesVoteRequestsResponse:
-      type: object
-      required:
-        - dso_rules_vote_requests
-      properties:
-        dso_rules_vote_requests:
-          type: array
-          items:
-            $ref: "./common-external.yaml#/components/schemas/Contract"
-
-    ListVoteResultsRequest:
-      type: object
-      required:
-        - limit
-      properties:
-        actionName:
-          type: string
-        accepted:
-          type: boolean
-        requester:
-          type: string
-        effectiveFrom:
-          type: string
-        effectiveTo:
-          type: string
-        limit:
-          type: integer
-
-    ListDsoRulesVoteResultsResponse:
-      type: object
-      required:
-        - dso_rules_vote_results
-      properties:
-        dso_rules_vote_results:
-          type: array
-          items:
-            type: object
-
-    ListValidatorLicensesResponse:
-      type: object
-      required:
-        - validator_licenses
-      properties:
-        validator_licenses:
-          type: array
-          items:
             $ref: "../../../../common/src/main/openapi/common-external.yaml#/components/schemas/Contract"
-        next_page_token:
-          type: integer
-          format: int64
-          description: |
-            When requesting the next page of results, pass this as URL query parameter `after`.
+

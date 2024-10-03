@@ -21,7 +21,7 @@ import { AmuletRules } from '@daml.js/splice-amulet/lib/Splice/AmuletRules/';
 import { SvNodeState } from '@daml.js/splice-dso-governance/lib/Splice/DSO/SvState';
 import { DsoRules } from '@daml.js/splice-dso-governance/lib/Splice/DsoRules';
 
-export interface DsoInfo {
+export interface SvUiState {
   svUser: string;
   svPartyId: string;
   dsoPartyId: string;
@@ -31,7 +31,7 @@ export interface DsoInfo {
   nodeStates: Contract<SvNodeState>[];
 }
 
-function encodeSvUiState(uiState: DsoInfo): unknown {
+function encodeSvUiState(uiState: SvUiState): unknown {
   return {
     ...uiState,
     amuletRules: Contract.encode(AmuletRules, uiState.amuletRules),
@@ -69,7 +69,7 @@ function getInfoTable(title: string, rows: { key: string; value: string; isParty
 function createRow(key: string, value: string, isParty: boolean = false) {
   return { key, value, isParty };
 }
-const GeneralInformationView: React.FC<{ dsoInfo: DsoInfo }> = ({ dsoInfo }) => {
+const GeneralInformationView: React.FC<{ dsoInfo: SvUiState }> = ({ dsoInfo }) => {
   let cs: { key: string; value: string }[] = [];
   dsoInfo.dsoRules.payload.svs.forEach((value, key) => cs.push(createRow(key, value.name)));
   const svInfos = [
@@ -218,7 +218,7 @@ function tabProps(info: string) {
   };
 }
 interface DsoViewPrettyJSONProps {
-  dsoInfoQuery: UseQueryResult<DsoInfo>;
+  dsoInfoQuery: UseQueryResult<SvUiState>;
   cometBftNodeDebugQuery?: UseQueryResult<CometBftNodeDumpOrErrorResponse>;
   sequencerStatusQuery?: UseQueryResult<NodeStatus>;
   mediatorStatusQuery?: UseQueryResult<NodeStatus>;
@@ -257,9 +257,10 @@ const DsoViewPrettyJSON: React.FC<DsoViewPrettyJSONProps> = ({
         <Tabs value={value} onChange={handleChange} aria-label="json tabs">
           <Tab label="General" {...tabProps('general')} />
           <Tab label="DSO Info" {...tabProps('dso-info')} />
+          {/* TODO(#13480): remove this fallback once we have a proper config in all apps */}
           <Tab
-            label={`${window.splice_config.spliceInstanceNames?.amuletName} Info`}
-            {...tabProps('amulet-info')}
+            label={`${window.splice_config.spliceInstanceNames?.amuletName || 'Canton Coin'} Info`}
+            {...tabProps('cc-info')}
           />
           {cometBftDebugTab && <Tab label="CometBFT Debug Info" {...tabProps('cometBft-debug')} />}
           {sequencerStatusQuery && mediatorStatusQuery && (

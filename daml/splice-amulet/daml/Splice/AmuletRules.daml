@@ -430,7 +430,6 @@ template AmuletRules
         appCouponCids : [ContractId AppRewardCoupon]
         svRewardCouponCids : [ContractId SvRewardCoupon]
         optValidatorFaucetCouponCids : Optional [ContractId ValidatorFaucetCoupon]
-        optValidatorLivenessActivityRecordCids : Optional [ContractId ValidatorLivenessActivityRecord]
       controller dso
       do
         -- retrieve round
@@ -448,12 +447,6 @@ template AmuletRules
           exercise validatorFaucetCouponCid ValidatorFaucetCoupon_DsoExpire with closedRoundCid
 
         let numValidatorFaucetCoupons = optional 0.0 (intToDecimal . length) optValidatorFaucetCouponCids
-
-        -- expire validator liveness activity records and compute their unclaimed rewards
-        forA_ (fromOptional [] optValidatorLivenessActivityRecordCids) $ \validatorLivenessActivityRecordCid -> do
-          exercise validatorLivenessActivityRecordCid  ValidatorLivenessActivityRecord_DsoExpire with closedRoundCid
-
-        let numValidatorLivenessActivityRecords = optional 0.0 (intToDecimal . length) optValidatorLivenessActivityRecordCids
 
         -- expire app rewards and compute their unclaimed rewards
         expiredAppRewards <- forA appCouponCids $ \appCouponCid -> do
@@ -473,7 +466,7 @@ template AmuletRules
         -- create unclaimed reward for the total
         let amount =
               validatorRewards * closedRound.issuancePerValidatorRewardCoupon +
-              (numValidatorFaucetCoupons + numValidatorLivenessActivityRecords) * getClosedMiningRoundIssuancePerValidatorFaucetCoupon closedRound +
+              numValidatorFaucetCoupons * getClosedMiningRoundIssuancePerValidatorFaucetCoupon closedRound +
               featuredAppRewards * closedRound.issuancePerFeaturedAppRewardCoupon +
               unfeaturedAppRewards * closedRound.issuancePerUnfeaturedAppRewardCoupon +
               intToDecimal svRewardsWeight * closedRound.issuancePerSvRewardCoupon
@@ -794,21 +787,6 @@ summarizeAndConsumeInputs csum dso sender inps = do
         amountArchivedAsOfRoundZero = s.amountArchivedAsOfRoundZero
         changeToHoldingFeesRate = s.changeToHoldingFeesRate
 
-    summarizeAndConsumeInput _round s (InputValidatorLivenessActivityRecord recordCid) = do
-      record <- fetchAndArchive forOwner recordCid
-      -- compute balance change
-      miningRound <- getIssuingMiningRound csum record.round
-      return TransferInputsSummary with
-        totalAmuletAmount = s.totalAmuletAmount
-        totalAppRewardAmount = s.totalAppRewardAmount
-        totalValidatorRewardAmount = s.totalValidatorRewardAmount
-        totalValidatorFaucetAmount =
-          s.totalValidatorFaucetAmount + getIssuingMiningRoundIssuancePerValidatorFaucetCoupon miningRound
-        totalSvRewardAmount = s.totalSvRewardAmount
-        totalHoldingFees = s.totalHoldingFees
-        amountArchivedAsOfRoundZero = s.amountArchivedAsOfRoundZero
-        changeToHoldingFeesRate = s.changeToHoldingFeesRate
-
     summarizeAndConsumeInput _round s (ExtTransferInput _dummyUnitField optInputValidatorFaucetCoupon) = do
       optional (pure s) (summarizeAndConsumeValidatorFaucetInput s) optInputValidatorFaucetCoupon
 
@@ -1072,7 +1050,7 @@ data TransferInput
         -- ^ Extension constructor (and field) to work around the current lack of upgrading for variants in Daml 3.0
       optInputValidatorFaucetCoupon : Optional (ContractId ValidatorFaucetCoupon)
         -- ^ Added in CIP-3. Optional validator faucet coupon input into this transfer.
-  | InputValidatorLivenessActivityRecord (ContractId ValidatorLivenessActivityRecord)
+        -- TODO(#9281): remove this and all other CIP-3 code from the base Daml model
   deriving (Eq, Ord, Show)
 
 -- | Smart constructor for inputing validator faucet coupons into a transfer.
@@ -1150,6 +1128,7 @@ data TransferSummary = TransferSummary with
     amuletPrice : Decimal -- ^ The amulet price at the round this transfer was executed.
     inputValidatorFaucetAmount : Optional Decimal
       -- ^ Added in CIP-3. Total amount of validator faucet coupon issuance input into this transfer.
+      -- TODO(#9281): remove this and all other CIP-3 code from the base Daml model
   deriving (Show, Eq)
 
 data BalanceChange = BalanceChange with
