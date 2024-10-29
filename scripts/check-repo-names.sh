@@ -23,10 +23,11 @@ function check_patterns_locally() {
   local exceptions=(
     '(\b|[`_])cn-docs'
     '@cn-load-tester\.com'
-    'clean-cn|cn-clean' # TODO () rename to clean-splice/splice-clean
-    'cn-component' # TODO () rename label in charts to splice-component
-    '^[^:]+(grafana-dashboards|WalletMetricsTest).*cn[._]|MetricName."cn"' # TODO () replace metrics prefix cn with splice
-    'databaseName = "cn_apps"|"cn_apps_reonboard"' # TODO () rename database to splice_apps
+    'clean-cn|cn-clean' # TODO (#15706) rename to clean-splice/splice-clean
+    'cn-component' # TODO (#15707) rename label in charts to splice-component
+    '^[^:]+(grafana-dashboards|WalletMetricsTest).*cn[._]|MetricName."cn"' # TODO (#15708) replace metrics prefix cn with splice
+    'databaseName = "cn_apps"|"cn_apps_reonboard"' # TODO (#15709) rename database to splice_apps
+    '(Chart-template\.yaml|helm/.*/NOTES.txt):.*Canton Network' # TODO (#15710) remove Canton Network from helm descriptions 
     '^[^:]+V001__create_schema\.sql:' # TODO (#15491) avoiding changing hashes
     'GcpConfig\.scala:' # cluster-specific
     '/da-cn-shared/cn-images' # docker image repo
