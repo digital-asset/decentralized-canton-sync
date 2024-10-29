@@ -39,7 +39,8 @@ function check_patterns_locally() {
     'ans-web-ui\.yaml:.*name: splice-app-cns-ui-auth' # TODO () new secret
     'Headers.scala:.*"cn-svc-configs"' # TODO () references to missing project subdirectory
     'package-lock\.json:.*("cns/frontend"|"name": "cns-frontend"|"cns/openapi-ts-client/dist"|"name": "cns-external-openapi")' # TODO () remove old versions from package-lock if possible
-    '(Validator|Sv)App.scala:.*"canton network.*realm"' # TODO () remove 'canton network' from realm names
+    '(Validator|Sv)App\.scala:.*"canton network.*realm"' # TODO () remove 'canton network' from realm names
+    'istio-gateway/.*gateway\.yaml:.*credentialName: cn-' # TODO () TLS credential names in istio-gateway
     'GcpConfig\.scala:' # cluster-specific
     '/da-cn-shared/cn-images|GOOGLE_CLOUD_PROJECT=da-cn-shared' # gcp
     '/cn-release-bundles' # docs route
