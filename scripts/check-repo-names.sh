@@ -29,8 +29,10 @@ function check_patterns_locally() {
     'databaseName = "cn_apps"|"cn_apps_reonboard"' # TODO (#15709) rename database to splice_apps
     '(Chart-template\.yaml|helm/.*/NOTES.txt):.*Canton Network' # TODO (#15710) remove Canton Network from helm descriptions 
     '^[^:]+V001__create_schema\.sql:' # TODO (#15491) avoiding changing hashes
+    'AUTH0_CN_MANAGEMENT_API_CLIENT_(ID|SECRET)|"dev" => ."AUTH0_CN"' # TODO () auth0 env names
+    'cluster/compose/validator/.*\.yaml' # TODO (#14303) old base-version
     'GcpConfig\.scala:' # cluster-specific
-    '/da-cn-shared/cn-images' # docker image repo
+    '/da-cn-shared/cn-images|GOOGLE_CLOUD_PROJECT=da-cn-shared' # gcp
     '/cn-release-bundles' # docs route
     'cn-(http|apps|public-http)-gateway' # helm gateway templates
     'SpliceTests\.scala.*getMeterProvider\.get."cn_tests"' # test metrics
