@@ -26,7 +26,9 @@ function check_patterns_locally() {
     'clean-cn|cn-clean' # TODO (#15706) rename to clean-splice/splice-clean
     'cn-component' # TODO (#15707) rename label in charts to splice-component
     '^[^:]+(grafana-dashboards|WalletMetricsTest).*cn[._]|MetricName."cn"' # TODO (#15708) replace metrics prefix cn with splice
-    'grafana-dashboards.*"(title|description)": "CN' # TODO () grafana
+    'grafana-dashboards.*("(title|description)": "(CN)|by CN Apps)' # TODO () grafana descriptions
+    'grafana-dashboards.*("cn"|"cn,daml")' # TODO () grafana cn query identifiers
+    'grafana-dashboards.*postgres_exporter\.json:.*"pge-cn-apps-pg-scan-sv-3"' # TODO () grafana pulumi pg reference
     'databaseName = "cn_apps"|"cn_apps_reonboard"' # TODO (#15709) rename database to splice_apps
     '(Chart-template\.yaml|helm/.*/NOTES.txt):.*Canton Network' # TODO (#15710) remove Canton Network from helm descriptions 
     '^[^:]+V001__create_schema\.sql:' # TODO (#15491) avoiding changing hashes
@@ -34,12 +36,17 @@ function check_patterns_locally() {
     'cluster/compose/validator/.*\.yaml' # TODO (#14303) old base-version
     '/helm/.*(Values\.ingress\.cns|cns: |name: cns-|- "cns\.)' # TODO () cns in splice-cluster-ingress-runbook
     'ans-web-ui\.yaml:.*\$cnsWebUiLabel' # TODO () $cnsWebUiLabel in splice-validator template
+    'ans-web-ui\.yaml:.*name: splice-app-cns-ui-auth' # TODO () new secret
+    'Headers.scala:.*"cn-svc-configs"' # TODO () references to missing project subdirectory
+    'package-lock\.json:.*("cns/frontend"|"name": "cns-frontend"|"cns/openapi-ts-client/dist"|"name": "cns-external-openapi")' # TODO () remove old versions from package-lock if possible
+    '(Validator|Sv)App.scala:.*"canton network.*realm"' # TODO () remove 'canton network' from realm names
     'GcpConfig\.scala:' # cluster-specific
     '/da-cn-shared/cn-images|GOOGLE_CLOUD_PROJECT=da-cn-shared' # gcp
     '/cn-release-bundles' # docs route
     'cn-(http|apps|public-http)-gateway' # helm gateway templates
     'SpliceTests\.scala.*getMeterProvider\.get."cn_tests"' # test metrics
     '^[^:]+package-lock\.json:.*"integrity"' # appears in hashes
+    'Preflight.*Test.*\.scala:.*s"https://cns' # hostnames in preflights
     'scan_txlog\.py.*requested CNS entry' # TODO (#15491) is this still right?
   )
 
