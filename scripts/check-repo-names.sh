@@ -48,7 +48,6 @@ function check_patterns_locally() {
     'SpliceTests\.scala.*getMeterProvider\.get."cn_tests"' # test metrics
     '^[^:]+package-lock\.json:.*"integrity"' # appears in hashes
     'Preflight.*Test.*\.scala:.*s"https://cns' # hostnames in preflights
-    'scan_txlog\.py.*requested CNS entry' # TODO (#15491) is this still right?
   )
 
   local exception exceptions_args=()
