@@ -1,0 +1,140 @@
+.. _module-splice-expiry-80141:
+
+Splice.Expiry
+=============
+
+Functions for computing amulet and lock expiry times and conditions\.
+
+Data Types
+----------
+
+.. _type-splice-expiry-boundedset-6748:
+
+**data** `BoundedSet <type-splice-expiry-boundedset-6748_>`_ a
+
+  A symbolic representation of a set of values of type ``a`` useful for computing upper\-bounds\.
+
+  .. _constr-splice-expiry-singleton-7610:
+
+  `Singleton <constr-splice-expiry-singleton-7610_>`_ a
+
+    ``Singleton x`` represents the singleton set ``{x}``
+
+  .. _constr-splice-expiry-aftermaxbound-46101:
+
+  `AfterMaxBound <constr-splice-expiry-aftermaxbound-46101_>`_
+
+    ``AfterMaxBound`` represents the set of all values larger than the maximal value that can be represented by type ``a``
+
+  **instance** `Functor <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-base-functor-31205>`_ `BoundedSet <type-splice-expiry-boundedset-6748_>`_
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ a \=\> `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ (`BoundedSet <type-splice-expiry-boundedset-6748_>`_ a)
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ a \=\> `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ (`BoundedSet <type-splice-expiry-boundedset-6748_>`_ a)
+
+.. _type-splice-expiry-timelock-2221:
+
+**data** `TimeLock <type-splice-expiry-timelock-2221_>`_
+
+  A lock held by multiple parties until its expiry\.
+
+  .. _constr-splice-expiry-timelock-44256:
+
+  `TimeLock <constr-splice-expiry-timelock-44256_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - holders
+         - \[`Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_\]
+         -
+       * - expiresAt
+         - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `TimeLock <type-splice-expiry-timelock-2221_>`_
+
+  **instance** `Ord <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-ord-6395>`_ `TimeLock <type-splice-expiry-timelock-2221_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `TimeLock <type-splice-expiry-timelock-2221_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"expiresAt\" `TimeLock <type-splice-expiry-timelock-2221_>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"holders\" `TimeLock <type-splice-expiry-timelock-2221_>`_ \[`Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_\]
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"lock\" :ref:`LockedAmulet <type-splice-amulet-lockedamulet-7030>` `TimeLock <type-splice-expiry-timelock-2221_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"lock\" :ref:`PreprocessedTransferOutput <type-splice-amuletrules-preprocessedtransferoutput-12209>` (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `TimeLock <type-splice-expiry-timelock-2221_>`_)
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"lock\" :ref:`TransferOutput <type-splice-amuletrules-transferoutput-70512>` (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `TimeLock <type-splice-expiry-timelock-2221_>`_)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"expiresAt\" `TimeLock <type-splice-expiry-timelock-2221_>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"holders\" `TimeLock <type-splice-expiry-timelock-2221_>`_ \[`Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_\]
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"lock\" :ref:`LockedAmulet <type-splice-amulet-lockedamulet-7030>` `TimeLock <type-splice-expiry-timelock-2221_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"lock\" :ref:`PreprocessedTransferOutput <type-splice-amuletrules-preprocessedtransferoutput-12209>` (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `TimeLock <type-splice-expiry-timelock-2221_>`_)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"lock\" :ref:`TransferOutput <type-splice-amuletrules-transferoutput-70512>` (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `TimeLock <type-splice-expiry-timelock-2221_>`_)
+
+Functions
+---------
+
+.. _function-splice-expiry-maxint-28108:
+
+`maxInt <function-splice-expiry-maxint-28108_>`_
+  \: `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+.. _function-splice-expiry-maxdecimaldiv10-64031:
+
+`maxDecimalDiv10 <function-splice-expiry-maxdecimaldiv10-64031_>`_
+  \: `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+.. _function-splice-expiry-mintime-10075:
+
+`minTime <function-splice-expiry-mintime-10075_>`_
+  \: `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+
+  The smallest time point that can be represented by the ``Time`` type\.
+
+.. _function-splice-expiry-maxtime-17293:
+
+`maxTime <function-splice-expiry-maxtime-17293_>`_
+  \: `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+
+  The largest time point that can be represented by the ``Time`` type\.
+
+.. _function-splice-expiry-amountexpiresat-59287:
+
+`amountExpiresAt <function-splice-expiry-amountexpiresat-59287_>`_
+  \: :ref:`ExpiringAmount <type-splice-fees-expiringamount-39537>` \-\> `BoundedSet <type-splice-expiry-boundedset-6748_>`_ :ref:`Round <type-splice-types-round-16181>`
+
+  Compute the round where the amulet expires\. i\.e\. the amulet is fully expired\.
+
+.. _function-splice-expiry-estimateopenroundcreatedat-6216:
+
+`estimateOpenRoundCreatedAt <function-splice-expiry-estimateopenroundcreatedat-6216_>`_
+  \: `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_ \-\> :ref:`OpenMiningRound <type-splice-round-openmininground-90060>` \-\> `BoundedSet <type-splice-expiry-boundedset-6748_>`_ :ref:`Round <type-splice-types-round-16181>` \-\> `BoundedSet <type-splice-expiry-boundedset-6748_>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+
+  ``estimateOpenRoundCreatedAt tickDuration currentMiningRound targetRound`` estimates
+  creation ``Time`` of a specified ``targetRound``\.
+
+.. _function-splice-expiry-doeslockexpirebeforeamulet-44609:
+
+`doesLockExpireBeforeAmulet <function-splice-expiry-doeslockexpirebeforeamulet-44609_>`_
+  \: :ref:`OpenMiningRound <type-splice-round-openmininground-90060>` \-\> `TimeLock <type-splice-expiry-timelock-2221_>`_ \-\> :ref:`ExpiringAmount <type-splice-fees-expiringamount-39537>` \-\> `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_ \-\> `Bool <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-bool-66265>`_
+
+  ``doesLockExpireBeforeAmulet`` computes whether a ``TimeLock`` expires before a ``Amulet``
+
+.. _function-splice-expiry-isamuletexpired-66613:
+
+`isAmuletExpired <function-splice-expiry-isamuletexpired-66613_>`_
+  \: :ref:`OpenMiningRound <type-splice-round-openmininground-90060>` \-\> :ref:`ExpiringAmount <type-splice-fees-expiringamount-39537>` \-\> `Bool <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-bool-66265>`_
+
+  ``isAmuletExpired openRound amuletAmount`` computes whether the expiring ``amuletAmount``
+  is definitely expired in case the ``openRound`` is open\.

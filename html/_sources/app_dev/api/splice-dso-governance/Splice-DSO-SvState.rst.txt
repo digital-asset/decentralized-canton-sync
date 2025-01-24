@@ -1,0 +1,365 @@
+.. _module-splice-dso-svstate-17621:
+
+Splice.DSO.SvState
+==================
+
+Templates to track per\-sv state\.
+
+Templates
+---------
+
+.. _type-splice-dso-svstate-svnodestate-44938:
+
+**template** `SvNodeState <type-splice-dso-svstate-svnodestate-44938_>`_
+
+  State of a node managed by an SV operator party\.
+
+  There is exactly one such state per SV operator party\.
+  Even though every SV can operate at most one node at any one time,
+  there can though be multiple SV node states per SV, as the state of offboarded
+  nodes is kept around for debugging purposes\.
+
+  Signatory\: dso
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - dso
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - sv
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       - The SV operator party identifying the node\.
+     * - svName
+       - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+       - The SV name in whose name the node is operated\.
+     * - state
+       - `NodeState <type-splice-dso-svstate-nodestate-84781_>`_
+       -
+
+  + **Choice** Archive
+
+    Controller\: dso
+
+    Returns\: ()
+
+    (no fields)
+
+.. _type-splice-dso-svstate-svrewardstate-90395:
+
+**template** `SvRewardState <type-splice-dso-svstate-svrewardstate-90395_>`_
+
+  State of reward collection for a sv identified by their sv name\.
+
+  Signatory\: dso
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - dso
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - svName
+       - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+       -
+     * - state
+       - `RewardState <type-splice-dso-svstate-rewardstate-93172_>`_
+       -
+
+  + **Choice** Archive
+
+    Controller\: dso
+
+    Returns\: ()
+
+    (no fields)
+
+.. _type-splice-dso-svstate-svstatusreport-18374:
+
+**template** `SvStatusReport <type-splice-dso-svstate-svstatusreport-18374_>`_
+
+  A singleton contract per SV party that is used to regularly submit status reports\.
+
+  Individual status reports serve as a heartbeat for a specific SV party and its associoated SV node
+  ; and to distribute that SVs view on the network to all other SVs\.
+
+  Signatory\: dso
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - dso
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - sv
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       - The SV party that submitted this report\.
+     * - svName
+       - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+       - The name of the SV operator whose operator party was used to submit this report\.
+     * - number
+       - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+       - The number of this report, starting from 0\.
+     * - status
+       - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `SvStatus <type-splice-dso-svstate-svstatus-81954_>`_
+       - None is used when initially creating the contract upon sv addition\.
+
+  + **Choice** Archive
+
+    Controller\: dso
+
+    Returns\: ()
+
+    (no fields)
+
+Data Types
+----------
+
+.. _type-splice-dso-svstate-forsv-86032:
+
+**data** `ForSv <type-splice-dso-svstate-forsv-86032_>`_
+
+  .. _constr-splice-dso-svstate-forsv-25145:
+
+  `ForSv <constr-splice-dso-svstate-forsv-25145_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - dso
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - svName
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `ForSv <type-splice-dso-svstate-forsv-86032_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `ForSv <type-splice-dso-svstate-forsv-86032_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"dso\" `ForSv <type-splice-dso-svstate-forsv-86032_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"svName\" `ForSv <type-splice-dso-svstate-forsv-86032_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"dso\" `ForSv <type-splice-dso-svstate-forsv-86032_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"svName\" `ForSv <type-splice-dso-svstate-forsv-86032_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** HasCheckedFetch `SvRewardState <type-splice-dso-svstate-svrewardstate-90395_>`_ `ForSv <type-splice-dso-svstate-forsv-86032_>`_
+
+.. _type-splice-dso-svstate-forsvnode-12988:
+
+**data** `ForSvNode <type-splice-dso-svstate-forsvnode-12988_>`_
+
+  .. _constr-splice-dso-svstate-forsvnode-35713:
+
+  `ForSvNode <constr-splice-dso-svstate-forsvnode-35713_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - dso
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - sv
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - svName
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `ForSvNode <type-splice-dso-svstate-forsvnode-12988_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `ForSvNode <type-splice-dso-svstate-forsvnode-12988_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"dso\" `ForSvNode <type-splice-dso-svstate-forsvnode-12988_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"sv\" `ForSvNode <type-splice-dso-svstate-forsvnode-12988_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"svName\" `ForSvNode <type-splice-dso-svstate-forsvnode-12988_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"dso\" `ForSvNode <type-splice-dso-svstate-forsvnode-12988_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"sv\" `ForSvNode <type-splice-dso-svstate-forsvnode-12988_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"svName\" `ForSvNode <type-splice-dso-svstate-forsvnode-12988_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** HasCheckedFetch `SvNodeState <type-splice-dso-svstate-svnodestate-44938_>`_ `ForSvNode <type-splice-dso-svstate-forsvnode-12988_>`_
+
+  **instance** HasCheckedFetch `SvStatusReport <type-splice-dso-svstate-svstatusreport-18374_>`_ `ForSvNode <type-splice-dso-svstate-forsvnode-12988_>`_
+
+.. _type-splice-dso-svstate-nodestate-84781:
+
+**data** `NodeState <type-splice-dso-svstate-nodestate-84781_>`_
+
+  .. _constr-splice-dso-svstate-nodestate-4328:
+
+  `NodeState <constr-splice-dso-svstate-nodestate-4328_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - synchronizerNodes
+         - :ref:`SynchronizerNodeConfigMap <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfigmap-59848>`
+         - The config for a synchronizer's CometBFT, sequencer, mediator and scan nodes under control of an SV party\.
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `NodeState <type-splice-dso-svstate-nodestate-84781_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `NodeState <type-splice-dso-svstate-nodestate-84781_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"state\" `SvNodeState <type-splice-dso-svstate-svnodestate-44938_>`_ `NodeState <type-splice-dso-svstate-nodestate-84781_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"synchronizerNodes\" `NodeState <type-splice-dso-svstate-nodestate-84781_>`_ :ref:`SynchronizerNodeConfigMap <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfigmap-59848>`
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"state\" `SvNodeState <type-splice-dso-svstate-svnodestate-44938_>`_ `NodeState <type-splice-dso-svstate-nodestate-84781_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"synchronizerNodes\" `NodeState <type-splice-dso-svstate-nodestate-84781_>`_ :ref:`SynchronizerNodeConfigMap <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfigmap-59848>`
+
+.. _type-splice-dso-svstate-rewardstate-93172:
+
+**data** `RewardState <type-splice-dso-svstate-rewardstate-93172_>`_
+
+  Reward collection state of an SV\.
+
+  Note that we keep some extra aggregates in this state to make it easier to interpret it\.
+  In principle, these could be derived from the transaction history, but that
+  would be much more onerous to implement\.
+
+  .. _constr-splice-dso-svstate-rewardstate-16777:
+
+  `RewardState <constr-splice-dso-svstate-rewardstate-16777_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - numRoundsMissed
+         - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         - Number of rounds for which they missed collecting coupons\.
+       * - numRoundsCollected
+         - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         - Number of rounds for which they collected coupons\.
+       * - lastRoundCollected
+         - Round
+         - Last round for which they collected reward coupons\.
+       * - numCouponsIssued
+         - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         - Number of SV reward coupons issued by them for their beneficiaries\.
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `RewardState <type-splice-dso-svstate-rewardstate-93172_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `RewardState <type-splice-dso-svstate-rewardstate-93172_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"lastRoundCollected\" `RewardState <type-splice-dso-svstate-rewardstate-93172_>`_ Round
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"numCouponsIssued\" `RewardState <type-splice-dso-svstate-rewardstate-93172_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"numRoundsCollected\" `RewardState <type-splice-dso-svstate-rewardstate-93172_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"numRoundsMissed\" `RewardState <type-splice-dso-svstate-rewardstate-93172_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"state\" `SvRewardState <type-splice-dso-svstate-svrewardstate-90395_>`_ `RewardState <type-splice-dso-svstate-rewardstate-93172_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"lastRoundCollected\" `RewardState <type-splice-dso-svstate-rewardstate-93172_>`_ Round
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"numCouponsIssued\" `RewardState <type-splice-dso-svstate-rewardstate-93172_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"numRoundsCollected\" `RewardState <type-splice-dso-svstate-rewardstate-93172_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"numRoundsMissed\" `RewardState <type-splice-dso-svstate-rewardstate-93172_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"state\" `SvRewardState <type-splice-dso-svstate-svrewardstate-90395_>`_ `RewardState <type-splice-dso-svstate-rewardstate-93172_>`_
+
+.. _type-splice-dso-svstate-svstatus-81954:
+
+**data** `SvStatus <type-splice-dso-svstate-svstatus-81954_>`_
+
+  The status of an SV as seen from their SV node's perspective\.
+  We generally add values here that are expected to regularly increase, so that
+  SV node operators can run alerting off of them\.
+
+  .. _constr-splice-dso-svstate-svstatus-71949:
+
+  `SvStatus <constr-splice-dso-svstate-svstatus-71949_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - createdAt
+         - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+         - The wall clock time of the SV node at the time when the SV node started to gather the data points in this report to submit them\.
+       * - cometBftHeight
+         - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         - The height of the CometBFT chain at the time of submission
+       * - mediatorSynchronizerTime
+         - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+         - The latest synchronizer time observed on the mediator at the time of submission
+       * - participantSynchronizerTime
+         - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+         - The latest synchronizer time observed on the participant at the time of submission
+       * - latestOpenRound
+         - Round
+         - The maximum round number of the OpenMiningRound contracts at the time of submission
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `SvStatus <type-splice-dso-svstate-svstatus-81954_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `SvStatus <type-splice-dso-svstate-svstatus-81954_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"cometBftHeight\" `SvStatus <type-splice-dso-svstate-svstatus-81954_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"createdAt\" `SvStatus <type-splice-dso-svstate-svstatus-81954_>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"latestOpenRound\" `SvStatus <type-splice-dso-svstate-svstatus-81954_>`_ Round
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"mediatorSynchronizerTime\" `SvStatus <type-splice-dso-svstate-svstatus-81954_>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"participantSynchronizerTime\" `SvStatus <type-splice-dso-svstate-svstatus-81954_>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"status\" `SvStatusReport <type-splice-dso-svstate-svstatusreport-18374_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `SvStatus <type-splice-dso-svstate-svstatus-81954_>`_)
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"status\" :ref:`DsoRules_SubmitStatusReport <type-splice-dsorules-dsorulessubmitstatusreport-89950>` `SvStatus <type-splice-dso-svstate-svstatus-81954_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"cometBftHeight\" `SvStatus <type-splice-dso-svstate-svstatus-81954_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"createdAt\" `SvStatus <type-splice-dso-svstate-svstatus-81954_>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"latestOpenRound\" `SvStatus <type-splice-dso-svstate-svstatus-81954_>`_ Round
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"mediatorSynchronizerTime\" `SvStatus <type-splice-dso-svstate-svstatus-81954_>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"participantSynchronizerTime\" `SvStatus <type-splice-dso-svstate-svstatus-81954_>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"status\" `SvStatusReport <type-splice-dso-svstate-svstatusreport-18374_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `SvStatus <type-splice-dso-svstate-svstatus-81954_>`_)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"status\" :ref:`DsoRules_SubmitStatusReport <type-splice-dsorules-dsorulessubmitstatusreport-89950>` `SvStatus <type-splice-dso-svstate-svstatus-81954_>`_

@@ -1,0 +1,452 @@
+.. _module-splice-dso-decentralizedsynchronizer-50859:
+
+Splice.DSO.DecentralizedSynchronizer
+====================================
+
+Data structures and contracts related managing the decentralized synchronizer\.
+
+Data Types
+----------
+
+.. _type-splice-dso-decentralizedsynchronizer-dsodecentralizedsynchronizerconfig-15965:
+
+**data** `DsoDecentralizedSynchronizerConfig <type-splice-dso-decentralizedsynchronizer-dsodecentralizedsynchronizerconfig-15965_>`_
+
+  The decentralized synchronizer consists of a series of actual synchronizers\.
+  New synchronizers are created by the SVs for the rare case of needing to roll\-out
+  a BFT protocol upgrade that cannot be rolled out in a backwards compatible fashion\.
+
+  Note that synchronizers themselves are formed by a cluster of nodes run by the SVs\.
+  As can be seen form ``SynchronizerNodeConfig`` each sv runs multiple different kinds of
+  physical nodes\.
+
+  .. _constr-splice-dso-decentralizedsynchronizer-dsodecentralizedsynchronizerconfig-75458:
+
+  `DsoDecentralizedSynchronizerConfig <constr-splice-dso-decentralizedsynchronizer-dsodecentralizedsynchronizerconfig-75458_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - synchronizers
+         - `Map <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-map-90052>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_ `SynchronizerConfig <type-splice-dso-decentralizedsynchronizer-synchronizerconfig-49093_>`_
+         - The actual synchronizers, numbered sequentially\.
+       * - lastSynchronizerId
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         - The last allocated synchronizer Id\.
+       * - activeSynchronizerId
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         - The synchronizer to be used for managing standard DSO and Amulet workflows\.
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `DsoDecentralizedSynchronizerConfig <type-splice-dso-decentralizedsynchronizer-dsodecentralizedsynchronizerconfig-15965_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `DsoDecentralizedSynchronizerConfig <type-splice-dso-decentralizedsynchronizer-dsodecentralizedsynchronizerconfig-15965_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"activeSynchronizerId\" `DsoDecentralizedSynchronizerConfig <type-splice-dso-decentralizedsynchronizer-dsodecentralizedsynchronizerconfig-15965_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"decentralizedSynchronizer\" :ref:`DsoRulesConfig <type-splice-dsorules-dsorulesconfig-6376>` `DsoDecentralizedSynchronizerConfig <type-splice-dso-decentralizedsynchronizer-dsodecentralizedsynchronizerconfig-15965_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"lastSynchronizerId\" `DsoDecentralizedSynchronizerConfig <type-splice-dso-decentralizedsynchronizer-dsodecentralizedsynchronizerconfig-15965_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"synchronizers\" `DsoDecentralizedSynchronizerConfig <type-splice-dso-decentralizedsynchronizer-dsodecentralizedsynchronizerconfig-15965_>`_ (`Map <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-map-90052>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_ `SynchronizerConfig <type-splice-dso-decentralizedsynchronizer-synchronizerconfig-49093_>`_)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"activeSynchronizerId\" `DsoDecentralizedSynchronizerConfig <type-splice-dso-decentralizedsynchronizer-dsodecentralizedsynchronizerconfig-15965_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"decentralizedSynchronizer\" :ref:`DsoRulesConfig <type-splice-dsorules-dsorulesconfig-6376>` `DsoDecentralizedSynchronizerConfig <type-splice-dso-decentralizedsynchronizer-dsodecentralizedsynchronizerconfig-15965_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"lastSynchronizerId\" `DsoDecentralizedSynchronizerConfig <type-splice-dso-decentralizedsynchronizer-dsodecentralizedsynchronizerconfig-15965_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"synchronizers\" `DsoDecentralizedSynchronizerConfig <type-splice-dso-decentralizedsynchronizer-dsodecentralizedsynchronizerconfig-15965_>`_ (`Map <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-map-90052>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_ `SynchronizerConfig <type-splice-dso-decentralizedsynchronizer-synchronizerconfig-49093_>`_)
+
+.. _type-splice-dso-decentralizedsynchronizer-legacysequencerconfig-76078:
+
+**data** `LegacySequencerConfig <type-splice-dso-decentralizedsynchronizer-legacysequencerconfig-76078_>`_
+
+  Config for a legacy sequencer, i\.e\., a migration id that is still up but paused\. This is useful to allow validators to catch up\.
+
+  .. _constr-splice-dso-decentralizedsynchronizer-legacysequencerconfig-74515:
+
+  `LegacySequencerConfig <constr-splice-dso-decentralizedsynchronizer-legacysequencerconfig-74515_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - migrationId
+         - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         - The synchronizer migration id corresponding to this sequencer\.
+       * - sequencerId
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         - The id of the sequencer\.
+       * - url
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         - The public accessible url of the sequencer\.
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `LegacySequencerConfig <type-splice-dso-decentralizedsynchronizer-legacysequencerconfig-76078_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `LegacySequencerConfig <type-splice-dso-decentralizedsynchronizer-legacysequencerconfig-76078_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"legacySequencerConfig\" `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `LegacySequencerConfig <type-splice-dso-decentralizedsynchronizer-legacysequencerconfig-76078_>`_)
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"migrationId\" `LegacySequencerConfig <type-splice-dso-decentralizedsynchronizer-legacysequencerconfig-76078_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"sequencerId\" `LegacySequencerConfig <type-splice-dso-decentralizedsynchronizer-legacysequencerconfig-76078_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"url\" `LegacySequencerConfig <type-splice-dso-decentralizedsynchronizer-legacysequencerconfig-76078_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"legacySequencerConfig\" `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `LegacySequencerConfig <type-splice-dso-decentralizedsynchronizer-legacysequencerconfig-76078_>`_)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"migrationId\" `LegacySequencerConfig <type-splice-dso-decentralizedsynchronizer-legacysequencerconfig-76078_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"sequencerId\" `LegacySequencerConfig <type-splice-dso-decentralizedsynchronizer-legacysequencerconfig-76078_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"url\" `LegacySequencerConfig <type-splice-dso-decentralizedsynchronizer-legacysequencerconfig-76078_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+.. _type-splice-dso-decentralizedsynchronizer-mediatorconfig-99298:
+
+**data** `MediatorConfig <type-splice-dso-decentralizedsynchronizer-mediatorconfig-99298_>`_
+
+  Config for a mediator\.
+
+  .. _constr-splice-dso-decentralizedsynchronizer-mediatorconfig-88513:
+
+  `MediatorConfig <constr-splice-dso-decentralizedsynchronizer-mediatorconfig-88513_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - mediatorId
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         - The id of the mediator\.
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `MediatorConfig <type-splice-dso-decentralizedsynchronizer-mediatorconfig-99298_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `MediatorConfig <type-splice-dso-decentralizedsynchronizer-mediatorconfig-99298_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"mediator\" `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `MediatorConfig <type-splice-dso-decentralizedsynchronizer-mediatorconfig-99298_>`_)
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"mediatorId\" `MediatorConfig <type-splice-dso-decentralizedsynchronizer-mediatorconfig-99298_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"mediator\" `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `MediatorConfig <type-splice-dso-decentralizedsynchronizer-mediatorconfig-99298_>`_)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"mediatorId\" `MediatorConfig <type-splice-dso-decentralizedsynchronizer-mediatorconfig-99298_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+.. _type-splice-dso-decentralizedsynchronizer-scanconfig-87910:
+
+**data** `ScanConfig <type-splice-dso-decentralizedsynchronizer-scanconfig-87910_>`_
+
+  Config for a Scan instance\.
+
+  .. _constr-splice-dso-decentralizedsynchronizer-scanconfig-27525:
+
+  `ScanConfig <constr-splice-dso-decentralizedsynchronizer-scanconfig-27525_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - publicUrl
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         - The publicly accessible URL of the Scan instance\.
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `ScanConfig <type-splice-dso-decentralizedsynchronizer-scanconfig-87910_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `ScanConfig <type-splice-dso-decentralizedsynchronizer-scanconfig-87910_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"publicUrl\" `ScanConfig <type-splice-dso-decentralizedsynchronizer-scanconfig-87910_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"scan\" `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `ScanConfig <type-splice-dso-decentralizedsynchronizer-scanconfig-87910_>`_)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"publicUrl\" `ScanConfig <type-splice-dso-decentralizedsynchronizer-scanconfig-87910_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"scan\" `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `ScanConfig <type-splice-dso-decentralizedsynchronizer-scanconfig-87910_>`_)
+
+.. _type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423:
+
+**data** `SequencerConfig <type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423_>`_
+
+  Config for a sequencer\.
+
+  .. _constr-splice-dso-decentralizedsynchronizer-sequencerconfig-73098:
+
+  `SequencerConfig <constr-splice-dso-decentralizedsynchronizer-sequencerconfig-73098_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - migrationId
+         - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         - The synchronizer migration id corresponding to this sequencer\.
+       * - sequencerId
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         - The id of the sequencer\.
+       * - url
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         - The public accessible url of the sequencer\.
+       * - availableAfter
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+         - Any participant should subscribe this sequencer after this time\. \^ If not set the sequencer is not yet accessible
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `SequencerConfig <type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `SequencerConfig <type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"availableAfter\" `SequencerConfig <type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_)
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"migrationId\" `SequencerConfig <type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"sequencer\" `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `SequencerConfig <type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423_>`_)
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"sequencerId\" `SequencerConfig <type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"url\" `SequencerConfig <type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"availableAfter\" `SequencerConfig <type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"migrationId\" `SequencerConfig <type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"sequencer\" `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `SequencerConfig <type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423_>`_)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"sequencerId\" `SequencerConfig <type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"url\" `SequencerConfig <type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+.. _type-splice-dso-decentralizedsynchronizer-synchronizerconfig-49093:
+
+**data** `SynchronizerConfig <type-splice-dso-decentralizedsynchronizer-synchronizerconfig-49093_>`_
+
+  The DSO\-level configuration of a synchronizer\. This contains the shared parameters
+  of the synchronizer\.
+
+  .. _constr-splice-dso-decentralizedsynchronizer-synchronizerconfig-62326:
+
+  `SynchronizerConfig <constr-splice-dso-decentralizedsynchronizer-synchronizerconfig-62326_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - state
+         - `SynchronizerState <type-splice-dso-decentralizedsynchronizer-synchronizerstate-25483_>`_
+         - The state of this synchronizer
+       * - cometBftGenesisJson
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         - The CometBftGenesis json value required for new svs to bring up their CometBft nodes for this synchronizer\.
+       * - acsCommitmentReconciliationInterval
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         - Participants connected to the decentralized synchronizer exchange ACS commitment messages every reconciliation interval seconds\.
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `SynchronizerConfig <type-splice-dso-decentralizedsynchronizer-synchronizerconfig-49093_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `SynchronizerConfig <type-splice-dso-decentralizedsynchronizer-synchronizerconfig-49093_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"acsCommitmentReconciliationInterval\" `SynchronizerConfig <type-splice-dso-decentralizedsynchronizer-synchronizerconfig-49093_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_)
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"cometBftGenesisJson\" `SynchronizerConfig <type-splice-dso-decentralizedsynchronizer-synchronizerconfig-49093_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"state\" `SynchronizerConfig <type-splice-dso-decentralizedsynchronizer-synchronizerconfig-49093_>`_ `SynchronizerState <type-splice-dso-decentralizedsynchronizer-synchronizerstate-25483_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"synchronizers\" `DsoDecentralizedSynchronizerConfig <type-splice-dso-decentralizedsynchronizer-dsodecentralizedsynchronizerconfig-15965_>`_ (`Map <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-map-90052>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_ `SynchronizerConfig <type-splice-dso-decentralizedsynchronizer-synchronizerconfig-49093_>`_)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"acsCommitmentReconciliationInterval\" `SynchronizerConfig <type-splice-dso-decentralizedsynchronizer-synchronizerconfig-49093_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"cometBftGenesisJson\" `SynchronizerConfig <type-splice-dso-decentralizedsynchronizer-synchronizerconfig-49093_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"state\" `SynchronizerConfig <type-splice-dso-decentralizedsynchronizer-synchronizerconfig-49093_>`_ `SynchronizerState <type-splice-dso-decentralizedsynchronizer-synchronizerstate-25483_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"synchronizers\" `DsoDecentralizedSynchronizerConfig <type-splice-dso-decentralizedsynchronizer-dsodecentralizedsynchronizerconfig-15965_>`_ (`Map <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-map-90052>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_ `SynchronizerConfig <type-splice-dso-decentralizedsynchronizer-synchronizerconfig-49093_>`_)
+
+.. _type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457:
+
+**data** `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_
+
+  The configuration of a sv's node for a particular synchronizer\.
+
+  .. _constr-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-64798:
+
+  `SynchronizerNodeConfig <constr-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-64798_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - cometBft
+         - :ref:`CometBftConfig <type-splice-cometbft-cometbftconfig-79018>`
+         - The configuration of this sv's CometBFT nodes and keys\.
+       * - sequencer
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `SequencerConfig <type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423_>`_
+         - The configuration of this sv's optional local sequencer\.
+       * - mediator
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `MediatorConfig <type-splice-dso-decentralizedsynchronizer-mediatorconfig-99298_>`_
+         - The configuration of this sv's optional local mediator\.
+       * - scan
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `ScanConfig <type-splice-dso-decentralizedsynchronizer-scanconfig-87910_>`_
+         - The configuration of this sv's optional Scan instance\.
+       * - legacySequencerConfig
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `LegacySequencerConfig <type-splice-dso-decentralizedsynchronizer-legacysequencerconfig-76078_>`_
+         - The legacy sequencer config for the prior migration id that is still up\. We store this so it can be published on scan and validators can catchup\.
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"cometBft\" `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_ :ref:`CometBftConfig <type-splice-cometbft-cometbftconfig-79018>`
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"legacySequencerConfig\" `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `LegacySequencerConfig <type-splice-dso-decentralizedsynchronizer-legacysequencerconfig-76078_>`_)
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"mediator\" `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `MediatorConfig <type-splice-dso-decentralizedsynchronizer-mediatorconfig-99298_>`_)
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"newNodeConfig\" :ref:`DsoRules_SetSynchronizerNodeConfig <type-splice-dsorules-dsorulessetsynchronizernodeconfig-79561>` `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"scan\" `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `ScanConfig <type-splice-dso-decentralizedsynchronizer-scanconfig-87910_>`_)
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"sequencer\" `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `SequencerConfig <type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423_>`_)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"cometBft\" `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_ :ref:`CometBftConfig <type-splice-cometbft-cometbftconfig-79018>`
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"legacySequencerConfig\" `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `LegacySequencerConfig <type-splice-dso-decentralizedsynchronizer-legacysequencerconfig-76078_>`_)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"mediator\" `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `MediatorConfig <type-splice-dso-decentralizedsynchronizer-mediatorconfig-99298_>`_)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"newNodeConfig\" :ref:`DsoRules_SetSynchronizerNodeConfig <type-splice-dsorules-dsorulessetsynchronizernodeconfig-79561>` `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"scan\" `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `ScanConfig <type-splice-dso-decentralizedsynchronizer-scanconfig-87910_>`_)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"sequencer\" `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `SequencerConfig <type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423_>`_)
+
+.. _type-splice-dso-decentralizedsynchronizer-synchronizernodeconfiglimits-3659:
+
+**data** `SynchronizerNodeConfigLimits <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfiglimits-3659_>`_
+
+  .. _constr-splice-dso-decentralizedsynchronizer-synchronizernodeconfiglimits-16072:
+
+  `SynchronizerNodeConfigLimits <constr-splice-dso-decentralizedsynchronizer-synchronizernodeconfiglimits-16072_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - cometBft
+         - :ref:`CometBftConfigLimits <type-splice-cometbft-cometbftconfiglimits-81004>`
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `SynchronizerNodeConfigLimits <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfiglimits-3659_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `SynchronizerNodeConfigLimits <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfiglimits-3659_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"cometBft\" `SynchronizerNodeConfigLimits <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfiglimits-3659_>`_ :ref:`CometBftConfigLimits <type-splice-cometbft-cometbftconfiglimits-81004>`
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"synchronizerNodeConfigLimits\" :ref:`DsoRulesConfig <type-splice-dsorules-dsorulesconfig-6376>` `SynchronizerNodeConfigLimits <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfiglimits-3659_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"cometBft\" `SynchronizerNodeConfigLimits <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfiglimits-3659_>`_ :ref:`CometBftConfigLimits <type-splice-cometbft-cometbftconfiglimits-81004>`
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"synchronizerNodeConfigLimits\" :ref:`DsoRulesConfig <type-splice-dsorules-dsorulesconfig-6376>` `SynchronizerNodeConfigLimits <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfiglimits-3659_>`_
+
+.. _type-splice-dso-decentralizedsynchronizer-synchronizernodeconfigmap-59848:
+
+**type** `SynchronizerNodeConfigMap <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfigmap-59848_>`_
+  \= `Map <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-map-90052>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_ `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_
+
+  A map from synchronizer\-ids to the configuration of a sv's node for this synchronizer\.
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"sv1SynchronizerNodes\" :ref:`DsoBootstrap <type-splice-dsobootstrap-dsobootstrap-38046>` `SynchronizerNodeConfigMap <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfigmap-59848_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"synchronizerNodes\" :ref:`NodeState <type-splice-dso-svstate-nodestate-84781>` `SynchronizerNodeConfigMap <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfigmap-59848_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"sv1SynchronizerNodes\" :ref:`DsoBootstrap <type-splice-dsobootstrap-dsobootstrap-38046>` `SynchronizerNodeConfigMap <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfigmap-59848_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"synchronizerNodes\" :ref:`NodeState <type-splice-dso-svstate-nodestate-84781>` `SynchronizerNodeConfigMap <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfigmap-59848_>`_
+
+.. _type-splice-dso-decentralizedsynchronizer-synchronizerstate-25483:
+
+**data** `SynchronizerState <type-splice-dso-decentralizedsynchronizer-synchronizerstate-25483_>`_
+
+  The state of a synchronizer\.
+
+  .. _constr-splice-dso-decentralizedsynchronizer-dsbootstrapping-64886:
+
+  `DS_Bootstrapping <constr-splice-dso-decentralizedsynchronizer-dsbootstrapping-64886_>`_
+
+    The synchronizer is still being bootstrapped, and SVs are required to
+    provision their nodes for it\.
+
+  .. _constr-splice-dso-decentralizedsynchronizer-dsoperational-99130:
+
+  `DS_Operational <constr-splice-dso-decentralizedsynchronizer-dsoperational-99130_>`_
+
+    The synchronizer is operational, and thus can be used as
+    the active synchronizer\.
+
+  .. _constr-splice-dso-decentralizedsynchronizer-dsdecomissioned-12812:
+
+  `DS_Decomissioned <constr-splice-dso-decentralizedsynchronizer-dsdecomissioned-12812_>`_
+
+    The synchronizer has been decommissioned and svs are now allowed to shutdown
+    their nodes for that synchronizer\. We track this state explicitly instead of just
+    deleting the synchronizer config, as decomissioning likely takes a while, and we
+    want to avoid confusion among SV operators when they see errors raised from
+    some of their synchronizer nodes\.
+
+  .. _constr-splice-dso-decentralizedsynchronizer-extsynchronizerstate-26922:
+
+  `ExtSynchronizerState <constr-splice-dso-decentralizedsynchronizer-extsynchronizerstate-26922_>`_
+
+    Extension constructor to work around the current lack of upgrading for variants in Daml 3\.0\.
+    Will serve as the default value in a containing record in case of an extension\.
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `SynchronizerState <type-splice-dso-decentralizedsynchronizer-synchronizerstate-25483_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `SynchronizerState <type-splice-dso-decentralizedsynchronizer-synchronizerstate-25483_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"state\" `SynchronizerConfig <type-splice-dso-decentralizedsynchronizer-synchronizerconfig-49093_>`_ `SynchronizerState <type-splice-dso-decentralizedsynchronizer-synchronizerstate-25483_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"state\" `SynchronizerConfig <type-splice-dso-decentralizedsynchronizer-synchronizerconfig-49093_>`_ `SynchronizerState <type-splice-dso-decentralizedsynchronizer-synchronizerstate-25483_>`_
+
+Functions
+---------
+
+.. _function-splice-dso-decentralizedsynchronizer-nosynchronizernodes-89430:
+
+`noSynchronizerNodes <function-splice-dso-decentralizedsynchronizer-nosynchronizernodes-89430_>`_
+  \: `SynchronizerNodeConfigMap <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfigmap-59848_>`_
+
+.. _function-splice-dso-decentralizedsynchronizer-emptysynchronizernodeconfig-56591:
+
+`emptySynchronizerNodeConfig <function-splice-dso-decentralizedsynchronizer-emptysynchronizernodeconfig-56591_>`_
+  \: `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_
+
+.. _function-splice-dso-decentralizedsynchronizer-validsynchronizernodeconfig-25090:
+
+`validSynchronizerNodeConfig <function-splice-dso-decentralizedsynchronizer-validsynchronizernodeconfig-25090_>`_
+  \: `SynchronizerNodeConfigLimits <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfiglimits-3659_>`_ \-\> `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_ \-\> `Bool <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-bool-66265>`_
+
+.. _function-splice-dso-decentralizedsynchronizer-defaultsynchronizernodeconfiglimits-67119:
+
+`defaultSynchronizerNodeConfigLimits <function-splice-dso-decentralizedsynchronizer-defaultsynchronizernodeconfiglimits-67119_>`_
+  \: `SynchronizerNodeConfigLimits <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfiglimits-3659_>`_

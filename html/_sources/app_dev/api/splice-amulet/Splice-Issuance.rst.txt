@@ -1,0 +1,312 @@
+.. _module-splice-issuance-46787:
+
+Splice.Issuance
+===============
+
+Amulet rewards issuance configuration and computation\.
+
+Data Types
+----------
+
+.. _type-splice-issuance-issuanceconfig-93012:
+
+**data** `IssuanceConfig <type-splice-issuance-issuanceconfig-93012_>`_
+
+  .. _constr-splice-issuance-issuanceconfig-42917:
+
+  `IssuanceConfig <constr-splice-issuance-issuanceconfig-42917_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - amuletToIssuePerYear
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         -
+       * - validatorRewardPercentage
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         -
+       * - appRewardPercentage
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         -
+       * - validatorRewardCap
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         -
+       * - featuredAppRewardCap
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         -
+       * - unfeaturedAppRewardCap
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         -
+       * - optValidatorFaucetCap
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         - Maximal amount in $ for the per\-validator issuance of validator faucet coupons; Introduced as part of CIP\-3\. Defaults to 2\.85 USD\.
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `IssuanceConfig <type-splice-issuance-issuanceconfig-93012_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `IssuanceConfig <type-splice-issuance-issuanceconfig-93012_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"amuletToIssuePerYear\" `IssuanceConfig <type-splice-issuance-issuanceconfig-93012_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"appRewardPercentage\" `IssuanceConfig <type-splice-issuance-issuanceconfig-93012_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"featuredAppRewardCap\" `IssuanceConfig <type-splice-issuance-issuanceconfig-93012_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"issuanceConfig\" :ref:`OpenMiningRound <type-splice-round-openmininground-90060>` `IssuanceConfig <type-splice-issuance-issuanceconfig-93012_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"issuanceConfig\" :ref:`SummarizingMiningRound <type-splice-round-summarizingmininground-36579>` `IssuanceConfig <type-splice-issuance-issuanceconfig-93012_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"issuanceCurve\" (:ref:`AmuletConfig <type-splice-amuletconfig-amuletconfig-37414>` unit) (:ref:`Schedule <type-splice-schedule-schedule-35504>` `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_ `IssuanceConfig <type-splice-issuance-issuanceconfig-93012_>`_)
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"optValidatorFaucetCap\" `IssuanceConfig <type-splice-issuance-issuanceconfig-93012_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_)
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"unfeaturedAppRewardCap\" `IssuanceConfig <type-splice-issuance-issuanceconfig-93012_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"validatorRewardCap\" `IssuanceConfig <type-splice-issuance-issuanceconfig-93012_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"validatorRewardPercentage\" `IssuanceConfig <type-splice-issuance-issuanceconfig-93012_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"amuletToIssuePerYear\" `IssuanceConfig <type-splice-issuance-issuanceconfig-93012_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"appRewardPercentage\" `IssuanceConfig <type-splice-issuance-issuanceconfig-93012_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"featuredAppRewardCap\" `IssuanceConfig <type-splice-issuance-issuanceconfig-93012_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"issuanceConfig\" :ref:`OpenMiningRound <type-splice-round-openmininground-90060>` `IssuanceConfig <type-splice-issuance-issuanceconfig-93012_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"issuanceConfig\" :ref:`SummarizingMiningRound <type-splice-round-summarizingmininground-36579>` `IssuanceConfig <type-splice-issuance-issuanceconfig-93012_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"issuanceCurve\" (:ref:`AmuletConfig <type-splice-amuletconfig-amuletconfig-37414>` unit) (:ref:`Schedule <type-splice-schedule-schedule-35504>` `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_ `IssuanceConfig <type-splice-issuance-issuanceconfig-93012_>`_)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"optValidatorFaucetCap\" `IssuanceConfig <type-splice-issuance-issuanceconfig-93012_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"unfeaturedAppRewardCap\" `IssuanceConfig <type-splice-issuance-issuanceconfig-93012_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"validatorRewardCap\" `IssuanceConfig <type-splice-issuance-issuanceconfig-93012_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"validatorRewardPercentage\" `IssuanceConfig <type-splice-issuance-issuanceconfig-93012_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+.. _type-splice-issuance-issuancetranche-71318:
+
+**data** `IssuanceTranche <type-splice-issuance-issuancetranche-71318_>`_
+
+  .. _constr-splice-issuance-issuancetranche-27573:
+
+  `IssuanceTranche <constr-splice-issuance-issuancetranche-27573_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - rewardsToIssue
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         - Total amulets to issue as rewards in this tranche
+       * - issuancePerCoupon
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         - Issuence per reward coupon for this tranche
+       * - unclaimedRewards
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         - Amulets to issue in this tranche that were not claimed
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"issuancePerCoupon\" `IssuanceTranche <type-splice-issuance-issuancetranche-71318_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"rewardsToIssue\" `IssuanceTranche <type-splice-issuance-issuancetranche-71318_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"unclaimedRewards\" `IssuanceTranche <type-splice-issuance-issuancetranche-71318_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"issuancePerCoupon\" `IssuanceTranche <type-splice-issuance-issuancetranche-71318_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"rewardsToIssue\" `IssuanceTranche <type-splice-issuance-issuancetranche-71318_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"unclaimedRewards\" `IssuanceTranche <type-splice-issuance-issuancetranche-71318_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+.. _type-splice-issuance-issuingroundparameters-47575:
+
+**data** `IssuingRoundParameters <type-splice-issuance-issuingroundparameters-47575_>`_
+
+  Parameters to use in a round that issues amulet as rewards for collected coupons\.
+
+  .. _constr-splice-issuance-issuingroundparameters-60486:
+
+  `IssuingRoundParameters <constr-splice-issuance-issuingroundparameters-60486_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - issuancePerValidatorRewardCoupon
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         -
+       * - issuancePerFeaturedAppRewardCoupon
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         -
+       * - issuancePerUnfeaturedAppRewardCoupon
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         -
+       * - issuancePerSvRewardCoupon
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         -
+       * - unclaimedAppRewards
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         -
+       * - unclaimedValidatorRewards
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         -
+       * - unclaimedSvRewards
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         - Can be non\-zero due to rounding, or no SV having had the chance to claim their coupons\.
+       * - issuancePerValidatorFaucetCoupon
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `IssuingRoundParameters <type-splice-issuance-issuingroundparameters-47575_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `IssuingRoundParameters <type-splice-issuance-issuingroundparameters-47575_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"issuancePerFeaturedAppRewardCoupon\" `IssuingRoundParameters <type-splice-issuance-issuingroundparameters-47575_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"issuancePerSvRewardCoupon\" `IssuingRoundParameters <type-splice-issuance-issuingroundparameters-47575_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"issuancePerUnfeaturedAppRewardCoupon\" `IssuingRoundParameters <type-splice-issuance-issuingroundparameters-47575_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"issuancePerValidatorFaucetCoupon\" `IssuingRoundParameters <type-splice-issuance-issuingroundparameters-47575_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"issuancePerValidatorRewardCoupon\" `IssuingRoundParameters <type-splice-issuance-issuingroundparameters-47575_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"unclaimedAppRewards\" `IssuingRoundParameters <type-splice-issuance-issuingroundparameters-47575_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"unclaimedSvRewards\" `IssuingRoundParameters <type-splice-issuance-issuingroundparameters-47575_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"unclaimedValidatorRewards\" `IssuingRoundParameters <type-splice-issuance-issuingroundparameters-47575_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"issuancePerFeaturedAppRewardCoupon\" `IssuingRoundParameters <type-splice-issuance-issuingroundparameters-47575_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"issuancePerSvRewardCoupon\" `IssuingRoundParameters <type-splice-issuance-issuingroundparameters-47575_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"issuancePerUnfeaturedAppRewardCoupon\" `IssuingRoundParameters <type-splice-issuance-issuingroundparameters-47575_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"issuancePerValidatorFaucetCoupon\" `IssuingRoundParameters <type-splice-issuance-issuingroundparameters-47575_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"issuancePerValidatorRewardCoupon\" `IssuingRoundParameters <type-splice-issuance-issuingroundparameters-47575_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"unclaimedAppRewards\" `IssuingRoundParameters <type-splice-issuance-issuingroundparameters-47575_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"unclaimedSvRewards\" `IssuingRoundParameters <type-splice-issuance-issuingroundparameters-47575_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"unclaimedValidatorRewards\" `IssuingRoundParameters <type-splice-issuance-issuingroundparameters-47575_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+.. _type-splice-issuance-openminingroundsummary-90943:
+
+**data** `OpenMiningRoundSummary <type-splice-issuance-openminingroundsummary-90943_>`_
+
+  A summary of total reward coupons issued against a specific open mining round\.
+
+  .. _constr-splice-issuance-openminingroundsummary-16618:
+
+  `OpenMiningRoundSummary <constr-splice-issuance-openminingroundsummary-16618_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - totalValidatorRewardCoupons
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         -
+       * - totalFeaturedAppRewardCoupons
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         -
+       * - totalUnfeaturedAppRewardCoupons
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         -
+       * - totalSvRewardWeight
+         - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         -
+       * - optTotalValidatorFaucetCoupons
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         - Introduced as part of CIP\-3\.
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `OpenMiningRoundSummary <type-splice-issuance-openminingroundsummary-90943_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `OpenMiningRoundSummary <type-splice-issuance-openminingroundsummary-90943_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"optTotalValidatorFaucetCoupons\" `OpenMiningRoundSummary <type-splice-issuance-openminingroundsummary-90943_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_)
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"summary\" :ref:`AmuletRules_MiningRound_StartIssuing <type-splice-amuletrules-amuletrulesminingroundstartissuing-80649>` `OpenMiningRoundSummary <type-splice-issuance-openminingroundsummary-90943_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"totalFeaturedAppRewardCoupons\" `OpenMiningRoundSummary <type-splice-issuance-openminingroundsummary-90943_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"totalSvRewardWeight\" `OpenMiningRoundSummary <type-splice-issuance-openminingroundsummary-90943_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"totalUnfeaturedAppRewardCoupons\" `OpenMiningRoundSummary <type-splice-issuance-openminingroundsummary-90943_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"totalValidatorRewardCoupons\" `OpenMiningRoundSummary <type-splice-issuance-openminingroundsummary-90943_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"optTotalValidatorFaucetCoupons\" `OpenMiningRoundSummary <type-splice-issuance-openminingroundsummary-90943_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"summary\" :ref:`AmuletRules_MiningRound_StartIssuing <type-splice-amuletrules-amuletrulesminingroundstartissuing-80649>` `OpenMiningRoundSummary <type-splice-issuance-openminingroundsummary-90943_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"totalFeaturedAppRewardCoupons\" `OpenMiningRoundSummary <type-splice-issuance-openminingroundsummary-90943_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"totalSvRewardWeight\" `OpenMiningRoundSummary <type-splice-issuance-openminingroundsummary-90943_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"totalUnfeaturedAppRewardCoupons\" `OpenMiningRoundSummary <type-splice-issuance-openminingroundsummary-90943_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"totalValidatorRewardCoupons\" `OpenMiningRoundSummary <type-splice-issuance-openminingroundsummary-90943_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+Functions
+---------
+
+.. _function-splice-issuance-getvalidatorfaucetcap-50474:
+
+`getValidatorFaucetCap <function-splice-issuance-getvalidatorfaucetcap-50474_>`_
+  \: `IssuanceConfig <type-splice-issuance-issuanceconfig-93012_>`_ \-\> `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  Getter with the right default value for the validator faucet cap\.
+  Use this consistently instead of accessing the field directly\.
+
+.. _function-splice-issuance-validissuancecurve-81463:
+
+`validIssuanceCurve <function-splice-issuance-validissuancecurve-81463_>`_
+  \: :ref:`Schedule <type-splice-schedule-schedule-35504>` `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_ `IssuanceConfig <type-splice-issuance-issuanceconfig-93012_>`_ \-\> `Bool <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-bool-66265>`_
+
+.. _function-splice-issuance-validissuanceconfig-25363:
+
+`validIssuanceConfig <function-splice-issuance-validissuanceconfig-25363_>`_
+  \: `IssuanceConfig <type-splice-issuance-issuanceconfig-93012_>`_ \-\> `Bool <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-bool-66265>`_
+
+.. _function-splice-issuance-gettotalvalidatorfaucetcoupons-98130:
+
+`getTotalValidatorFaucetCoupons <function-splice-issuance-gettotalvalidatorfaucetcoupons-98130_>`_
+  \: `OpenMiningRoundSummary <type-splice-issuance-openminingroundsummary-90943_>`_ \-\> `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+.. _function-splice-issuance-validateopenminingroundsummary-65797:
+
+`validateOpenMiningRoundSummary <function-splice-issuance-validateopenminingroundsummary-65797_>`_
+  \: `CanAssert <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-assert-canassert-67323>`_ m \=\> `OpenMiningRoundSummary <type-splice-issuance-openminingroundsummary-90943_>`_ \-\> m ()
+
+.. _function-splice-issuance-computeissuingroundparameters-5863:
+
+`computeIssuingRoundParameters <function-splice-issuance-computeissuingroundparameters-5863_>`_
+  \: `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_ \-\> `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_ \-\> `IssuanceConfig <type-splice-issuance-issuanceconfig-93012_>`_ \-\> `OpenMiningRoundSummary <type-splice-issuance-openminingroundsummary-90943_>`_ \-\> `IssuingRoundParameters <type-splice-issuance-issuingroundparameters-47575_>`_
+
+.. _function-splice-issuance-computeissuancetranche-10230:
+
+`computeIssuanceTranche <function-splice-issuance-computeissuancetranche-10230_>`_
+  \: `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_ \-\> `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_ \-\> `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_ \-\> `IssuanceTranche <type-splice-issuance-issuancetranche-71318_>`_
+
+  ``computeIssuanceTranche rewardsToIssue capPerCoupon totalCoupons``
+
+  computes parameters that issue as many rewards per coupon as possible up to
+  a maximum of ``capPerCoupon`` amulets\.

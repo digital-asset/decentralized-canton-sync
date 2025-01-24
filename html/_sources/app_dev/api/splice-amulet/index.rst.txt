@@ -1,0 +1,26 @@
+..
+   Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+..
+   SPDX-License-Identifier: Apache-2.0
+
+splice-amulet docs
+==================
+
+.. toctree::
+   :maxdepth: 3
+   :titlesonly:
+
+   Splice.Amulet <Splice-Amulet>
+   Splice.AmuletConfig <Splice-AmuletConfig>
+   Splice.AmuletRules <Splice-AmuletRules>
+   Splice.DecentralizedSynchronizer <Splice-DecentralizedSynchronizer>
+   Splice.Expiry <Splice-Expiry>
+   Splice.ExternalPartyAmuletRules <Splice-ExternalPartyAmuletRules>
+   Splice.Fees <Splice-Fees>
+   Splice.Issuance <Splice-Issuance>
+   Splice.RelRound <Splice-RelRound>
+   Splice.Round <Splice-Round>
+   Splice.Schedule <Splice-Schedule>
+   Splice.Types <Splice-Types>
+   Splice.ValidatorLicense <Splice-ValidatorLicense>
+

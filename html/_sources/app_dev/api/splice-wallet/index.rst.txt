@@ -1,0 +1,18 @@
+..
+   Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+..
+   SPDX-License-Identifier: Apache-2.0
+
+splice-wallet docs
+==================
+
+.. toctree::
+   :maxdepth: 3
+   :titlesonly:
+
+   Splice.Wallet.BuyTrafficRequest <Splice-Wallet-BuyTrafficRequest>
+   Splice.Wallet.Install <Splice-Wallet-Install>
+   Splice.Wallet.TopUpState <Splice-Wallet-TopUpState>
+   Splice.Wallet.TransferOffer <Splice-Wallet-TransferOffer>
+   Splice.Wallet.TransferPreapproval <Splice-Wallet-TransferPreapproval>
+

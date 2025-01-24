@@ -1,0 +1,52 @@
+.. _module-splice-relround-92157:
+
+Splice.RelRound
+===============
+
+Data Types
+----------
+
+.. _type-splice-relround-relround-10584:
+
+**data** `RelRound <type-splice-relround-relround-10584_>`_
+
+  The equivalent of RelTime for rounds, i\.e\., a delta between
+  two rounds
+
+  .. _constr-splice-relround-relround-94237:
+
+  `RelRound <constr-splice-relround-relround-94237_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - diff
+         - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `RelRound <type-splice-relround-relround-10584_>`_
+
+  **instance** `Ord <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-ord-6395>`_ `RelRound <type-splice-relround-relround-10584_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `RelRound <type-splice-relround-relround-10584_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"diff\" `RelRound <type-splice-relround-relround-10584_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"diff\" `RelRound <type-splice-relround-relround-10584_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+Functions
+---------
+
+.. _function-splice-relround-addrelround-11446:
+
+`addRelRound <function-splice-relround-addrelround-11446_>`_
+  \: :ref:`Round <type-splice-types-round-16181>` \-\> `RelRound <type-splice-relround-relround-10584_>`_ \-\> :ref:`Round <type-splice-types-round-16181>`
+
+.. _function-splice-relround-subround-39329:
+
+`subRound <function-splice-relround-subround-39329_>`_
+  \: :ref:`Round <type-splice-types-round-16181>` \-\> :ref:`Round <type-splice-types-round-16181>` \-\> `RelRound <type-splice-relround-relround-10584_>`_

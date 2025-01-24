@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kubernetes-Based Deployment of a Super Validator node &mdash; Splice  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="../_static/copybutton.js?v=06d34380"></script>
+        <script src="../_static/script.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Upgrades" href="sv_upgrades.html" />
+    <link rel="prev" title="Supervalidators" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Splice
+          </a>
+              <div class="version">
+                0.3.7-moritz-dirty
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Deployment and Operations</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../deployment.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../validator_operator/index.html">Validators</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_hardware_requirements.html">Validator Hardware Requirements</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_hardware_requirements.html#database-latency">Database Latency</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_compose.html">Docker-Compose Based Deployment</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_compose.html#docker-compose-based-deployment-of-a-validator-node">Docker-Compose Based Deployment of a Validator Node</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_compose.html#requirements">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_compose.html#preparing-for-validator-onboarding">Preparing for Validator Onboarding</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_compose.html#deployment">Deployment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_compose.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_compose.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_compose.html#configuring-authentication">Configuring Authentication</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_helm.html">Kubernetes-Based Deployment of a Validator node</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#requirements">Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#preparing-a-cluster-for-installation">Preparing a Cluster for Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-postgresql-authentication">Configuring PostgreSQL authentication</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#preparing-for-validator-onboarding">Preparing for Validator Onboarding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-authentication">Configuring Authentication</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#oidc-provider-requirements">OIDC Provider Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-an-auth0-tenant">Configuring an Auth0 Tenant</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-authentication-on-your-validator">Configuring Authentication on your Validator</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#installing-the-software">Installing the Software</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-the-helm-charts">Configuring the Helm Charts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#installing-the-helm-charts">Installing the Helm Charts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-the-cluster-ingress">Configuring the Cluster Ingress</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#id3">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#installation-instructions">Installation Instructions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#testnet-only-granting-coin-to-the-validator-for-traffic-purchases">(Testnet-only) Granting coin to the validator for traffic purchases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-top-ups">Configuring top-ups</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-sweeps-and-auto-accepts-of-transfer-offers">Configuring sweeps and auto-accepts of transfer offers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_upgrades.html">Upgrades</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html">Synchronizer Upgrades with Downtime</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html#technical-details">Technical Details</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html#state-and-migration-ids">State and Migration IDs</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html#migration-dumps">Migration Dumps</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html#catching-up-before-the-migration">Catching Up Before the Migration</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html#deploying-the-validator-app-and-participant-kubernetes">Deploying the Validator App and Participant (Kubernetes)</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html#deploying-the-validator-app-and-participant-docker-compose">Deploying the validator App and Participant (Docker-Compose)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_backups.html">Backups</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_backups.html#backup-of-node-identities">Backup of Node Identities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_backups.html#backups-of-postgres-instances">Backups of postgres instances</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html">Disaster Recovery</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#restoring-a-validator-from-backups">Restoring a validator from backups</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#re-onboard-a-validator-and-recover-balances-of-all-users-it-hosts">Re-onboard a validator and recover balances of all users it hosts</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#docker-compose-deployment">Docker-Compose Deployment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#kubernetes-deployment">Kubernetes Deployment</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#disaster-recovery-from-loss-of-the-cometbft-storage-layer-of-the-global-synchronizer">Disaster recovery from loss of the CometBFT storage layer of the global synchronizer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#technical-details">Technical Details</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_users.html">Users, Parties and Wallets in the Splice Wallet</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Supervalidators</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Kubernetes-Based Deployment of a Super Validator node</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#requirements">Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#generating-an-sv-identity">Generating an SV identity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#preparing-a-cluster-for-installation">Preparing a Cluster for Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configuring-authentication">Configuring Authentication</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#oidc-provider-requirements">OIDC Provider Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuring-an-auth0-tenant">Configuring an Auth0 Tenant</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuring-authentication-on-your-sv-node">Configuring Authentication on your SV Node</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#configuring-your-cometbft-node">Configuring your CometBft node</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#generating-your-cometbft-node-keys">Generating your CometBft node keys</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuring-your-cometbft-node-keys">Configuring your CometBft node keys</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuring-cometbft-state-sync">Configuring CometBft state sync</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#installing-postgres-instances">Installing Postgres instances</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#creating-k8s-secrets-for-postgres-passwords">Creating k8s Secrets for Postgres Passwords</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#postgres-in-the-cluster">Postgres in the Cluster</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cloud-hosted-postgres">Cloud-Hosted Postgres</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#installing-the-software">Installing the Software</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#configuring-the-helm-charts">Configuring the Helm Charts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#installing-the-helm-charts">Installing the Helm Charts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#configuring-the-cluster-ingress">Configuring the Cluster Ingress</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hostnames-and-urls">Hostnames and URLs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ingress-configuration">Ingress Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id3">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#installation-instructions">Installation Instructions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#configuring-the-cluster-egress">Configuring the Cluster Egress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#logging-into-the-sv-ui">Logging into the SV UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#observing-the-canton-coin-scan-ui">Observing the Canton Coin Scan UI</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="sv_upgrades.html">Upgrades</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="sv_major_upgrade.html">Synchronizer Upgrades with Downtime</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="sv_major_upgrade.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sv_major_upgrade.html#technical-details">Technical Details</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#state-and-migration-ids">State and Migration IDs</a></li>
+<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#migration-dumps">Migration Dumps</a></li>
+<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#deploying-new-canton-components-and-cometbft-node">Deploying new Canton Components and CometBFT Node</a></li>
+<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#catching-up-before-the-migration">Catching Up Before the Migration</a></li>
+<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#updating-apps">Updating Apps</a></li>
+<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#recovering-from-a-failed-upgrade">Recovering from a failed upgrade</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="sv_major_upgrade.html#organizational-details">Organizational Details</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#coordination-calls">Coordination calls</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="sv_major_upgrade.html#testing">Testing</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#individual-preparation">Individual Preparation</a></li>
+<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#coordinated-tests">Coordinated Tests</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="sv_backup.html">Backups</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="sv_backup.html#backup-of-node-identities">Backup of Node Identities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sv_backup.html#backup-of-postgres-instances">Backup of Postgres Instances</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sv_backup.html#backup-of-cometbft">Backup of CometBFT</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="sv_restore.html">Disaster Recovery</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="sv_restore.html#restoring-from-data-corruption">Restoring From Data Corruption</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="sv_restore.html#restoring-a-single-component-from-backups">Restoring a single component from backups</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sv_restore.html#restoring-a-full-sv-node-from-backups">Restoring a full SV node from backups</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="sv_restore.html#re-onboard-an-sv-and-recover-amulets-with-a-validator">Re-onboard an SV and recover Amulets with a validator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sv_restore.html#disaster-recovery-from-loss-of-cometbft-layer">Disaster recovery from loss of CometBFT layer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="sv_restore.html#technical-details">Technical Details</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="sv_restore.html#finding-a-consistent-timestamp-to-recover-the-synchronizer-from">Finding a Consistent Timestamp to Recover the Synchronizer From</a></li>
+<li class="toctree-l5"><a class="reference internal" href="sv_restore.html#creating-a-data-dump-from-the-sv-app">Creating a Data Dump from the SV App</a></li>
+<li class="toctree-l5"><a class="reference internal" href="sv_restore.html#migrating-the-data">Migrating the Data</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="sv_operations.html">SV Operations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="sv_operations.html#security-notice">Security Notice</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sv_operations.html#generate-a-validator-onboarding-secret">Generate a validator onboarding secret</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sv_operations.html#sv-identities-overview">Identities used by SV nodes on different layers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="sv_operations.html#sv-identity">SV identity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sv_operations.html#participant-identities">Participant identities</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sv_operations.html#cometbft-node-identities">CometBFT node identities</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="sv_operations.html#updating-the-reward-weight-of-an-sv">Updating the reward weight of an SV</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="sv_scratchnet.html">How to Bootstrap a Network</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="sv_scratchnet.html#cometbft-helm-values">cometbft helm values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sv_scratchnet.html#scan-helm-values">scan helm values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sv_scratchnet.html#sv-helm-values">sv helm values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sv_scratchnet.html#other-helm-values-you-may-need-to-consider">other helm values you may need to consider</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sv_scratchnet.html#infra-level-things-you-might-want-to-consider">Infra-level things you might want to consider</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sv_scratchnet.html#how-to-run-through-a-hdm">How to run through a HDM</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../troubleshooting.html#where-to-find-logs">Where to find logs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../troubleshooting.html#debugging-issues-in-web-uis">Debugging issues in Web UIs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../troubleshooting.html#configurations">Configurations</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Application Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../app_dev/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../app_dev/index.html#version-information">Version Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../app_dev/index.html#testing">Testing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../app_dev/localnet.html">Docker-Compose Based Deployment of a Super Validator Node</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../app_dev/index.html#api-reference">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../app_dev/splice_app_apis/index.html">Splice App APIs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/splice_app_apis/index.html#openapi-specifications">OpenAPI Specifications</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/splice_app_apis/index.html#api-stability">API Stability</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/splice_app_apis/index.html#contract-payload-encoding">Contract Payload Encoding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/splice_app_apis/index.html#authentication">Authentication</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../app_dev/daml.html">Daml API Reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/api/splice-amulet/index.html">splice-amulet docs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Amulet.html">Splice.Amulet</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Amulet.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Amulet.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Amulet.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-AmuletConfig.html">Splice.AmuletConfig</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-AmuletConfig.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-AmuletConfig.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-AmuletRules.html">Splice.AmuletRules</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-AmuletRules.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-AmuletRules.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-AmuletRules.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-DecentralizedSynchronizer.html">Splice.DecentralizedSynchronizer</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-DecentralizedSynchronizer.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-DecentralizedSynchronizer.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-DecentralizedSynchronizer.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Expiry.html">Splice.Expiry</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Expiry.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Expiry.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-ExternalPartyAmuletRules.html">Splice.ExternalPartyAmuletRules</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-ExternalPartyAmuletRules.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-ExternalPartyAmuletRules.html#data-types">Data Types</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Fees.html">Splice.Fees</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Fees.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Fees.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Issuance.html">Splice.Issuance</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Issuance.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Issuance.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-RelRound.html">Splice.RelRound</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-RelRound.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-RelRound.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Round.html">Splice.Round</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Round.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Round.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Schedule.html">Splice.Schedule</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Schedule.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Schedule.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Types.html">Splice.Types</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Types.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Types.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-ValidatorLicense.html">Splice.ValidatorLicense</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-ValidatorLicense.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-ValidatorLicense.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-ValidatorLicense.html#functions">Functions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/api/splice-amulet-name-service/index.html">splice-amulet-name-service docs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet-name-service/Splice-Ans.html">Splice.Ans</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet-name-service/Splice-Ans.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet-name-service/Splice-Ans.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet-name-service/Splice-Ans.html#functions">Functions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/api/splice-dso-governance/index.html">splice-dso-governance docs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-CometBft.html">Splice.CometBft</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-CometBft.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-CometBft.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DSO-AmuletPrice.html">Splice.DSO.AmuletPrice</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DSO-AmuletPrice.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DSO-AmuletPrice.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DSO-DecentralizedSynchronizer.html">Splice.DSO.DecentralizedSynchronizer</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DSO-DecentralizedSynchronizer.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DSO-DecentralizedSynchronizer.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DSO-SvState.html">Splice.DSO.SvState</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DSO-SvState.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DSO-SvState.html#data-types">Data Types</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DsoBootstrap.html">Splice.DsoBootstrap</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DsoBootstrap.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DsoBootstrap.html#data-types">Data Types</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DsoRules.html">Splice.DsoRules</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DsoRules.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DsoRules.html#orphan-typeclass-instances">Orphan Typeclass Instances</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DsoRules.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DsoRules.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-SvOnboarding.html">Splice.SvOnboarding</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-SvOnboarding.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-SvOnboarding.html#data-types">Data Types</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/api/splice-util/index.html">splice-util docs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-util/Splice-Util.html">Splice.Util</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-util/Splice-Util.html#typeclasses">Typeclasses</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-util/Splice-Util.html#functions">Functions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/api/splice-validator-lifecycle/index.html">splice-validator-life-cycle docs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-validator-lifecycle/Splice-ValidatorOnboarding.html">Splice.ValidatorOnboarding</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-validator-lifecycle/Splice-ValidatorOnboarding.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-validator-lifecycle/Splice-ValidatorOnboarding.html#data-types">Data Types</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/api/splice-wallet/index.html">splice-wallet docs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-BuyTrafficRequest.html">Splice.Wallet.BuyTrafficRequest</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-BuyTrafficRequest.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-BuyTrafficRequest.html#data-types">Data Types</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-Install.html">Splice.Wallet.Install</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-Install.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-Install.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-Install.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-TopUpState.html">Splice.Wallet.TopUpState</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-TopUpState.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-TopUpState.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-TransferOffer.html">Splice.Wallet.TransferOffer</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-TransferOffer.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-TransferOffer.html#data-types">Data Types</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-TransferPreapproval.html">Splice.Wallet.TransferPreapproval</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-TransferPreapproval.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-TransferPreapproval.html#data-types">Data Types</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/api/splice-wallet-payments/index.html">splice-wallet-payments docs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-wallet-payments/Splice-Wallet-Payment.html">Splice.Wallet.Payment</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet-payments/Splice-Wallet-Payment.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet-payments/Splice-Wallet-Payment.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet-payments/Splice-Wallet-Payment.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-wallet-payments/Splice-Wallet-Subscriptions.html">Splice.Wallet.Subscriptions</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet-payments/Splice-Wallet-Subscriptions.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet-payments/Splice-Wallet-Subscriptions.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet-payments/Splice-Wallet-Subscriptions.html#functions">Functions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Glossary</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#upcoming-release">Upcoming Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id2">0.3.6</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id3">0.3.5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id4">0.3.4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id5">0.3.3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id6">0.3.2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id7">0.3.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id8">0.3.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../release_notes.html#daml-changes-in-0-3-0">Daml Changes in 0.3.0</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id9">0.2.8</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id10">0.2.7</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id11">0.2.6</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id12">0.2.4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id13">0.2.3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id14">0.2.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id15">0.2.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id16">0.1.19</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id17">0.1.18</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id18">0.1.17</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id19">0.1.16</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id20">0.1.15</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id21">0.1.13</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id22">0.1.12</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id23">0.1.10</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id24">0.1.9</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id25">0.1.8</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id26">0.1.7</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id27">0.1.6</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id28">0.1.5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id29">0.1.4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id30">0.1.3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id31">0.1.2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id32">2024-04-01</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id33">2024-03-25</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id34">2024-03-18</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id35">2024-03-11</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id36">2024-03-04</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id37">2024-02-26</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id38">2024-02-19</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id39">2024-02-12</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id40">2024-02-05</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id41">2024-01-29</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id42">2024-01-22</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id43">2024-01-15</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id44">2024-01-08</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id45">2023-12-18</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id46">2023-12-11</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id47">2023-12-04</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id48">2023-11-27</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id49">2023-11-20</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id50">2023-11-13</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id51">2023-11-06</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id52">2023-10-30</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id53">2023-10-23</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id54">2023-10-16</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id55">2023-10-09</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id56">2023-10-02</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id57">2023-09-25</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id58">2023-09-11</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id59">2023-09-04</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id60">2023-08-28</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id61">2023-08-14</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id62">2023-08-07</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id63">2023-07-31</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id64">2023-07-16</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id65">2023-07-02</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id66">2023-06-25</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id67">2023-06-18</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id68">2023-06-11</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id69">2023-06-04</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id70">2023-05-28</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id71">2023-05-21</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id72">2023-05-14</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id73">2023-05-07</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id74">2023-04-30</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id75">2023-04-23</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Splice</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Supervalidators</a></li>
+      <li class="breadcrumb-item active">Kubernetes-Based Deployment of a Super Validator node</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/sv_operator/sv_helm.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="kubernetes-based-deployment-of-a-super-validator-node">
+<span id="sv-helm"></span><h1>Kubernetes-Based Deployment of a Super Validator node<a class="headerlink" href="#kubernetes-based-deployment-of-a-super-validator-node" title="Link to this heading"></a></h1>
+<p>This section describes deploying a Super Validator (SV) node in kubernetes using Helm
+charts.  The Helm charts deploy a complete node and connect it to a
+target cluster.</p>
+<section id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading"></a></h2>
+<ol class="arabic">
+<li><p>Access to the following two Artifactory repositories:</p>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p><a class="reference external" href="https://digitalasset.jfrog.io/ui/native/canton-network-docker">Canton Network Docker repository</a></p></li>
+<li><p><a class="reference external" href="https://digitalasset.jfrog.io/ui/native/canton-network-helm/">Canton Network Helm repository</a></p></li>
+</ol>
+</div></blockquote>
+</li>
+<li><p>A running Kubernetes cluster in which you have administrator access to create and manage namespaces.</p></li>
+<li><p>A development workstation with the following:</p>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">kubectl</span></code> - At least v1.26.1</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">helm</span></code> - At least v3.11.1</p></li>
+</ol>
+</div></blockquote>
+</li>
+<li><p>Your cluster either needs to be connected to the GCP DA Canton
+VPN or you need a static egress IP. In the latter case,
+please provide that IP address to your contact at Digital Asset to
+add it to the firewall rules.</p></li>
+<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.7-moritz-dirty_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
+</ol>
+<pre class="literal-block">tar xzvf 0.3.7-moritz-dirty_splice-node.tar.gz</pre>
+<ol class="arabic simple" start="6">
+<li><p>Please inquire if the global synchronizer (domain) on your target network has previously undergone a <a class="reference internal" href="sv_major_upgrade.html#sv-upgrades"><span class="std std-ref">synchronizer migration</span></a>.
+If it has, please record the current migration ID of the synchronizer.
+The migration ID is 0 for the initial synchronizer deployment and is incremented by 1 for each subsequent migration.</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">MIGRATION_ID</span><span class="o">=</span><span class="m">0</span>
+</pre></div>
+</div>
+</section>
+<section id="generating-an-sv-identity">
+<span id="sv-identity"></span><h2>Generating an SV identity<a class="headerlink" href="#generating-an-sv-identity" title="Link to this heading"></a></h2>
+<p>SV operators are identified by a human-readable name and an EC public key.
+This identification is stable across deployments of the Global Synchronizer.
+You are, for example, expected to reuse your SV name and public key between (test-)network resets.</p>
+<p>Use the following shell commands to generate a keypair in the format expected by the SV node software:</p>
+<div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="n">#</span><span class="w"> </span><span class="nc">Generate</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">keypair</span>
+<span class="n">openssl</span><span class="w"> </span><span class="n">ecparam</span><span class="w"> </span><span class="o">-</span><span class="n">name</span><span class="w"> </span><span class="n">prime256v1</span><span class="w"> </span><span class="o">-</span><span class="n">genkey</span><span class="w"> </span><span class="o">-</span><span class="n">noout</span><span class="w"> </span><span class="o">-</span><span class="n">out</span><span class="w"> </span><span class="n">sv</span><span class="o">-</span><span class="n">keys</span><span class="p">.</span><span class="n">pem</span>
+
+<span class="n">#</span><span class="w"> </span><span class="nc">Encode</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">keys</span>
+<span class="n">public_key_base64</span><span class="o">=</span><span class="n">$</span><span class="p">(</span><span class="n">openssl</span><span class="w"> </span><span class="n">ec</span><span class="w"> </span><span class="o">-</span><span class="n">in</span><span class="w"> </span><span class="n">sv</span><span class="o">-</span><span class="n">keys</span><span class="p">.</span><span class="n">pem</span><span class="w"> </span><span class="o">-</span><span class="n">pubout</span><span class="w"> </span><span class="o">-</span><span class="n">outform</span><span class="w"> </span><span class="nc">DER</span><span class="w"> </span><span class="mi">2</span><span class="o">&gt;/</span><span class="n">dev</span><span class="o">/</span><span class="kc">null</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">base64</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">tr</span><span class="w"> </span><span class="o">-</span><span class="n">d</span><span class="w"> </span><span class="s">&quot;\n&quot;</span><span class="p">)</span>
+<span class="n">private_key_base64</span><span class="o">=</span><span class="n">$</span><span class="p">(</span><span class="n">openssl</span><span class="w"> </span><span class="n">pkcs8</span><span class="w"> </span><span class="o">-</span><span class="n">topk8</span><span class="w"> </span><span class="o">-</span><span class="n">nocrypt</span><span class="w"> </span><span class="o">-</span><span class="n">in</span><span class="w"> </span><span class="n">sv</span><span class="o">-</span><span class="n">keys</span><span class="p">.</span><span class="n">pem</span><span class="w"> </span><span class="o">-</span><span class="n">outform</span><span class="w"> </span><span class="nc">DER</span><span class="w"> </span><span class="mi">2</span><span class="o">&gt;/</span><span class="n">dev</span><span class="o">/</span><span class="kc">null</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">base64</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">tr</span><span class="w"> </span><span class="o">-</span><span class="n">d</span><span class="w"> </span><span class="s">&quot;\n&quot;</span><span class="p">)</span>
+
+<span class="n">#</span><span class="w"> </span><span class="nc">Output</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">keys</span>
+<span class="n">echo</span><span class="w"> </span><span class="s">&quot;public-key = \&quot;$public_key_base64\&quot;&quot;</span>
+<span class="n">echo</span><span class="w"> </span><span class="s">&quot;private-key = \&quot;$private_key_base64\&quot;&quot;</span>
+
+<span class="n">#</span><span class="w"> </span><span class="nc">Clean</span><span class="w"> </span><span class="n">up</span>
+<span class="n">rm</span><span class="w"> </span><span class="n">sv</span><span class="o">-</span><span class="n">keys</span><span class="p">.</span><span class="n">pem</span>
+</pre></div>
+</div>
+<p>These commands should result in an output similar to</p>
+<div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="n">public</span><span class="o">-</span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE1eb+JkH2QFRCZedO/P5cq5d2+yfdwP+jE+9w3cT6BqfHxCd/PyA0mmWMePovShmf97HlUajFuN05kZgxvjcPQw==&quot;</span>
+<span class="k">private</span><span class="o">-</span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;MEECAQAwEwYHKoZIzj0CAQYIKoZIzj0DAQcEJzAlAgEBBCBsFuFa7Eumkdg4dcf/vxIXgAje2ULVz+qTKP3s/tHqKw==&quot;</span>
+</pre></div>
+</div>
+<p>Store both keys in a safe location.
+You will be using them every time you want to deploy a new SV node, i.e., also when deploying an SV node to a different deployment of the Global Synchronizer and for redeploying an SV node after a (test-)network reset.</p>
+<p>The <cite>public-key</cite> and your desired <em>SV name</em> need to be approved by a threshold of currently active SVs in order for you to be able to join the network as an SV.
+For <cite>DevNet</cite> and the current early version of <cite>TestNet</cite>, send the <cite>public-key</cite> and your desired SV name to your point of contact at Digital Asset (DA) and wait for confirmation that your SV identity has been approved and configured at existing SV nodes.</p>
+</section>
+<section id="preparing-a-cluster-for-installation">
+<span id="identity-token"></span><h2>Preparing a Cluster for Installation<a class="headerlink" href="#preparing-a-cluster-for-installation" title="Link to this heading"></a></h2>
+<p>In the following, you will need your Artifactory credentials from
+<a class="reference external" href="https://digitalasset.jfrog.io/ui/user_profile">https://digitalasset.jfrog.io/ui/user_profile</a>. Based on that, set the following environment variables.</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>Name</p></td>
+<td><p>Value</p></td>
+</tr>
+<tr class="row-even"><td><p>ARTIFACTORY_USER</p></td>
+<td><p>Your Artifactory user name shown at the top right.</p></td>
+</tr>
+<tr class="row-odd"><td><p>ARTIFACTORY_PASSWORD</p></td>
+<td><p>Your Artifactory Identity token. If you don’t have one you can generate one on your profile page.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Ensure that your local helm installation has access to the Digital Asset Helm chart repository:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>repo<span class="w"> </span>add<span class="w"> </span>canton-network-helm<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>https://digitalasset.jfrog.io/artifactory/api/helm/canton-network-helm<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--username<span class="w"> </span><span class="si">${</span><span class="nv">ARTIFACTORY_USER</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--password<span class="w"> </span><span class="si">${</span><span class="nv">ARTIFACTORY_PASSWORD</span><span class="si">}</span>
+</pre></div>
+</div>
+<p>Create the application namespace within Kubernetes and ensure it has image pull credentials for fetching images from the Digital Asset Artifactory repository used for Docker images.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>create<span class="w"> </span>ns<span class="w"> </span>sv
+
+kubectl<span class="w"> </span>create<span class="w"> </span>secret<span class="w"> </span>docker-registry<span class="w"> </span>docker-reg-cred<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--docker-server<span class="o">=</span>digitalasset-canton-network-docker.jfrog.io<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--docker-username<span class="o">=</span><span class="si">${</span><span class="nv">ARTIFACTORY_USER</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--docker-password<span class="o">=</span><span class="si">${</span><span class="nv">ARTIFACTORY_PASSWORD</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-n<span class="w"> </span>sv
+
+kubectl<span class="w"> </span>patch<span class="w"> </span>serviceaccount<span class="w"> </span>default<span class="w"> </span>-n<span class="w"> </span>sv<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-p<span class="w"> </span><span class="s1">&#39;{&quot;imagePullSecrets&quot;: [{&quot;name&quot;: &quot;docker-reg-cred&quot;}]}&#39;</span>
+</pre></div>
+</div>
+</section>
+<section id="configuring-authentication">
+<span id="helm-sv-auth"></span><h2>Configuring Authentication<a class="headerlink" href="#configuring-authentication" title="Link to this heading"></a></h2>
+<p>For security, the various components that comprise your SV node need to be able to authenticate themselves to each other,
+as well as be able to authenticate external UI and API users.
+We use JWT access tokens for authentication and expect these tokens to be issued by an (external) <a class="reference external" href="https://openid.net/connect/">OpenID Connect</a> (OIDC) provider.
+You must:</p>
+<ol class="arabic simple">
+<li><p>Set up an OIDC provider in such a way that both backends and web UI users are able to obtain JWTs in a supported form.</p></li>
+<li><p>Configure your backends to use that OIDC provider.</p></li>
+</ol>
+<section id="oidc-provider-requirements">
+<span id="helm-sv-auth-requirements"></span><h3>OIDC Provider Requirements<a class="headerlink" href="#oidc-provider-requirements" title="Link to this heading"></a></h3>
+<p>This section provides pointers for setting up an OIDC provider for use with your SV node.
+Feel free to skip directly to <a class="reference internal" href="#helm-sv-auth0"><span class="std std-ref">Configuring an Auth0 Tenant</span></a> if you plan to use <a class="reference external" href="https://auth0.com">Auth0</a> for your SV node’s authentication needs.
+That said, we encourage you to move to an OIDC provider different from Auth0 for the long-term production deployment of your SV,
+to avoid security risks resulting from a majority of SVs depending on the same authentication provider
+(which could expose the whole network to potential security problems at this provider).</p>
+<p>Your OIDC provider must be reachable <a class="footnote-reference brackets" href="#reach" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a> at a well known (HTTPS) URL.
+In the following, we will refer to this URL as <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_URL</span></code>.
+Both your SV node and any users that wish to authenticate to a web UI connected to your SV node must be able to reach the <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_URL</span></code>.
+We require your OIDC provider to provide a <a class="reference external" href="https://openid.net/specs/openid-connect-discovery-1_0.html">discovery document</a> at <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_URL/.well-known/openid-configuration</span></code>.
+We furthermore require that your OIDC provider exposes a <a class="reference external" href="https://datatracker.ietf.org/doc/html/rfc7517">JWK Set</a> document.
+In this documentation, we assume that this document is available at <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_URL/.well-known/jwks.json</span></code>.</p>
+<p>For machine-to-machine (SV node component to SV node component) authentication,
+your OIDC provider must support the <a class="reference external" href="https://tools.ietf.org/html/rfc6749#section-4.4">OAuth 2.0 Client Credentials Grant</a> flow.
+This means that you must be able to configure (<cite>CLIENT_ID</cite>, <cite>CLIENT_SECRET</cite>) pairs for all SV node components that need to authenticate to others.
+Currently, these are the validator app backend and the SV app backend - both need to authenticate to the SV node’s Canton participant.
+The <cite>sub</cite> field of JWTs issued through this flow must match the user ID configured as <cite>ledger-api-user</cite> in <a class="reference internal" href="#helm-sv-auth-secrets-config"><span class="std std-ref">Configuring Authentication on your SV Node</span></a>.
+In this documentation, we assume that the <cite>sub</cite> field of these JWTs is formed as <code class="docutils literal notranslate"><span class="pre">CLIENT_ID&#64;clients</span></code>.
+If this is not true for your OIDC provider, pay extra attention when configuring <code class="docutils literal notranslate"><span class="pre">ledger-api-user</span></code> values below.</p>
+<p>For user-facing authentication - allowing users to access the various web UIs hosted on your SV node,
+your OIDC provider must support the <a class="reference external" href="https://datatracker.ietf.org/doc/html/rfc6749#section-4.1">OAuth 2.0 Authorization Code Grant</a> flow
+and allow you to obtain client identifiers for the web UIs your SV node will be hosting.
+Currently, these are the SV web UI, the Wallet web UI and the CNS web UI.
+You might be required to whitelist a range of URLs on your OIDC provider, such as “Allowed Callback URLs”, “Allowed Logout URLs”, “Allowed Web Origins”, and “Allowed Origins (CORS)”.
+If you are using the ingress configuration of this runbook, the correct URLs to configure here are
+<code class="docutils literal notranslate"><span class="pre">https://sv.sv.YOUR_HOSTNAME</span></code> (for the SV web UI) ,
+<code class="docutils literal notranslate"><span class="pre">https://wallet.sv.YOUR_HOSTNAME</span></code> (for the Wallet web UI) and
+<code class="docutils literal notranslate"><span class="pre">https://cns.sv.YOUR_HOSTNAME</span></code> (for the CNS web UI).
+An identifier that is unique to the user must be set via the <cite>sub</cite> field of the issued JWT.
+On some occasions, this identifier will be used as a user name for that user on your SV node’s Canton participant.
+In <a class="reference internal" href="#helm-sv-install"><span class="std std-ref">Installing the Software</span></a>, you will be required to configure a user identifier as the <code class="docutils literal notranslate"><span class="pre">validatorWalletUser</span></code> -
+make sure that whatever you configure there matches the contents of the <cite>sub</cite> field of JWTs issued for that user.</p>
+<p><em>All</em> JWTs issued for use with your SV node:</p>
+<ul class="simple">
+<li><p>must be signed using the RS256 signing algorithm.</p></li>
+</ul>
+<p>In the future, your OIDC provider might additionally be required to issue JWTs with a <code class="docutils literal notranslate"><span class="pre">scope</span></code> explicitly set to <code class="docutils literal notranslate"><span class="pre">daml_ledger_api</span></code>
+(when requested to do so as part of the OAuth 2.0 authorization code flow).</p>
+<p>Summing up, your OIDC provider setup must provide you with the following configuration values:</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>Name</p></td>
+<td><p>Value</p></td>
+</tr>
+<tr class="row-even"><td><p>OIDC_AUTHORITY_URL</p></td>
+<td><p>The URL of your OIDC provider for obtaining the <code class="docutils literal notranslate"><span class="pre">openid-configuration</span></code> and <code class="docutils literal notranslate"><span class="pre">jwks.json</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>VALIDATOR_CLIENT_ID</p></td>
+<td><p>The client id of the Auth0 app for the validator app backend</p></td>
+</tr>
+<tr class="row-even"><td><p>VALIDATOR_CLIENT_SECRET</p></td>
+<td><p>The client secret of the Auth0 app for the validator app backend</p></td>
+</tr>
+<tr class="row-odd"><td><p>SV_CLIENT_ID</p></td>
+<td><p>The client id of the Auth0 app for the SV app backend</p></td>
+</tr>
+<tr class="row-even"><td><p>SV_CLIENT_SECRET</p></td>
+<td><p>The client secret of the Auth0 app for the SV app backend</p></td>
+</tr>
+<tr class="row-odd"><td><p>WALLET_UI_CLIENT_ID</p></td>
+<td><p>The client id of the Auth0 app for the wallet UI.</p></td>
+</tr>
+<tr class="row-even"><td><p>SV_UI_CLIENT_ID</p></td>
+<td><p>The client id of the Auth0 app for the SV UI.</p></td>
+</tr>
+<tr class="row-odd"><td><p>CNS_UI_CLIENT_ID</p></td>
+<td><p>The client id of the Auth0 app for the CNS UI.</p></td>
+</tr>
+</tbody>
+</table>
+<p>We are going to use these values, exported to environment variables named as per the <cite>Name</cite> column, in <a class="reference internal" href="#helm-sv-auth-secrets-config"><span class="std std-ref">Configuring Authentication on your SV Node</span></a> and <a class="reference internal" href="#helm-sv-install"><span class="std std-ref">Installing the Software</span></a>.</p>
+<p>When first starting out, it is suggested to configure all three JWT token audiences below to the same value: <code class="docutils literal notranslate"><span class="pre">https://canton.network.global</span></code>.</p>
+<p>Once you can confirm that your setup is working correctly using this (simple) default,
+we recommend that you configure dedicated audience values that match your deployment and URLs.
+You can configure audiences of your choice for the participant ledger API, the validator backend API, and the SV backend API.
+We will refer to these using the following configuration values:</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>Name</p></td>
+<td><p>Value</p></td>
+</tr>
+<tr class="row-even"><td><p>OIDC_AUTHORITY_LEDGER_API_AUDIENCE</p></td>
+<td><p>The audience for the participant ledger API. e.g. <code class="docutils literal notranslate"><span class="pre">https://ledger_api.example.com</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>OIDC_AUTHORITY_VALIDATOR_AUDIENCE</p></td>
+<td><p>The audience for the validator backend API. e.g. <code class="docutils literal notranslate"><span class="pre">https://validator.example.com/api</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>OIDC_AUTHORITY_SV_AUDIENCE</p></td>
+<td><p>The audience for the SV backend API. e.g. <code class="docutils literal notranslate"><span class="pre">https://sv.example.com/api</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>In case you are facing trouble with setting up your (non-Auth0) OIDC provider,
+it can be beneficial to skim the instructions in <a class="reference internal" href="#helm-sv-auth0"><span class="std std-ref">Configuring an Auth0 Tenant</span></a> as well, to check for functionality or configuration details that your OIDC provider setup might be missing.</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="reach" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>The URL must be reachable from the Canton participant, validator app and SV app running in your cluster, as well as from all web browsers that should be able to interact with the SV and wallet UIs.</p>
+</aside>
+</aside>
+</section>
+<section id="configuring-an-auth0-tenant">
+<span id="helm-sv-auth0"></span><h3>Configuring an Auth0 Tenant<a class="headerlink" href="#configuring-an-auth0-tenant" title="Link to this heading"></a></h3>
+<p>To configure <a class="reference external" href="https://auth0.com">Auth0</a> as your SV’s OIDC provider, perform the following:</p>
+<ol class="arabic">
+<li><p>Create an Auth0 tenant for your SV</p></li>
+<li><p>Create an Auth0 API that controls access to the ledger API:</p>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>Navigate to Applications &gt; APIs and click “Create API”. Set name to <code class="docutils literal notranslate"><span class="pre">Daml</span> <span class="pre">Ledger</span> <span class="pre">API</span></code>,
+set identifier to <code class="docutils literal notranslate"><span class="pre">https://canton.network.global</span></code>.
+Alternatively, if you would like to configure your own audience, you can set the identifier here. e.g. <code class="docutils literal notranslate"><span class="pre">https://ledger_api.example.com</span></code>.</p></li>
+<li><p>Under the Permissions tab in the new API, add a permission with scope <code class="docutils literal notranslate"><span class="pre">daml_ledger_api</span></code>, and a description of your choice.</p></li>
+<li><p>On the Settings tab, scroll down to “Access Settings” and enable “Allow Offline Access”, for automatic token refreshing.</p></li>
+</ol>
+</div></blockquote>
+</li>
+<li><p>Create an Auth0 Application for the validator backend:</p>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>In Auth0, navigate to Applications -&gt; Applications, and click the “Create Application” button.</p></li>
+<li><p>Name it <code class="docutils literal notranslate"><span class="pre">Validator</span> <span class="pre">app</span> <span class="pre">backend</span></code>, choose “Machine to Machine Applications”, and click Create.</p></li>
+<li><p>Choose the <code class="docutils literal notranslate"><span class="pre">Daml</span> <span class="pre">Ledger</span> <span class="pre">API</span></code> API you created in step 2 in the “Authorize Machine to Machine Application” dialog and click Authorize.</p></li>
+</ol>
+</div></blockquote>
+</li>
+<li><p>Create an Auth0 Application for the SV backend.
+Repeat all steps described in step 3, using <code class="docutils literal notranslate"><span class="pre">SV</span> <span class="pre">app</span> <span class="pre">backend</span></code> as the name of your application.</p></li>
+<li><p>Create an Auth0 Application for the SV web UI:</p>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>In Auth0, navigate to Applications -&gt; Applications, and click the “Create Application” button.</p></li>
+<li><p>Choose “Single Page Web Applications”, call it <code class="docutils literal notranslate"><span class="pre">SV</span> <span class="pre">web</span> <span class="pre">UI</span></code>, and click Create.</p></li>
+<li><p>Determine the URL for your validator’s SV UI.
+If you’re using the ingress configuration of this runbook, that would be <code class="docutils literal notranslate"><span class="pre">https://sv.sv.YOUR_HOSTNAME</span></code>.</p></li>
+<li><p>In the Auth0 application settings, add the SV URL to the following:</p>
+<ul class="simple">
+<li><p>“Allowed Callback URLs”</p></li>
+<li><p>“Allowed Logout URLs”</p></li>
+<li><p>“Allowed Web Origins”</p></li>
+<li><p>“Allowed Origins (CORS)”</p></li>
+</ul>
+</li>
+<li><p>Save your application settings.</p></li>
+</ol>
+</div></blockquote>
+</li>
+<li><p>Create an Auth0 Application for the wallet web UI.
+Repeat all steps described in step 5, with following modifications:</p>
+<ul class="simple">
+<li><p>In step b, use <code class="docutils literal notranslate"><span class="pre">Wallet</span> <span class="pre">web</span> <span class="pre">UI</span></code> as the name of your application.</p></li>
+<li><p>In steps c and d, use the URL for your SV’s <em>wallet</em> UI.
+If you’re using the ingress configuration of this runbook, that would be <code class="docutils literal notranslate"><span class="pre">https://wallet.sv.YOUR_HOSTNAME</span></code>.</p></li>
+</ul>
+</li>
+<li><p>Create an Auth0 Application for the CNS web UI.
+Repeat all steps described in step 5, with following modifications:</p>
+<ul class="simple">
+<li><p>In step b, use <code class="docutils literal notranslate"><span class="pre">CNS</span> <span class="pre">web</span> <span class="pre">UI</span></code> as the name of your application.</p></li>
+<li><p>In steps c and d, use the URL for your SV’s <em>CNS</em> UI.
+If you’re using the ingress configuration of this runbook, that would be <code class="docutils literal notranslate"><span class="pre">https://cns.sv.YOUR_HOSTNAME</span></code>.</p></li>
+</ul>
+</li>
+<li><dl class="simple">
+<dt>(Optional) Similarly to the ledger API above, the default audience is set to <code class="docutils literal notranslate"><span class="pre">https://canton.network.global</span></code>.</dt><dd><p>If you want to configure a different audience to your APIs, you can do so by creating new Auth0 APIs with an identifier set to the audience of your choice. For example,</p>
+<ol class="loweralpha simple">
+<li><p>Navigate to Applications &gt; APIs and click “Create API”. Set name to <code class="docutils literal notranslate"><span class="pre">SV</span> <span class="pre">App</span> <span class="pre">API</span></code>,
+set identifier for the SV backend app API e.g. <code class="docutils literal notranslate"><span class="pre">https://sv.example.com/api</span></code>.</p></li>
+<li><p>Create another API by setting name to <code class="docutils literal notranslate"><span class="pre">Validator</span> <span class="pre">App</span> <span class="pre">API</span></code>,
+set identifier for the Validator backend app e.g. <code class="docutils literal notranslate"><span class="pre">https://validator.example.com/api</span></code>.</p></li>
+</ol>
+</dd>
+</dl>
+</li>
+</ol>
+<p>Please refer to Auth0’s <a class="reference external" href="https://auth0.com/docs/manage-users">own documentation on user management</a> for pointers on how to set up end-user accounts for the two web UI applications you created.
+Note that you will need to create at least one such user account for completing the steps in <a class="reference internal" href="#helm-sv-install"><span class="std std-ref">Installing the Software</span></a> - for being able to log in as your SV node’s administrator.
+You will be asked to obtain the user identifier for this user account.
+It can be found in the Auth0 interface under User Management -&gt; Users -&gt; your user’s name -&gt; user_id (a field right under the user’s name at the top).</p>
+<p>We will use the environment variables listed in the table below to refer to aspects of your Auth0 configuration:</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>Name</p></td>
+<td><p>Value</p></td>
+</tr>
+<tr class="row-even"><td><p>OIDC_AUTHORITY_URL</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">https://AUTH0_TENANT_NAME.us.auth0.com</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>OIDC_AUTHORITY_LEDGER_API_AUDIENCE</p></td>
+<td><p>The optional audience of your choice for Ledger API. e.g. <code class="docutils literal notranslate"><span class="pre">https://ledger_api.example.com</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>VALIDATOR_CLIENT_ID</p></td>
+<td><p>The client id of the Auth0 app for the validator app backend</p></td>
+</tr>
+<tr class="row-odd"><td><p>VALIDATOR_CLIENT_SECRET</p></td>
+<td><p>The client secret of the Auth0 app for the validator app backend</p></td>
+</tr>
+<tr class="row-even"><td><p>SV_CLIENT_ID</p></td>
+<td><p>The client id of the Auth0 app for the SV app backend</p></td>
+</tr>
+<tr class="row-odd"><td><p>SV_CLIENT_SECRET</p></td>
+<td><p>The client secret of the Auth0 app for the SV app backend</p></td>
+</tr>
+<tr class="row-even"><td><p>WALLET_UI_CLIENT_ID</p></td>
+<td><p>The client id of the Auth0 app for the wallet UI.</p></td>
+</tr>
+<tr class="row-odd"><td><p>SV_UI_CLIENT_ID</p></td>
+<td><p>The client id of the Auth0 app for the SV UI.</p></td>
+</tr>
+<tr class="row-even"><td><p>CNS_UI_CLIENT_ID</p></td>
+<td><p>The client id of the Auth0 app for the CNS UI.</p></td>
+</tr>
+</tbody>
+</table>
+<p>The <code class="docutils literal notranslate"><span class="pre">AUTH0_TENANT_NAME</span></code> is the name of your Auth0 tenant as shown at the top left of your Auth0 project.
+You can obtain the client ID and secret of each Auth0 app from the settings pages of that app.</p>
+</section>
+<section id="configuring-authentication-on-your-sv-node">
+<span id="helm-sv-auth-secrets-config"></span><h3>Configuring Authentication on your SV Node<a class="headerlink" href="#configuring-authentication-on-your-sv-node" title="Link to this heading"></a></h3>
+<p>We are now going to configure your SV node software based on the OIDC provider configuration values your exported to environment variables at the end of either <a class="reference internal" href="#helm-sv-auth-requirements"><span class="std std-ref">OIDC Provider Requirements</span></a> or <a class="reference internal" href="#helm-sv-auth0"><span class="std std-ref">Configuring an Auth0 Tenant</span></a>.
+(Note that some authentication-related configuration steps are also included in <a class="reference internal" href="#helm-sv-install"><span class="std std-ref">Installing the Software</span></a>.)</p>
+<p>The following kubernetes secret will instruct the participant to create a service user for your SV app:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>create<span class="w"> </span>--namespace<span class="w"> </span>sv<span class="w"> </span>secret<span class="w"> </span>generic<span class="w"> </span>splice-app-sv-ledger-api-auth<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">&quot;--from-literal=ledger-api-user=</span><span class="si">${</span><span class="nv">SV_CLIENT_ID</span><span class="si">}</span><span class="s2">@clients&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">&quot;--from-literal=url=</span><span class="si">${</span><span class="nv">OIDC_AUTHORITY_URL</span><span class="si">}</span><span class="s2">/.well-known/openid-configuration&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">&quot;--from-literal=client-id=</span><span class="si">${</span><span class="nv">SV_CLIENT_ID</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">&quot;--from-literal=client-secret=</span><span class="si">${</span><span class="nv">SV_CLIENT_SECRET</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="w">    </span><span class="s2">&quot;--from-literal=audience=</span><span class="si">${</span><span class="nv">OIDC_AUTHORITY_LEDGER_API_AUDIENCE</span><span class="si">}</span><span class="s2">&quot;</span>
+</pre></div>
+</div>
+<p>The validator app backend requires the following secret.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>create<span class="w"> </span>--namespace<span class="w"> </span>sv<span class="w"> </span>secret<span class="w"> </span>generic<span class="w"> </span>splice-app-validator-ledger-api-auth<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">&quot;--from-literal=ledger-api-user=</span><span class="si">${</span><span class="nv">VALIDATOR_CLIENT_ID</span><span class="si">}</span><span class="s2">@clients&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">&quot;--from-literal=url=</span><span class="si">${</span><span class="nv">OIDC_AUTHORITY_URL</span><span class="si">}</span><span class="s2">/.well-known/openid-configuration&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">&quot;--from-literal=client-id=</span><span class="si">${</span><span class="nv">VALIDATOR_CLIENT_ID</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">&quot;--from-literal=client-secret=</span><span class="si">${</span><span class="nv">VALIDATOR_CLIENT_SECRET</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="w">    </span><span class="s2">&quot;--from-literal=audience=</span><span class="si">${</span><span class="nv">OIDC_AUTHORITY_LEDGER_API_AUDIENCE</span><span class="si">}</span><span class="s2">&quot;</span>
+</pre></div>
+</div>
+<p>To setup the wallet, CNS and SV UI, create the following two secrets.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>create<span class="w"> </span>--namespace<span class="w"> </span>sv<span class="w"> </span>secret<span class="w"> </span>generic<span class="w"> </span>splice-app-wallet-ui-auth<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">&quot;--from-literal=url=</span><span class="si">${</span><span class="nv">OIDC_AUTHORITY_URL</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">&quot;--from-literal=client-id=</span><span class="si">${</span><span class="nv">WALLET_UI_CLIENT_ID</span><span class="si">}</span><span class="s2">&quot;</span>
+
+kubectl<span class="w"> </span>create<span class="w"> </span>--namespace<span class="w"> </span>sv<span class="w"> </span>secret<span class="w"> </span>generic<span class="w"> </span>splice-app-sv-ui-auth<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">&quot;--from-literal=url=</span><span class="si">${</span><span class="nv">OIDC_AUTHORITY_URL</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">&quot;--from-literal=client-id=</span><span class="si">${</span><span class="nv">SV_UI_CLIENT_ID</span><span class="si">}</span><span class="s2">&quot;</span>
+
+kubectl<span class="w"> </span>create<span class="w"> </span>--namespace<span class="w"> </span>sv<span class="w"> </span>secret<span class="w"> </span>generic<span class="w"> </span>splice-app-cns-ui-auth<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">&quot;--from-literal=url=</span><span class="si">${</span><span class="nv">OIDC_AUTHORITY_URL</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">&quot;--from-literal=client-id=</span><span class="si">${</span><span class="nv">CNS_UI_CLIENT_ID</span><span class="si">}</span><span class="s2">&quot;</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="configuring-your-cometbft-node">
+<h2>Configuring your CometBft node<a class="headerlink" href="#configuring-your-cometbft-node" title="Link to this heading"></a></h2>
+<p>Every SV node also deploys a CometBft node. This node must be configured to join the existing Global Synchronizer BFT chain.
+To do that, you first must generate the keys that will identify the node.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You need access to the canton <a class="reference external" href="https://digitalasset.jfrog.io/ui/native/canton-network-docker">network docker repo</a> to successfully generate the node identity.
+You can access your username and get the Identity token for your Artifactory account through the UI, using the top right <cite>Edit profile</cite> option.</p>
+<div class="line-block">
+<div class="line">This can be configured by running:</div>
+<div class="line"><code class="code docutils literal notranslate"><span class="pre">docker</span> <span class="pre">login</span> <span class="pre">-u</span> <span class="pre">&lt;your_artifactory_user&gt;</span> <span class="pre">-p</span> <span class="pre">&lt;your_artifactory_api_key&gt;</span> <span class="pre">digitalasset-canton-network-docker.jfrog.io</span></code></div>
+</div>
+</div>
+<section id="generating-your-cometbft-node-keys">
+<span id="cometbft-identity"></span><h3>Generating your CometBft node keys<a class="headerlink" href="#generating-your-cometbft-node-keys" title="Link to this heading"></a></h3>
+<p>To generate the node config you must have access to the CometBft docker image provided through the Canton Network artifacotry (digitalasset-canton-network-docker.jfrog.io).</p>
+<p>Use the following shell commands to generate the proper keys:</p>
+<pre class="literal-block"># Create a folder to store the config
+mkdir cometbft
+cd cometbft
+# Init the node
+docker run --rm -v &quot;$(pwd):/init&quot; digitalasset-canton-network-docker.jfrog.io/digitalasset/cometbft:0.3.7-moritz-dirty init --home /init
+# Read the node id and keep a note of it for the deployment
+docker run --rm -v &quot;$(pwd):/init&quot; digitalasset-canton-network-docker.jfrog.io/digitalasset/cometbft:0.3.7-moritz-dirty show-node-id --home /init</pre>
+<p>Please keep a note of the node ID printed out above.</p>
+<p>In addition, please retain some of the configuration files generated, as follows (you might need to change the permissions/ownership for them as they are accessible only by the root user):</p>
+<div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="n">cometbft</span><span class="o">/</span><span class="n">config</span><span class="o">/</span><span class="n">node_key</span><span class="p">.</span><span class="n">json</span>
+<span class="n">cometbft</span><span class="o">/</span><span class="n">config</span><span class="o">/</span><span class="n">priv_validator_key</span><span class="p">.</span><span class="n">json</span>
+</pre></div>
+</div>
+<p>Any other files can be ignored.</p>
+</section>
+<section id="configuring-your-cometbft-node-keys">
+<span id="helm-cometbft-secrets-config"></span><h3>Configuring your CometBft node keys<a class="headerlink" href="#configuring-your-cometbft-node-keys" title="Link to this heading"></a></h3>
+<p>The CometBft node is configured with a secret, based on the output from <a class="reference internal" href="#cometbft-identity"><span class="std std-ref">Generating the CometBft node identity</span></a>
+The secret is created as follows, with the <cite>node_key.json</cite> and <cite>priv_validator_key.json</cite> files representing the files generated as part of the node identity:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>create<span class="w"> </span>--namespace<span class="w"> </span>sv<span class="w"> </span>secret<span class="w"> </span>generic<span class="w"> </span>cometbft-keys<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">&quot;--from-file=node_key.json=node_key.json&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">&quot;--from-file=priv_validator_key.json=priv_validator_key.json&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="configuring-cometbft-state-sync">
+<span id="helm-cometbft-state-sync"></span><h3>Configuring CometBft state sync<a class="headerlink" href="#configuring-cometbft-state-sync" title="Link to this heading"></a></h3>
+<p>CometBft has a feature called state sync that allows a new peer to catch up quickly by reading a snapshot of data at or near the head of
+the chain and verifying it instead of fetching and replaying every block. (See <a class="reference external" href="https://docs.cometbft.com/v0.34/core/state-sync">CometBft documentation</a>).
+This leads to drastically shorter times to onboard new nodes at the cost of new nodes having a truncated block history.
+Further, when the chain has been pruned, state sync needs to be enabled on new nodes in order to bootstrap them successfully.</p>
+<p>There are 3 main configuration parameters that control state sync in CometBft:</p>
+<ul class="simple">
+<li><p><cite>rpc_servers</cite> - The list of CometBft RPC servers to connect to in order to fetch snapshots</p></li>
+<li><p><cite>trust_height</cite> - Height at which you should trust the chain</p></li>
+<li><p><cite>trust_hash</cite> - Hash corresponding to the trusted height</p></li>
+</ul>
+<p>A CometBft node installed using our helm charts (see <a class="reference internal" href="#helm-sv-install"><span class="std std-ref">Installing the Software</span></a>) with the default values set in
+<code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/cometbft-values.yaml</span></code> automatically uses state sync for bootstrapping
+if:</p>
+<ul class="simple">
+<li><p>it has not been explicitly disabled by setting <cite>stateSync.enable</cite> to <cite>false</cite></p></li>
+<li><p>the block chain is mature enough for at least 1 state snapshot to have been taken i.e.
+the height of the latest block is greater than or equal to the configured interval between snapshots</p></li>
+</ul>
+<p>The snapshots are fetched from sv1 which exposes its CometBft RPC API at <cite>https://sv.sv-1.TARGET_HOSTNAME:443/cometbft-rpc/</cite>.
+This can be changed by setting <cite>stateSync.rpcServers</cite> accordingly. The <cite>trust_height</cite> and <cite>trust_hash</cite> are computed dynamically via an initialization script
+and setting them explicitly should not be required and is not currently supported.</p>
+</section>
+</section>
+<section id="installing-postgres-instances">
+<span id="helm-sv-postgres"></span><h2>Installing Postgres instances<a class="headerlink" href="#installing-postgres-instances" title="Link to this heading"></a></h2>
+<p>The SV node requires 4 Postgres instances: one for the sequencer, one for the mediator,
+one for the participant, and one for the CN apps. While they can all use the same instance,
+we recommend splitting them up into 4 separate instances for better operational flexibility,
+and also for better control over backup processes.</p>
+<p>We support both Cloud-hosted Postgres instances and Postgres instances running in the cluster.</p>
+<section id="creating-k8s-secrets-for-postgres-passwords">
+<h3>Creating k8s Secrets for Postgres Passwords<a class="headerlink" href="#creating-k8s-secrets-for-postgres-passwords" title="Link to this heading"></a></h3>
+<p>All apps support reading the Postgres password from a Kubernetes secret.
+Currently, all apps use the Postgres user <code class="docutils literal notranslate"><span class="pre">cnadmin</span></code>.
+The password can be setup with the following command, assuming you set the environment variables <code class="docutils literal notranslate"><span class="pre">POSTGRES_PASSWORD_XXX</span></code> to secure values:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>create<span class="w"> </span>secret<span class="w"> </span>generic<span class="w"> </span>sequencer-pg-secret<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--from-literal<span class="o">=</span><span class="nv">postgresPassword</span><span class="o">=</span><span class="si">${</span><span class="nv">POSTGRES_PASSWORD_SEQUENCER</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-n<span class="w"> </span>sv
+kubectl<span class="w"> </span>create<span class="w"> </span>secret<span class="w"> </span>generic<span class="w"> </span>mediator-pg-secret<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--from-literal<span class="o">=</span><span class="nv">postgresPassword</span><span class="o">=</span><span class="si">${</span><span class="nv">POSTGRES_PASSWORD_MEDIATOR</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-n<span class="w"> </span>sv
+kubectl<span class="w"> </span>create<span class="w"> </span>secret<span class="w"> </span>generic<span class="w"> </span>participant-pg-secret<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--from-literal<span class="o">=</span><span class="nv">postgresPassword</span><span class="o">=</span><span class="si">${</span><span class="nv">POSTGRES_PASSWORD_PARTICIPANT</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-n<span class="w"> </span>sv
+kubectl<span class="w"> </span>create<span class="w"> </span>secret<span class="w"> </span>generic<span class="w"> </span>apps-pg-secret<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--from-literal<span class="o">=</span><span class="nv">postgresPassword</span><span class="o">=</span><span class="si">${</span><span class="nv">POSTGRES_PASSWORD_APPS</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-n<span class="w"> </span>sv
+</pre></div>
+</div>
+</section>
+<section id="postgres-in-the-cluster">
+<h3>Postgres in the Cluster<a class="headerlink" href="#postgres-in-the-cluster" title="Link to this heading"></a></h3>
+<p>If you wish to run the Postgres instances as pods in your cluster, you can use the <cite>splice-postgres</cite> Helm chart to install them:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>install<span class="w"> </span>sequencer-pg<span class="w"> </span>canton-network-helm/splice-postgres<span class="w"> </span>-n<span class="w"> </span>sv<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/postgres-values-sequencer.yaml<span class="w"> </span>--wait
+helm<span class="w"> </span>install<span class="w"> </span>mediator-pg<span class="w"> </span>canton-network-helm/splice-postgres<span class="w"> </span>-n<span class="w"> </span>sv<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/postgres-values-mediator.yaml<span class="w"> </span>--wait
+helm<span class="w"> </span>install<span class="w"> </span>participant-pg<span class="w"> </span>canton-network-helm/splice-postgres<span class="w"> </span>-n<span class="w"> </span>sv<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/postgres-values-participant.yaml<span class="w"> </span>--wait
+helm<span class="w"> </span>install<span class="w"> </span>apps-pg<span class="w"> </span>canton-network-helm/splice-postgres<span class="w"> </span>-n<span class="w"> </span>sv<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/postgres-values-apps.yaml<span class="w"> </span>--wait
+</pre></div>
+</div>
+</section>
+<section id="cloud-hosted-postgres">
+<h3>Cloud-Hosted Postgres<a class="headerlink" href="#cloud-hosted-postgres" title="Link to this heading"></a></h3>
+<p>If you wish to use cloud-hosted Postgres instances, please configure and initialize each of them as follows:</p>
+<ul class="simple">
+<li><p>Use Postgres version 14</p></li>
+<li><p>Create a database called <code class="docutils literal notranslate"><span class="pre">cantonnet</span></code> (this is a dummy database that will not be filled with actual data; additional databases will be created as part of deployment and initialization)</p></li>
+<li><p>Create a user called <code class="docutils literal notranslate"><span class="pre">cnadmin</span></code> with the password as configured in the kubernetes secrets above</p></li>
+</ul>
+<p>Note that the default Helm values files used below assume that the Postgres instances are deployed using the Helm charts above,
+thus are accessible at hostname sequencer-pg, mediator-pg, etc. If you are using cloud-hosted Postgres instances,
+please override the hostnames under <cite>persistence.host</cite> with the IP addresses of the Postgres instances.
+To avoid conflicts across migration IDs,
+you will also need to ensure that <cite>persistence.databaseName</cite> is unique per component (participant, sequencer, mediator) and migration ID.</p>
+</section>
+</section>
+<section id="installing-the-software">
+<span id="helm-sv-install"></span><h2>Installing the Software<a class="headerlink" href="#installing-the-software" title="Link to this heading"></a></h2>
+<section id="configuring-the-helm-charts">
+<h3>Configuring the Helm Charts<a class="headerlink" href="#configuring-the-helm-charts" title="Link to this heading"></a></h3>
+<p>To install the Helm charts needed to start an SV node connected to the
+cluster, you will need to meet a few preconditions. The first is that
+there needs to be an environment variable defined to refer to the
+version of the Helm charts necessary to connect to this environment:</p>
+<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.7-moritz-dirty</span></code></p>
+<p>An SV node includes a CometBft node so you also need to configure
+that. Please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/cometbft-values.yaml</span></code> as follows:</p>
+<ul class="simple">
+<li><p>Replace all instances of <code class="docutils literal notranslate"><span class="pre">TARGET_CLUSTER</span></code> with <span class="raw-html"><span class="splice-cluster">unknown_cluster</span></span>, per the cluster to which you are connecting.</p></li>
+<li><p>Replace all instances of <code class="docutils literal notranslate"><span class="pre">TARGET_HOSTNAME</span></code> with <span class="raw-html"><span class="splice-url-prefix">unknown_cluster</span>global.canton.network.digitalasset.com</span>, per the cluster to which you are connecting.</p></li>
+<li><p>Replace all instances of <code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code> with the migration ID of the global synchronizer on your target cluster. Note that <code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code> is also used within port numbers in URLs here!</p></li>
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">YOUR_SV_NAME</span></code> with the name you chose when creating the SV identity (this must be an exact match of the string for your SV to be approved to onboard)</p></li>
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">YOUR_COMETBFT_NODE_ID</span></code> with the id obtained when generating the config for the CometBft node</p></li>
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">YOUR_HOSTNAME</span></code> with the hostname that will be used for the ingress</p></li>
+<li><p>Add <cite>db.volumeSize</cite> and <cite>db.volumeStorageClass</cite> to the values file adjust persistent storage size and storage class if necessary. (These values default to 20GiB and <cite>standard-rwo</cite>)</p></li>
+<li><p>Uncomment the appropriate <cite>nodeId</cite>, <cite>publicKey</cite> and <cite>keyAddress</cite> values in the <cite>sv1</cite> section as per the cluster to which you are connecting.</p></li>
+</ul>
+<p id="helm-configure-global-domain">Please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/participant-values.yaml</span></code> as follows:</p>
+<ul class="simple">
+<li><p>Replace all instances of <code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code> with the migration ID of the global synchronizer on your target cluster.</p></li>
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_LEDGER_API_AUDIENCE</span></code> in the <cite>auth.targetAudience</cite> entry with audience for the ledger API. e.g. <code class="docutils literal notranslate"><span class="pre">https://ledger_api.example.com</span></code>. If you are not ready to use a custom audience, you can use the suggested default <code class="docutils literal notranslate"><span class="pre">https://canton.network.global</span></code>.</p></li>
+<li><p>Update the <cite>auth.jwksUrl</cite> entry to point to your auth provider’s JWK set document by replacing <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_URL</span></code> with your auth provider’s OIDC URL, as explained above.</p></li>
+<li><p>If you are running on a version of Kubernetes earlier than 1.24, set <cite>enableHealthProbes</cite> to <cite>false</cite> to disable the gRPC liveness and readiness probes.</p></li>
+<li><p>Add <cite>db.volumeSize</cite> and <cite>db.volumeStorageClass</cite> to the values file adjust persistant storage size and storage class if necessary. (These values default to 20GiB and <cite>standard-rwo</cite>)</p></li>
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">YOUR_NODE_NAME</span></code> with the name you chose when creating the SV identity.</p></li>
+<li><p>For the initial onboarding of your node, set <code class="docutils literal notranslate"><span class="pre">disableAutoInit</span></code> to <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p></li>
+</ul>
+<p>Please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/global-domain-values.yaml</span></code> as follows:</p>
+<ul class="simple">
+<li><p>Replace all instances of <code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code> with the migration ID of the global synchronizer on your target cluster.</p></li>
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">YOUR_SV_NAME</span></code> with the name you chose when creating the SV identity.</p></li>
+<li><p>For the initial onboarding of your node only, set <code class="docutils literal notranslate"><span class="pre">disableAutoInit</span></code> to <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p></li>
+</ul>
+<p>Please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/scan-values.yaml</span></code> as follows:</p>
+<ul class="simple">
+<li><p>Replace all instances of <code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code> with the migration ID of the global synchronizer on your target cluster.</p></li>
+</ul>
+<p>An SV node includes a validator app so you also need to configure
+that. Please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/validator-values.yaml</span></code> as follows:</p>
+<ul class="simple">
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">TRUSTED_SCAN_URL</span></code> with the URL of the Scan you host. If you are using the ingress configuration of this runbook, you can use <code class="docutils literal notranslate"><span class="pre">&quot;http://scan-app.sv:5012&quot;</span></code>.</p></li>
+<li><p>If you want to configure the audience for the Validator app backend API, replace <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_VALIDATOR_AUDIENCE</span></code> in the <cite>auth.audience</cite> entry with audience for the Validator app backend API. e.g. <code class="docutils literal notranslate"><span class="pre">https://validator.example.com/api</span></code>.</p></li>
+<li><p>If you want to configure the audience for the Ledger API, set the <code class="docutils literal notranslate"><span class="pre">audience</span></code> field in the <cite>splice-app-sv-ledger-api-auth</cite> k8s secret with the audience for the Ledger API. e.g. <code class="docutils literal notranslate"><span class="pre">https://ledger_api.example.com</span></code>.</p></li>
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">OPERATOR_WALLET_USER_ID</span></code> with the user ID in your IAM that you want to use to log into the wallet as the SV party. Note that this should be the full user id, e.g., <code class="docutils literal notranslate"><span class="pre">auth0|43b68e1e4978b000cefba352</span></code>, <em>not</em> only the suffix <code class="docutils literal notranslate"><span class="pre">43b68e1e4978b000cefba352</span></code></p></li>
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">YOUR_CONTACT_POINT</span></code> by the same contact point that you used in <code class="docutils literal notranslate"><span class="pre">sv-values.yaml</span></code>.
+this, set it to an empty string.</p></li>
+<li><p>Update the <cite>auth.jwksUrl</cite> entry to point to your auth provider’s JWK set document by replacing <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_URL</span></code> with your auth provider’s OIDC URL, as explained above.</p></li>
+<li><p>If your validator is not supposed to hold any CC, you should disable the wallet by setting <cite>enableWallet</cite> to <cite>false</cite>.
+Note that if the wallet is disabled, you shouldn’t install the wallet or CNS UIs, as they won’t work.</p></li>
+</ul>
+<p>Additionally, please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/sv-validator-values.yaml</span></code> as follows:</p>
+<ul class="simple">
+<li><p>Replace all instances of <code class="docutils literal notranslate"><span class="pre">TARGET_HOSTNAME</span></code> with <span class="raw-html"><span class="splice-url-prefix">unknown_cluster</span>global.canton.network.digitalasset.com</span>, per the cluster to which you are connecting.</p></li>
+<li><p>Replace all instances of <code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code> with the migration ID of the global synchronizer on your target cluster.</p></li>
+</ul>
+<p>The private and public key for your SV are defined in a K8s secret.
+If you haven’t done so yet, please first follow the instructions in
+the <a class="reference internal" href="#sv-identity"><span class="std std-ref">Generating an SV Identity</span></a> section to obtain
+and register a name and keypair for your SV. Replace
+<code class="docutils literal notranslate"><span class="pre">YOUR_PUBLIC_KEY</span></code> and <code class="docutils literal notranslate"><span class="pre">YOUR_PRIVATE_KEY</span></code> with the <code class="docutils literal notranslate"><span class="pre">public-key</span></code>
+and <code class="docutils literal notranslate"><span class="pre">private-key</span></code> values obtained as part of generating your SV
+identity.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>create<span class="w"> </span>secret<span class="w"> </span>--namespace<span class="w"> </span>sv<span class="w"> </span>generic<span class="w"> </span>splice-app-sv-key<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--from-literal<span class="o">=</span><span class="nv">public</span><span class="o">=</span>YOUR_PUBLIC_KEY<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--from-literal<span class="o">=</span><span class="nv">private</span><span class="o">=</span>YOUR_PRIVATE_KEY
+</pre></div>
+</div>
+<p>For configuring your sv app, please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/sv-values.yaml</span></code> as follows:</p>
+<ul class="simple">
+<li><p>Replace all instances of <code class="docutils literal notranslate"><span class="pre">TARGET_HOSTNAME</span></code> with <span class="raw-html"><span class="splice-url-prefix">unknown_cluster</span>global.canton.network.digitalasset.com</span>, per the cluster to which you are connecting.</p></li>
+<li><p>Replace all instances of <code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code> with the migration ID of the global synchronizer on your target cluster.</p></li>
+<li><p>If you want to configure the audience for the SV app backend API, replace <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_SV_AUDIENCE</span></code> in the <cite>auth.audience</cite> entry with audience for the SV app backend API. e.g. <code class="docutils literal notranslate"><span class="pre">https://sv.example.com/api</span></code>.</p></li>
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">YOUR_SV_NAME</span></code> with the name you chose when creating the SV identity (this must be an exact match of the string for your SV to be approved to onboard)</p></li>
+<li><p>Update the <code class="docutils literal notranslate"><span class="pre">auth.jwksUrl</span></code> entry to point to your auth provider’s JWK set document by replacing <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_URL</span></code> with your auth provider’s OIDC URL, as explained above.</p></li>
+<li><p>Please set <cite>domain.sequencerPublicUrl</cite> to the URL to your sequencer service in the SV configuration. If you are using the ingress configuration of this runbook, you can just replace <code class="docutils literal notranslate"><span class="pre">YOUR_HOSTNAME</span></code> with your host name.</p></li>
+<li><p>Please set <cite>scan.publicUrl</cite> to the URL to your Scan app in the SV configuration. If you are using the ingress configuration of this runbook, you can just replace <code class="docutils literal notranslate"><span class="pre">YOUR_HOSTNAME</span></code> with your host name.</p></li>
+<li><p>It is recommended to set the <code class="docutils literal notranslate"><span class="pre">sequencerPruningConfig.pruningInterval</span></code> to <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">hour</span></code>
+and the <code class="docutils literal notranslate"><span class="pre">sequencerPruningConfig.retentionPeriod</span></code> to <code class="docutils literal notranslate"><span class="pre">30</span> <span class="pre">days</span></code>.
+The pruning interval is the time between two consecutive prunings,
+and the retention period is the time for which the sequencer will retain the data.</p></li>
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">YOUR_CONTACT_POINT</span></code> by a slack user name or email address that can be used by node operators to contact you in case there are issues with your node. If you do not want to share
+this, set it to an empty string.</p></li>
+<li><p>If you would like to redistribute all or part of the SV rewards with other parties, you can fill up the <cite>extraBeneficiaries</cite> section with the desired parties and the percentage of the reward that corresponds to them.
+Note that the party you register must be known on the network for the reward coupon issuance to succeed.
+Furthermore, that party must be hosted on a validator node for its wallet to collect the SV reward coupons. That collection will happen automatically if the wallet is running.
+If it is not running during the time that the reward coupon can be collected, the corresponding reward is marked as unclaimed, and stored in an DSO-wide unclaimed reward pool.
+The <cite>extraBeneficiaries</cite> can be changed with just a restart of the SV app.</p></li>
+</ul>
+<p>If you are redeploying the SV app as part of a <a class="reference internal" href="sv_major_upgrade.html#sv-upgrades"><span class="std std-ref">synchronizer migration</span></a>, in your <code class="docutils literal notranslate"><span class="pre">sv-values.yaml</span></code>:</p>
+<ul class="simple">
+<li><p>set <code class="docutils literal notranslate"><span class="pre">migrating</span></code> to <code class="docutils literal notranslate"><span class="pre">true</span></code></p></li>
+<li><p>set <code class="docutils literal notranslate"><span class="pre">legacyId</span></code> to the value of migration ID before incremented (<code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code> - 1)</p></li>
+</ul>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Replace MIGRATION_ID with the migration ID of the global synchronizer.</span>
+<span class="nt">migration</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;MIGRATION_ID&quot;</span>
+<span class="w">  </span><span class="c1"># Uncomment these when redeploying as part of a migration,</span>
+<span class="w">  </span><span class="c1"># i.e., MIGRATION_ID was incremented and a migration dump was exported to the attached pvc.</span>
+<span class="w">  </span><span class="c1"># migrating: true</span>
+<span class="w">  </span><span class="c1"># This declares that your sequencer with that migration id is still up. You should remove it</span>
+<span class="w">  </span><span class="c1"># once you take down the sequencer for the prior migration id</span>
+<span class="w">  </span><span class="c1"># legacyId: &quot;MIGRATION_ID_BEFORE_INCREMENTED&quot;</span>
+</pre></div>
+</div>
+<p>The <a class="reference external" href="https://github.com/DACH-NY/cn-svc-configs/">cn-svc-configs repo</a> contains recommended values for configuring your SV node. Store the paths to these YAML files in the following environment variables:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">SV_IDENTITIES_FILE</span></code>: The list of SV identities for your node to auto-approve as peer SVs. Locate and review the <code class="docutils literal notranslate"><span class="pre">approved-sv-id-values.yaml</span></code> file corresponding to the network to which you are connecting.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">UI_CONFIG_VALUES_FILE</span></code>: The file is located at <code class="docutils literal notranslate"><span class="pre">configs/ui-config-values.yaml</span></code>, and is the same for all networks.</p></li>
+</ol>
+<p>These environment variables will be used below.</p>
+</section>
+<section id="installing-the-helm-charts">
+<span id="helm-install"></span><h3>Installing the Helm Charts<a class="headerlink" href="#installing-the-helm-charts" title="Link to this heading"></a></h3>
+<p>With these files in place, you can execute the following helm commands
+in sequence. It’s generally a good idea to wait until each deployment
+reaches a stable state prior to moving on to the next step.</p>
+<p>Install the Canton and CometBFT components:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>repo<span class="w"> </span>update
+helm<span class="w"> </span>install<span class="w"> </span>global-domain-<span class="si">${</span><span class="nv">MIGRATION_ID</span><span class="si">}</span>-cometbft<span class="w"> </span>canton-network-helm/splice-cometbft<span class="w"> </span>-n<span class="w"> </span>sv<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/cometbft-values.yaml<span class="w"> </span>--wait
+helm<span class="w"> </span>install<span class="w"> </span>global-domain-<span class="si">${</span><span class="nv">MIGRATION_ID</span><span class="si">}</span><span class="w"> </span>canton-network-helm/splice-global-domain<span class="w"> </span>-n<span class="w"> </span>sv<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/global-domain-values.yaml<span class="w"> </span>--wait
+helm<span class="w"> </span>install<span class="w"> </span>participant-<span class="si">${</span><span class="nv">MIGRATION_ID</span><span class="si">}</span><span class="w"> </span>canton-network-helm/splice-participant<span class="w"> </span>-n<span class="w"> </span>sv<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/participant-values.yaml<span class="w"> </span>--wait
+</pre></div>
+</div>
+<p>Note that we use the migration ID when naming Canton components.
+This is to support operating multiple instances of these components side by side as part of a <a class="reference internal" href="sv_major_upgrade.html#sv-upgrades"><span class="std std-ref">synchronizer migration</span></a>.</p>
+<p>Install the SV node apps (replace <code class="docutils literal notranslate"><span class="pre">helm</span> <span class="pre">install</span></code> in these commands with <code class="docutils literal notranslate"><span class="pre">helm</span> <span class="pre">upgrade</span></code> if you are following <a class="reference internal" href="sv_major_upgrade.html#sv-upgrades-deploying-apps"><span class="std std-ref">Updating Apps</span></a>):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>install<span class="w"> </span>sv<span class="w"> </span>canton-network-helm/splice-sv-node<span class="w"> </span>-n<span class="w"> </span>sv<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/sv-values.yaml<span class="w"> </span>-f<span class="w"> </span><span class="si">${</span><span class="nv">SV_IDENTITIES_FILE</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span><span class="si">${</span><span class="nv">UI_CONFIG_VALUES_FILE</span><span class="si">}</span><span class="w"> </span>--wait
+helm<span class="w"> </span>install<span class="w"> </span>scan<span class="w"> </span>canton-network-helm/splice-scan<span class="w"> </span>-n<span class="w"> </span>sv<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/scan-values.yaml<span class="w"> </span>-f<span class="w"> </span><span class="si">${</span><span class="nv">UI_CONFIG_VALUES_FILE</span><span class="si">}</span><span class="w"> </span>--wait
+helm<span class="w"> </span>install<span class="w"> </span>validator<span class="w"> </span>canton-network-helm/splice-validator<span class="w"> </span>-n<span class="w"> </span>sv<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/validator-values.yaml<span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/sv-validator-values.yaml<span class="w"> </span>-f<span class="w"> </span><span class="si">${</span><span class="nv">UI_CONFIG_VALUES_FILE</span><span class="si">}</span><span class="w"> </span>--wait
+</pre></div>
+</div>
+<p>Once everything is running, you should be able to inspect the state of the
+cluster and observe pods running in the new
+namespace. A typical query might look as follows:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>sv
+NAME<span class="w">                                         </span>READY<span class="w">   </span>STATUS<span class="w">    </span>RESTARTS<span class="w">      </span>AGE
+apps-pg-0<span class="w">                                    </span><span class="m">2</span>/2<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">             </span>14m
+ans-web-ui-5cf76bfc98-bh6tw<span class="w">                  </span><span class="m">2</span>/2<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">             </span>10m
+global-domain-0-cometbft-c584c9468-9r2v5<span class="w">     </span><span class="m">2</span>/2<span class="w">     </span>Running<span class="w">   </span><span class="m">2</span><span class="w"> </span><span class="o">(</span>14m<span class="w"> </span>ago<span class="o">)</span><span class="w">   </span>14m
+global-domain-0-mediator-7bfb5f6b6d-ts5zp<span class="w">    </span><span class="m">2</span>/2<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">             </span>13m
+global-domain-0-sequencer-6c85d98bb6-887c7<span class="w">   </span><span class="m">2</span>/2<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">             </span>13m
+mediator-pg-0<span class="w">                                </span><span class="m">2</span>/2<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">             </span>14m
+participant-0-57579c64ff-wmzk5<span class="w">               </span><span class="m">2</span>/2<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">             </span>14m
+participant-pg-0<span class="w">                             </span><span class="m">2</span>/2<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">             </span>14m
+scan-app-b8456cc64-stjm2<span class="w">                     </span><span class="m">2</span>/2<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">             </span>10m
+scan-web-ui-7c6b5b59dc-fjxjg<span class="w">                 </span><span class="m">2</span>/2<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">             </span>10m
+sequencer-pg-0<span class="w">                               </span><span class="m">2</span>/2<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">             </span>14m
+sv-app-7f4b6f468c-sj7ch<span class="w">                      </span><span class="m">2</span>/2<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">             </span>13m
+sv-web-ui-67bfbdfc77-wwvp9<span class="w">                   </span><span class="m">2</span>/2<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">             </span>13m
+validator-app-667445fdfc-rcztx<span class="w">               </span><span class="m">2</span>/2<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">             </span>10m
+wallet-web-ui-648f86f9f9-lffz5<span class="w">               </span><span class="m">2</span>/2<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">             </span>10m
+</pre></div>
+</div>
+<p>Note also that <code class="docutils literal notranslate"><span class="pre">Pod</span></code> restarts may happen during bringup,
+particularly if all helm charts are deployed at the same time. The
+<code class="docutils literal notranslate"><span class="pre">splice-sv-node</span></code> cannot start until <code class="docutils literal notranslate"><span class="pre">participant</span></code> is running and
+<code class="docutils literal notranslate"><span class="pre">participant</span></code> cannot start until <code class="docutils literal notranslate"><span class="pre">postgres</span></code> is running.</p>
+</section>
+</section>
+<section id="configuring-the-cluster-ingress">
+<span id="helm-sv-ingress"></span><h2>Configuring the Cluster Ingress<a class="headerlink" href="#configuring-the-cluster-ingress" title="Link to this heading"></a></h2>
+<section id="hostnames-and-urls">
+<h3>Hostnames and URLs<a class="headerlink" href="#hostnames-and-urls" title="Link to this heading"></a></h3>
+<p>The SV operators have decided to follow the following convention for all SV hostnames and URLs:</p>
+<ul class="simple">
+<li><p>For DevNet, all hostnames should be in the format <code class="docutils literal notranslate"><span class="pre">&lt;service-name&gt;.sv-&lt;enumerator&gt;.dev.global.canton.network.&lt;companyTLD&gt;</span></code>,
+where:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;service-name&gt;</span></code> is the name of the service, e.g., <code class="docutils literal notranslate"><span class="pre">sv</span></code>, <code class="docutils literal notranslate"><span class="pre">wallet</span></code>, <code class="docutils literal notranslate"><span class="pre">scan</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;enumerator&gt;</span></code> is a unique number for each SV node operated by the same organization, starting at 1,
+e.g. <code class="docutils literal notranslate"><span class="pre">sv-1</span></code> for the first node operated by an organization.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;companyTLD&gt;</span></code> is the top-level domain of the company operating the SV node, e.g.
+<code class="docutils literal notranslate"><span class="pre">digitalasset.com</span></code> for Digital Asset.</p></li>
+</ul>
+</li>
+<li><p>For TestNet, all hostnames should similarly be in the format <code class="docutils literal notranslate"><span class="pre">&lt;service-name&gt;.sv-&lt;enumerator&gt;.test.global.canton.network.&lt;companyTLD&gt;</span></code>.</p></li>
+<li><p>For MainNet, all hostnames should be in the format all hostnames should be in the format <code class="docutils literal notranslate"><span class="pre">&lt;service-name&gt;.sv-&lt;enumerator&gt;.global.canton.network.&lt;companyTLD&gt;</span></code>
+(note that for MainNet, the name of the network, e.g. dev/test/main is ommitted from the hostname).</p></li>
+</ul>
+<p>Note that the reference ingress charts provided below do not fully satisfy these requirements,
+as they ommit the <code class="docutils literal notranslate"><span class="pre">enumerator</span></code> part of the hostname.</p>
+</section>
+<section id="ingress-configuration">
+<h3>Ingress Configuration<a class="headerlink" href="#ingress-configuration" title="Link to this heading"></a></h3>
+<p>An IP whitelisting json file <code class="docutils literal notranslate"><span class="pre">allowed-ip-ranges-external.json</span></code> will be provided in each SV operations announcement.
+This file contains other clusters’ egress IPs that require access to your super validator’s components. These IPs typically belong to peer super-validators, validators and the Digital Asset VPN.</p>
+<p>Each SV is required to configure their cluster ingress to allow traffic from these IPs to be operational.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">https://wallet.sv.&lt;YOUR_HOSTNAME&gt;</span></code> should be routed to service <code class="docutils literal notranslate"><span class="pre">wallet-web-ui</span></code> in the <code class="docutils literal notranslate"><span class="pre">sv</span></code> namespace.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">https://wallet.sv.&lt;YOUR_HOSTNAME&gt;/api/validator</span></code> should be routed to <code class="docutils literal notranslate"><span class="pre">/api/validator</span></code> at port 5003 of service <code class="docutils literal notranslate"><span class="pre">validator-app</span></code> in the <code class="docutils literal notranslate"><span class="pre">sv</span></code> namespace.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">https://sv.sv.&lt;YOUR_HOSTNAME&gt;</span></code> should be routed to service <code class="docutils literal notranslate"><span class="pre">sv-web-ui</span></code> in the <code class="docutils literal notranslate"><span class="pre">sv</span></code> namespace.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">https://sv.sv.&lt;YOUR_HOSTNAME&gt;/api/sv</span></code> should be routed to <code class="docutils literal notranslate"><span class="pre">/api/sv</span></code> at port 5014 of service <code class="docutils literal notranslate"><span class="pre">sv-app</span></code> in the <code class="docutils literal notranslate"><span class="pre">sv</span></code> namespace.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">https://scan.sv.&lt;YOUR_HOSTNAME&gt;</span></code> should be routed to service <code class="docutils literal notranslate"><span class="pre">scan-web-ui</span></code> in the <code class="docutils literal notranslate"><span class="pre">sv</span></code> namespace.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">https://scan.sv.&lt;YOUR_HOSTNAME&gt;/api/scan</span></code> should be routed to <code class="docutils literal notranslate"><span class="pre">/api/scan</span></code> at port 5012 in service <code class="docutils literal notranslate"><span class="pre">scan-app</span></code> in the <code class="docutils literal notranslate"><span class="pre">sv</span></code> namespace.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">global-domain-&lt;MIGRATION_ID&gt;-cometbft.sv.&lt;YOUR_HOSTNAME&gt;:26&lt;MIGRATION_ID&gt;56</span></code> should be routed to port 26656 of service <code class="docutils literal notranslate"><span class="pre">global-domain-&lt;MIGRATION_ID&gt;-cometbft-cometbft-p2p</span></code> in the <code class="docutils literal notranslate"><span class="pre">sv</span></code> namespace using the TCP protocol.
+Please note that cometBFT traffic is purely TCP. TLS is not supported so SNI host routing for these traffic is not possible.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">https://cns.sv.&lt;YOUR_HOSTNAME&gt;</span></code> should be routed to service <code class="docutils literal notranslate"><span class="pre">ans-web-ui</span></code> in the <code class="docutils literal notranslate"><span class="pre">sv</span></code> namespace.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">https://cns.sv.&lt;YOUR_HOSTNAME&gt;/api/validator</span></code> should be routed to <code class="docutils literal notranslate"><span class="pre">/api/validator</span></code> at port 5003 of service <code class="docutils literal notranslate"><span class="pre">validator-app</span></code> in the <code class="docutils literal notranslate"><span class="pre">sv</span></code> namespace.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">https://sequencer-&lt;MIGRATION_ID&gt;.sv.&lt;YOUR_HOSTNAME&gt;</span></code> should be routed to port 5008 of service <code class="docutils literal notranslate"><span class="pre">global-domain-&lt;MIGRATION_ID&gt;-sequencer</span></code> in the <code class="docutils literal notranslate"><span class="pre">sv</span></code> namespace.</p></li>
+</ul>
+<p>Internet ingress configuration is often specific to the network configuration and scenario of the
+cluster being configured. To illustrate the basic requirements of an SV node ingress, we have
+provided a Helm chart that configures the above cluster according to the routes above, as detailed in the sections below.</p>
+<p>Your SV node should be configured with a url to your <code class="docutils literal notranslate"><span class="pre">global-domain-sequencer</span></code> so that other validators can subscribe to it.</p>
+<p>Make sure your cluster’s ingress is correctly configured for the sequencer service and can be accessed through the provided URL.
+To check whether the sequencer is accessible, we can use the command below with the <a class="reference external" href="https://github.com/fullstorydev/grpcurl">grpcurl tool</a> :</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>grpcurl<span class="w"> </span>&lt;sequencer<span class="w"> </span>host&gt;:&lt;sequencer<span class="w"> </span>port&gt;<span class="w"> </span>grpc.health.v1.Health/Check
+</pre></div>
+</div>
+<p>If you are using the ingress configuration of this runbook, the <code class="docutils literal notranslate"><span class="pre">&lt;sequencer</span> <span class="pre">host&gt;:&lt;sequencer</span> <span class="pre">port&gt;</span></code> should be <code class="docutils literal notranslate"><span class="pre">sequencer-MIGRATION_ID.sv.YOUR_HOSTNAME:443</span></code>
+Please replace <code class="docutils literal notranslate"><span class="pre">YOUR_HOSTNAME</span></code> with your host name and <code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code> with the migration ID of the synchronizer that the sequencer is part of.</p>
+<p>If you see the response below, it means the sequencer is up and accessible through the URL.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">{</span>
+<span class="w">  </span><span class="s2">&quot;status&quot;</span>:<span class="w"> </span><span class="s2">&quot;SERVING&quot;</span>
+<span class="o">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Requirements<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<p>In order to install the reference charts, the following must be satisfied in your cluster:</p>
+<ul class="simple">
+<li><p>cert-manager must be available in the cluster (See <a class="reference external" href="https://cert-manager.io/docs/installation/helm/">cert-manager documentation</a>)</p></li>
+<li><p>istio should be installed in the cluster (See <a class="reference external" href="https://istio.io/latest/docs/setup/">istio documentation</a>)</p></li>
+</ul>
+<p><strong>Example of Istio installation:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>repo<span class="w"> </span>add<span class="w"> </span>istio<span class="w"> </span>https://istio-release.storage.googleapis.com/charts
+helm<span class="w"> </span>repo<span class="w"> </span>update
+helm<span class="w"> </span>install<span class="w"> </span>istio-base<span class="w"> </span>istio/base<span class="w"> </span>-n<span class="w"> </span>istio-system<span class="w"> </span>--set<span class="w"> </span>defaults.global.istioNamespace<span class="o">=</span>cluster-ingress<span class="w"> </span>--wait
+helm<span class="w"> </span>install<span class="w"> </span>istiod<span class="w"> </span>istio/istiod<span class="w"> </span>-n<span class="w"> </span>cluster-ingress<span class="w"> </span>--set<span class="w"> </span>global.istioNamespace<span class="o">=</span><span class="s2">&quot;cluster-ingress&quot;</span><span class="w"> </span>--set<span class="w"> </span>meshConfig.accessLogFile<span class="o">=</span><span class="s2">&quot;/dev/stdout&quot;</span><span class="w">  </span>--wait
+</pre></div>
+</div>
+</section>
+<section id="installation-instructions">
+<h3>Installation Instructions<a class="headerlink" href="#installation-instructions" title="Link to this heading"></a></h3>
+<p>Create a <cite>cluster-ingress</cite> namespace with image pull permissions from the Artifactory docker repository:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>create<span class="w"> </span>ns<span class="w"> </span>cluster-ingress
+
+kubectl<span class="w"> </span>create<span class="w"> </span>secret<span class="w"> </span>docker-registry<span class="w"> </span>docker-reg-cred<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--docker-server<span class="o">=</span>digitalasset-canton-network-docker.jfrog.io<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--docker-username<span class="o">=</span><span class="si">${</span><span class="nv">ARTIFACTORY_USER</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--docker-password<span class="o">=</span><span class="si">${</span><span class="nv">ARTIFACTORY_PASSWORD</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-n<span class="w"> </span>cluster-ingress
+
+kubectl<span class="w"> </span>patch<span class="w"> </span>serviceaccount<span class="w"> </span>default<span class="w"> </span>-n<span class="w"> </span>cluster-ingress<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-p<span class="w"> </span><span class="s1">&#39;{&quot;imagePullSecrets&quot;: [{&quot;name&quot;: &quot;docker-reg-cred&quot;}]}&#39;</span>
+</pre></div>
+</div>
+<p>Ensure that there is a cert-manager certificate available in a secret
+named <code class="docutils literal notranslate"><span class="pre">cn-net-tls</span></code>.  An example of a suitable certificate
+definition:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cert-manager.io/v1</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Certificate</span>
+<span class="nt">metadata</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cn-certificate</span>
+<span class="w">   </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cluster-ingress</span>
+<span class="nt">spec</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">dnsNames</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;*.sv.YOUR_HOSTNAME&#39;</span>
+<span class="w">    </span><span class="nt">issuerRef</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">letsencrypt-production</span>
+<span class="w">    </span><span class="nt">secretName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cn-net-tls</span>
+</pre></div>
+</div>
+<p>Create a file named <code class="docutils literal notranslate"><span class="pre">istio-gateway-values.yaml</span></code> with the following content
+(Tip: on GCP you can get the cluster IP from <code class="docutils literal notranslate"><span class="pre">gcloud</span> <span class="pre">compute</span> <span class="pre">addresses</span> <span class="pre">list</span></code>):</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">service</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">loadBalancerIP</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;YOUR_CLUSTER_IP&quot;</span>
+<span class="w">    </span><span class="nt">loadBalancerSourceRanges</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;35.194.81.56/32&quot;</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;35.198.147.95/32&quot;</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;35.189.40.124/32&quot;</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;34.132.91.75/32&quot;</span>
+</pre></div>
+</div>
+<p>And install it to your cluster:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>install<span class="w"> </span>istio-ingress<span class="w"> </span>istio/gateway<span class="w"> </span>-n<span class="w"> </span>cluster-ingress<span class="w"> </span>-f<span class="w"> </span>istio-gateway-values.yaml
+</pre></div>
+</div>
+<p>A reference Helm chart installing a gateway that uses this service is also provided.
+To install it, run the following (assuming the environment variable <cite>YOUR_HOSTNAME</cite> is set to your hostname):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>install<span class="w"> </span>cluster-gateway<span class="w"> </span>canton-network-helm/splice-istio-gateway<span class="w"> </span>-n<span class="w"> </span>cluster-ingress<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>--set<span class="w"> </span>cluster.daHostname<span class="o">=</span><span class="si">${</span><span class="nv">YOUR_HOSTNAME</span><span class="si">}</span><span class="w"> </span>--set<span class="w"> </span>cluster.cantonHostname<span class="o">=</span><span class="si">${</span><span class="nv">YOUR_HOSTNAME</span><span class="si">}</span>
+</pre></div>
+</div>
+<p>This gateway terminates tls using the secret that you configured above, and exposes raw http traffic in its outbound port 443.
+Istio VirtualServices can now be created to route traffic from there to the required pods within the cluster.
+Another reference Helm chart is provided for that, which can be installed after</p>
+<ol class="arabic simple">
+<li><p>replacing <code class="docutils literal notranslate"><span class="pre">YOUR_HOSTNAME</span></code> in <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/sv-cluster-ingress-values.yaml</span></code> and</p></li>
+<li><p>setting <code class="docutils literal notranslate"><span class="pre">nameServiceDomain</span></code> in the same file to <code class="docutils literal notranslate"><span class="pre">&quot;cns&quot;</span></code></p></li>
+</ol>
+<p>using:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>install<span class="w"> </span>cluster-ingress-sv<span class="w"> </span>canton-network-helm/splice-cluster-ingress-runbook<span class="w"> </span>-n<span class="w"> </span>sv<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/sv-cluster-ingress-values.yaml
+</pre></div>
+</div>
+</section>
+</section>
+<section id="configuring-the-cluster-egress">
+<h2>Configuring the Cluster Egress<a class="headerlink" href="#configuring-the-cluster-egress" title="Link to this heading"></a></h2>
+<p>Here is a list of destinations of all outbound traffic from the Super Validator node.
+This list is useful for an SV that wishes to limit egress to only allow the minimum necessary outbound traffic.
+<code class="docutils literal notranslate"><span class="pre">M</span></code> will be used a shorthand for <code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code>.</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>Destination</p></td>
+<td><p>Url</p></td>
+<td><p>Protocol</p></td>
+<td><p>Source pod</p></td>
+</tr>
+<tr class="row-even"><td><p>Sponsor SV</p></td>
+<td><p>sv.sv-1.&lt;TARGET_HOSTNAME&gt;:443</p></td>
+<td><p>HTTPS</p></td>
+<td><p>sv-app</p></td>
+</tr>
+<tr class="row-odd"><td><p>Sponsor SV Sequencer</p></td>
+<td><p>sequencer-&lt;M&gt;.sv-1.&lt;TARGET_HOSTNAME&gt;:443</p></td>
+<td><p>HTTPS</p></td>
+<td><p>participant-&lt;M&gt;</p></td>
+</tr>
+<tr class="row-even"><td><p>Sponsor SV Scan</p></td>
+<td><p>scan.sv-1.&lt;TARGET_HOSTNAME&gt;:443</p></td>
+<td><p>HTTPS</p></td>
+<td><p>validator-app</p></td>
+</tr>
+<tr class="row-odd"><td><p>CometBft P2P</p></td>
+<td><p>CometBft p2p IPs and ports 26&lt;M&gt;16, 26&lt;M&gt;26, 26&lt;M&gt;36, 26&lt;M&gt;46, 26&lt;M&gt;56</p></td>
+<td><p>TCP</p></td>
+<td><p>global-domain-&lt;M&gt;-cometbft</p></td>
+</tr>
+<tr class="row-even"><td><p>CometBft JSON RPC</p></td>
+<td><p>sv.sv-1.&lt;TARGET_HOSTNAME&gt;:443/api/sv/v0/admin/domain/cometbft/json-rpc</p></td>
+<td><p>HTTPS</p></td>
+<td><p>global-domain-&lt;M&gt;-cometbft</p></td>
+</tr>
+</tbody>
+</table>
+<p>At present, we designate sv1 as the sponsor SV. However, in the long term, any onboarded SV can function as a sponsor SV.</p>
+</section>
+<section id="logging-into-the-wallet-ui">
+<span id="helm-sv-wallet-ui"></span><h2>Logging into the wallet UI<a class="headerlink" href="#logging-into-the-wallet-ui" title="Link to this heading"></a></h2>
+<p>After you deploy your ingress, open your browser at
+<a class="reference external" href="https://wallet.sv.YOUR_HOSTNAME">https://wallet.sv.YOUR_HOSTNAME</a> and login using the
+credentials for the user that you configured as
+<code class="docutils literal notranslate"><span class="pre">validatorWalletUser</span></code> earlier. You will be able to see your balance
+increase as mining rounds advance every 2.5 minutes and you will see
+<code class="docutils literal notranslate"><span class="pre">sv_reward_collected</span></code> entries in your transaction history.
+Once logged in one should see the transactions page.</p>
+<a class="reference internal image-reference" href="../_images/wallet_home.png"><img alt="After logged in into the wallet UI" src="../_images/wallet_home.png" style="width: 600px;" />
+</a>
+</section>
+<section id="logging-into-the-cns-ui">
+<span id="helm-ans-web-ui"></span><h2>Logging into the CNS UI<a class="headerlink" href="#logging-into-the-cns-ui" title="Link to this heading"></a></h2>
+<p>You can open your browser at
+<a class="reference external" href="https://cns.sv.YOUR_HOSTNAME">https://cns.sv.YOUR_HOSTNAME</a> and login using the
+credentials for the user that you configured as
+<code class="docutils literal notranslate"><span class="pre">validatorWalletUser</span></code> earlier. You will be able to register a name on the
+Canton Name Service.</p>
+<a class="reference internal image-reference" href="../_images/ans_home.png"><img alt="After logged in into the CNS UI" src="../_images/ans_home.png" style="width: 600px;" />
+</a>
+</section>
+<section id="logging-into-the-sv-ui">
+<span id="local-sv-web-ui"></span><h2>Logging into the SV UI<a class="headerlink" href="#logging-into-the-sv-ui" title="Link to this heading"></a></h2>
+<p>Open your browser at <a class="reference external" href="https://sv.sv.YOUR_HOSTNAME">https://sv.sv.YOUR_HOSTNAME</a> to login to the SV Operations user interface.
+You can use the credentials of the <code class="docutils literal notranslate"><span class="pre">validatorWalletUser</span></code> to login. These are the same credentials you used for the wallet login above. Note that only Super validators will be able to login.
+Once logged in one should see a page with some SV collective information.</p>
+<a class="reference internal image-reference" href="../_images/sv_home.png"><img alt="After logged in into the sv UI" src="../_images/sv_home.png" style="width: 600px;" />
+</a>
+<p>The SV UI presents also some useful debug information for the CometBFT node. To see it, click on the “CometBFT Debug Info” tab.
+If your CometBFT is configured correctly, and it has connectivity to all other nodes, you should see <code class="docutils literal notranslate"><span class="pre">n_peers</span></code> that is equal to the size of the DSO, excluding your own node,
+and you should see all peer SVs listed as peers (their human-friendly names will be listed in the <code class="docutils literal notranslate"><span class="pre">moniker</span></code> fields).</p>
+<p id="sv-ui-global-domain">The SV UI also presents the status of your global domain node. To see it, click on the “Domain Node Status” tab.</p>
+</section>
+<section id="observing-the-canton-coin-scan-ui">
+<span id="helm-scan-web-ui"></span><h2>Observing the Canton Coin Scan UI<a class="headerlink" href="#observing-the-canton-coin-scan-ui" title="Link to this heading"></a></h2>
+<p>The Canton Coin Scan app is a public-facing application that provides summary information regarding Canton Coin activity on the network.
+A copy of it is hosted by each Super Validator. Open your browser at <a class="reference external" href="https://scan.sv.YOUR_HOSTNAME">https://scan.sv.YOUR_HOSTNAME</a> to see your instance of it.</p>
+<p>Note that after spinning up the application, it may take several minutes before data is available (as it waits to see a mining round opening and closing).
+In the top-right corner of the screen, see the message starting with “The content on this page is computed as of round:”.
+If you see a round number, then the data in your scan app is up-to-date.
+If, instead, you see “??”, that means that the backend is working, but does not yet expose any useful information. It should turn into a round number within a few minutes.
+A “–” as a round number indicates a problem. It may be very temporary while the data is being fetched from the backend, but if it persists for more than that,
+please inspect the browser logs and reach out to Digital Asset support as needed.</p>
+<p>Note that as of now, each instance of the Scan app backend aggregates only Canton Coin activity occuring while the app is up and ingesting ledger updates.
+This will be changed in future updates, where the Scan app will guarantee correctness against all data since network start.
+At that point, data in different instances of the Scan app (hosted by different Super Validators) will always be consistent.
+This allows the public to inspect multiple Scan UIs and compare their data, so that they do not need to trust a single Super Validator.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Supervalidators" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="sv_upgrades.html" class="btn btn-neutral float-right" title="Upgrades" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright  2025, Digital Asset.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

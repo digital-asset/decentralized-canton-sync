@@ -1,0 +1,426 @@
+.. _module-splice-externalpartyamuletrules-66966:
+
+Splice.ExternalPartyAmuletRules
+===============================
+
+Templates
+---------
+
+.. _type-splice-externalpartyamuletrules-externalpartyamuletrules-29682:
+
+**template** `ExternalPartyAmuletRules <type-splice-externalpartyamuletrules-externalpartyamuletrules-29682_>`_
+
+  Rules contract that can be used in transactions that require signatures
+  from an external party\. This is intended to get archived and recreated as rarely as possible
+  to support long delays between preparing and signing a transaction\.
+
+  Signatory\: dso
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - dso
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+
+  + **Choice** Archive
+
+    Controller\: dso
+
+    Returns\: ()
+
+    (no fields)
+
+  + .. _type-splice-externalpartyamuletrules-externalpartyamuletrulescreatetransfercommand-90877:
+
+    **Choice** `ExternalPartyAmuletRules_CreateTransferCommand <type-splice-externalpartyamuletrules-externalpartyamuletrulescreatetransfercommand-90877_>`_
+
+    Controller\: sender
+
+    Returns\: `ExternalPartyAmuletRules_CreateTransferCommandResult <type-splice-externalpartyamuletrules-externalpartyamuletrulescreatetransfercommandresult-84908_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - sender
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - receiver
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - delegate
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - amount
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         -
+       * - expiresAt
+         - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+         -
+       * - nonce
+         - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         -
+
+.. _type-splice-externalpartyamuletrules-transfercommand-52429:
+
+**template** `TransferCommand <type-splice-externalpartyamuletrules-transfercommand-52429_>`_
+
+  One\-time delegation to execute a transfer to the given receiver
+  for the given amount\.
+
+  We externally sign this instead of the transfer itself to support a longer delay between
+  prepare/execute which would be prevented by signing the transfer directly as that one pins
+  down the mining rounds that are relatively short lived and relies on ``getTime`` which
+  means it would fail due to the max allowed skew between ledger effective time and record
+  time\.
+
+  Signatory\: sender, dso
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - dso
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - sender
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - receiver
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - delegate
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       - The delegate that actually executes the transfer
+     * - amount
+       - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+       -
+     * - expiresAt
+       - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+       - Expiry of the command until when TransferCommand\_Send must be called
+     * - nonce
+       - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+       - Expected nonce value to order and deduplicate concurrent transfers\. Starts at 0 and the next value to use can then be read from TransferCommandCounter and the in\-flight TransferCommand contracts\.
+
+  + **Choice** Archive
+
+    Controller\: sender, dso
+
+    Returns\: ()
+
+    (no fields)
+
+  + .. _type-splice-externalpartyamuletrules-transfercommandexpire-28516:
+
+    **Choice** `TransferCommand_Expire <type-splice-externalpartyamuletrules-transfercommandexpire-28516_>`_
+
+    Controller\: p
+
+    Returns\: `TransferCommand_ExpireResult <type-splice-externalpartyamuletrules-transfercommandexpireresult-5229_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - p
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+
+  + .. _type-splice-externalpartyamuletrules-transfercommandsend-32409:
+
+    **Choice** `TransferCommand_Send <type-splice-externalpartyamuletrules-transfercommandsend-32409_>`_
+
+    Controller\: delegate
+
+    Returns\: `TransferCommand_SendResult <type-splice-externalpartyamuletrules-transfercommandsendresult-21916_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - context
+         - :ref:`PaymentTransferContext <type-splice-amuletrules-paymenttransfercontext-72190>`
+         -
+       * - inputs
+         - \[:ref:`TransferInput <type-splice-amuletrules-transferinput-61796>`\]
+         -
+       * - transferPreapprovalCidO
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`TransferPreapproval <type-splice-amuletrules-transferpreapproval-36220>`)
+         -
+       * - transferCounterCid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `TransferCommandCounter <type-splice-externalpartyamuletrules-transfercommandcounter-30214_>`_
+         -
+
+  + .. _type-splice-externalpartyamuletrules-transfercommandwithdraw-90837:
+
+    **Choice** `TransferCommand_Withdraw <type-splice-externalpartyamuletrules-transfercommandwithdraw-90837_>`_
+
+    Controller\: sender
+
+    Returns\: `TransferCommand_WithdrawResult <type-splice-externalpartyamuletrules-transfercommandwithdrawresult-60664_>`_
+
+    (no fields)
+
+.. _type-splice-externalpartyamuletrules-transfercommandcounter-30214:
+
+**template** `TransferCommandCounter <type-splice-externalpartyamuletrules-transfercommandcounter-30214_>`_
+
+  A contract tracking the number of completed TransferCommands per sender,
+  which is used to determine the nonces used in TransferCommands for deduplication\.
+
+  Signatory\: dso
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - dso
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - sender
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - nextNonce
+       - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+       -
+
+  + **Choice** Archive
+
+    Controller\: dso
+
+    Returns\: ()
+
+    (no fields)
+
+Data Types
+----------
+
+.. _type-splice-externalpartyamuletrules-externalpartyamuletrulescreatetransfercommandresult-84908:
+
+**data** `ExternalPartyAmuletRules_CreateTransferCommandResult <type-splice-externalpartyamuletrules-externalpartyamuletrulescreatetransfercommandresult-84908_>`_
+
+  .. _constr-splice-externalpartyamuletrules-externalpartyamuletrulescreatetransfercommandresult-32161:
+
+  `ExternalPartyAmuletRules_CreateTransferCommandResult <constr-splice-externalpartyamuletrules-externalpartyamuletrulescreatetransfercommandresult-32161_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - transferCommandCid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `TransferCommand <type-splice-externalpartyamuletrules-transfercommand-52429_>`_
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `ExternalPartyAmuletRules_CreateTransferCommandResult <type-splice-externalpartyamuletrules-externalpartyamuletrulescreatetransfercommandresult-84908_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `ExternalPartyAmuletRules_CreateTransferCommandResult <type-splice-externalpartyamuletrules-externalpartyamuletrulescreatetransfercommandresult-84908_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"transferCommandCid\" `ExternalPartyAmuletRules_CreateTransferCommandResult <type-splice-externalpartyamuletrules-externalpartyamuletrulescreatetransfercommandresult-84908_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `TransferCommand <type-splice-externalpartyamuletrules-transfercommand-52429_>`_)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"transferCommandCid\" `ExternalPartyAmuletRules_CreateTransferCommandResult <type-splice-externalpartyamuletrules-externalpartyamuletrulescreatetransfercommandresult-84908_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `TransferCommand <type-splice-externalpartyamuletrules-transfercommand-52429_>`_)
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `ExternalPartyAmuletRules <type-splice-externalpartyamuletrules-externalpartyamuletrules-29682_>`_ `ExternalPartyAmuletRules_CreateTransferCommand <type-splice-externalpartyamuletrules-externalpartyamuletrulescreatetransfercommand-90877_>`_ `ExternalPartyAmuletRules_CreateTransferCommandResult <type-splice-externalpartyamuletrules-externalpartyamuletrulescreatetransfercommandresult-84908_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `ExternalPartyAmuletRules <type-splice-externalpartyamuletrules-externalpartyamuletrules-29682_>`_ `ExternalPartyAmuletRules_CreateTransferCommand <type-splice-externalpartyamuletrules-externalpartyamuletrulescreatetransfercommand-90877_>`_ `ExternalPartyAmuletRules_CreateTransferCommandResult <type-splice-externalpartyamuletrules-externalpartyamuletrulescreatetransfercommandresult-84908_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `ExternalPartyAmuletRules <type-splice-externalpartyamuletrules-externalpartyamuletrules-29682_>`_ `ExternalPartyAmuletRules_CreateTransferCommand <type-splice-externalpartyamuletrules-externalpartyamuletrulescreatetransfercommand-90877_>`_ `ExternalPartyAmuletRules_CreateTransferCommandResult <type-splice-externalpartyamuletrules-externalpartyamuletrulescreatetransfercommandresult-84908_>`_
+
+.. _type-splice-externalpartyamuletrules-transfercommandresult-23924:
+
+**data** `TransferCommandResult <type-splice-externalpartyamuletrules-transfercommandresult-23924_>`_
+
+  .. _constr-splice-externalpartyamuletrules-transfercommandresultfailure-75214:
+
+  `TransferCommandResultFailure <constr-splice-externalpartyamuletrules-transfercommandresultfailure-75214_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - reason
+         - :ref:`InvalidTransferReason <type-splice-amuletrules-invalidtransferreason-16587>`
+         -
+
+  .. _constr-splice-externalpartyamuletrules-transfercommandresultsuccess-68641:
+
+  `TransferCommandResultSuccess <constr-splice-externalpartyamuletrules-transfercommandresultsuccess-68641_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - result
+         - :ref:`TransferResult <type-splice-amuletrules-transferresult-93164>`
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `TransferCommandResult <type-splice-externalpartyamuletrules-transfercommandresult-23924_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `TransferCommandResult <type-splice-externalpartyamuletrules-transfercommandresult-23924_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"reason\" `TransferCommandResult <type-splice-externalpartyamuletrules-transfercommandresult-23924_>`_ :ref:`InvalidTransferReason <type-splice-amuletrules-invalidtransferreason-16587>`
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"result\" `TransferCommandResult <type-splice-externalpartyamuletrules-transfercommandresult-23924_>`_ :ref:`TransferResult <type-splice-amuletrules-transferresult-93164>`
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"result\" `TransferCommand_SendResult <type-splice-externalpartyamuletrules-transfercommandsendresult-21916_>`_ `TransferCommandResult <type-splice-externalpartyamuletrules-transfercommandresult-23924_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"reason\" `TransferCommandResult <type-splice-externalpartyamuletrules-transfercommandresult-23924_>`_ :ref:`InvalidTransferReason <type-splice-amuletrules-invalidtransferreason-16587>`
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"result\" `TransferCommandResult <type-splice-externalpartyamuletrules-transfercommandresult-23924_>`_ :ref:`TransferResult <type-splice-amuletrules-transferresult-93164>`
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"result\" `TransferCommand_SendResult <type-splice-externalpartyamuletrules-transfercommandsendresult-21916_>`_ `TransferCommandResult <type-splice-externalpartyamuletrules-transfercommandresult-23924_>`_
+
+.. _type-splice-externalpartyamuletrules-transfercommandexpireresult-5229:
+
+**data** `TransferCommand_ExpireResult <type-splice-externalpartyamuletrules-transfercommandexpireresult-5229_>`_
+
+  .. _constr-splice-externalpartyamuletrules-transfercommandexpireresult-27948:
+
+  `TransferCommand_ExpireResult <constr-splice-externalpartyamuletrules-transfercommandexpireresult-27948_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - sender
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - nonce
+         - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `TransferCommand_ExpireResult <type-splice-externalpartyamuletrules-transfercommandexpireresult-5229_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `TransferCommand_ExpireResult <type-splice-externalpartyamuletrules-transfercommandexpireresult-5229_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"nonce\" `TransferCommand_ExpireResult <type-splice-externalpartyamuletrules-transfercommandexpireresult-5229_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"sender\" `TransferCommand_ExpireResult <type-splice-externalpartyamuletrules-transfercommandexpireresult-5229_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"nonce\" `TransferCommand_ExpireResult <type-splice-externalpartyamuletrules-transfercommandexpireresult-5229_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"sender\" `TransferCommand_ExpireResult <type-splice-externalpartyamuletrules-transfercommandexpireresult-5229_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `TransferCommand <type-splice-externalpartyamuletrules-transfercommand-52429_>`_ `TransferCommand_Expire <type-splice-externalpartyamuletrules-transfercommandexpire-28516_>`_ `TransferCommand_ExpireResult <type-splice-externalpartyamuletrules-transfercommandexpireresult-5229_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `TransferCommand <type-splice-externalpartyamuletrules-transfercommand-52429_>`_ `TransferCommand_Expire <type-splice-externalpartyamuletrules-transfercommandexpire-28516_>`_ `TransferCommand_ExpireResult <type-splice-externalpartyamuletrules-transfercommandexpireresult-5229_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `TransferCommand <type-splice-externalpartyamuletrules-transfercommand-52429_>`_ `TransferCommand_Expire <type-splice-externalpartyamuletrules-transfercommandexpire-28516_>`_ `TransferCommand_ExpireResult <type-splice-externalpartyamuletrules-transfercommandexpireresult-5229_>`_
+
+.. _type-splice-externalpartyamuletrules-transfercommandsendresult-21916:
+
+**data** `TransferCommand_SendResult <type-splice-externalpartyamuletrules-transfercommandsendresult-21916_>`_
+
+  .. _constr-splice-externalpartyamuletrules-transfercommandsendresult-15277:
+
+  `TransferCommand_SendResult <constr-splice-externalpartyamuletrules-transfercommandsendresult-15277_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - result
+         - `TransferCommandResult <type-splice-externalpartyamuletrules-transfercommandresult-23924_>`_
+         -
+       * - sender
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - nonce
+         - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `TransferCommand_SendResult <type-splice-externalpartyamuletrules-transfercommandsendresult-21916_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `TransferCommand_SendResult <type-splice-externalpartyamuletrules-transfercommandsendresult-21916_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"nonce\" `TransferCommand_SendResult <type-splice-externalpartyamuletrules-transfercommandsendresult-21916_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"result\" `TransferCommand_SendResult <type-splice-externalpartyamuletrules-transfercommandsendresult-21916_>`_ `TransferCommandResult <type-splice-externalpartyamuletrules-transfercommandresult-23924_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"sender\" `TransferCommand_SendResult <type-splice-externalpartyamuletrules-transfercommandsendresult-21916_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"nonce\" `TransferCommand_SendResult <type-splice-externalpartyamuletrules-transfercommandsendresult-21916_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"result\" `TransferCommand_SendResult <type-splice-externalpartyamuletrules-transfercommandsendresult-21916_>`_ `TransferCommandResult <type-splice-externalpartyamuletrules-transfercommandresult-23924_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"sender\" `TransferCommand_SendResult <type-splice-externalpartyamuletrules-transfercommandsendresult-21916_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `TransferCommand <type-splice-externalpartyamuletrules-transfercommand-52429_>`_ `TransferCommand_Send <type-splice-externalpartyamuletrules-transfercommandsend-32409_>`_ `TransferCommand_SendResult <type-splice-externalpartyamuletrules-transfercommandsendresult-21916_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `TransferCommand <type-splice-externalpartyamuletrules-transfercommand-52429_>`_ `TransferCommand_Send <type-splice-externalpartyamuletrules-transfercommandsend-32409_>`_ `TransferCommand_SendResult <type-splice-externalpartyamuletrules-transfercommandsendresult-21916_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `TransferCommand <type-splice-externalpartyamuletrules-transfercommand-52429_>`_ `TransferCommand_Send <type-splice-externalpartyamuletrules-transfercommandsend-32409_>`_ `TransferCommand_SendResult <type-splice-externalpartyamuletrules-transfercommandsendresult-21916_>`_
+
+.. _type-splice-externalpartyamuletrules-transfercommandwithdrawresult-60664:
+
+**data** `TransferCommand_WithdrawResult <type-splice-externalpartyamuletrules-transfercommandwithdrawresult-60664_>`_
+
+  .. _constr-splice-externalpartyamuletrules-transfercommandwithdrawresult-93393:
+
+  `TransferCommand_WithdrawResult <constr-splice-externalpartyamuletrules-transfercommandwithdrawresult-93393_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - sender
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - nonce
+         - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `TransferCommand_WithdrawResult <type-splice-externalpartyamuletrules-transfercommandwithdrawresult-60664_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `TransferCommand_WithdrawResult <type-splice-externalpartyamuletrules-transfercommandwithdrawresult-60664_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"nonce\" `TransferCommand_WithdrawResult <type-splice-externalpartyamuletrules-transfercommandwithdrawresult-60664_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"sender\" `TransferCommand_WithdrawResult <type-splice-externalpartyamuletrules-transfercommandwithdrawresult-60664_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"nonce\" `TransferCommand_WithdrawResult <type-splice-externalpartyamuletrules-transfercommandwithdrawresult-60664_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"sender\" `TransferCommand_WithdrawResult <type-splice-externalpartyamuletrules-transfercommandwithdrawresult-60664_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `TransferCommand <type-splice-externalpartyamuletrules-transfercommand-52429_>`_ `TransferCommand_Withdraw <type-splice-externalpartyamuletrules-transfercommandwithdraw-90837_>`_ `TransferCommand_WithdrawResult <type-splice-externalpartyamuletrules-transfercommandwithdrawresult-60664_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `TransferCommand <type-splice-externalpartyamuletrules-transfercommand-52429_>`_ `TransferCommand_Withdraw <type-splice-externalpartyamuletrules-transfercommandwithdraw-90837_>`_ `TransferCommand_WithdrawResult <type-splice-externalpartyamuletrules-transfercommandwithdrawresult-60664_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `TransferCommand <type-splice-externalpartyamuletrules-transfercommand-52429_>`_ `TransferCommand_Withdraw <type-splice-externalpartyamuletrules-transfercommandwithdraw-90837_>`_ `TransferCommand_WithdrawResult <type-splice-externalpartyamuletrules-transfercommandwithdrawresult-60664_>`_

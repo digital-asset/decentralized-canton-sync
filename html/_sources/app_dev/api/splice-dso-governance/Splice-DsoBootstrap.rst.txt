@@ -1,0 +1,98 @@
+.. _module-splice-dsobootstrap-6192:
+
+Splice.DsoBootstrap
+===================
+
+Templates
+---------
+
+.. _type-splice-dsobootstrap-dsobootstrap-38046:
+
+**template** `DsoBootstrap <type-splice-dsobootstrap-dsobootstrap-38046_>`_
+
+  A template for bootstrapping DsoRules and AmuletRules\.
+
+  Signatory\: dso
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - dso
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - sv1Party
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       - the SV that bootstraps the network
+     * - sv1Name
+       - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+       - human\-readable name of SV1
+     * - sv1RewardWeight
+       - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+       - the weight of SV1 in the reward distribution
+     * - sv1ParticipantId
+       - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+       - the id of the participant of the SV that bootstraps the synchronizer
+     * - sv1SynchronizerNodes
+       - :ref:`SynchronizerNodeConfigMap <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfigmap-59848>`
+       - Synchronizer nodes on which this workflow runs
+     * - round0Duration
+       - `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_
+       -
+     * - amuletConfig
+       - AmuletConfig USD
+       -
+     * - amuletPrice
+       - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+       -
+     * - ansRulesConfig
+       - AnsRulesConfig
+       -
+     * - config
+       - :ref:`DsoRulesConfig <type-splice-dsorules-dsorulesconfig-6376>`
+       -
+     * - initialTrafficState
+       - `Map <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-map-90052>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_ :ref:`TrafficState <type-splice-dsorules-trafficstate-38069>`
+       -
+     * - isDevNet
+       - `Bool <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-bool-66265>`_
+       -
+
+  + **Choice** Archive
+
+    Controller\: dso
+
+    Returns\: ()
+
+    (no fields)
+
+  + .. _type-splice-dsobootstrap-dsobootstrapbootstrap-56803:
+
+    **Choice** `DsoBootstrap_Bootstrap <type-splice-dsobootstrap-dsobootstrapbootstrap-56803_>`_
+
+    Controller\: dso
+
+    Returns\: `DsoBootstrap_BootstrapResult <type-splice-dsobootstrap-dsobootstrapbootstrapresult-11174_>`_
+
+    (no fields)
+
+Data Types
+----------
+
+.. _type-splice-dsobootstrap-dsobootstrapbootstrapresult-11174:
+
+**data** `DsoBootstrap_BootstrapResult <type-splice-dsobootstrap-dsobootstrapbootstrapresult-11174_>`_
+
+  .. _constr-splice-dsobootstrap-dsobootstrapbootstrapresult-22331:
+
+  `DsoBootstrap_BootstrapResult <constr-splice-dsobootstrap-dsobootstrapbootstrapresult-22331_>`_
+
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `DsoBootstrap <type-splice-dsobootstrap-dsobootstrap-38046_>`_ `DsoBootstrap_Bootstrap <type-splice-dsobootstrap-dsobootstrapbootstrap-56803_>`_ `DsoBootstrap_BootstrapResult <type-splice-dsobootstrap-dsobootstrapbootstrapresult-11174_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `DsoBootstrap <type-splice-dsobootstrap-dsobootstrap-38046_>`_ `DsoBootstrap_Bootstrap <type-splice-dsobootstrap-dsobootstrapbootstrap-56803_>`_ `DsoBootstrap_BootstrapResult <type-splice-dsobootstrap-dsobootstrapbootstrapresult-11174_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `DsoBootstrap <type-splice-dsobootstrap-dsobootstrap-38046_>`_ `DsoBootstrap_Bootstrap <type-splice-dsobootstrap-dsobootstrapbootstrap-56803_>`_ `DsoBootstrap_BootstrapResult <type-splice-dsobootstrap-dsobootstrapbootstrapresult-11174_>`_

@@ -1,0 +1,234 @@
+.. _module-splice-round-72925:
+
+Splice.Round
+============
+
+Templates
+---------
+
+.. _type-splice-round-closedmininground-12506:
+
+**template** `ClosedMiningRound <type-splice-round-closedmininground-12506_>`_
+
+  A record that a specific mining round has been closed, which can
+  be used to archive expired rewards\.
+
+  Signatory\: dso
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - dso
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - round
+       - :ref:`Round <type-splice-types-round-16181>`
+       -
+     * - issuancePerValidatorRewardCoupon
+       - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+       -
+     * - issuancePerFeaturedAppRewardCoupon
+       - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+       -
+     * - issuancePerUnfeaturedAppRewardCoupon
+       - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+       -
+     * - issuancePerSvRewardCoupon
+       - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+       -
+     * - optIssuancePerValidatorFaucetCoupon
+       - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+       - Introduced in CIP\-3
+
+  + **Choice** Archive
+
+    Controller\: dso
+
+    Returns\: ()
+
+    (no fields)
+
+.. _type-splice-round-issuingmininground-98097:
+
+**template** `IssuingMiningRound <type-splice-round-issuingmininground-98097_>`_
+
+  A mining round for whose rewards amulets are being issued\.
+
+  Signatory\: dso
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - dso
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - round
+       - :ref:`Round <type-splice-types-round-16181>`
+       -
+     * - issuancePerValidatorRewardCoupon
+       - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+       -
+     * - issuancePerFeaturedAppRewardCoupon
+       - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+       -
+     * - issuancePerUnfeaturedAppRewardCoupon
+       - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+       -
+     * - issuancePerSvRewardCoupon
+       - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+       -
+     * - opensAt
+       - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+       - Time after which rewards from this mining round can be collected
+     * - targetClosesAt
+       - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+       - Time when this round is expected to close during standard DSO\. The round SHOULD NOT be archived before this time\.
+     * - optIssuancePerValidatorFaucetCoupon
+       - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+       - Introduced in CIP\-3
+
+  + **Choice** Archive
+
+    Controller\: dso
+
+    Returns\: ()
+
+    (no fields)
+
+.. _type-splice-round-openmininground-90060:
+
+**template** `OpenMiningRound <type-splice-round-openmininground-90060_>`_
+
+  A mining round for which new rewards can be registered\.
+  Note that multiple mining rounds can be open at the same time to give some
+  time for propagating a new open round, while still registering rewards
+  against the previous open round\.
+
+  Signatory\: dso
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - dso
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - round
+       - :ref:`Round <type-splice-types-round-16181>`
+       -
+     * - amuletPrice
+       - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+       -
+     * - opensAt
+       - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+       - Time after which transfers can use this mining round
+     * - targetClosesAt
+       - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+       - Time when this round is expected to be closed as part of standard DSO\. The round SHOULD NOT be archived before this time\.
+     * - issuingFor
+       - `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_
+       - Timepoint on the issuance curve that was used to determing the issuance configuration for this round\.
+     * - transferConfigUsd
+       - :ref:`TransferConfig <type-splice-amuletconfig-transferconfig-45691>` :ref:`USD <type-splice-amuletconfig-usd-42527>`
+       - Configuration determining the fees and limits in USD for Amulet transfers
+     * - issuanceConfig
+       - :ref:`IssuanceConfig <type-splice-issuance-issuanceconfig-93012>`
+       - Configuration for issuance of this round\.
+     * - tickDuration
+       - `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_
+       - Duration of a tick, which is the duration of half a round\.
+
+  + **Choice** Archive
+
+    Controller\: dso
+
+    Returns\: ()
+
+    (no fields)
+
+  + .. _type-splice-round-openminingroundfetch-48019:
+
+    **Choice** `OpenMiningRound_Fetch <type-splice-round-openminingroundfetch-48019_>`_
+
+    Controller\: p
+
+    Returns\: `OpenMiningRound <type-splice-round-openmininground-90060_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - p
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+
+.. _type-splice-round-summarizingmininground-36579:
+
+**template** `SummarizingMiningRound <type-splice-round-summarizingmininground-36579_>`_
+
+  A mining round for which the total sum of registered rewards
+  is being computed\. Rewards can no longer be registered aginst such a round\.
+
+  Signatory\: dso
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - dso
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - round
+       - :ref:`Round <type-splice-types-round-16181>`
+       -
+     * - amuletPrice
+       - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+       -
+     * - issuanceConfig
+       - :ref:`IssuanceConfig <type-splice-issuance-issuanceconfig-93012>`
+       -
+     * - tickDuration
+       - `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_
+       -
+
+  + **Choice** Archive
+
+    Controller\: dso
+
+    Returns\: ()
+
+    (no fields)
+
+Functions
+---------
+
+.. _function-splice-round-getissuingminingroundissuancepervalidatorfaucetcoupon-99508:
+
+`getIssuingMiningRoundIssuancePerValidatorFaucetCoupon <function-splice-round-getissuingminingroundissuancepervalidatorfaucetcoupon-99508_>`_
+  \: `IssuingMiningRound <type-splice-round-issuingmininground-98097_>`_ \-\> `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  Accessor with defaulting for the optional issuancePerValidatorFaucetCoupon field
+
+.. _function-splice-round-getclosedminingroundissuancepervalidatorfaucetcoupon-25673:
+
+`getClosedMiningRoundIssuancePerValidatorFaucetCoupon <function-splice-round-getclosedminingroundissuancepervalidatorfaucetcoupon-25673_>`_
+  \: `ClosedMiningRound <type-splice-round-closedmininground-12506_>`_ \-\> `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  Accessor with defaulting for the optional issuancePerValidatorFaucetCoupon field

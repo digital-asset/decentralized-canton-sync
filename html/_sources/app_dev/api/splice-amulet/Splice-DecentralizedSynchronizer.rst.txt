@@ -1,0 +1,267 @@
+.. _module-splice-decentralizedsynchronizer-23863:
+
+Splice.DecentralizedSynchronizer
+================================
+
+Types and contracts for managing synchronizer fees
+
+Templates
+---------
+
+.. _type-splice-decentralizedsynchronizer-membertraffic-74049:
+
+**template** `MemberTraffic <type-splice-decentralizedsynchronizer-membertraffic-74049_>`_
+
+  The state of the extra synchronizer traffic purchases of a sequencer sv\.
+
+  Signatory\: dso
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - dso
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - memberId
+       - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+       - The id of the sequencer member (participant or mediator) for which traffic has been purchased
+     * - synchronizerId
+       - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+       - The id of the synchronizer for which this contract tracks purchased extra traffic
+     * - migrationId
+       - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+       - The migration id of the synchronizer for which this contract tracks purchased extra traffic
+     * - totalPurchased
+       - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+       - The number of bytes of extra traffic purchased
+     * - numPurchases
+       - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+       - Number of times extra traffic has been purchased
+     * - amuletSpent
+       - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+       - Total Amulet spent on extra traffic
+     * - usdSpent
+       - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+       - Total USD spent on extra traffic
+
+  + **Choice** Archive
+
+    Controller\: dso
+
+    Returns\: ()
+
+    (no fields)
+
+Data Types
+----------
+
+.. _type-splice-decentralizedsynchronizer-amuletdecentralizedsynchronizerconfig-15126:
+
+**data** `AmuletDecentralizedSynchronizerConfig <type-splice-decentralizedsynchronizer-amuletdecentralizedsynchronizerconfig-15126_>`_
+
+  The configuration of the logical concept of a decentralized synchronizer, which consists over its lifetime
+  of a series of actual synchronizers, which are introduced for handling the (rare) occasions of switching
+  to a new synchronizer protocol version\.
+
+  .. _constr-splice-decentralizedsynchronizer-amuletdecentralizedsynchronizerconfig-80511:
+
+  `AmuletDecentralizedSynchronizerConfig <constr-splice-decentralizedsynchronizer-amuletdecentralizedsynchronizerconfig-80511_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - requiredSynchronizers
+         - `Set <https://docs.daml.com/daml/stdlib/DA-Set.html#type-da-set-types-set-90436>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         - The synchronizer\-ids of all synchronizers that Amulet and ANS users should be connected to\.
+       * - activeSynchronizer
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         - The synchronizer\-id of the synchronizer on which the SVs accepts transactions involving the AmuletRules and related contracts, which must be one of the ``requiredSynchronizers``\.
+       * - fees
+         - `SynchronizerFeesConfig <type-splice-decentralizedsynchronizer-synchronizerfeesconfig-12142_>`_
+         - The fees charged for using the decentralized synchronizer\. We use the same fees across all active decentralized synchronizers\.
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `AmuletDecentralizedSynchronizerConfig <type-splice-decentralizedsynchronizer-amuletdecentralizedsynchronizerconfig-15126_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `AmuletDecentralizedSynchronizerConfig <type-splice-decentralizedsynchronizer-amuletdecentralizedsynchronizerconfig-15126_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"activeSynchronizer\" `AmuletDecentralizedSynchronizerConfig <type-splice-decentralizedsynchronizer-amuletdecentralizedsynchronizerconfig-15126_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"decentralizedSynchronizer\" (:ref:`AmuletConfig <type-splice-amuletconfig-amuletconfig-37414>` unit) `AmuletDecentralizedSynchronizerConfig <type-splice-decentralizedsynchronizer-amuletdecentralizedsynchronizerconfig-15126_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"fees\" `AmuletDecentralizedSynchronizerConfig <type-splice-decentralizedsynchronizer-amuletdecentralizedsynchronizerconfig-15126_>`_ `SynchronizerFeesConfig <type-splice-decentralizedsynchronizer-synchronizerfeesconfig-12142_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"requiredSynchronizers\" `AmuletDecentralizedSynchronizerConfig <type-splice-decentralizedsynchronizer-amuletdecentralizedsynchronizerconfig-15126_>`_ (`Set <https://docs.daml.com/daml/stdlib/DA-Set.html#type-da-set-types-set-90436>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"activeSynchronizer\" `AmuletDecentralizedSynchronizerConfig <type-splice-decentralizedsynchronizer-amuletdecentralizedsynchronizerconfig-15126_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"decentralizedSynchronizer\" (:ref:`AmuletConfig <type-splice-amuletconfig-amuletconfig-37414>` unit) `AmuletDecentralizedSynchronizerConfig <type-splice-decentralizedsynchronizer-amuletdecentralizedsynchronizerconfig-15126_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"fees\" `AmuletDecentralizedSynchronizerConfig <type-splice-decentralizedsynchronizer-amuletdecentralizedsynchronizerconfig-15126_>`_ `SynchronizerFeesConfig <type-splice-decentralizedsynchronizer-synchronizerfeesconfig-12142_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"requiredSynchronizers\" `AmuletDecentralizedSynchronizerConfig <type-splice-decentralizedsynchronizer-amuletdecentralizedsynchronizerconfig-15126_>`_ (`Set <https://docs.daml.com/daml/stdlib/DA-Set.html#type-da-set-types-set-90436>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_)
+
+.. _type-splice-decentralizedsynchronizer-baseratetrafficlimits-64372:
+
+**data** `BaseRateTrafficLimits <type-splice-decentralizedsynchronizer-baseratetrafficlimits-64372_>`_
+
+  The limits defining the free base rate delivered by the synchronizer\.
+  It defines the base rate as allowing at most burstAmount of sequencing traffic within a window of burstWindow seconds\.
+
+  .. _constr-splice-decentralizedsynchronizer-baseratetrafficlimits-1937:
+
+  `BaseRateTrafficLimits <constr-splice-decentralizedsynchronizer-baseratetrafficlimits-1937_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - burstAmount
+         - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         - The total burstAmount in bytes of sequencing traffic delivered over the burstWindow
+       * - burstWindow
+         - `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_
+         - Time window within which the burstAmount must not be exceeded
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `BaseRateTrafficLimits <type-splice-decentralizedsynchronizer-baseratetrafficlimits-64372_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `BaseRateTrafficLimits <type-splice-decentralizedsynchronizer-baseratetrafficlimits-64372_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"baseRateTrafficLimits\" `SynchronizerFeesConfig <type-splice-decentralizedsynchronizer-synchronizerfeesconfig-12142_>`_ `BaseRateTrafficLimits <type-splice-decentralizedsynchronizer-baseratetrafficlimits-64372_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"burstAmount\" `BaseRateTrafficLimits <type-splice-decentralizedsynchronizer-baseratetrafficlimits-64372_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"burstWindow\" `BaseRateTrafficLimits <type-splice-decentralizedsynchronizer-baseratetrafficlimits-64372_>`_ `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"baseRateTrafficLimits\" `SynchronizerFeesConfig <type-splice-decentralizedsynchronizer-synchronizerfeesconfig-12142_>`_ `BaseRateTrafficLimits <type-splice-decentralizedsynchronizer-baseratetrafficlimits-64372_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"burstAmount\" `BaseRateTrafficLimits <type-splice-decentralizedsynchronizer-baseratetrafficlimits-64372_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"burstWindow\" `BaseRateTrafficLimits <type-splice-decentralizedsynchronizer-baseratetrafficlimits-64372_>`_ `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_
+
+.. _type-splice-decentralizedsynchronizer-formembertraffic-62879:
+
+**data** `ForMemberTraffic <type-splice-decentralizedsynchronizer-formembertraffic-62879_>`_
+
+  .. _constr-splice-decentralizedsynchronizer-formembertraffic-24640:
+
+  `ForMemberTraffic <constr-splice-decentralizedsynchronizer-formembertraffic-24640_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - dso
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - memberId
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         -
+       * - synchronizerId
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         -
+       * - migrationId
+         - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `ForMemberTraffic <type-splice-decentralizedsynchronizer-formembertraffic-62879_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `ForMemberTraffic <type-splice-decentralizedsynchronizer-formembertraffic-62879_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"dso\" `ForMemberTraffic <type-splice-decentralizedsynchronizer-formembertraffic-62879_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"memberId\" `ForMemberTraffic <type-splice-decentralizedsynchronizer-formembertraffic-62879_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"migrationId\" `ForMemberTraffic <type-splice-decentralizedsynchronizer-formembertraffic-62879_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"synchronizerId\" `ForMemberTraffic <type-splice-decentralizedsynchronizer-formembertraffic-62879_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"dso\" `ForMemberTraffic <type-splice-decentralizedsynchronizer-formembertraffic-62879_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"memberId\" `ForMemberTraffic <type-splice-decentralizedsynchronizer-formembertraffic-62879_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"migrationId\" `ForMemberTraffic <type-splice-decentralizedsynchronizer-formembertraffic-62879_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"synchronizerId\" `ForMemberTraffic <type-splice-decentralizedsynchronizer-formembertraffic-62879_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** HasCheckedFetch `MemberTraffic <type-splice-decentralizedsynchronizer-membertraffic-74049_>`_ `ForMemberTraffic <type-splice-decentralizedsynchronizer-formembertraffic-62879_>`_
+
+.. _type-splice-decentralizedsynchronizer-synchronizerfeesconfig-12142:
+
+**data** `SynchronizerFeesConfig <type-splice-decentralizedsynchronizer-synchronizerfeesconfig-12142_>`_
+
+  Synchronizer fees related configuration to be tracked on the DsoRules contract
+
+  .. _constr-splice-decentralizedsynchronizer-synchronizerfeesconfig-16293:
+
+  `SynchronizerFeesConfig <constr-splice-decentralizedsynchronizer-synchronizerfeesconfig-16293_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - baseRateTrafficLimits
+         - `BaseRateTrafficLimits <type-splice-decentralizedsynchronizer-baseratetrafficlimits-64372_>`_
+         - Configuration limits for base rate traffic
+       * - extraTrafficPrice
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         - The price of extra traffic denominated in $/MB
+       * - readVsWriteScalingFactor
+         - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         - How much the sending of a message to its recipient costs in terms of bytes written to the synchronizer\. This factor is specified in parts per 10,000 (or per 10 mille) We charge for sending messages depending on the number of recipients, as delivering the message incurs a cost as well, albeit usually a much smaller one than the cost of a write\.
+       * - minTopupAmount
+         - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         - The minimum amount of extra traffic (in bytes) that must be bought when buying extra traffic\. This ensures that the SVs can amortize the cost of executing that transaction\.
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `SynchronizerFeesConfig <type-splice-decentralizedsynchronizer-synchronizerfeesconfig-12142_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `SynchronizerFeesConfig <type-splice-decentralizedsynchronizer-synchronizerfeesconfig-12142_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"baseRateTrafficLimits\" `SynchronizerFeesConfig <type-splice-decentralizedsynchronizer-synchronizerfeesconfig-12142_>`_ `BaseRateTrafficLimits <type-splice-decentralizedsynchronizer-baseratetrafficlimits-64372_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"extraTrafficPrice\" `SynchronizerFeesConfig <type-splice-decentralizedsynchronizer-synchronizerfeesconfig-12142_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"fees\" `AmuletDecentralizedSynchronizerConfig <type-splice-decentralizedsynchronizer-amuletdecentralizedsynchronizerconfig-15126_>`_ `SynchronizerFeesConfig <type-splice-decentralizedsynchronizer-synchronizerfeesconfig-12142_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"minTopupAmount\" `SynchronizerFeesConfig <type-splice-decentralizedsynchronizer-synchronizerfeesconfig-12142_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"readVsWriteScalingFactor\" `SynchronizerFeesConfig <type-splice-decentralizedsynchronizer-synchronizerfeesconfig-12142_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"baseRateTrafficLimits\" `SynchronizerFeesConfig <type-splice-decentralizedsynchronizer-synchronizerfeesconfig-12142_>`_ `BaseRateTrafficLimits <type-splice-decentralizedsynchronizer-baseratetrafficlimits-64372_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"extraTrafficPrice\" `SynchronizerFeesConfig <type-splice-decentralizedsynchronizer-synchronizerfeesconfig-12142_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"fees\" `AmuletDecentralizedSynchronizerConfig <type-splice-decentralizedsynchronizer-amuletdecentralizedsynchronizerconfig-15126_>`_ `SynchronizerFeesConfig <type-splice-decentralizedsynchronizer-synchronizerfeesconfig-12142_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"minTopupAmount\" `SynchronizerFeesConfig <type-splice-decentralizedsynchronizer-synchronizerfeesconfig-12142_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"readVsWriteScalingFactor\" `SynchronizerFeesConfig <type-splice-decentralizedsynchronizer-synchronizerfeesconfig-12142_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+Functions
+---------
+
+.. _function-splice-decentralizedsynchronizer-validamuletdecentralizedsynchronizerconfig-57759:
+
+`validAmuletDecentralizedSynchronizerConfig <function-splice-decentralizedsynchronizer-validamuletdecentralizedsynchronizerconfig-57759_>`_
+  \: `AmuletDecentralizedSynchronizerConfig <type-splice-decentralizedsynchronizer-amuletdecentralizedsynchronizerconfig-15126_>`_ \-\> `Bool <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-bool-66265>`_
+
+.. _function-splice-decentralizedsynchronizer-initialmembertraffic-49736:
+
+`initialMemberTraffic <function-splice-decentralizedsynchronizer-initialmembertraffic-49736_>`_
+  \: `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_ \-\> `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_ \-\> `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_ \-\> `MemberTraffic <type-splice-decentralizedsynchronizer-membertraffic-74049_>`_

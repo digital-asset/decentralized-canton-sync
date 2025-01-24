@@ -1,0 +1,154 @@
+.. _module-splice-svonboarding-92564:
+
+Splice.SvOnboarding
+===================
+
+Templates
+---------
+
+.. _type-splice-svonboarding-svonboardingconfirmed-6814:
+
+**template** `SvOnboardingConfirmed <type-splice-svonboarding-svonboardingconfirmed-6814_>`_
+
+  A confirmation for approval of a candidate SV\.
+
+  Once this contract is created, the workflows to onboard that SVs node starts\.
+
+  Signatory\: dso
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - svParty
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - svName
+       - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+       -
+     * - svRewardWeight
+       - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+       -
+     * - svParticipantId
+       - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+       -
+     * - reason
+       - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+       -
+     * - dso
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - expiresAt
+       - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+       - When this contract can be archived\.
+
+  + **Choice** Archive
+
+    Controller\: dso
+
+    Returns\: ()
+
+    (no fields)
+
+  + .. _type-splice-svonboarding-svonboardingconfirmedexpire-37945:
+
+    **Choice** `SvOnboardingConfirmed_Expire <type-splice-svonboarding-svonboardingconfirmedexpire-37945_>`_
+
+    Controller\: dso
+
+    Returns\: `SvOnboardingConfirmed_ExpireResult <type-splice-svonboarding-svonboardingconfirmedexpireresult-89548_>`_
+
+    (no fields)
+
+.. _type-splice-svonboarding-svonboardingrequest-71856:
+
+**template** `SvOnboardingRequest <type-splice-svonboarding-svonboardingrequest-71856_>`_
+
+  Template used by the SVs to collect confirmations for the onboarding of an SV candidate\.
+  The existence of this contract triggers SV automation that creates confirmation contracts for
+  the candidate if the token is a valid ``SvOnboardingToken`` and matches an ``ApprovedSvIdentity``\.
+
+  Signatory\: dso
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - candidateName
+       - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+       - Human\-readable name of the SV candidate\. Must match the one in ``ApprovedSvIdentity``!
+     * - candidateParty
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       - PartyId of the candidate SV party\.
+     * - candidateParticipantId
+       - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+       - ParticipantId of the candidate SV\.
+     * - token
+       - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+       - An encoded and signed ``SvOnboardingToken`` that confirms the candidate's identity\.
+     * - sponsor
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       - The established SV node that created this contract\.
+     * - dso
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - expiresAt
+       - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+       - When this contract can be archived even if the onboarding did not succeed\.
+
+  + **Choice** Archive
+
+    Controller\: dso
+
+    Returns\: ()
+
+    (no fields)
+
+  + .. _type-splice-svonboarding-svonboardingrequestexpire-23755:
+
+    **Choice** `SvOnboardingRequest_Expire <type-splice-svonboarding-svonboardingrequestexpire-23755_>`_
+
+    Controller\: dso
+
+    Returns\: `SvOnboardingRequest_ExpireResult <type-splice-svonboarding-svonboardingrequestexpireresult-6542_>`_
+
+    (no fields)
+
+Data Types
+----------
+
+.. _type-splice-svonboarding-svonboardingconfirmedexpireresult-89548:
+
+**data** `SvOnboardingConfirmed_ExpireResult <type-splice-svonboarding-svonboardingconfirmedexpireresult-89548_>`_
+
+  .. _constr-splice-svonboarding-svonboardingconfirmedexpireresult-55325:
+
+  `SvOnboardingConfirmed_ExpireResult <constr-splice-svonboarding-svonboardingconfirmedexpireresult-55325_>`_
+
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `SvOnboardingConfirmed <type-splice-svonboarding-svonboardingconfirmed-6814_>`_ `SvOnboardingConfirmed_Expire <type-splice-svonboarding-svonboardingconfirmedexpire-37945_>`_ `SvOnboardingConfirmed_ExpireResult <type-splice-svonboarding-svonboardingconfirmedexpireresult-89548_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `SvOnboardingConfirmed <type-splice-svonboarding-svonboardingconfirmed-6814_>`_ `SvOnboardingConfirmed_Expire <type-splice-svonboarding-svonboardingconfirmedexpire-37945_>`_ `SvOnboardingConfirmed_ExpireResult <type-splice-svonboarding-svonboardingconfirmedexpireresult-89548_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `SvOnboardingConfirmed <type-splice-svonboarding-svonboardingconfirmed-6814_>`_ `SvOnboardingConfirmed_Expire <type-splice-svonboarding-svonboardingconfirmedexpire-37945_>`_ `SvOnboardingConfirmed_ExpireResult <type-splice-svonboarding-svonboardingconfirmedexpireresult-89548_>`_
+
+.. _type-splice-svonboarding-svonboardingrequestexpireresult-6542:
+
+**data** `SvOnboardingRequest_ExpireResult <type-splice-svonboarding-svonboardingrequestexpireresult-6542_>`_
+
+  .. _constr-splice-svonboarding-svonboardingrequestexpireresult-87875:
+
+  `SvOnboardingRequest_ExpireResult <constr-splice-svonboarding-svonboardingrequestexpireresult-87875_>`_
+
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `SvOnboardingRequest <type-splice-svonboarding-svonboardingrequest-71856_>`_ `SvOnboardingRequest_Expire <type-splice-svonboarding-svonboardingrequestexpire-23755_>`_ `SvOnboardingRequest_ExpireResult <type-splice-svonboarding-svonboardingrequestexpireresult-6542_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `SvOnboardingRequest <type-splice-svonboarding-svonboardingrequest-71856_>`_ `SvOnboardingRequest_Expire <type-splice-svonboarding-svonboardingrequestexpire-23755_>`_ `SvOnboardingRequest_ExpireResult <type-splice-svonboarding-svonboardingrequestexpireresult-6542_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `SvOnboardingRequest <type-splice-svonboarding-svonboardingrequest-71856_>`_ `SvOnboardingRequest_Expire <type-splice-svonboarding-svonboardingrequestexpire-23755_>`_ `SvOnboardingRequest_ExpireResult <type-splice-svonboarding-svonboardingrequestexpireresult-6542_>`_

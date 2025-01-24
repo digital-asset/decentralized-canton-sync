@@ -1,0 +1,268 @@
+.. _module-splice-wallet-buytrafficrequest-40881:
+
+Splice.Wallet.BuyTrafficRequest
+===============================
+
+Templates
+---------
+
+.. _type-splice-wallet-buytrafficrequest-buytrafficrequest-65116:
+
+**template** `BuyTrafficRequest <type-splice-wallet-buytrafficrequest-buytrafficrequest-65116_>`_
+
+  A request by an end\-user to the wallet's automation to buy traffic
+  for a sequencer member
+
+  Signatory\: endUserParty
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - dso
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - endUserParty
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - expiresAt
+       - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+       - Buy the traffic before this time\.
+     * - trackingId
+       - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+       - Used to deduplicate requests
+     * - trafficAmount
+       - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+       -
+     * - memberId
+       - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+       -
+     * - synchronizerId
+       - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+       -
+     * - migrationId
+       - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+       -
+
+  + **Choice** Archive
+
+    Controller\: endUserParty
+
+    Returns\: ()
+
+    (no fields)
+
+  + .. _type-splice-wallet-buytrafficrequest-buytrafficrequestcancel-52564:
+
+    **Choice** `BuyTrafficRequest_Cancel <type-splice-wallet-buytrafficrequest-buytrafficrequestcancel-52564_>`_
+
+    Controller\: endUserParty
+
+    Returns\: `BuyTrafficRequest_CancelResult <type-splice-wallet-buytrafficrequest-buytrafficrequestcancelresult-81241_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - reason
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         -
+
+  + .. _type-splice-wallet-buytrafficrequest-buytrafficrequestcomplete-61949:
+
+    **Choice** `BuyTrafficRequest_Complete <type-splice-wallet-buytrafficrequest-buytrafficrequestcomplete-61949_>`_
+
+    Controller\: endUserParty, walletProvider
+
+    Returns\: `BuyTrafficRequest_CompleteResult <type-splice-wallet-buytrafficrequest-buytrafficrequestcompleteresult-44764_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - inputs
+         - \[TransferInput\]
+         -
+       * - context
+         - PaymentTransferContext
+         -
+       * - walletProvider
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+
+  + .. _type-splice-wallet-buytrafficrequest-buytrafficrequestexpire-77595:
+
+    **Choice** `BuyTrafficRequest_Expire <type-splice-wallet-buytrafficrequest-buytrafficrequestexpire-77595_>`_
+
+    Controller\: endUserParty
+
+    Returns\: `BuyTrafficRequest_ExpireResult <type-splice-wallet-buytrafficrequest-buytrafficrequestexpireresult-25706_>`_
+
+    (no fields)
+
+Data Types
+----------
+
+.. _type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943:
+
+**data** `BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943_>`_
+
+  .. _constr-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-4476:
+
+  `BuyTrafficRequestTrackingInfo <constr-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-4476_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - trackingId
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         - used to deduplicate requests and query for the status
+       * - endUserParty
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         - used in UserWalletTxLogParser's filterByParty
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"endUserParty\" `BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingId\" `BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" `BuyTrafficRequest_CancelResult <type-splice-wallet-buytrafficrequest-buytrafficrequestcancelresult-81241_>`_ `BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" `BuyTrafficRequest_CompleteResult <type-splice-wallet-buytrafficrequest-buytrafficrequestcompleteresult-44764_>`_ `BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" `BuyTrafficRequest_ExpireResult <type-splice-wallet-buytrafficrequest-buytrafficrequestexpireresult-25706_>`_ `BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" :ref:`WalletAppInstall_BuyTrafficRequest_CancelResult <type-splice-wallet-install-walletappinstallbuytrafficrequestcancelresult-7425>` `BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" :ref:`WalletAppInstall_BuyTrafficRequest_ExpireResult <type-splice-wallet-install-walletappinstallbuytrafficrequestexpireresult-53806>` `BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"endUserParty\" `BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingId\" `BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" `BuyTrafficRequest_CancelResult <type-splice-wallet-buytrafficrequest-buytrafficrequestcancelresult-81241_>`_ `BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" `BuyTrafficRequest_CompleteResult <type-splice-wallet-buytrafficrequest-buytrafficrequestcompleteresult-44764_>`_ `BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" `BuyTrafficRequest_ExpireResult <type-splice-wallet-buytrafficrequest-buytrafficrequestexpireresult-25706_>`_ `BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" :ref:`WalletAppInstall_BuyTrafficRequest_CancelResult <type-splice-wallet-install-walletappinstallbuytrafficrequestcancelresult-7425>` `BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" :ref:`WalletAppInstall_BuyTrafficRequest_ExpireResult <type-splice-wallet-install-walletappinstallbuytrafficrequestexpireresult-53806>` `BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943_>`_
+
+.. _type-splice-wallet-buytrafficrequest-buytrafficrequestcancelresult-81241:
+
+**data** `BuyTrafficRequest_CancelResult <type-splice-wallet-buytrafficrequest-buytrafficrequestcancelresult-81241_>`_
+
+  .. _constr-splice-wallet-buytrafficrequest-buytrafficrequestcancelresult-28380:
+
+  `BuyTrafficRequest_CancelResult <constr-splice-wallet-buytrafficrequest-buytrafficrequestcancelresult-28380_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - trackingInfo
+         - `BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943_>`_
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" `BuyTrafficRequest_CancelResult <type-splice-wallet-buytrafficrequest-buytrafficrequestcancelresult-81241_>`_ `BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" `BuyTrafficRequest_CancelResult <type-splice-wallet-buytrafficrequest-buytrafficrequestcancelresult-81241_>`_ `BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943_>`_
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `BuyTrafficRequest <type-splice-wallet-buytrafficrequest-buytrafficrequest-65116_>`_ `BuyTrafficRequest_Cancel <type-splice-wallet-buytrafficrequest-buytrafficrequestcancel-52564_>`_ `BuyTrafficRequest_CancelResult <type-splice-wallet-buytrafficrequest-buytrafficrequestcancelresult-81241_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `BuyTrafficRequest <type-splice-wallet-buytrafficrequest-buytrafficrequest-65116_>`_ `BuyTrafficRequest_Cancel <type-splice-wallet-buytrafficrequest-buytrafficrequestcancel-52564_>`_ `BuyTrafficRequest_CancelResult <type-splice-wallet-buytrafficrequest-buytrafficrequestcancelresult-81241_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `BuyTrafficRequest <type-splice-wallet-buytrafficrequest-buytrafficrequest-65116_>`_ `BuyTrafficRequest_Cancel <type-splice-wallet-buytrafficrequest-buytrafficrequestcancel-52564_>`_ `BuyTrafficRequest_CancelResult <type-splice-wallet-buytrafficrequest-buytrafficrequestcancelresult-81241_>`_
+
+.. _type-splice-wallet-buytrafficrequest-buytrafficrequestcompleteresult-44764:
+
+**data** `BuyTrafficRequest_CompleteResult <type-splice-wallet-buytrafficrequest-buytrafficrequestcompleteresult-44764_>`_
+
+  .. _constr-splice-wallet-buytrafficrequest-buytrafficrequestcompleteresult-27129:
+
+  `BuyTrafficRequest_CompleteResult <constr-splice-wallet-buytrafficrequest-buytrafficrequestcompleteresult-27129_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - purchasedTraffic
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ MemberTraffic
+         -
+       * - trackingInfo
+         - `BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943_>`_
+         -
+       * - senderChangeAmulet
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Amulet)
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"purchasedTraffic\" `BuyTrafficRequest_CompleteResult <type-splice-wallet-buytrafficrequest-buytrafficrequestcompleteresult-44764_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ MemberTraffic)
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"senderChangeAmulet\" `BuyTrafficRequest_CompleteResult <type-splice-wallet-buytrafficrequest-buytrafficrequestcompleteresult-44764_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Amulet))
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" `BuyTrafficRequest_CompleteResult <type-splice-wallet-buytrafficrequest-buytrafficrequestcompleteresult-44764_>`_ `BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"purchasedTraffic\" `BuyTrafficRequest_CompleteResult <type-splice-wallet-buytrafficrequest-buytrafficrequestcompleteresult-44764_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ MemberTraffic)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"senderChangeAmulet\" `BuyTrafficRequest_CompleteResult <type-splice-wallet-buytrafficrequest-buytrafficrequestcompleteresult-44764_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Amulet))
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" `BuyTrafficRequest_CompleteResult <type-splice-wallet-buytrafficrequest-buytrafficrequestcompleteresult-44764_>`_ `BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943_>`_
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `BuyTrafficRequest <type-splice-wallet-buytrafficrequest-buytrafficrequest-65116_>`_ `BuyTrafficRequest_Complete <type-splice-wallet-buytrafficrequest-buytrafficrequestcomplete-61949_>`_ `BuyTrafficRequest_CompleteResult <type-splice-wallet-buytrafficrequest-buytrafficrequestcompleteresult-44764_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `BuyTrafficRequest <type-splice-wallet-buytrafficrequest-buytrafficrequest-65116_>`_ `BuyTrafficRequest_Complete <type-splice-wallet-buytrafficrequest-buytrafficrequestcomplete-61949_>`_ `BuyTrafficRequest_CompleteResult <type-splice-wallet-buytrafficrequest-buytrafficrequestcompleteresult-44764_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `BuyTrafficRequest <type-splice-wallet-buytrafficrequest-buytrafficrequest-65116_>`_ `BuyTrafficRequest_Complete <type-splice-wallet-buytrafficrequest-buytrafficrequestcomplete-61949_>`_ `BuyTrafficRequest_CompleteResult <type-splice-wallet-buytrafficrequest-buytrafficrequestcompleteresult-44764_>`_
+
+.. _type-splice-wallet-buytrafficrequest-buytrafficrequestexpireresult-25706:
+
+**data** `BuyTrafficRequest_ExpireResult <type-splice-wallet-buytrafficrequest-buytrafficrequestexpireresult-25706_>`_
+
+  .. _constr-splice-wallet-buytrafficrequest-buytrafficrequestexpireresult-5207:
+
+  `BuyTrafficRequest_ExpireResult <constr-splice-wallet-buytrafficrequest-buytrafficrequestexpireresult-5207_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - trackingInfo
+         - `BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943_>`_
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" `BuyTrafficRequest_ExpireResult <type-splice-wallet-buytrafficrequest-buytrafficrequestexpireresult-25706_>`_ `BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" `BuyTrafficRequest_ExpireResult <type-splice-wallet-buytrafficrequest-buytrafficrequestexpireresult-25706_>`_ `BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943_>`_
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `BuyTrafficRequest <type-splice-wallet-buytrafficrequest-buytrafficrequest-65116_>`_ `BuyTrafficRequest_Expire <type-splice-wallet-buytrafficrequest-buytrafficrequestexpire-77595_>`_ `BuyTrafficRequest_ExpireResult <type-splice-wallet-buytrafficrequest-buytrafficrequestexpireresult-25706_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `BuyTrafficRequest <type-splice-wallet-buytrafficrequest-buytrafficrequest-65116_>`_ `BuyTrafficRequest_Expire <type-splice-wallet-buytrafficrequest-buytrafficrequestexpire-77595_>`_ `BuyTrafficRequest_ExpireResult <type-splice-wallet-buytrafficrequest-buytrafficrequestexpireresult-25706_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `BuyTrafficRequest <type-splice-wallet-buytrafficrequest-buytrafficrequest-65116_>`_ `BuyTrafficRequest_Expire <type-splice-wallet-buytrafficrequest-buytrafficrequestexpire-77595_>`_ `BuyTrafficRequest_ExpireResult <type-splice-wallet-buytrafficrequest-buytrafficrequestexpireresult-25706_>`_

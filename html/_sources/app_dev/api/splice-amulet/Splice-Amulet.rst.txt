@@ -1,0 +1,918 @@
+.. _module-splice-amulet-64804:
+
+Splice.Amulet
+=============
+
+The contracts representing the long\-term state of Splice\.
+
+Templates
+---------
+
+.. _type-splice-amulet-amulet-63582:
+
+**template** `Amulet <type-splice-amulet-amulet-63582_>`_
+
+  A amulet, which can be locked and whose amount expires over time\.
+
+  The expiry serves to charge an inactivity fee, and thereby ensures that the
+  SVs can reclaim the corresponding storage space at some point in the future\.
+
+  Signatory\: dso, owner
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - dso
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - owner
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - amount
+       - :ref:`ExpiringAmount <type-splice-fees-expiringamount-39537>`
+       -
+
+  + .. _type-splice-amulet-amuletexpire-87297:
+
+    **Choice** `Amulet_Expire <type-splice-amulet-amuletexpire-87297_>`_
+
+    Controller\: dso
+
+    Returns\: `Amulet_ExpireResult <type-splice-amulet-amuletexpireresult-11748_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - roundCid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`OpenMiningRound <type-splice-round-openmininground-90060>`
+         -
+
+  + **Choice** Archive
+
+    Controller\: dso, owner
+
+    Returns\: ()
+
+    (no fields)
+
+.. _type-splice-amulet-apprewardcoupon-57229:
+
+**template** `AppRewardCoupon <type-splice-amulet-apprewardcoupon-57229_>`_
+
+  A coupon for receiving app rewards proportional to the usage fee paid as part of a
+  Amulet transfer coordinated by the app of a provider\.
+
+  Signatory\: dso
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - dso
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - provider
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       - Application provider
+     * - featured
+       - `Bool <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-bool-66265>`_
+       -
+     * - amount
+       - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+       -
+     * - round
+       - :ref:`Round <type-splice-types-round-16181>`
+       -
+
+  + .. _type-splice-amulet-apprewardcoupondsoexpire-84081:
+
+    **Choice** `AppRewardCoupon_DsoExpire <type-splice-amulet-apprewardcoupondsoexpire-84081_>`_
+
+    Controller\: dso
+
+    Returns\: `AppRewardCoupon_DsoExpireResult <type-splice-amulet-apprewardcoupondsoexpireresult-15772_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - closedRoundCid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`ClosedMiningRound <type-splice-round-closedmininground-12506>`
+         -
+
+  + **Choice** Archive
+
+    Controller\: dso
+
+    Returns\: ()
+
+    (no fields)
+
+.. _type-splice-amulet-featuredappright-765:
+
+**template** `FeaturedAppRight <type-splice-amulet-featuredappright-765_>`_
+
+  The right for an application provider to earn featured app rewards\.
+
+  Signatory\: dso
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - dso
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - provider
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+
+  + **Choice** Archive
+
+    Controller\: dso
+
+    Returns\: ()
+
+    (no fields)
+
+  + .. _type-splice-amulet-featuredapprightcancel-96535:
+
+    **Choice** `FeaturedAppRight_Cancel <type-splice-amulet-featuredapprightcancel-96535_>`_
+
+    Controller\: provider
+
+    Returns\: `FeaturedAppRight_CancelResult <type-splice-amulet-featuredapprightcancelresult-22074_>`_
+
+    (no fields)
+
+  + .. _type-splice-amulet-featuredapprightwithdraw-8217:
+
+    **Choice** `FeaturedAppRight_Withdraw <type-splice-amulet-featuredapprightwithdraw-8217_>`_
+
+    Controller\: dso
+
+    Returns\: `FeaturedAppRight_WithdrawResult <type-splice-amulet-featuredapprightwithdrawresult-98740_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - reason
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         -
+
+.. _type-splice-amulet-lockedamulet-7030:
+
+**template** `LockedAmulet <type-splice-amulet-lockedamulet-7030_>`_
+
+  Signatory\: (DA\.Internal\.Record\.getField @\"holders\" lock), signatory amulet
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - amulet
+       - `Amulet <type-splice-amulet-amulet-63582_>`_
+       -
+     * - lock
+       - :ref:`TimeLock <type-splice-expiry-timelock-2221>`
+       -
+
+  + **Choice** Archive
+
+    Controller\: (DA\.Internal\.Record\.getField @\"holders\" lock), signatory amulet
+
+    Returns\: ()
+
+    (no fields)
+
+  + .. _type-splice-amulet-lockedamuletexpireamulet-28333:
+
+    **Choice** `LockedAmulet_ExpireAmulet <type-splice-amulet-lockedamuletexpireamulet-28333_>`_
+
+    Controller\: (DA\.Internal\.Record\.getField @\"dso\" amulet)
+
+    Returns\: `LockedAmulet_ExpireAmuletResult <type-splice-amulet-lockedamuletexpireamuletresult-88432_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - roundCid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`OpenMiningRound <type-splice-round-openmininground-90060>`
+         -
+
+  + .. _type-splice-amulet-lockedamuletownerexpirelock-79102:
+
+    **Choice** `LockedAmulet_OwnerExpireLock <type-splice-amulet-lockedamuletownerexpirelock-79102_>`_
+
+    Controller\: (DA\.Internal\.Record\.getField @\"owner\" amulet)
+
+    Returns\: `LockedAmulet_OwnerExpireLockResult <type-splice-amulet-lockedamuletownerexpirelockresult-44583_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - openRoundCid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`OpenMiningRound <type-splice-round-openmininground-90060>`
+         -
+
+  + .. _type-splice-amulet-lockedamuletunlock-59352:
+
+    **Choice** `LockedAmulet_Unlock <type-splice-amulet-lockedamuletunlock-59352_>`_
+
+    Controller\: (DA\.Internal\.Record\.getField @\"owner\" amulet) \:\: (DA\.Internal\.Record\.getField @\"holders\" lock)
+
+    Returns\: `LockedAmulet_UnlockResult <type-splice-amulet-lockedamuletunlockresult-29457_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - openRoundCid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`OpenMiningRound <type-splice-round-openmininground-90060>`
+         -
+
+.. _type-splice-amulet-svrewardcoupon-68580:
+
+**template** `SvRewardCoupon <type-splice-amulet-svrewardcoupon-68580_>`_
+
+  A coupon for a beneficiary to receive part of the SV issuance for a specific SV node and round\.
+
+  Signatory\: dso
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - dso
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - sv
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       - The party identifying the SV node for which the reward is issued\.
+     * - beneficiary
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       - The beneficiary allowed to receive the reward\.
+     * - round
+       - :ref:`Round <type-splice-types-round-16181>`
+       -
+     * - weight
+       - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+       - Coupons receive a share of the SV issuance proportional to their weight\.
+
+  + **Choice** Archive
+
+    Controller\: dso
+
+    Returns\: ()
+
+    (no fields)
+
+  + .. _type-splice-amulet-svrewardcouponarchiveasbeneficiary-26109:
+
+    **Choice** `SvRewardCoupon_ArchiveAsBeneficiary <type-splice-amulet-svrewardcouponarchiveasbeneficiary-26109_>`_
+
+    Controller\: beneficiary
+
+    Returns\: `SvRewardCoupon_ArchiveAsBeneficiaryResult <type-splice-amulet-svrewardcouponarchiveasbeneficiaryresult-20724_>`_
+
+    (no fields)
+
+  + .. _type-splice-amulet-svrewardcoupondsoexpire-92140:
+
+    **Choice** `SvRewardCoupon_DsoExpire <type-splice-amulet-svrewardcoupondsoexpire-92140_>`_
+
+    Controller\: dso
+
+    Returns\: `SvRewardCoupon_DsoExpireResult <type-splice-amulet-svrewardcoupondsoexpireresult-4801_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - closedRoundCid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`ClosedMiningRound <type-splice-round-closedmininground-12506>`
+         -
+
+.. _type-splice-amulet-unclaimedreward-7814:
+
+**template** `UnclaimedReward <type-splice-amulet-unclaimedreward-7814_>`_
+
+  Rewards that have not been claimed and are thus at the disposal of the foundation\.
+
+  Signatory\: dso
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - dso
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - amount
+       - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+       -
+
+  + **Choice** Archive
+
+    Controller\: dso
+
+    Returns\: ()
+
+    (no fields)
+
+.. _type-splice-amulet-validatorrewardcoupon-76808:
+
+**template** `ValidatorRewardCoupon <type-splice-amulet-validatorrewardcoupon-76808_>`_
+
+  A coupon for receiving validator rewards proportional to the usage fee paid by a user
+  hosted by a validator operator\.
+
+  Signatory\: dso
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - dso
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - user
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - amount
+       - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+       -
+     * - round
+       - :ref:`Round <type-splice-types-round-16181>`
+       -
+
+  + **Choice** Archive
+
+    Controller\: dso
+
+    Returns\: ()
+
+    (no fields)
+
+  + .. _type-splice-amulet-validatorrewardcouponarchiveasvalidator-99406:
+
+    **Choice** `ValidatorRewardCoupon_ArchiveAsValidator <type-splice-amulet-validatorrewardcouponarchiveasvalidator-99406_>`_
+
+    This choice is used by validators to archive the burn receipt upon claiming its corresponding issuance\.
+
+    Controller\: dso, validator
+
+    Returns\: `ValidatorRewardCoupon_ArchiveAsValidatorResult <type-splice-amulet-validatorrewardcouponarchiveasvalidatorresult-41727_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - validator
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - rightCid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `ValidatorRight <type-splice-amulet-validatorright-15964_>`_
+         -
+
+  + .. _type-splice-amulet-validatorrewardcoupondsoexpire-85552:
+
+    **Choice** `ValidatorRewardCoupon_DsoExpire <type-splice-amulet-validatorrewardcoupondsoexpire-85552_>`_
+
+    Controller\: dso
+
+    Returns\: `ValidatorRewardCoupon_DsoExpireResult <type-splice-amulet-validatorrewardcoupondsoexpireresult-94761_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - closedRoundCid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`ClosedMiningRound <type-splice-round-closedmininground-12506>`
+         -
+
+.. _type-splice-amulet-validatorright-15964:
+
+**template** `ValidatorRight <type-splice-amulet-validatorright-15964_>`_
+
+  The right to claim amulet issuances for a user's burns as their validator\.
+
+  Signatory\: user, validator
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - dso
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - user
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - validator
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+
+  + **Choice** Archive
+
+    Controller\: user, validator
+
+    Returns\: ()
+
+    (no fields)
+
+  + .. _type-splice-amulet-validatorrightarchiveasuser-43276:
+
+    **Choice** `ValidatorRight_ArchiveAsUser <type-splice-amulet-validatorrightarchiveasuser-43276_>`_
+
+    Controller\: user
+
+    Returns\: `ValidatorRight_ArchiveAsUserResult <type-splice-amulet-validatorrightarchiveasuserresult-3193_>`_
+
+    (no fields)
+
+  + .. _type-splice-amulet-validatorrightarchiveasvalidator-83210:
+
+    **Choice** `ValidatorRight_ArchiveAsValidator <type-splice-amulet-validatorrightarchiveasvalidator-83210_>`_
+
+    Controller\: validator
+
+    Returns\: `ValidatorRight_ArchiveAsValidatorResult <type-splice-amulet-validatorrightarchiveasvalidatorresult-59299_>`_
+
+    (no fields)
+
+Data Types
+----------
+
+.. _type-splice-amulet-amuletcreatesummary-15609:
+
+**data** `AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609_>`_ amuletContractId
+
+  Result of an operation that created a new amulet, e\.g\.,
+  by minting a fresh amulet, or by unlocking a locked amulet\.
+
+  .. _constr-splice-amulet-amuletcreatesummary-64070:
+
+  `AmuletCreateSummary <constr-splice-amulet-amuletcreatesummary-64070_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - amulet
+         - amuletContractId
+         - The new amulet that was created
+       * - amuletPrice
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         - The amulet price at the round the amulet was created
+       * - round
+         - :ref:`Round <type-splice-types-round-16181>`
+         - Round for which this amulet was created\.
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"amulet\" (`AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609_>`_ amuletContractId) amuletContractId
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"amuletPrice\" (`AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609_>`_ amuletContractId) `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"amuletSum\" `LockedAmulet_OwnerExpireLockResult <type-splice-amulet-lockedamuletownerexpirelockresult-44583_>`_ (`AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `Amulet <type-splice-amulet-amulet-63582_>`_))
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"amuletSum\" `LockedAmulet_UnlockResult <type-splice-amulet-lockedamuletunlockresult-29457_>`_ (`AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `Amulet <type-splice-amulet-amulet-63582_>`_))
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"amuletSum\" :ref:`AmuletRules_DevNet_TapResult <type-splice-amuletrules-amuletrulesdevnettapresult-1845>` (`AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `Amulet <type-splice-amulet-amulet-63582_>`_))
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"amuletSum\" :ref:`AmuletRules_MintResult <type-splice-amuletrules-amuletrulesmintresult-5311>` (`AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `Amulet <type-splice-amulet-amulet-63582_>`_))
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"round\" (`AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609_>`_ amuletContractId) :ref:`Round <type-splice-types-round-16181>`
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"amulet\" (`AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609_>`_ amuletContractId) amuletContractId
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"amuletPrice\" (`AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609_>`_ amuletContractId) `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"amuletSum\" `LockedAmulet_OwnerExpireLockResult <type-splice-amulet-lockedamuletownerexpirelockresult-44583_>`_ (`AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `Amulet <type-splice-amulet-amulet-63582_>`_))
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"amuletSum\" `LockedAmulet_UnlockResult <type-splice-amulet-lockedamuletunlockresult-29457_>`_ (`AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `Amulet <type-splice-amulet-amulet-63582_>`_))
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"amuletSum\" :ref:`AmuletRules_DevNet_TapResult <type-splice-amuletrules-amuletrulesdevnettapresult-1845>` (`AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `Amulet <type-splice-amulet-amulet-63582_>`_))
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"amuletSum\" :ref:`AmuletRules_MintResult <type-splice-amuletrules-amuletrulesmintresult-5311>` (`AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `Amulet <type-splice-amulet-amulet-63582_>`_))
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"round\" (`AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609_>`_ amuletContractId) :ref:`Round <type-splice-types-round-16181>`
+
+.. _type-splice-amulet-amuletexpiresummary-4706:
+
+**data** `AmuletExpireSummary <type-splice-amulet-amuletexpiresummary-4706_>`_
+
+  .. _constr-splice-amulet-amuletexpiresummary-31721:
+
+  `AmuletExpireSummary <constr-splice-amulet-amuletexpiresummary-31721_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - owner
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - round
+         - :ref:`Round <type-splice-types-round-16181>`
+         - Round for which this expiry was registered\.
+       * - changeToInitialAmountAsOfRoundZero
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         -
+       * - changeToHoldingFeesRate
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         - The change of total holding fees introduced by a amulet expiry\.
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"changeToHoldingFeesRate\" `AmuletExpireSummary <type-splice-amulet-amuletexpiresummary-4706_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"changeToInitialAmountAsOfRoundZero\" `AmuletExpireSummary <type-splice-amulet-amuletexpiresummary-4706_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"expireSum\" `Amulet_ExpireResult <type-splice-amulet-amuletexpireresult-11748_>`_ `AmuletExpireSummary <type-splice-amulet-amuletexpiresummary-4706_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"expireSum\" `LockedAmulet_ExpireAmuletResult <type-splice-amulet-lockedamuletexpireamuletresult-88432_>`_ `AmuletExpireSummary <type-splice-amulet-amuletexpiresummary-4706_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"owner\" `AmuletExpireSummary <type-splice-amulet-amuletexpiresummary-4706_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"round\" `AmuletExpireSummary <type-splice-amulet-amuletexpiresummary-4706_>`_ :ref:`Round <type-splice-types-round-16181>`
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"changeToHoldingFeesRate\" `AmuletExpireSummary <type-splice-amulet-amuletexpiresummary-4706_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"changeToInitialAmountAsOfRoundZero\" `AmuletExpireSummary <type-splice-amulet-amuletexpiresummary-4706_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"expireSum\" `Amulet_ExpireResult <type-splice-amulet-amuletexpireresult-11748_>`_ `AmuletExpireSummary <type-splice-amulet-amuletexpiresummary-4706_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"expireSum\" `LockedAmulet_ExpireAmuletResult <type-splice-amulet-lockedamuletexpireamuletresult-88432_>`_ `AmuletExpireSummary <type-splice-amulet-amuletexpiresummary-4706_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"owner\" `AmuletExpireSummary <type-splice-amulet-amuletexpiresummary-4706_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"round\" `AmuletExpireSummary <type-splice-amulet-amuletexpiresummary-4706_>`_ :ref:`Round <type-splice-types-round-16181>`
+
+.. _type-splice-amulet-amuletexpireresult-11748:
+
+**data** `Amulet_ExpireResult <type-splice-amulet-amuletexpireresult-11748_>`_
+
+  .. _constr-splice-amulet-amuletexpireresult-71583:
+
+  `Amulet_ExpireResult <constr-splice-amulet-amuletexpireresult-71583_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - expireSum
+         - `AmuletExpireSummary <type-splice-amulet-amuletexpiresummary-4706_>`_
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"expireSum\" `Amulet_ExpireResult <type-splice-amulet-amuletexpireresult-11748_>`_ `AmuletExpireSummary <type-splice-amulet-amuletexpiresummary-4706_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"expireSum\" `Amulet_ExpireResult <type-splice-amulet-amuletexpireresult-11748_>`_ `AmuletExpireSummary <type-splice-amulet-amuletexpiresummary-4706_>`_
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `Amulet <type-splice-amulet-amulet-63582_>`_ `Amulet_Expire <type-splice-amulet-amuletexpire-87297_>`_ `Amulet_ExpireResult <type-splice-amulet-amuletexpireresult-11748_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `Amulet <type-splice-amulet-amulet-63582_>`_ `Amulet_Expire <type-splice-amulet-amuletexpire-87297_>`_ `Amulet_ExpireResult <type-splice-amulet-amuletexpireresult-11748_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `Amulet <type-splice-amulet-amulet-63582_>`_ `Amulet_Expire <type-splice-amulet-amuletexpire-87297_>`_ `Amulet_ExpireResult <type-splice-amulet-amuletexpireresult-11748_>`_
+
+.. _type-splice-amulet-apprewardcoupondsoexpireresult-15772:
+
+**data** `AppRewardCoupon_DsoExpireResult <type-splice-amulet-apprewardcoupondsoexpireresult-15772_>`_
+
+  .. _constr-splice-amulet-apprewardcoupondsoexpireresult-84547:
+
+  `AppRewardCoupon_DsoExpireResult <constr-splice-amulet-apprewardcoupondsoexpireresult-84547_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - featured
+         - `Bool <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-bool-66265>`_
+         -
+       * - amount
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"amount\" `AppRewardCoupon_DsoExpireResult <type-splice-amulet-apprewardcoupondsoexpireresult-15772_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"featured\" `AppRewardCoupon_DsoExpireResult <type-splice-amulet-apprewardcoupondsoexpireresult-15772_>`_ `Bool <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-bool-66265>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"amount\" `AppRewardCoupon_DsoExpireResult <type-splice-amulet-apprewardcoupondsoexpireresult-15772_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"featured\" `AppRewardCoupon_DsoExpireResult <type-splice-amulet-apprewardcoupondsoexpireresult-15772_>`_ `Bool <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-bool-66265>`_
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `AppRewardCoupon <type-splice-amulet-apprewardcoupon-57229_>`_ `AppRewardCoupon_DsoExpire <type-splice-amulet-apprewardcoupondsoexpire-84081_>`_ `AppRewardCoupon_DsoExpireResult <type-splice-amulet-apprewardcoupondsoexpireresult-15772_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `AppRewardCoupon <type-splice-amulet-apprewardcoupon-57229_>`_ `AppRewardCoupon_DsoExpire <type-splice-amulet-apprewardcoupondsoexpire-84081_>`_ `AppRewardCoupon_DsoExpireResult <type-splice-amulet-apprewardcoupondsoexpireresult-15772_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `AppRewardCoupon <type-splice-amulet-apprewardcoupon-57229_>`_ `AppRewardCoupon_DsoExpire <type-splice-amulet-apprewardcoupondsoexpire-84081_>`_ `AppRewardCoupon_DsoExpireResult <type-splice-amulet-apprewardcoupondsoexpireresult-15772_>`_
+
+.. _type-splice-amulet-featuredapprightcancelresult-22074:
+
+**data** `FeaturedAppRight_CancelResult <type-splice-amulet-featuredapprightcancelresult-22074_>`_
+
+  .. _constr-splice-amulet-featuredapprightcancelresult-30485:
+
+  `FeaturedAppRight_CancelResult <constr-splice-amulet-featuredapprightcancelresult-30485_>`_
+
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `FeaturedAppRight <type-splice-amulet-featuredappright-765_>`_ `FeaturedAppRight_Cancel <type-splice-amulet-featuredapprightcancel-96535_>`_ `FeaturedAppRight_CancelResult <type-splice-amulet-featuredapprightcancelresult-22074_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `FeaturedAppRight <type-splice-amulet-featuredappright-765_>`_ `FeaturedAppRight_Cancel <type-splice-amulet-featuredapprightcancel-96535_>`_ `FeaturedAppRight_CancelResult <type-splice-amulet-featuredapprightcancelresult-22074_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `FeaturedAppRight <type-splice-amulet-featuredappright-765_>`_ `FeaturedAppRight_Cancel <type-splice-amulet-featuredapprightcancel-96535_>`_ `FeaturedAppRight_CancelResult <type-splice-amulet-featuredapprightcancelresult-22074_>`_
+
+.. _type-splice-amulet-featuredapprightwithdrawresult-98740:
+
+**data** `FeaturedAppRight_WithdrawResult <type-splice-amulet-featuredapprightwithdrawresult-98740_>`_
+
+  .. _constr-splice-amulet-featuredapprightwithdrawresult-88987:
+
+  `FeaturedAppRight_WithdrawResult <constr-splice-amulet-featuredapprightwithdrawresult-88987_>`_
+
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `FeaturedAppRight <type-splice-amulet-featuredappright-765_>`_ `FeaturedAppRight_Withdraw <type-splice-amulet-featuredapprightwithdraw-8217_>`_ `FeaturedAppRight_WithdrawResult <type-splice-amulet-featuredapprightwithdrawresult-98740_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `FeaturedAppRight <type-splice-amulet-featuredappright-765_>`_ `FeaturedAppRight_Withdraw <type-splice-amulet-featuredapprightwithdraw-8217_>`_ `FeaturedAppRight_WithdrawResult <type-splice-amulet-featuredapprightwithdrawresult-98740_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `FeaturedAppRight <type-splice-amulet-featuredappright-765_>`_ `FeaturedAppRight_Withdraw <type-splice-amulet-featuredapprightwithdraw-8217_>`_ `FeaturedAppRight_WithdrawResult <type-splice-amulet-featuredapprightwithdrawresult-98740_>`_
+
+.. _type-splice-amulet-lockedamuletexpireamuletresult-88432:
+
+**data** `LockedAmulet_ExpireAmuletResult <type-splice-amulet-lockedamuletexpireamuletresult-88432_>`_
+
+  .. _constr-splice-amulet-lockedamuletexpireamuletresult-82939:
+
+  `LockedAmulet_ExpireAmuletResult <constr-splice-amulet-lockedamuletexpireamuletresult-82939_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - expireSum
+         - `AmuletExpireSummary <type-splice-amulet-amuletexpiresummary-4706_>`_
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"expireSum\" `LockedAmulet_ExpireAmuletResult <type-splice-amulet-lockedamuletexpireamuletresult-88432_>`_ `AmuletExpireSummary <type-splice-amulet-amuletexpiresummary-4706_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"expireSum\" `LockedAmulet_ExpireAmuletResult <type-splice-amulet-lockedamuletexpireamuletresult-88432_>`_ `AmuletExpireSummary <type-splice-amulet-amuletexpiresummary-4706_>`_
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `LockedAmulet <type-splice-amulet-lockedamulet-7030_>`_ `LockedAmulet_ExpireAmulet <type-splice-amulet-lockedamuletexpireamulet-28333_>`_ `LockedAmulet_ExpireAmuletResult <type-splice-amulet-lockedamuletexpireamuletresult-88432_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `LockedAmulet <type-splice-amulet-lockedamulet-7030_>`_ `LockedAmulet_ExpireAmulet <type-splice-amulet-lockedamuletexpireamulet-28333_>`_ `LockedAmulet_ExpireAmuletResult <type-splice-amulet-lockedamuletexpireamuletresult-88432_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `LockedAmulet <type-splice-amulet-lockedamulet-7030_>`_ `LockedAmulet_ExpireAmulet <type-splice-amulet-lockedamuletexpireamulet-28333_>`_ `LockedAmulet_ExpireAmuletResult <type-splice-amulet-lockedamuletexpireamuletresult-88432_>`_
+
+.. _type-splice-amulet-lockedamuletownerexpirelockresult-44583:
+
+**data** `LockedAmulet_OwnerExpireLockResult <type-splice-amulet-lockedamuletownerexpirelockresult-44583_>`_
+
+  .. _constr-splice-amulet-lockedamuletownerexpirelockresult-40926:
+
+  `LockedAmulet_OwnerExpireLockResult <constr-splice-amulet-lockedamuletownerexpirelockresult-40926_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - amuletSum
+         - `AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `Amulet <type-splice-amulet-amulet-63582_>`_)
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"amuletSum\" `LockedAmulet_OwnerExpireLockResult <type-splice-amulet-lockedamuletownerexpirelockresult-44583_>`_ (`AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `Amulet <type-splice-amulet-amulet-63582_>`_))
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"amuletSum\" `LockedAmulet_OwnerExpireLockResult <type-splice-amulet-lockedamuletownerexpirelockresult-44583_>`_ (`AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `Amulet <type-splice-amulet-amulet-63582_>`_))
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `LockedAmulet <type-splice-amulet-lockedamulet-7030_>`_ `LockedAmulet_OwnerExpireLock <type-splice-amulet-lockedamuletownerexpirelock-79102_>`_ `LockedAmulet_OwnerExpireLockResult <type-splice-amulet-lockedamuletownerexpirelockresult-44583_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `LockedAmulet <type-splice-amulet-lockedamulet-7030_>`_ `LockedAmulet_OwnerExpireLock <type-splice-amulet-lockedamuletownerexpirelock-79102_>`_ `LockedAmulet_OwnerExpireLockResult <type-splice-amulet-lockedamuletownerexpirelockresult-44583_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `LockedAmulet <type-splice-amulet-lockedamulet-7030_>`_ `LockedAmulet_OwnerExpireLock <type-splice-amulet-lockedamuletownerexpirelock-79102_>`_ `LockedAmulet_OwnerExpireLockResult <type-splice-amulet-lockedamuletownerexpirelockresult-44583_>`_
+
+.. _type-splice-amulet-lockedamuletunlockresult-29457:
+
+**data** `LockedAmulet_UnlockResult <type-splice-amulet-lockedamuletunlockresult-29457_>`_
+
+  .. _constr-splice-amulet-lockedamuletunlockresult-40430:
+
+  `LockedAmulet_UnlockResult <constr-splice-amulet-lockedamuletunlockresult-40430_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - amuletSum
+         - `AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `Amulet <type-splice-amulet-amulet-63582_>`_)
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"amuletSum\" `LockedAmulet_UnlockResult <type-splice-amulet-lockedamuletunlockresult-29457_>`_ (`AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `Amulet <type-splice-amulet-amulet-63582_>`_))
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"amuletSum\" `LockedAmulet_UnlockResult <type-splice-amulet-lockedamuletunlockresult-29457_>`_ (`AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `Amulet <type-splice-amulet-amulet-63582_>`_))
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `LockedAmulet <type-splice-amulet-lockedamulet-7030_>`_ `LockedAmulet_Unlock <type-splice-amulet-lockedamuletunlock-59352_>`_ `LockedAmulet_UnlockResult <type-splice-amulet-lockedamuletunlockresult-29457_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `LockedAmulet <type-splice-amulet-lockedamulet-7030_>`_ `LockedAmulet_Unlock <type-splice-amulet-lockedamuletunlock-59352_>`_ `LockedAmulet_UnlockResult <type-splice-amulet-lockedamuletunlockresult-29457_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `LockedAmulet <type-splice-amulet-lockedamulet-7030_>`_ `LockedAmulet_Unlock <type-splice-amulet-lockedamuletunlock-59352_>`_ `LockedAmulet_UnlockResult <type-splice-amulet-lockedamuletunlockresult-29457_>`_
+
+.. _type-splice-amulet-svrewardcouponarchiveasbeneficiaryresult-20724:
+
+**data** `SvRewardCoupon_ArchiveAsBeneficiaryResult <type-splice-amulet-svrewardcouponarchiveasbeneficiaryresult-20724_>`_
+
+  .. _constr-splice-amulet-svrewardcouponarchiveasbeneficiaryresult-19239:
+
+  `SvRewardCoupon_ArchiveAsBeneficiaryResult <constr-splice-amulet-svrewardcouponarchiveasbeneficiaryresult-19239_>`_
+
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `SvRewardCoupon <type-splice-amulet-svrewardcoupon-68580_>`_ `SvRewardCoupon_ArchiveAsBeneficiary <type-splice-amulet-svrewardcouponarchiveasbeneficiary-26109_>`_ `SvRewardCoupon_ArchiveAsBeneficiaryResult <type-splice-amulet-svrewardcouponarchiveasbeneficiaryresult-20724_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `SvRewardCoupon <type-splice-amulet-svrewardcoupon-68580_>`_ `SvRewardCoupon_ArchiveAsBeneficiary <type-splice-amulet-svrewardcouponarchiveasbeneficiary-26109_>`_ `SvRewardCoupon_ArchiveAsBeneficiaryResult <type-splice-amulet-svrewardcouponarchiveasbeneficiaryresult-20724_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `SvRewardCoupon <type-splice-amulet-svrewardcoupon-68580_>`_ `SvRewardCoupon_ArchiveAsBeneficiary <type-splice-amulet-svrewardcouponarchiveasbeneficiary-26109_>`_ `SvRewardCoupon_ArchiveAsBeneficiaryResult <type-splice-amulet-svrewardcouponarchiveasbeneficiaryresult-20724_>`_
+
+.. _type-splice-amulet-svrewardcoupondsoexpireresult-4801:
+
+**data** `SvRewardCoupon_DsoExpireResult <type-splice-amulet-svrewardcoupondsoexpireresult-4801_>`_
+
+  .. _constr-splice-amulet-svrewardcoupondsoexpireresult-59696:
+
+  `SvRewardCoupon_DsoExpireResult <constr-splice-amulet-svrewardcoupondsoexpireresult-59696_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - weight
+         - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"weight\" `SvRewardCoupon_DsoExpireResult <type-splice-amulet-svrewardcoupondsoexpireresult-4801_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"weight\" `SvRewardCoupon_DsoExpireResult <type-splice-amulet-svrewardcoupondsoexpireresult-4801_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `SvRewardCoupon <type-splice-amulet-svrewardcoupon-68580_>`_ `SvRewardCoupon_DsoExpire <type-splice-amulet-svrewardcoupondsoexpire-92140_>`_ `SvRewardCoupon_DsoExpireResult <type-splice-amulet-svrewardcoupondsoexpireresult-4801_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `SvRewardCoupon <type-splice-amulet-svrewardcoupon-68580_>`_ `SvRewardCoupon_DsoExpire <type-splice-amulet-svrewardcoupondsoexpire-92140_>`_ `SvRewardCoupon_DsoExpireResult <type-splice-amulet-svrewardcoupondsoexpireresult-4801_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `SvRewardCoupon <type-splice-amulet-svrewardcoupon-68580_>`_ `SvRewardCoupon_DsoExpire <type-splice-amulet-svrewardcoupondsoexpire-92140_>`_ `SvRewardCoupon_DsoExpireResult <type-splice-amulet-svrewardcoupondsoexpireresult-4801_>`_
+
+.. _type-splice-amulet-validatorrewardcouponarchiveasvalidatorresult-41727:
+
+**data** `ValidatorRewardCoupon_ArchiveAsValidatorResult <type-splice-amulet-validatorrewardcouponarchiveasvalidatorresult-41727_>`_
+
+  .. _constr-splice-amulet-validatorrewardcouponarchiveasvalidatorresult-51782:
+
+  `ValidatorRewardCoupon_ArchiveAsValidatorResult <constr-splice-amulet-validatorrewardcouponarchiveasvalidatorresult-51782_>`_
+
+    (no fields)
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `ValidatorRewardCoupon <type-splice-amulet-validatorrewardcoupon-76808_>`_ `ValidatorRewardCoupon_ArchiveAsValidator <type-splice-amulet-validatorrewardcouponarchiveasvalidator-99406_>`_ `ValidatorRewardCoupon_ArchiveAsValidatorResult <type-splice-amulet-validatorrewardcouponarchiveasvalidatorresult-41727_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `ValidatorRewardCoupon <type-splice-amulet-validatorrewardcoupon-76808_>`_ `ValidatorRewardCoupon_ArchiveAsValidator <type-splice-amulet-validatorrewardcouponarchiveasvalidator-99406_>`_ `ValidatorRewardCoupon_ArchiveAsValidatorResult <type-splice-amulet-validatorrewardcouponarchiveasvalidatorresult-41727_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `ValidatorRewardCoupon <type-splice-amulet-validatorrewardcoupon-76808_>`_ `ValidatorRewardCoupon_ArchiveAsValidator <type-splice-amulet-validatorrewardcouponarchiveasvalidator-99406_>`_ `ValidatorRewardCoupon_ArchiveAsValidatorResult <type-splice-amulet-validatorrewardcouponarchiveasvalidatorresult-41727_>`_
+
+.. _type-splice-amulet-validatorrewardcoupondsoexpireresult-94761:
+
+**data** `ValidatorRewardCoupon_DsoExpireResult <type-splice-amulet-validatorrewardcoupondsoexpireresult-94761_>`_
+
+  .. _constr-splice-amulet-validatorrewardcoupondsoexpireresult-92822:
+
+  `ValidatorRewardCoupon_DsoExpireResult <constr-splice-amulet-validatorrewardcoupondsoexpireresult-92822_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - amount
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"amount\" `ValidatorRewardCoupon_DsoExpireResult <type-splice-amulet-validatorrewardcoupondsoexpireresult-94761_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"amount\" `ValidatorRewardCoupon_DsoExpireResult <type-splice-amulet-validatorrewardcoupondsoexpireresult-94761_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `ValidatorRewardCoupon <type-splice-amulet-validatorrewardcoupon-76808_>`_ `ValidatorRewardCoupon_DsoExpire <type-splice-amulet-validatorrewardcoupondsoexpire-85552_>`_ `ValidatorRewardCoupon_DsoExpireResult <type-splice-amulet-validatorrewardcoupondsoexpireresult-94761_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `ValidatorRewardCoupon <type-splice-amulet-validatorrewardcoupon-76808_>`_ `ValidatorRewardCoupon_DsoExpire <type-splice-amulet-validatorrewardcoupondsoexpire-85552_>`_ `ValidatorRewardCoupon_DsoExpireResult <type-splice-amulet-validatorrewardcoupondsoexpireresult-94761_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `ValidatorRewardCoupon <type-splice-amulet-validatorrewardcoupon-76808_>`_ `ValidatorRewardCoupon_DsoExpire <type-splice-amulet-validatorrewardcoupondsoexpire-85552_>`_ `ValidatorRewardCoupon_DsoExpireResult <type-splice-amulet-validatorrewardcoupondsoexpireresult-94761_>`_
+
+.. _type-splice-amulet-validatorrightarchiveasuserresult-3193:
+
+**data** `ValidatorRight_ArchiveAsUserResult <type-splice-amulet-validatorrightarchiveasuserresult-3193_>`_
+
+  .. _constr-splice-amulet-validatorrightarchiveasuserresult-47620:
+
+  `ValidatorRight_ArchiveAsUserResult <constr-splice-amulet-validatorrightarchiveasuserresult-47620_>`_
+
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `ValidatorRight <type-splice-amulet-validatorright-15964_>`_ `ValidatorRight_ArchiveAsUser <type-splice-amulet-validatorrightarchiveasuser-43276_>`_ `ValidatorRight_ArchiveAsUserResult <type-splice-amulet-validatorrightarchiveasuserresult-3193_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `ValidatorRight <type-splice-amulet-validatorright-15964_>`_ `ValidatorRight_ArchiveAsUser <type-splice-amulet-validatorrightarchiveasuser-43276_>`_ `ValidatorRight_ArchiveAsUserResult <type-splice-amulet-validatorrightarchiveasuserresult-3193_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `ValidatorRight <type-splice-amulet-validatorright-15964_>`_ `ValidatorRight_ArchiveAsUser <type-splice-amulet-validatorrightarchiveasuser-43276_>`_ `ValidatorRight_ArchiveAsUserResult <type-splice-amulet-validatorrightarchiveasuserresult-3193_>`_
+
+.. _type-splice-amulet-validatorrightarchiveasvalidatorresult-59299:
+
+**data** `ValidatorRight_ArchiveAsValidatorResult <type-splice-amulet-validatorrightarchiveasvalidatorresult-59299_>`_
+
+  .. _constr-splice-amulet-validatorrightarchiveasvalidatorresult-93588:
+
+  `ValidatorRight_ArchiveAsValidatorResult <constr-splice-amulet-validatorrightarchiveasvalidatorresult-93588_>`_
+
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `ValidatorRight <type-splice-amulet-validatorright-15964_>`_ `ValidatorRight_ArchiveAsValidator <type-splice-amulet-validatorrightarchiveasvalidator-83210_>`_ `ValidatorRight_ArchiveAsValidatorResult <type-splice-amulet-validatorrightarchiveasvalidatorresult-59299_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `ValidatorRight <type-splice-amulet-validatorright-15964_>`_ `ValidatorRight_ArchiveAsValidator <type-splice-amulet-validatorrightarchiveasvalidator-83210_>`_ `ValidatorRight_ArchiveAsValidatorResult <type-splice-amulet-validatorrightarchiveasvalidatorresult-59299_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `ValidatorRight <type-splice-amulet-validatorright-15964_>`_ `ValidatorRight_ArchiveAsValidator <type-splice-amulet-validatorrightarchiveasvalidator-83210_>`_ `ValidatorRight_ArchiveAsValidatorResult <type-splice-amulet-validatorrightarchiveasvalidatorresult-59299_>`_
+
+Functions
+---------
+
+.. _function-splice-amulet-requireamuletexpiredforallopenrounds-12337:
+
+`requireAmuletExpiredForAllOpenRounds <function-splice-amulet-requireamuletexpiredforallopenrounds-12337_>`_
+  \: `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`OpenMiningRound <type-splice-round-openmininground-90060>` \-\> `Amulet <type-splice-amulet-amulet-63582_>`_ \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ ()

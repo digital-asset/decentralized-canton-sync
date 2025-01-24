@@ -1,0 +1,20 @@
+..
+   Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+..
+   SPDX-License-Identifier: Apache-2.0
+
+splice-dso-governance docs
+==========================
+
+.. toctree::
+   :maxdepth: 3
+   :titlesonly:
+
+   Splice.CometBft <Splice-CometBft>
+   Splice.DSO.AmuletPrice <Splice-DSO-AmuletPrice>
+   Splice.DSO.DecentralizedSynchronizer <Splice-DSO-DecentralizedSynchronizer>
+   Splice.DSO.SvState <Splice-DSO-SvState>
+   Splice.DsoBootstrap <Splice-DsoBootstrap>
+   Splice.DsoRules <Splice-DsoRules>
+   Splice.SvOnboarding <Splice-SvOnboarding>
+

@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kubernetes-Based Deployment of a Validator node &mdash; Splice  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="../_static/copybutton.js?v=06d34380"></script>
+        <script src="../_static/script.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Upgrades" href="validator_upgrades.html" />
+    <link rel="prev" title="Docker-Compose Based Deployment" href="validator_compose.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Splice
+          </a>
+              <div class="version">
+                0.3.7-moritz-dirty
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Deployment and Operations</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../deployment.html">Overview</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Validators</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="validator_hardware_requirements.html">Validator Hardware Requirements</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="validator_hardware_requirements.html#database-latency">Database Latency</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="validator_compose.html">Docker-Compose Based Deployment</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="validator_compose.html#docker-compose-based-deployment-of-a-validator-node">Docker-Compose Based Deployment of a Validator Node</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="validator_compose.html#requirements">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="validator_compose.html#preparing-for-validator-onboarding">Preparing for Validator Onboarding</a></li>
+<li class="toctree-l4"><a class="reference internal" href="validator_compose.html#deployment">Deployment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="validator_compose.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
+<li class="toctree-l4"><a class="reference internal" href="validator_compose.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
+<li class="toctree-l4"><a class="reference internal" href="validator_compose.html#configuring-authentication">Configuring Authentication</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Kubernetes-Based Deployment of a Validator node</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#requirements">Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#preparing-a-cluster-for-installation">Preparing a Cluster for Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configuring-postgresql-authentication">Configuring PostgreSQL authentication</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#preparing-for-validator-onboarding">Preparing for Validator Onboarding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configuring-authentication">Configuring Authentication</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#oidc-provider-requirements">OIDC Provider Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuring-an-auth0-tenant">Configuring an Auth0 Tenant</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuring-authentication-on-your-validator">Configuring Authentication on your Validator</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#installing-the-software">Installing the Software</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#configuring-the-helm-charts">Configuring the Helm Charts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#installing-the-helm-charts">Installing the Helm Charts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#configuring-the-cluster-ingress">Configuring the Cluster Ingress</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id3">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#installation-instructions">Installation Instructions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#testnet-only-granting-coin-to-the-validator-for-traffic-purchases">(Testnet-only) Granting coin to the validator for traffic purchases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configuring-top-ups">Configuring top-ups</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configuring-sweeps-and-auto-accepts-of-transfer-offers">Configuring sweeps and auto-accepts of transfer offers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="validator_upgrades.html">Upgrades</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="validator_major_upgrades.html">Synchronizer Upgrades with Downtime</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="validator_major_upgrades.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="validator_major_upgrades.html#technical-details">Technical Details</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#state-and-migration-ids">State and Migration IDs</a></li>
+<li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#migration-dumps">Migration Dumps</a></li>
+<li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#catching-up-before-the-migration">Catching Up Before the Migration</a></li>
+<li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#deploying-the-validator-app-and-participant-kubernetes">Deploying the Validator App and Participant (Kubernetes)</a></li>
+<li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#deploying-the-validator-app-and-participant-docker-compose">Deploying the validator App and Participant (Docker-Compose)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="validator_backups.html">Backups</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="validator_backups.html#backup-of-node-identities">Backup of Node Identities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_backups.html#backups-of-postgres-instances">Backups of postgres instances</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="validator_disaster_recovery.html">Disaster Recovery</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="validator_disaster_recovery.html#restoring-a-validator-from-backups">Restoring a validator from backups</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_disaster_recovery.html#re-onboard-a-validator-and-recover-balances-of-all-users-it-hosts">Re-onboard a validator and recover balances of all users it hosts</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="validator_disaster_recovery.html#docker-compose-deployment">Docker-Compose Deployment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="validator_disaster_recovery.html#kubernetes-deployment">Kubernetes Deployment</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="validator_disaster_recovery.html#disaster-recovery-from-loss-of-the-cometbft-storage-layer-of-the-global-synchronizer">Disaster recovery from loss of the CometBFT storage layer of the global synchronizer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="validator_disaster_recovery.html#technical-details">Technical Details</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="validator_users.html">Users, Parties and Wallets in the Splice Wallet</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../sv_operator/index.html">Supervalidators</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../sv_operator/sv_helm.html">Kubernetes-Based Deployment of a Super Validator node</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#requirements">Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#generating-an-sv-identity">Generating an SV identity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#preparing-a-cluster-for-installation">Preparing a Cluster for Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-authentication">Configuring Authentication</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#oidc-provider-requirements">OIDC Provider Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-an-auth0-tenant">Configuring an Auth0 Tenant</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-authentication-on-your-sv-node">Configuring Authentication on your SV Node</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-your-cometbft-node">Configuring your CometBft node</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#generating-your-cometbft-node-keys">Generating your CometBft node keys</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-your-cometbft-node-keys">Configuring your CometBft node keys</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-cometbft-state-sync">Configuring CometBft state sync</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#installing-postgres-instances">Installing Postgres instances</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#creating-k8s-secrets-for-postgres-passwords">Creating k8s Secrets for Postgres Passwords</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#postgres-in-the-cluster">Postgres in the Cluster</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#cloud-hosted-postgres">Cloud-Hosted Postgres</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#installing-the-software">Installing the Software</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-the-helm-charts">Configuring the Helm Charts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#installing-the-helm-charts">Installing the Helm Charts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-the-cluster-ingress">Configuring the Cluster Ingress</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#hostnames-and-urls">Hostnames and URLs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#ingress-configuration">Ingress Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#id3">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#installation-instructions">Installation Instructions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-the-cluster-egress">Configuring the Cluster Egress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#logging-into-the-sv-ui">Logging into the SV UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#observing-the-canton-coin-scan-ui">Observing the Canton Coin Scan UI</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../sv_operator/sv_upgrades.html">Upgrades</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html">Synchronizer Upgrades with Downtime</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#technical-details">Technical Details</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#state-and-migration-ids">State and Migration IDs</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#migration-dumps">Migration Dumps</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#deploying-new-canton-components-and-cometbft-node">Deploying new Canton Components and CometBFT Node</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#catching-up-before-the-migration">Catching Up Before the Migration</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#updating-apps">Updating Apps</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#recovering-from-a-failed-upgrade">Recovering from a failed upgrade</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#organizational-details">Organizational Details</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#coordination-calls">Coordination calls</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#testing">Testing</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#individual-preparation">Individual Preparation</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#coordinated-tests">Coordinated Tests</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../sv_operator/sv_backup.html">Backups</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_backup.html#backup-of-node-identities">Backup of Node Identities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_backup.html#backup-of-postgres-instances">Backup of Postgres Instances</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_backup.html#backup-of-cometbft">Backup of CometBFT</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../sv_operator/sv_restore.html">Disaster Recovery</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_restore.html#restoring-from-data-corruption">Restoring From Data Corruption</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_restore.html#restoring-a-single-component-from-backups">Restoring a single component from backups</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_restore.html#restoring-a-full-sv-node-from-backups">Restoring a full SV node from backups</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_restore.html#re-onboard-an-sv-and-recover-amulets-with-a-validator">Re-onboard an SV and recover Amulets with a validator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_restore.html#disaster-recovery-from-loss-of-cometbft-layer">Disaster recovery from loss of CometBFT layer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_restore.html#technical-details">Technical Details</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_restore.html#finding-a-consistent-timestamp-to-recover-the-synchronizer-from">Finding a Consistent Timestamp to Recover the Synchronizer From</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_restore.html#creating-a-data-dump-from-the-sv-app">Creating a Data Dump from the SV App</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_restore.html#migrating-the-data">Migrating the Data</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../sv_operator/sv_operations.html">SV Operations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_operations.html#security-notice">Security Notice</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_operations.html#generate-a-validator-onboarding-secret">Generate a validator onboarding secret</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_operations.html#sv-identities-overview">Identities used by SV nodes on different layers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_operations.html#sv-identity">SV identity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_operations.html#participant-identities">Participant identities</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_operations.html#cometbft-node-identities">CometBFT node identities</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_operations.html#updating-the-reward-weight-of-an-sv">Updating the reward weight of an SV</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../sv_operator/sv_scratchnet.html">How to Bootstrap a Network</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_scratchnet.html#cometbft-helm-values">cometbft helm values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_scratchnet.html#scan-helm-values">scan helm values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_scratchnet.html#sv-helm-values">sv helm values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_scratchnet.html#other-helm-values-you-may-need-to-consider">other helm values you may need to consider</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_scratchnet.html#infra-level-things-you-might-want-to-consider">Infra-level things you might want to consider</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_scratchnet.html#how-to-run-through-a-hdm">How to run through a HDM</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../troubleshooting.html#where-to-find-logs">Where to find logs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../troubleshooting.html#debugging-issues-in-web-uis">Debugging issues in Web UIs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../troubleshooting.html#configurations">Configurations</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Application Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../app_dev/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../app_dev/index.html#version-information">Version Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../app_dev/index.html#testing">Testing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../app_dev/localnet.html">Docker-Compose Based Deployment of a Super Validator Node</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../app_dev/index.html#api-reference">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../app_dev/splice_app_apis/index.html">Splice App APIs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/splice_app_apis/index.html#openapi-specifications">OpenAPI Specifications</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/splice_app_apis/index.html#api-stability">API Stability</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/splice_app_apis/index.html#contract-payload-encoding">Contract Payload Encoding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/splice_app_apis/index.html#authentication">Authentication</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../app_dev/daml.html">Daml API Reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/api/splice-amulet/index.html">splice-amulet docs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Amulet.html">Splice.Amulet</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Amulet.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Amulet.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Amulet.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-AmuletConfig.html">Splice.AmuletConfig</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-AmuletConfig.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-AmuletConfig.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-AmuletRules.html">Splice.AmuletRules</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-AmuletRules.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-AmuletRules.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-AmuletRules.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-DecentralizedSynchronizer.html">Splice.DecentralizedSynchronizer</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-DecentralizedSynchronizer.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-DecentralizedSynchronizer.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-DecentralizedSynchronizer.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Expiry.html">Splice.Expiry</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Expiry.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Expiry.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-ExternalPartyAmuletRules.html">Splice.ExternalPartyAmuletRules</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-ExternalPartyAmuletRules.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-ExternalPartyAmuletRules.html#data-types">Data Types</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Fees.html">Splice.Fees</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Fees.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Fees.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Issuance.html">Splice.Issuance</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Issuance.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Issuance.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-RelRound.html">Splice.RelRound</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-RelRound.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-RelRound.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Round.html">Splice.Round</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Round.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Round.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Schedule.html">Splice.Schedule</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Schedule.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Schedule.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Types.html">Splice.Types</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Types.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Types.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-ValidatorLicense.html">Splice.ValidatorLicense</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-ValidatorLicense.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-ValidatorLicense.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-ValidatorLicense.html#functions">Functions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/api/splice-amulet-name-service/index.html">splice-amulet-name-service docs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet-name-service/Splice-Ans.html">Splice.Ans</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet-name-service/Splice-Ans.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet-name-service/Splice-Ans.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet-name-service/Splice-Ans.html#functions">Functions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/api/splice-dso-governance/index.html">splice-dso-governance docs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-CometBft.html">Splice.CometBft</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-CometBft.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-CometBft.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DSO-AmuletPrice.html">Splice.DSO.AmuletPrice</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DSO-AmuletPrice.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DSO-AmuletPrice.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DSO-DecentralizedSynchronizer.html">Splice.DSO.DecentralizedSynchronizer</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DSO-DecentralizedSynchronizer.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DSO-DecentralizedSynchronizer.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DSO-SvState.html">Splice.DSO.SvState</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DSO-SvState.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DSO-SvState.html#data-types">Data Types</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DsoBootstrap.html">Splice.DsoBootstrap</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DsoBootstrap.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DsoBootstrap.html#data-types">Data Types</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DsoRules.html">Splice.DsoRules</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DsoRules.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DsoRules.html#orphan-typeclass-instances">Orphan Typeclass Instances</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DsoRules.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DsoRules.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-SvOnboarding.html">Splice.SvOnboarding</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-SvOnboarding.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-SvOnboarding.html#data-types">Data Types</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/api/splice-util/index.html">splice-util docs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-util/Splice-Util.html">Splice.Util</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-util/Splice-Util.html#typeclasses">Typeclasses</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-util/Splice-Util.html#functions">Functions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/api/splice-validator-lifecycle/index.html">splice-validator-life-cycle docs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-validator-lifecycle/Splice-ValidatorOnboarding.html">Splice.ValidatorOnboarding</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-validator-lifecycle/Splice-ValidatorOnboarding.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-validator-lifecycle/Splice-ValidatorOnboarding.html#data-types">Data Types</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/api/splice-wallet/index.html">splice-wallet docs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-BuyTrafficRequest.html">Splice.Wallet.BuyTrafficRequest</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-BuyTrafficRequest.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-BuyTrafficRequest.html#data-types">Data Types</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-Install.html">Splice.Wallet.Install</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-Install.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-Install.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-Install.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-TopUpState.html">Splice.Wallet.TopUpState</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-TopUpState.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-TopUpState.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-TransferOffer.html">Splice.Wallet.TransferOffer</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-TransferOffer.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-TransferOffer.html#data-types">Data Types</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-TransferPreapproval.html">Splice.Wallet.TransferPreapproval</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-TransferPreapproval.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-TransferPreapproval.html#data-types">Data Types</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/api/splice-wallet-payments/index.html">splice-wallet-payments docs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-wallet-payments/Splice-Wallet-Payment.html">Splice.Wallet.Payment</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet-payments/Splice-Wallet-Payment.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet-payments/Splice-Wallet-Payment.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet-payments/Splice-Wallet-Payment.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-wallet-payments/Splice-Wallet-Subscriptions.html">Splice.Wallet.Subscriptions</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet-payments/Splice-Wallet-Subscriptions.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet-payments/Splice-Wallet-Subscriptions.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet-payments/Splice-Wallet-Subscriptions.html#functions">Functions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Glossary</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#upcoming-release">Upcoming Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id2">0.3.6</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id3">0.3.5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id4">0.3.4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id5">0.3.3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id6">0.3.2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id7">0.3.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id8">0.3.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../release_notes.html#daml-changes-in-0-3-0">Daml Changes in 0.3.0</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id9">0.2.8</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id10">0.2.7</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id11">0.2.6</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id12">0.2.4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id13">0.2.3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id14">0.2.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id15">0.2.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id16">0.1.19</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id17">0.1.18</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id18">0.1.17</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id19">0.1.16</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id20">0.1.15</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id21">0.1.13</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id22">0.1.12</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id23">0.1.10</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id24">0.1.9</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id25">0.1.8</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id26">0.1.7</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id27">0.1.6</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id28">0.1.5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id29">0.1.4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id30">0.1.3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id31">0.1.2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id32">2024-04-01</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id33">2024-03-25</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id34">2024-03-18</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id35">2024-03-11</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id36">2024-03-04</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id37">2024-02-26</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id38">2024-02-19</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id39">2024-02-12</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id40">2024-02-05</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id41">2024-01-29</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id42">2024-01-22</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id43">2024-01-15</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id44">2024-01-08</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id45">2023-12-18</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id46">2023-12-11</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id47">2023-12-04</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id48">2023-11-27</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id49">2023-11-20</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id50">2023-11-13</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id51">2023-11-06</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id52">2023-10-30</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id53">2023-10-23</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id54">2023-10-16</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id55">2023-10-09</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id56">2023-10-02</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id57">2023-09-25</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id58">2023-09-11</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id59">2023-09-04</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id60">2023-08-28</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id61">2023-08-14</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id62">2023-08-07</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id63">2023-07-31</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id64">2023-07-16</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id65">2023-07-02</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id66">2023-06-25</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id67">2023-06-18</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id68">2023-06-11</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id69">2023-06-04</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id70">2023-05-28</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id71">2023-05-21</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id72">2023-05-14</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id73">2023-05-07</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id74">2023-04-30</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id75">2023-04-23</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Splice</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Validators</a></li>
+      <li class="breadcrumb-item active">Kubernetes-Based Deployment of a Validator node</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/validator_operator/validator_helm.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="kubernetes-based-deployment-of-a-validator-node">
+<span id="k8s-validator"></span><h1>Kubernetes-Based Deployment of a Validator node<a class="headerlink" href="#kubernetes-based-deployment-of-a-validator-node" title="Link to this heading"></a></h1>
+<p>This section describes how to deploy a standalone validator node in Kubernetes using Helm charts. The Helm charts deploy a validator node along with associated wallet and CNS UIs, and connect it to a target cluster.</p>
+<section id="requirements">
+<span id="validator-prerequisites"></span><h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading"></a></h2>
+<ol class="arabic">
+<li><p>Access to the following two Artifactory repositories:</p>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p><a class="reference external" href="https://digitalasset.jfrog.io/ui/native/canton-network-docker">Canton Network Docker repository</a></p></li>
+<li><p><a class="reference external" href="https://digitalasset.jfrog.io/ui/native/canton-network-helm/">Canton Network Helm repository</a></p></li>
+</ol>
+</div></blockquote>
+</li>
+<li><p>A running Kubernetes cluster in which you have administrator access to create and manage namespaces.</p></li>
+<li><p>A development workstation with the following:</p>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">kubectl</span></code> - At least v1.26.1</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">helm</span></code> - At least v3.11.1</p></li>
+</ol>
+</div></blockquote>
+</li>
+<li><p>Your cluster either needs to be connected to the GCP DA Canton
+VPN or you need a static egress IP. In the latter case,
+please provide that IP address to your contact at Digital Asset to
+add it to the firewall rules.</p></li>
+<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.7-moritz-dirty_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
+</ol>
+<pre class="literal-block">tar xzvf 0.3.7-moritz-dirty_splice-node.tar.gz</pre>
+<ol class="arabic simple" start="6">
+<li><p>Please inquire if the global synchronizer (domain) on your target network has previously undergone a <a class="reference internal" href="validator_major_upgrades.html#validator-upgrades"><span class="std std-ref">synchronizer migration</span></a>.
+If it has, please record the current migration ID of the synchronizer.
+The migration ID is 0 for the initial synchronizer deployment and is incremented by 1 for each subsequent migration.</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">MIGRATION_ID</span><span class="o">=</span><span class="m">0</span>
+</pre></div>
+</div>
+</section>
+<section id="preparing-a-cluster-for-installation">
+<span id="validator-identity-token"></span><h2>Preparing a Cluster for Installation<a class="headerlink" href="#preparing-a-cluster-for-installation" title="Link to this heading"></a></h2>
+<p>In the following, you will need your Artifactory credentials from
+<a class="reference external" href="https://digitalasset.jfrog.io/ui/user_profile">https://digitalasset.jfrog.io/ui/user_profile</a>. Based on that, set the following environment variables.</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>Name</p></td>
+<td><p>Value</p></td>
+</tr>
+<tr class="row-even"><td><p>ARTIFACTORY_USER</p></td>
+<td><p>Your Artifactory user name shown at the top right.</p></td>
+</tr>
+<tr class="row-odd"><td><p>ARTIFACTORY_PASSWORD</p></td>
+<td><p>Your Artifactory Identity token. If you don’t have one you can generate one on your profile page.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Ensure that your local helm installation has access to the Digital Asset Helm chart repository:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>repo<span class="w"> </span>add<span class="w"> </span>canton-network-helm<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>https://digitalasset.jfrog.io/artifactory/api/helm/canton-network-helm<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--username<span class="w"> </span><span class="si">${</span><span class="nv">ARTIFACTORY_USER</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--password<span class="w"> </span><span class="si">${</span><span class="nv">ARTIFACTORY_PASSWORD</span><span class="si">}</span>
+</pre></div>
+</div>
+<p>Create the application namespace within Kubernetes and ensure it has image pull credentials for fetching images from the Digital Asset Artifactory repository used for Docker images.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>create<span class="w"> </span>ns<span class="w"> </span>validator
+
+kubectl<span class="w"> </span>create<span class="w"> </span>secret<span class="w"> </span>docker-registry<span class="w"> </span>docker-reg-cred<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--docker-server<span class="o">=</span>digitalasset-canton-network-docker.jfrog.io<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--docker-username<span class="o">=</span><span class="si">${</span><span class="nv">ARTIFACTORY_USER</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--docker-password<span class="o">=</span><span class="si">${</span><span class="nv">ARTIFACTORY_PASSWORD</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-n<span class="w"> </span>validator
+
+kubectl<span class="w"> </span>patch<span class="w"> </span>serviceaccount<span class="w"> </span>default<span class="w"> </span>-n<span class="w"> </span>validator<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-p<span class="w"> </span><span class="s1">&#39;{&quot;imagePullSecrets&quot;: [{&quot;name&quot;: &quot;docker-reg-cred&quot;}]}&#39;</span>
+</pre></div>
+</div>
+</section>
+<section id="configuring-postgresql-authentication">
+<span id="validator-postgres-auth"></span><h2>Configuring PostgreSQL authentication<a class="headerlink" href="#configuring-postgresql-authentication" title="Link to this heading"></a></h2>
+<p>The PostgreSQL instance that the helm charts create, and all apps that depend on it, require the user’s password to be set through Kubernetes secrets.
+Currently, all apps use the Postgres user <code class="docutils literal notranslate"><span class="pre">cnadmin</span></code>.
+The password can be setup with the following command, assuming you set the environment variable <code class="docutils literal notranslate"><span class="pre">POSTGRES_PASSWORD</span></code> to a secure value:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>create<span class="w"> </span>secret<span class="w"> </span>generic<span class="w"> </span>postgres-secrets<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--from-literal<span class="o">=</span><span class="nv">postgresPassword</span><span class="o">=</span><span class="si">${</span><span class="nv">POSTGRES_PASSWORD</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-n<span class="w"> </span>validator
+</pre></div>
+</div>
+</section>
+<section id="preparing-for-validator-onboarding">
+<span id="validator-onboarding"></span><h2>Preparing for Validator Onboarding<a class="headerlink" href="#preparing-for-validator-onboarding" title="Link to this heading"></a></h2>
+<p>In order to become a validator, you need the sponsorship of an SV.
+Your SV will provide you with a required secret to authorize yourself towards their SV.</p>
+<p>The onboarding secret is a one-time use secret that expires after 24 hours. If you don’t join before it expires, you need to request a new secret from your SV sponsor.</p>
+<div class="admonition-devnet-only admonition">
+<p class="admonition-title">DevNet-only</p>
+<p>On DevNet, you can obtain an onboarding secret automatically by
+calling the following endpoint on your sponsoring SV (GSF used here for illustration):</p>
+<div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="n">curl</span><span class="w"> </span><span class="o">-</span><span class="nc">X</span><span class="w"> </span><span class="nc">POST</span><span class="w"> </span><span class="n">https</span><span class="p">:</span><span class="c1">//sv.sv-1.TARGET_CLUSTER.global.canton.network.sync.global/api/sv/v0/devnet/onboard/validator/prepare</span>
+</pre></div>
+</div>
+<p>Note that this most be called on the same SV that sponsors your validator. Please double check the URL
+with your sponsoring SV.</p>
+</div>
+<p>Ensure that your validator onboarding secret <code class="docutils literal notranslate"><span class="pre">VALIDATOR_SECRET</span></code> is set in the namespace you created earlier. The value should be provided by the SV sponsoring the onboarding of your validator.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>create<span class="w"> </span>secret<span class="w"> </span>generic<span class="w"> </span>splice-app-validator-onboarding-validator<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">&quot;--from-literal=secret=</span><span class="si">${</span><span class="nv">VALIDATOR_SECRET</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-n<span class="w"> </span>validator
+</pre></div>
+</div>
+</section>
+<section id="configuring-authentication">
+<span id="helm-validator-auth"></span><h2>Configuring Authentication<a class="headerlink" href="#configuring-authentication" title="Link to this heading"></a></h2>
+<p>For security, the various components that comprise your Validator node need to be able to authenticate themselves to each other,
+as well as be able to authenticate external UI and API users.
+We use JWT access tokens for authentication and expect these tokens to be issued by an (external) <a class="reference external" href="https://openid.net/connect/">OpenID Connect</a> (OIDC) provider.
+You must:</p>
+<ol class="arabic simple">
+<li><p>Set up an OIDC provider in such a way that both backends and web UI users are able to obtain JWTs in a supported form.</p></li>
+<li><p>Configure your backends to use that OIDC provider.</p></li>
+</ol>
+<section id="oidc-provider-requirements">
+<span id="helm-validator-auth-requirements"></span><h3>OIDC Provider Requirements<a class="headerlink" href="#oidc-provider-requirements" title="Link to this heading"></a></h3>
+<p>This section provides pointers for setting up an OIDC provider for use with your Validator node.
+Feel free to skip directly to <a class="reference internal" href="#helm-validator-auth0"><span class="std std-ref">Configuring an Auth0 Tenant</span></a> if you plan to use <a class="reference external" href="https://auth0.com">Auth0</a> for your Validator node’s authentication needs.</p>
+<p>Your OIDC provider must be reachable <a class="footnote-reference brackets" href="#reach" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a> at a well known (HTTPS) URL.
+In the following, we will refer to this URL as <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_URL</span></code>.
+Both your Validator node and any users that wish to authenticate to a web UI connected to your Validator node must be able to reach the <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_URL</span></code>.
+We require your OIDC provider to provide a <a class="reference external" href="https://openid.net/specs/openid-connect-discovery-1_0.html">discovery document</a> at <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_URL/.well-known/openid-configuration</span></code>.
+We furthermore require that your OIDC provider exposes a <a class="reference external" href="https://datatracker.ietf.org/doc/html/rfc7517">JWK Set</a> document.
+In this documentation, we assume that this document is available at <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_URL/.well-known/jwks.json</span></code>.</p>
+<p>For machine-to-machine (Validator node component to Validator node component) authentication,
+your OIDC provider must support the <a class="reference external" href="https://tools.ietf.org/html/rfc6749#section-4.4">OAuth 2.0 Client Credentials Grant</a> flow.
+This means that you must be able to configure (<cite>CLIENT_ID</cite>, <cite>CLIENT_SECRET</cite>) pairs for all Validator node components that need to authenticate to others.
+Currently, this is the validator app backend - which needs to authenticate to the Validator node’s Canton participant.
+The <cite>sub</cite> field of JWTs issued through this flow must match the user ID configured as <cite>ledger-api-user</cite> in <a class="reference internal" href="#helm-validator-auth-secrets-config"><span class="std std-ref">Configuring Authentication on your Validator</span></a>.
+In this documentation, we assume that the <cite>sub</cite> field of these JWTs is formed as <code class="docutils literal notranslate"><span class="pre">CLIENT_ID&#64;clients</span></code>.
+If this is not true for your OIDC provider, pay extra attention when configuring <code class="docutils literal notranslate"><span class="pre">ledger-api-user</span></code> values below.</p>
+<p>For user-facing authentication - allowing users to access the various web UIs hosted on your Validator node,
+your OIDC provider must support the <a class="reference external" href="https://datatracker.ietf.org/doc/html/rfc6749#section-4.1">OAuth 2.0 Authorization Code Grant</a> flow
+and allow you to obtain client identifiers for the web UIs your Validator node will be hosting.
+Currently, these are the Wallet web UI and the CNS web UI.
+You might be required to whitelist a range of URLs on your OIDC provider, such as “Allowed Callback URLs”, “Allowed Logout URLs”, “Allowed Web Origins”, and “Allowed Origins (CORS)”.
+If you are using the ingress configuration of this runbook, the correct URLs to configure here are
+<code class="docutils literal notranslate"><span class="pre">https://wallet.validator.YOUR_HOSTNAME</span></code> (for the Wallet web UI) and
+<code class="docutils literal notranslate"><span class="pre">https://cns.validator.YOUR_HOSTNAME</span></code> (for the CNS web UI).</p>
+<p><code class="docutils literal notranslate"><span class="pre">YOUR_HOSTNAME</span></code> is a placeholder that you need to replace with the actual domain name or IP address of the server hosting your services.</p>
+<p>An identifier that is unique to the user must be set via the <cite>sub</cite> field of the issued JWT.
+On some occasions, this identifier will be used as a user name for that user on your Validator node’s Canton participant.
+In <a class="reference internal" href="#helm-validator-install"><span class="std std-ref">Installing the Software</span></a>, you will be required to configure a user identifier as the <code class="docutils literal notranslate"><span class="pre">validatorWalletUser</span></code> -
+make sure that whatever you configure there matches the contents of the <cite>sub</cite> field of JWTs issued for that user.</p>
+<p><em>All</em> JWTs issued for use with your Validator node:</p>
+<ul class="simple">
+<li><p>must be signed using the RS256 signing algorithm</p></li>
+</ul>
+<p>In the future, your OIDC provider might additionally be required to issue JWTs with a <code class="docutils literal notranslate"><span class="pre">scope</span></code> explicitly set to <code class="docutils literal notranslate"><span class="pre">daml_ledger_api</span></code>
+(when requested to do so as part of the OAuth 2.0 authorization code flow).</p>
+<p>Summing up, your OIDC provider setup must provide you with the following configuration values:</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>Name</p></td>
+<td><p>Value</p></td>
+</tr>
+<tr class="row-even"><td><p>OIDC_AUTHORITY_URL</p></td>
+<td><p>The URL of your OIDC provider for obtaining the <code class="docutils literal notranslate"><span class="pre">openid-configuration</span></code> and <code class="docutils literal notranslate"><span class="pre">jwks.json</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>VALIDATOR_CLIENT_ID</p></td>
+<td><p>The client id of the Auth0 app for the validator app backend</p></td>
+</tr>
+<tr class="row-even"><td><p>VALIDATOR_CLIENT_SECRET</p></td>
+<td><p>The client secret of the Auth0 app for the validator app backend</p></td>
+</tr>
+<tr class="row-odd"><td><p>WALLET_UI_CLIENT_ID</p></td>
+<td><p>The client id of the Auth0 app for the wallet UI.</p></td>
+</tr>
+<tr class="row-even"><td><p>CNS_UI_CLIENT_ID</p></td>
+<td><p>The client id of the Auth0 app for the CNS UI.</p></td>
+</tr>
+</tbody>
+</table>
+<p>We are going to use these values, exported to environment variables named as per the <cite>Name</cite> column, in <a class="reference internal" href="#helm-validator-auth-secrets-config"><span class="std std-ref">Configuring Authentication on your Validator</span></a> and <a class="reference internal" href="#helm-validator-install"><span class="std std-ref">Installing the Software</span></a>.</p>
+<p>When first starting out, it is suggested to configure both JWT token audiences below to the same value: <code class="docutils literal notranslate"><span class="pre">https://canton.network.global</span></code>.</p>
+<p>Once you can confirm that your setup is working correctly using this (simple) default,
+we recommend that you configure dedicated audience values that match your deployment and URLs.
+You can configure audiences of your choice for the participant ledger API and the validator backend API.
+We will refer to these using the following configuration values:</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>Name</p></td>
+<td><p>Value</p></td>
+</tr>
+<tr class="row-even"><td><p>OIDC_AUTHORITY_LEDGER_API_AUDIENCE</p></td>
+<td><p>The audience for the participant ledger API. e.g. <code class="docutils literal notranslate"><span class="pre">https://ledger_api.example.com</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>OIDC_AUTHORITY_VALIDATOR_AUDIENCE</p></td>
+<td><p>The audience for the validator backend API. e.g. <code class="docutils literal notranslate"><span class="pre">https://validator.example.com/api</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>In case you are facing trouble with setting up your (non-Auth0) OIDC provider,
+it can be beneficial to skim the instructions in <a class="reference internal" href="#helm-validator-auth0"><span class="std std-ref">Configuring an Auth0 Tenant</span></a> as well, to check for functionality or configuration details that your OIDC provider setup might be missing.</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="reach" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>The URL must be reachable from the Canton participant and validator app running in your cluster, as well as from all web browsers that should be able to interact with the wallet and CNS UIs.</p>
+</aside>
+</aside>
+</section>
+<section id="configuring-an-auth0-tenant">
+<span id="helm-validator-auth0"></span><h3>Configuring an Auth0 Tenant<a class="headerlink" href="#configuring-an-auth0-tenant" title="Link to this heading"></a></h3>
+<p>To configure <a class="reference external" href="https://auth0.com">Auth0</a> as your validator’s OIDC provider, perform the following:</p>
+<ol class="arabic">
+<li><p>Create an Auth0 tenant for your validator</p></li>
+<li><p>Create an Auth0 API that controls access to the ledger API:</p>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>Navigate to Applications &gt; APIs and click “Create API”. Set name to <code class="docutils literal notranslate"><span class="pre">Daml</span> <span class="pre">Ledger</span> <span class="pre">API</span></code>,
+set identifier to <code class="docutils literal notranslate"><span class="pre">https://canton.network.global</span></code>.
+Alternatively, if you would like to configure your own audience, you can set the identifier here. e.g. <code class="docutils literal notranslate"><span class="pre">https://ledger_api.example.com</span></code>.</p></li>
+<li><p>Under the Permissions tab in the new API, add a permission with scope <code class="docutils literal notranslate"><span class="pre">daml_ledger_api</span></code>, and a description of your choice.</p></li>
+<li><p>On the Settings tab, scroll down to “Access Settings” and enable “Allow Offline Access”, for automatic token refreshing.</p></li>
+</ol>
+</div></blockquote>
+</li>
+<li><p>(Optional) If you want to configure a different audience to your APIs, you can do so by creating new Auth0 APIs with an identifier set to the audience of your choice. For example,</p>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>Create another API by setting name to <code class="docutils literal notranslate"><span class="pre">Validator</span> <span class="pre">App</span> <span class="pre">API</span></code>,
+set identifier for the Validator backend app e.g. <code class="docutils literal notranslate"><span class="pre">https://validator.example.com/api</span></code>.</p></li>
+</ol>
+</div></blockquote>
+</li>
+<li><p>Create an Auth0 Application for the validator backend:</p>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>In Auth0, navigate to Applications -&gt; Applications, and click the “Create Application” button.</p></li>
+<li><p>Name it <code class="docutils literal notranslate"><span class="pre">Validator</span> <span class="pre">app</span> <span class="pre">backend</span></code>, choose “Machine to Machine Applications”, and click Create.</p></li>
+<li><p>Choose the <code class="docutils literal notranslate"><span class="pre">Daml</span> <span class="pre">Ledger</span> <span class="pre">API</span></code> API you created in step 2 in the “Authorize Machine to Machine Application” dialog and click Authorize.</p></li>
+</ol>
+</div></blockquote>
+</li>
+<li><p>Create an Auth0 Application for the wallet web UI.</p>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>In Auth0, navigate to Applications -&gt; Applications, and click the “Create Application” button.</p></li>
+<li><p>Choose “Single Page Web Applications”, call it <code class="docutils literal notranslate"><span class="pre">Wallet</span> <span class="pre">web</span> <span class="pre">UI</span></code>, and click Create.</p></li>
+<li><p>Determine the URL for your validator’s wallet UI.
+If you’re using the ingress configuration of this runbook, that would be <code class="docutils literal notranslate"><span class="pre">https://wallet.validator.YOUR_HOSTNAME</span></code>.</p></li>
+<li><p>In the Auth0 application settings, add the URL of the validator wallet to the following:</p>
+<ul class="simple">
+<li><p>“Allowed Callback URLs”</p></li>
+<li><p>“Allowed Logout URLs”</p></li>
+<li><p>“Allowed Web Origins”</p></li>
+<li><p>“Allowed Origins (CORS)”</p></li>
+</ul>
+</li>
+<li><p>Save your application settings.</p></li>
+</ol>
+</div></blockquote>
+</li>
+<li><p>Create an Auth0 Application for the CNS web UI.
+Repeat all steps described in step 5, with following modifications:</p>
+<ul class="simple">
+<li><p>In step b, use <code class="docutils literal notranslate"><span class="pre">CNS</span> <span class="pre">web</span> <span class="pre">UI</span></code> as the name of your application.</p></li>
+<li><p>In steps c and d, use the URL for your validator’s <em>CNS</em> UI.
+If you’re using the ingress configuration of this runbook, that would be <code class="docutils literal notranslate"><span class="pre">https://cns.validator.YOUR_HOSTNAME</span></code>.</p></li>
+</ul>
+</li>
+</ol>
+<p>Please refer to Auth0’s <a class="reference external" href="https://auth0.com/docs/manage-users">own documentation on user management</a> for pointers on how to set up end-user accounts for the two web UI applications you created.
+Note that you will need to create at least one such user account for completing the steps in <a class="reference internal" href="#helm-validator-install"><span class="std std-ref">Installing the Software</span></a> - for being able to log in as your Validator node’s administrator.
+You will be asked to obtain the user identifier for this user account.
+It can be found in the Auth0 interface under User Management -&gt; Users -&gt; your user’s name -&gt; user_id (a field right under the user’s name at the top).</p>
+<p>We will use the environment variables listed in the table below to refer to aspects of your Auth0 configuration:</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>Name</p></td>
+<td><p>Value</p></td>
+</tr>
+<tr class="row-even"><td><p>OIDC_AUTHORITY_URL</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">https://AUTH0_TENANT_NAME.us.auth0.com</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>OIDC_AUTHORITY_LEDGER_API_AUDIENCE</p></td>
+<td><p>The optional audience of your choice for Ledger API. e.g. <code class="docutils literal notranslate"><span class="pre">https://ledger_api.example.com</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>VALIDATOR_CLIENT_ID</p></td>
+<td><p>The client id of the Auth0 app for the validator app backend</p></td>
+</tr>
+<tr class="row-odd"><td><p>VALIDATOR_CLIENT_SECRET</p></td>
+<td><p>The client secret of the Auth0 app for the validator app backend</p></td>
+</tr>
+<tr class="row-even"><td><p>WALLET_UI_CLIENT_ID</p></td>
+<td><p>The client id of the Auth0 app for the wallet UI.</p></td>
+</tr>
+<tr class="row-odd"><td><p>CNS_UI_CLIENT_ID</p></td>
+<td><p>The client id of the Auth0 app for the CNS UI.</p></td>
+</tr>
+</tbody>
+</table>
+<p>The <code class="docutils literal notranslate"><span class="pre">AUTH0_TENANT_NAME</span></code> is the name of your Auth0 tenant as shown at the top left of your Auth0 project.
+You can obtain the client ID and secret of each Auth0 app from the settings pages of that app.</p>
+</section>
+<section id="configuring-authentication-on-your-validator">
+<span id="helm-validator-auth-secrets-config"></span><h3>Configuring Authentication on your Validator<a class="headerlink" href="#configuring-authentication-on-your-validator" title="Link to this heading"></a></h3>
+<p>We are now going to configure your Validator node software based on the OIDC provider configuration values your exported to environment variables at the end of either <a class="reference internal" href="#helm-validator-auth-requirements"><span class="std std-ref">OIDC Provider Requirements</span></a> or <a class="reference internal" href="#helm-validator-auth0"><span class="std std-ref">Configuring an Auth0 Tenant</span></a>.
+(Note that some authentication-related configuration steps are also included in <a class="reference internal" href="#helm-validator-install"><span class="std std-ref">Installing the Software</span></a>.)</p>
+<p>The validator app backend requires the following secret.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>create<span class="w"> </span>--namespace<span class="w"> </span>validator<span class="w"> </span>secret<span class="w"> </span>generic<span class="w"> </span>splice-app-validator-ledger-api-auth<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">&quot;--from-literal=ledger-api-user=</span><span class="si">${</span><span class="nv">VALIDATOR_CLIENT_ID</span><span class="si">}</span><span class="s2">@clients&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">&quot;--from-literal=url=</span><span class="si">${</span><span class="nv">OIDC_AUTHORITY_URL</span><span class="si">}</span><span class="s2">/.well-known/openid-configuration&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">&quot;--from-literal=client-id=</span><span class="si">${</span><span class="nv">VALIDATOR_CLIENT_ID</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">&quot;--from-literal=client-secret=</span><span class="si">${</span><span class="nv">VALIDATOR_CLIENT_SECRET</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">&quot;--from-literal=audience=</span><span class="si">${</span><span class="nv">OIDC_AUTHORITY_LEDGER_API_AUDIENCE</span><span class="si">}</span><span class="s2">&quot;</span>
+</pre></div>
+</div>
+<p>To setup the wallet and CNS UI, create the following two secrets.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>create<span class="w"> </span>--namespace<span class="w"> </span>validator<span class="w"> </span>secret<span class="w"> </span>generic<span class="w"> </span>splice-app-wallet-ui-auth<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">&quot;--from-literal=url=</span><span class="si">${</span><span class="nv">OIDC_AUTHORITY_URL</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">&quot;--from-literal=client-id=</span><span class="si">${</span><span class="nv">WALLET_UI_CLIENT_ID</span><span class="si">}</span><span class="s2">&quot;</span>
+
+kubectl<span class="w"> </span>create<span class="w"> </span>--namespace<span class="w"> </span>validator<span class="w"> </span>secret<span class="w"> </span>generic<span class="w"> </span>splice-app-cns-ui-auth<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">&quot;--from-literal=url=</span><span class="si">${</span><span class="nv">OIDC_AUTHORITY_URL</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">&quot;--from-literal=client-id=</span><span class="si">${</span><span class="nv">CNS_UI_CLIENT_ID</span><span class="si">}</span><span class="s2">&quot;</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="installing-the-software">
+<span id="helm-validator-install"></span><h2>Installing the Software<a class="headerlink" href="#installing-the-software" title="Link to this heading"></a></h2>
+<section id="configuring-the-helm-charts">
+<h3>Configuring the Helm Charts<a class="headerlink" href="#configuring-the-helm-charts" title="Link to this heading"></a></h3>
+<p>To install the Helm charts needed to start a Validator node connected to the
+cluster, you will need to meet a few preconditions. The first is that
+there needs to be an environment variable defined to refer to the
+version of the Helm charts necessary to connect to this environment:</p>
+<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.7-moritz-dirty</span></code></p>
+<p>Please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/participant-values.yaml</span></code> as follows:</p>
+<ul class="simple">
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_LEDGER_API_AUDIENCE</span></code> in the <cite>auth.targetAudience</cite> entry with audience for the ledger API. e.g. <code class="docutils literal notranslate"><span class="pre">https://ledger_api.example.com</span></code>. If you are not ready to use a custom audience, you can use the suggested default <code class="docutils literal notranslate"><span class="pre">https://canton.network.global</span></code>.</p></li>
+<li><p>Update the <cite>auth.jwksUrl</cite> entry to point to your auth provider’s JWK set document by replacing <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_URL</span></code> with your auth provider’s OIDC URL, as explained above.</p></li>
+<li><p>If you are running on a version of Kubernetes earlier than 1.24, set <cite>enableHealthProbes</cite> to <cite>false</cite> to disable the gRPC liveness and readiness probes.</p></li>
+</ul>
+<p>If you are using the provided postgres helm chart, modify <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/postgres-values-validator-participant.yaml</span></code> as follows:</p>
+<ul class="simple">
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">db.volumeSize</span></code> and <code class="docutils literal notranslate"><span class="pre">db.volumeStorageClass</span></code> to the values file adjust persistant storage size and storage class if necessary. (These values default to 20GiB and <code class="docutils literal notranslate"><span class="pre">standard-rwo</span></code>)</p></li>
+</ul>
+<p>Additionally, please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/standalone-participant-values.yaml</span></code> as follows:</p>
+<ul class="simple">
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code> with the migration ID of the global synchronizer on your target cluster.</p></li>
+</ul>
+<p>To configure the validator app, please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/validator-values.yaml</span></code> as follows:</p>
+<ul class="simple">
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">TRUSTED_SCAN_URL</span></code> with a URL of a Scan you host or trust that is reachable by your Validator. For example, the GSF scan URL, e.g., <code class="docutils literal notranslate"><span class="pre">https://scan.sv-1.TARGET_CLUSTER.global.canton.network.sync.global</span></code>
+(This Scan instance will be used for obtaining additional Scan URLs for BFT Scan reads.)</p></li>
+<li><p>If you want to configure the audience for the Validator app backend API, replace <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_VALIDATOR_AUDIENCE</span></code> in the <cite>auth.audience</cite> entry with audience for the Validator app backend API. e.g. <code class="docutils literal notranslate"><span class="pre">https://validator.example.com/api</span></code>.</p></li>
+<li><p>If you want to configure the audience for the Ledger API, set the <code class="docutils literal notranslate"><span class="pre">audience</span></code> field in the <cite>splice-app-validator-ledger-api-auth</cite> k8s secret with the audience for the Ledger API. e.g. <code class="docutils literal notranslate"><span class="pre">https://ledger_api.example.com</span></code>.</p></li>
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">OPERATOR_WALLET_USER_ID</span></code> with the user ID in your IAM that you want to use to log into the wallet as the validator operator party. Note that this should be the full user id, e.g., <code class="docutils literal notranslate"><span class="pre">auth0|43b68e1e4978b000cefba352</span></code>, <em>not</em> only the suffix <code class="docutils literal notranslate"><span class="pre">43b68e1e4978b000cefba352</span></code></p></li>
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">YOUR_CONTACT_POINT</span></code> by a slack user name or email address that can be used by node operators to contact you in case there are issues with your node. Note that this contact information will be publicly visible. If you do not want to share contact information, you can put an empty string.</p></li>
+<li><p>Update the <cite>auth.jwksUrl</cite> entry to point to your auth provider’s JWK set document by replacing <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_URL</span></code> with your auth provider’s OIDC URL, as explained above.</p></li>
+</ul>
+<p>If you want to configure to only connect to a single trusted scan at <code class="docutils literal notranslate"><span class="pre">TRUSTED_SCAN_URL</span></code> but not obtaining additional Scan URLs for BFT Scan reads,
+you can uncomment the following and set <code class="docutils literal notranslate"><span class="pre">nonSvValidatorTrustSingleScan</span></code> to <code class="docutils literal notranslate"><span class="pre">true</span></code>.
+This does mean that you depend on that single SV and if it is broken or malicious you will be unable to use the network so usually you want to default to not enabling this.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># If you want to configure validator to use a single trusted scan, set ``nonSvValidatorTrustSingleScan`` to true.</span>
+<span class="c1"># It will only connect to the scan specified in ``scanAddress``. This does mean that you depend on that single SV and if it is broken or malicious you will be unable to use the network so usually you want to default to not enabling this.</span>
+<span class="c1"># nonSvValidatorTrustSingleScan: true</span>
+</pre></div>
+</div>
+<p>If you want to configure to connect to the decentralized synchronizer via only a single trusted sequencer,
+you can uncomment the following and set <code class="docutils literal notranslate"><span class="pre">useSequencerConnectionsFromScan</span></code> to <code class="docutils literal notranslate"><span class="pre">false</span></code>. Also replace <code class="docutils literal notranslate"><span class="pre">TRUSTED_SYNCHRONIZER_SEQUENCER_URL</span></code> with the publicly accessible URL of the trusted sequencer,
+e.g., <code class="docutils literal notranslate"><span class="pre">https://sequencer-MIGRATION_ID.sv-1.TARGET_CLUSTER.global.canton.network.sync.global</span></code>.
+This does mean that you depend on that single SV and if it is broken or malicious you will be unable to use the network so usually you want to default to not enabling this.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># If you want to configure validator to connect to a single trusted sequencer, set ``useSequencerConnectionsFromScan`` to false.</span>
+<span class="c1"># and replace ``TRUSTED_SYNCHRONIZER_SEQUENCER_URL`` with the publicly accessible URL of the trusted sequencer.</span>
+<span class="c1"># This does mean that you depend on that single SV and if it is broken or malicious you will be unable to use the network so usually you want to default to not enabling this.</span>
+<span class="c1"># decentralizedSynchronizerUrl: &quot;TRUSTED_SYNCHRONIZER_SEQUENCER_URL&quot;</span>
+<span class="c1"># useSequencerConnectionsFromScan: false</span>
+</pre></div>
+</div>
+<p>Additionally, please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/standalone-validator-values.yaml</span></code> as follows:</p>
+<ul class="simple">
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code> with the migration ID of the global synchronizer on your target cluster.</p></li>
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">SPONSOR_SV_URL</span></code> with the URL of the SV that will sponsor the onboarding of your validator, for example,
+<code class="docutils literal notranslate"><span class="pre">https://sv-1.TARGET_CLUSTER.global.canton.network.sync.global</span></code> for the GSF. Please make sure that you use the URL
+of your sponsoring SV.</p></li>
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">YOUR_VALIDATOR_PARTY_HINT</span></code> with the desired name for your
+validator operator party. It must be of the format
+<code class="docutils literal notranslate"><span class="pre">&lt;organization&gt;-&lt;function&gt;-&lt;enumerator&gt;</span></code>.</p></li>
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">YOUR_VALIDATOR_NODE_NAME</span></code> with the name you want your validator node to be represented as on the network. Usually you can use the same value as for your <code class="docutils literal notranslate"><span class="pre">validatorPartyHint</span></code>.</p></li>
+</ul>
+<p>If you are redeploying the validator app as part of a <a class="reference internal" href="validator_major_upgrades.html#validator-upgrades"><span class="std std-ref">synchronizer migration</span></a>, you will also need to set <code class="docutils literal notranslate"><span class="pre">migrating</span></code> to <code class="docutils literal notranslate"><span class="pre">true</span></code> in your <code class="docutils literal notranslate"><span class="pre">standalone-validator-values.yaml</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Replace MIGRATION_ID with the migration ID of the global synchronizer.</span>
+<span class="nt">migration</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;MIGRATION_ID&quot;</span>
+<span class="w">  </span><span class="c1"># Uncomment this when redeploying as part of a migration, i.e., MIGRATION_ID was incremented and a migration dump was exported to the attached pvc.</span>
+<span class="w">  </span><span class="c1"># migrating: true</span>
+</pre></div>
+</div>
+<p>Finally, please add the following values to your <code class="docutils literal notranslate"><span class="pre">standalone-validator-values.yaml</span></code> file:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">spliceInstanceNames</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">networkName</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Canton</span><span class="nv"> </span><span class="s">Network&quot;</span>
+<span class="w">  </span><span class="nt">networkFaviconUrl</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://www.canton.network/hubfs/cn-favicon-05%201-1.png&quot;</span>
+<span class="w">  </span><span class="nt">amuletName</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Canton</span><span class="nv"> </span><span class="s">Coin&quot;</span>
+<span class="w">  </span><span class="nt">amuletNameAcronym</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;CC&quot;</span>
+<span class="w">  </span><span class="nt">nameServiceName</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Canton</span><span class="nv"> </span><span class="s">Name</span><span class="nv"> </span><span class="s">Service&quot;</span>
+<span class="w">  </span><span class="nt">nameServiceNameAcronym</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;CNS&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="installing-the-helm-charts">
+<span id="validator-helm-charts-install"></span><h3>Installing the Helm Charts<a class="headerlink" href="#installing-the-helm-charts" title="Link to this heading"></a></h3>
+<p>With these files in place, you can execute the following helm commands
+in sequence. It’s generally a good idea to wait until each deployment
+reaches a stable state prior to moving on to the next step.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>repo<span class="w"> </span>update
+helm<span class="w"> </span>install<span class="w"> </span>postgres<span class="w"> </span>canton-network-helm/splice-postgres<span class="w"> </span>-n<span class="w"> </span>validator<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/postgres-values-validator-participant.yaml<span class="w"> </span>--wait
+helm<span class="w"> </span>install<span class="w"> </span>participant<span class="w"> </span>canton-network-helm/splice-participant<span class="w"> </span>-n<span class="w"> </span>validator<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/participant-values.yaml<span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/standalone-participant-values.yaml<span class="w"> </span>--wait
+helm<span class="w"> </span>install<span class="w"> </span>validator<span class="w"> </span>canton-network-helm/splice-validator<span class="w"> </span>-n<span class="w"> </span>validator<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/validator-values.yaml<span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/standalone-validator-values.yaml<span class="w"> </span>--wait
+</pre></div>
+</div>
+<p>Once this is running, you should be able to inspect the state of the
+cluster and observe pods running in the new
+namespace. A typical query might look as follows:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>validator
+NAMESPACE<span class="w">         </span>NAME<span class="w">                                  </span>READY<span class="w">   </span>STATUS<span class="w">             </span>RESTARTS<span class="w">        </span>AGE
+validator<span class="w">         </span>ans-web-ui-5bf489db78-bdn2j<span class="w">           </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">            </span><span class="m">0</span><span class="w">               </span>24m
+validator<span class="w">         </span>participant-8988dfb54-m9655<span class="w">           </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">            </span><span class="m">0</span><span class="w">               </span>26m
+validator<span class="w">         </span>postgres-0<span class="w">                            </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">            </span><span class="m">0</span><span class="w">               </span>37m
+validator<span class="w">         </span>validator-app-f8c74d5dd-zf9j4<span class="w">         </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">            </span><span class="m">0</span><span class="w">               </span>24m
+validator<span class="w">         </span>wallet-web-ui-69d85cdb99-fnj7q<span class="w">        </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">            </span><span class="m">0</span><span class="w">               </span>24m
+</pre></div>
+</div>
+<p>Note also that <code class="docutils literal notranslate"><span class="pre">Pod</span></code> restarts may happen during bringup,
+particularly if all helm charts are deployed at the same time. For example, the
+<code class="docutils literal notranslate"><span class="pre">participant</span></code> cannot start until <code class="docutils literal notranslate"><span class="pre">postgres</span></code> is running.</p>
+</section>
+</section>
+<section id="configuring-the-cluster-ingress">
+<span id="helm-validator-ingress"></span><h2>Configuring the Cluster Ingress<a class="headerlink" href="#configuring-the-cluster-ingress" title="Link to this heading"></a></h2>
+<p>The following routes should be configured in your cluster ingress
+controller.</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>Services</p></td>
+<td><p>Port</p></td>
+<td><p>Routes</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">wallet-web-ui</span></code></p></td>
+<td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">https://wallet.validator.&lt;YOUR_HOSTNAME&gt;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">validator-app</span></code></p></td>
+<td><p>5003</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">https://wallet.validator.&lt;YOUR_HOSTNAME&gt;/api/validator</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ans-web-ui</span></code></p></td>
+<td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">https://cns.validator.&lt;YOUR_HOSTNAME&gt;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">validator-app</span></code></p></td>
+<td><p>5003</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">https://cns.validator.&lt;YOUR_HOSTNAME&gt;/api/validator</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">https://wallet.validator.&lt;YOUR_HOSTNAME&gt;</span></code> should be routed to service <code class="docutils literal notranslate"><span class="pre">wallet-web-ui</span></code> in the <code class="docutils literal notranslate"><span class="pre">validator</span></code> namespace</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">https://wallet.validator.&lt;YOUR_HOSTNAME&gt;/api/validator</span></code> should be routed to <code class="docutils literal notranslate"><span class="pre">/api/validator</span></code> at port 5003 of service <code class="docutils literal notranslate"><span class="pre">validator-app</span></code> in the <code class="docutils literal notranslate"><span class="pre">validator</span></code> namespace</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">https://cns.validator.&lt;YOUR_HOSTNAME&gt;</span></code> should be routed to service <code class="docutils literal notranslate"><span class="pre">ans-web-ui</span></code> in the <code class="docutils literal notranslate"><span class="pre">validator</span></code> namespace</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">https://cns.validator.&lt;YOUR_HOSTNAME&gt;/api/validator</span></code> should be routed to <code class="docutils literal notranslate"><span class="pre">/api/validator</span></code> at port 5003 of service <code class="docutils literal notranslate"><span class="pre">validator-app</span></code> in the <code class="docutils literal notranslate"><span class="pre">validator</span></code> namespace</p></li>
+</ul>
+<p>Internet ingress configuration is often specific to the network configuration and scenario of the
+cluster being configured. To illustrate the basic requirements of a Validator node ingress, we have
+provided a Helm chart that configures the above cluster according to the routes above, as detailed in the sections below.</p>
+<section id="id3">
+<h3>Requirements<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<p>In order to install the reference charts, the following must be satisfied in your cluster:</p>
+<ul class="simple">
+<li><p><em>cert-manager</em> must be available in the cluster (See <a class="reference external" href="https://cert-manager.io/docs/installation/helm/">cert-manager documentation</a>)</p></li>
+<li><p><em>istio</em> should be installed in the cluster (See <a class="reference external" href="https://istio.io/latest/docs/setup/">istio documentation</a>)</p></li>
+</ul>
+<p><em>Note that their deployments are often platform-dependent and good documentations on how to set them up can be found online.</em></p>
+<p><strong>Example of Istio installation:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>repo<span class="w"> </span>add<span class="w"> </span>istio<span class="w"> </span>https://istio-release.storage.googleapis.com/charts
+helm<span class="w"> </span>repo<span class="w"> </span>update
+helm<span class="w"> </span>install<span class="w"> </span>istio-base<span class="w"> </span>istio/base<span class="w"> </span>-n<span class="w"> </span>istio-system<span class="w"> </span>--set<span class="w"> </span>defaults.global.istioNamespace<span class="o">=</span>cluster-ingress<span class="w"> </span>--wait
+helm<span class="w"> </span>install<span class="w"> </span>istiod<span class="w"> </span>istio/istiod<span class="w"> </span>-n<span class="w"> </span>cluster-ingress<span class="w"> </span>--set<span class="w"> </span>global.istioNamespace<span class="o">=</span><span class="s2">&quot;cluster-ingress&quot;</span><span class="w"> </span>--set<span class="w"> </span>meshConfig.accessLogFile<span class="o">=</span><span class="s2">&quot;/dev/stdout&quot;</span><span class="w">  </span>--wait
+</pre></div>
+</div>
+</section>
+<section id="installation-instructions">
+<h3>Installation Instructions<a class="headerlink" href="#installation-instructions" title="Link to this heading"></a></h3>
+<p>Create a <cite>cluster-ingress</cite> namespace with image pull permissions from the Artifactory docker repository:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>create<span class="w"> </span>ns<span class="w"> </span>cluster-ingress
+
+kubectl<span class="w"> </span>create<span class="w"> </span>secret<span class="w"> </span>docker-registry<span class="w"> </span>docker-reg-cred<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--docker-server<span class="o">=</span>digitalasset-canton-network-docker.jfrog.io<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--docker-username<span class="o">=</span><span class="si">${</span><span class="nv">ARTIFACTORY_USER</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--docker-password<span class="o">=</span><span class="si">${</span><span class="nv">ARTIFACTORY_PASSWORD</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-n<span class="w"> </span>cluster-ingress
+
+kubectl<span class="w"> </span>patch<span class="w"> </span>serviceaccount<span class="w"> </span>default<span class="w"> </span>-n<span class="w"> </span>cluster-ingress<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-p<span class="w"> </span><span class="s1">&#39;{&quot;imagePullSecrets&quot;: [{&quot;name&quot;: &quot;docker-reg-cred&quot;}]}&#39;</span>
+</pre></div>
+</div>
+<p>Ensure that there is a cert-manager certificate available in a secret
+named <code class="docutils literal notranslate"><span class="pre">cn-net-tls</span></code>.  An example of a suitable certificate
+definition:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cert-manager.io/v1</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Certificate</span>
+<span class="nt">metadata</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cn-certificate</span>
+<span class="w">   </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cluster-ingress</span>
+<span class="nt">spec</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">dnsNames</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;*.validator.YOUR_HOSTNAME&#39;</span>
+<span class="w">    </span><span class="nt">issuerRef</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">letsencrypt-production</span>
+<span class="w">    </span><span class="nt">secretName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cn-net-tls</span>
+</pre></div>
+</div>
+<p>Create a file named <code class="docutils literal notranslate"><span class="pre">istio-gateway-values.yaml</span></code> with the following content
+(Tip: on GCP you can get the cluster IP from <code class="docutils literal notranslate"><span class="pre">gcloud</span> <span class="pre">compute</span> <span class="pre">addresses</span> <span class="pre">list</span></code>):</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">service</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">loadBalancerIP</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;YOUR_CLUSTER_IP&quot;</span>
+<span class="w">    </span><span class="nt">loadBalancerSourceRanges</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;35.194.81.56/32&quot;</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;35.198.147.95/32&quot;</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;35.189.40.124/32&quot;</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;34.132.91.75/32&quot;</span>
+</pre></div>
+</div>
+<p>And install it to your cluster:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>install<span class="w"> </span>istio-ingress<span class="w"> </span>istio/gateway<span class="w"> </span>-n<span class="w"> </span>cluster-ingress<span class="w"> </span>-f<span class="w"> </span>istio-gateway-values.yaml
+</pre></div>
+</div>
+<p>A reference Helm chart installing a gateway that uses this service is also provided.
+To install it, run the following (assuming the environment variable <cite>YOUR_HOSTNAME</cite> is set to your hostname):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>install<span class="w"> </span>cluster-gateway<span class="w"> </span>canton-network-helm/splice-istio-gateway<span class="w"> </span>-n<span class="w"> </span>cluster-ingress<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>--set<span class="w"> </span>cluster.daHostname<span class="o">=</span><span class="si">${</span><span class="nv">YOUR_HOSTNAME</span><span class="si">}</span><span class="w"> </span>--set<span class="w"> </span>cluster.cantonHostname<span class="o">=</span><span class="si">${</span><span class="nv">YOUR_HOSTNAME</span><span class="si">}</span>
+</pre></div>
+</div>
+<p>This gateway terminates tls using the secret that you configured above, and exposes raw http traffic in its outbound port 443.
+Istio VirtualServices can now be created to route traffic from there to the required pods within the cluster.
+Another reference Helm chart is provided for that, which can be installed after</p>
+<ol class="arabic simple">
+<li><p>replacing <code class="docutils literal notranslate"><span class="pre">YOUR_HOSTNAME</span></code> in <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/validator-cluster-ingress-values.yaml</span></code> and</p></li>
+<li><p>setting <code class="docutils literal notranslate"><span class="pre">nameServiceDomain</span></code> in the same file to <code class="docutils literal notranslate"><span class="pre">&quot;cns&quot;</span></code></p></li>
+</ol>
+<p>using:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>install<span class="w"> </span>cluster-ingress-validator<span class="w"> </span>canton-network-helm/splice-cluster-ingress-runbook<span class="w"> </span>-n<span class="w"> </span>validator<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/validator-cluster-ingress-values.yaml
+</pre></div>
+</div>
+</section>
+</section>
+<section id="logging-into-the-wallet-ui">
+<span id="helm-validator-wallet-ui"></span><h2>Logging into the wallet UI<a class="headerlink" href="#logging-into-the-wallet-ui" title="Link to this heading"></a></h2>
+<p>After you deploy your ingress, open your browser at
+<a class="reference external" href="https://wallet.validator.YOUR_HOSTNAME">https://wallet.validator.YOUR_HOSTNAME</a> and login using the
+credentials for the user that you configured as
+<code class="docutils literal notranslate"><span class="pre">validatorWalletUser</span></code> earlier.
+Once logged in one should see the transactions page.</p>
+<a class="reference internal image-reference" href="../_images/wallet_home1.png"><img alt="After logged in into the wallet UI" src="../_images/wallet_home1.png" style="width: 600px;" />
+</a>
+</section>
+<section id="testnet-only-granting-coin-to-the-validator-for-traffic-purchases">
+<span id="helm-validator-testnet-cc-grant"></span><h2>(Testnet-only) Granting coin to the validator for traffic purchases<a class="headerlink" href="#testnet-only-granting-coin-to-the-validator-for-traffic-purchases" title="Link to this heading"></a></h2>
+<p>On testnet, your validator party will need an initial coin grant to be able to purchase traffic.
+After logging into the wallet UI in the previous section, note that the party ID is displayed in
+the top right of the UI (e.g. <code class="docutils literal notranslate"><span class="pre">validator_validator_service_user::12204f9f94b7369e027544927703efcdf0f03cb15bd26ac53c784c627b63bdf8f041</span></code>).</p>
+<p>An SV (say your sponsor) will need to transfer coin to this party. They can do this through their wallet UI.</p>
+</section>
+<section id="logging-into-the-cns-ui">
+<span id="helm-validator-ans-web-ui"></span><h2>Logging into the CNS UI<a class="headerlink" href="#logging-into-the-cns-ui" title="Link to this heading"></a></h2>
+<p>You can open your browser at
+<a class="reference external" href="https://cns.validator.YOUR_HOSTNAME">https://cns.validator.YOUR_HOSTNAME</a> and login using the
+credentials for the user that you configured as
+<code class="docutils literal notranslate"><span class="pre">validatorWalletUser</span></code> earlier. You will be able to register a name on the
+Canton Name Service.</p>
+<a class="reference internal image-reference" href="../_images/ans_home1.png"><img alt="After logged in into the CNS UI" src="../_images/ans_home1.png" style="width: 600px;" />
+</a>
+</section>
+<section id="configuring-top-ups">
+<h2>Configuring top-ups<a class="headerlink" href="#configuring-top-ups" title="Link to this heading"></a></h2>
+<p>Optionally you may want to configure a validator’s traffic top-up loop for non-production validators.
+To do so, uncomment and fill in the following section in the validator-values.yaml file:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Configuring a validator&#39;s traffic top-up loop</span>
+<span class="c1">#</span>
+<span class="c1"># enabled - set to false in order to disable automatic traffic top-ups.</span>
+<span class="c1"># targetThroughput - target throughput in bytes / second of sequenced traffic. targetThroughput=0 &lt;=&gt; enabled=false</span>
+<span class="c1"># minTopupInterval - minimum time interval that must elapse before the next top-up.</span>
+<span class="c1">#</span>
+<span class="c1"># On each successful top-up, an amount of traffic roughly equivalent to `targetThroughput * minTopupInterval`</span>
+<span class="c1"># (possibly with some rounding-up), referred to as the top-up amount, is purchased. The `minTopupInterval` allows</span>
+<span class="c1"># validator operators to control the frequency at which automated top-ups happen. Note that the actual top-up amount</span>
+<span class="c1"># and top-up interval might be larger due to the DSO requiring a minimal top-up amount larger than `targetThroughput * minTopupInterval`.</span>
+<span class="c1">#</span>
+<span class="c1"># The next top-up gets triggered when:</span>
+<span class="c1"># - the available traffic amount drops below the configured top-up amount</span>
+<span class="c1"># - at least minTopupInterval has elapsed since the last one</span>
+<span class="c1"># - the validator has sufficient CC in its wallet to buy this much traffic (except on DevNet)</span>
+</pre></div>
+</div>
+</section>
+<section id="configuring-sweeps-and-auto-accepts-of-transfer-offers">
+<h2>Configuring sweeps and auto-accepts of transfer offers<a class="headerlink" href="#configuring-sweeps-and-auto-accepts-of-transfer-offers" title="Link to this heading"></a></h2>
+<p>You can optionally configure the validator to automatically create transfer offers
+to other parties on the network whenever the balance of certain parties that it hosts
+exceeds a certain threshold. To do so, uncomment and fill in the following section
+in the <code class="docutils literal notranslate"><span class="pre">validator-values.yaml</span></code> file:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># If you want funds sweeped out of parties in this validator, uncomment and fill in the following:</span>
+<span class="c1">#walletSweep:</span>
+<span class="c1">#  &quot;&lt;senderPartyId&gt;&quot;:</span>
+<span class="c1">#    maxBalanceUSD: &lt;maxBalanceUSD&gt;</span>
+<span class="c1">#    minBalanceUSD: &lt;minBalanceUSD&gt;</span>
+<span class="c1">#    receiver: &quot;&lt;receiverPartyId&gt;&quot;</span>
+<span class="c1">#    useTransferPreapproval: false # sweep by transferring directly through the transfer preapproval of the receiver,</span>
+<span class="c1">#                                    if set to false sweeping creates transfer offers that need to be accepted on the receiver side.</span>
+</pre></div>
+</div>
+<p>Whenever the balance of <cite>&lt;senderPartyID&gt;</cite> exceeds <cite>maxBalanceUSD</cite>, the validator
+will automatically create a transfer offer to <cite>&lt;receiverPartyId&gt;</cite>, for an amount that
+leaves <cite>minBalanceUSD</cite> in the sender’s wallet. Note that you will need to know the
+party IDs of both the sender and receiver, which can be copied from the wallet UIs
+of the respective users (in the top right corner). This therefore needs to be applied
+to the Helm chart in a second step after the initial deployment, once the party IDs are known.</p>
+<p>Similarly, you can configure the validator to automatically accept transfer offers
+from certain parties on the network. To do so, uncomment and fill in the following section
+in the <code class="docutils literal notranslate"><span class="pre">validator-values.yaml</span></code> file:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># To configure the validator to auto-accept transfer offers from specific parties, uncomment and fill in the following:</span>
+<span class="c1">#autoAcceptTransfers:</span>
+<span class="c1">#  &quot;&lt;receiverPartyId&gt;&quot;:</span>
+<span class="c1">#    fromParties:</span>
+<span class="c1">#      - &quot;&lt;senderPartyId&gt;&quot;</span>
+</pre></div>
+</div>
+<p>Whenever the validator receives a transfer offer from <cite>&lt;senderPartyID&gt;</cite> to <cite>&lt;receiverPartyId&gt;</cite>,
+it will automatically accept it. Similarly to sweeps, party IDs must be known in order to
+apply this configuration.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="validator_compose.html" class="btn btn-neutral float-left" title="Docker-Compose Based Deployment" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="validator_upgrades.html" class="btn btn-neutral float-right" title="Upgrades" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright  2025, Digital Asset.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

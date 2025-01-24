@@ -1,0 +1,266 @@
+.. _module-splice-fees-99189:
+
+Splice.Fees
+===========
+
+Utility functions for different kinds of fees\.
+
+Data Types
+----------
+
+.. _type-splice-fees-expiringamount-39537:
+
+**data** `ExpiringAmount <type-splice-fees-expiringamount-39537_>`_
+
+  .. _constr-splice-fees-expiringamount-68564:
+
+  `ExpiringAmount <constr-splice-fees-expiringamount-68564_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - initialAmount
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         -
+       * - createdAt
+         - :ref:`Round <type-splice-types-round-16181>`
+         -
+       * - ratePerRound
+         - `RatePerRound <type-splice-fees-rateperround-90570_>`_
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `ExpiringAmount <type-splice-fees-expiringamount-39537_>`_
+
+  **instance** `Ord <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-ord-6395>`_ `ExpiringAmount <type-splice-fees-expiringamount-39537_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `ExpiringAmount <type-splice-fees-expiringamount-39537_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"amount\" :ref:`Amulet <type-splice-amulet-amulet-63582>` `ExpiringAmount <type-splice-fees-expiringamount-39537_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"createdAt\" `ExpiringAmount <type-splice-fees-expiringamount-39537_>`_ :ref:`Round <type-splice-types-round-16181>`
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"initialAmount\" `ExpiringAmount <type-splice-fees-expiringamount-39537_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"ratePerRound\" `ExpiringAmount <type-splice-fees-expiringamount-39537_>`_ `RatePerRound <type-splice-fees-rateperround-90570_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"amount\" :ref:`Amulet <type-splice-amulet-amulet-63582>` `ExpiringAmount <type-splice-fees-expiringamount-39537_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"createdAt\" `ExpiringAmount <type-splice-fees-expiringamount-39537_>`_ :ref:`Round <type-splice-types-round-16181>`
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"initialAmount\" `ExpiringAmount <type-splice-fees-expiringamount-39537_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"ratePerRound\" `ExpiringAmount <type-splice-fees-expiringamount-39537_>`_ `RatePerRound <type-splice-fees-rateperround-90570_>`_
+
+.. _type-splice-fees-fixedfee-53985:
+
+**data** `FixedFee <type-splice-fees-fixedfee-53985_>`_
+
+  A fixed fee independent of the action being taken\.
+  TODO(M3\-90)\: check whether this name matches usage in financial terms, it probably isn't\. Should it be 'flat\-fee', 'constantfee', \.\.\. ???
+
+  .. _constr-splice-fees-fixedfee-53900:
+
+  `FixedFee <constr-splice-fees-fixedfee-53900_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - fee
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `FixedFee <type-splice-fees-fixedfee-53985_>`_
+
+  **instance** `Ord <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-ord-6395>`_ `FixedFee <type-splice-fees-fixedfee-53985_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `FixedFee <type-splice-fees-fixedfee-53985_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"createFee\" (:ref:`TransferConfig <type-splice-amuletconfig-transferconfig-45691>` unit) `FixedFee <type-splice-fees-fixedfee-53985_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"fee\" `FixedFee <type-splice-fees-fixedfee-53985_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"lockHolderFee\" (:ref:`TransferConfig <type-splice-amuletconfig-transferconfig-45691>` unit) `FixedFee <type-splice-fees-fixedfee-53985_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"createFee\" (:ref:`TransferConfig <type-splice-amuletconfig-transferconfig-45691>` unit) `FixedFee <type-splice-fees-fixedfee-53985_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"fee\" `FixedFee <type-splice-fees-fixedfee-53985_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"lockHolderFee\" (:ref:`TransferConfig <type-splice-amuletconfig-transferconfig-45691>` unit) `FixedFee <type-splice-fees-fixedfee-53985_>`_
+
+.. _type-splice-fees-rateperround-90570:
+
+**data** `RatePerRound <type-splice-fees-rateperround-90570_>`_
+
+  .. _constr-splice-fees-rateperround-75691:
+
+  `RatePerRound <constr-splice-fees-rateperround-75691_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - rate
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `RatePerRound <type-splice-fees-rateperround-90570_>`_
+
+  **instance** `Ord <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-ord-6395>`_ `RatePerRound <type-splice-fees-rateperround-90570_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `RatePerRound <type-splice-fees-rateperround-90570_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"holdingFee\" (:ref:`TransferConfig <type-splice-amuletconfig-transferconfig-45691>` unit) `RatePerRound <type-splice-fees-rateperround-90570_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"rate\" `RatePerRound <type-splice-fees-rateperround-90570_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"ratePerRound\" `ExpiringAmount <type-splice-fees-expiringamount-39537_>`_ `RatePerRound <type-splice-fees-rateperround-90570_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"holdingFee\" (:ref:`TransferConfig <type-splice-amuletconfig-transferconfig-45691>` unit) `RatePerRound <type-splice-fees-rateperround-90570_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"rate\" `RatePerRound <type-splice-fees-rateperround-90570_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"ratePerRound\" `ExpiringAmount <type-splice-fees-expiringamount-39537_>`_ `RatePerRound <type-splice-fees-rateperround-90570_>`_
+
+.. _type-splice-fees-steppedrate-36691:
+
+**data** `SteppedRate <type-splice-fees-steppedrate-36691_>`_
+
+  A rate defined as a piecewise linear function, e\.g\.,
+  \`SteppedRate 0\.01 \[(100\.0, 0\.001), (1000\.0, 0\.0001), (1000000, 0\.00001)\]
+  corresponds to 1% of the first 100, 0\.1% between 100 and 1000, 0\.01% between 1000 and 1000000
+  and 0\.001% for everything above that\.
+
+  .. _constr-splice-fees-steppedrate-72856:
+
+  `SteppedRate <constr-splice-fees-steppedrate-72856_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - initialRate
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         -
+       * - steps
+         - \[(`Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_, `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_)\]
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `SteppedRate <type-splice-fees-steppedrate-36691_>`_
+
+  **instance** `Ord <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-ord-6395>`_ `SteppedRate <type-splice-fees-steppedrate-36691_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `SteppedRate <type-splice-fees-steppedrate-36691_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"initialRate\" `SteppedRate <type-splice-fees-steppedrate-36691_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"steps\" `SteppedRate <type-splice-fees-steppedrate-36691_>`_ \[(`Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_, `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_)\]
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"transferFee\" (:ref:`TransferConfig <type-splice-amuletconfig-transferconfig-45691>` unit) `SteppedRate <type-splice-fees-steppedrate-36691_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"initialRate\" `SteppedRate <type-splice-fees-steppedrate-36691_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"steps\" `SteppedRate <type-splice-fees-steppedrate-36691_>`_ \[(`Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_, `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_)\]
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"transferFee\" (:ref:`TransferConfig <type-splice-amuletconfig-transferconfig-45691>` unit) `SteppedRate <type-splice-fees-steppedrate-36691_>`_
+
+Functions
+---------
+
+.. _function-splice-fees-reltimetomicros-80866:
+
+`relTimeToMicros <function-splice-fees-reltimetomicros-80866_>`_
+  \: `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_ \-\> `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+.. _function-splice-fees-microsperday-26445:
+
+`microsPerDay <function-splice-fees-microsperday-26445_>`_
+  \: `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+.. _function-splice-fees-reltimetodays-39078:
+
+`relTimeToDays <function-splice-fees-reltimetodays-39078_>`_
+  \: `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_ \-\> `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+.. _function-splice-fees-daystoreltime-342:
+
+`daysToRelTime <function-splice-fees-daystoreltime-342_>`_
+  \: `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_ \-\> `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_
+
+.. _function-splice-fees-chargerateperround-14136:
+
+`chargeRatePerRound <function-splice-fees-chargerateperround-14136_>`_
+  \: `RatePerRound <type-splice-fees-rateperround-90570_>`_ \-\> :ref:`RelRound <type-splice-relround-relround-10584>` \-\> `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+.. _function-splice-fees-scalerateperround-96257:
+
+`scaleRatePerRound <function-splice-fees-scalerateperround-96257_>`_
+  \: `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_ \-\> `RatePerRound <type-splice-fees-rateperround-90570_>`_ \-\> `RatePerRound <type-splice-fees-rateperround-90570_>`_
+
+  Scale a round rate such that
+
+  ALL s r dt\. s \* chargeRatePerRound r dt \= chargeRatePerRound (s ``scaleRatePerRound`` r) dt
+
+.. _function-splice-fees-scalefixedfee-12994:
+
+`scaleFixedFee <function-splice-fees-scalefixedfee-12994_>`_
+  \: `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_ \-\> `FixedFee <type-splice-fees-fixedfee-53985_>`_ \-\> `FixedFee <type-splice-fees-fixedfee-53985_>`_
+
+.. _function-splice-fees-validsteppedrate-82534:
+
+`validSteppedRate <function-splice-fees-validsteppedrate-82534_>`_
+  \: `SteppedRate <type-splice-fees-steppedrate-36691_>`_ \-\> `Bool <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-bool-66265>`_
+
+.. _function-splice-fees-chargesteppedrate-67705:
+
+`chargeSteppedRate <function-splice-fees-chargesteppedrate-67705_>`_
+  \: `SteppedRate <type-splice-fees-steppedrate-36691_>`_ \-\> `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_ \-\> `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+.. _function-splice-fees-gochargesteppedrate-62505:
+
+`goChargeSteppedRate <function-splice-fees-gochargesteppedrate-62505_>`_
+  \: (`Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_, `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_, `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_) \-\> \[(`Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_, `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_)\] \-\> `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+.. _function-splice-fees-scalesteppedrate-86486:
+
+`scaleSteppedRate <function-splice-fees-scalesteppedrate-86486_>`_
+  \: `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_ \-\> `SteppedRate <type-splice-fees-steppedrate-36691_>`_ \-\> `SteppedRate <type-splice-fees-steppedrate-36691_>`_
+
+  Scale a fixed\-plus\-variable rate such that
+
+  ALL s r q\. s \* chargeSteppedRate r (q/s) \= chargeSteppedRate (s ``scaleSteppedRate`` r) q
+
+.. _function-splice-fees-validexpiringamount-89306:
+
+`validExpiringAmount <function-splice-fees-validexpiringamount-89306_>`_
+  \: `ExpiringAmount <type-splice-fees-expiringamount-39537_>`_ \-\> `Bool <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-bool-66265>`_
+
+.. _function-splice-fees-actualamount-22453:
+
+`actualAmount <function-splice-fees-actualamount-22453_>`_
+  \: :ref:`Round <type-splice-types-round-16181>` \-\> `ExpiringAmount <type-splice-fees-expiringamount-39537_>`_ \-\> `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+.. _function-splice-fees-expiringamount-85661:
+
+`expiringAmount <function-splice-fees-expiringamount-85661_>`_
+  \: `RatePerRound <type-splice-fees-rateperround-90570_>`_ \-\> `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_ \-\> :ref:`Round <type-splice-types-round-16181>` \-\> `ExpiringAmount <type-splice-fees-expiringamount-39537_>`_
+
+  Smart constructor for an expiring amount\.
+
+.. _function-splice-fees-getvalueasofround0-94025:
+
+`getValueAsOfRound0 <function-splice-fees-getvalueasofround0-94025_>`_
+  \: `ExpiringAmount <type-splice-fees-expiringamount-39537_>`_ \-\> `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_

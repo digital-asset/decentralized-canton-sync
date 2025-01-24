@@ -1,0 +1,106 @@
+.. _module-splice-wallet-transferpreapproval-41862:
+
+Splice.Wallet.TransferPreapproval
+=================================
+
+Templates
+---------
+
+.. _type-splice-wallet-transferpreapproval-transferpreapprovalproposal-39002:
+
+**template** `TransferPreapprovalProposal <type-splice-wallet-transferpreapproval-transferpreapprovalproposal-39002_>`_
+
+  Signatory\: receiver
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - receiver
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - provider
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+
+  + **Choice** Archive
+
+    Controller\: receiver
+
+    Returns\: ()
+
+    (no fields)
+
+  + .. _type-splice-wallet-transferpreapproval-transferpreapprovalproposalaccept-6548:
+
+    **Choice** `TransferPreapprovalProposal_Accept <type-splice-wallet-transferpreapproval-transferpreapprovalproposalaccept-6548_>`_
+
+    Controller\: provider
+
+    Returns\: `TransferPreapprovalProposal_AcceptResult <type-splice-wallet-transferpreapproval-transferpreapprovalproposalacceptresult-56845_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - context
+         - PaymentTransferContext
+         -
+       * - inputs
+         - \[TransferInput\]
+         -
+       * - expiresAt
+         - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+         -
+
+Data Types
+----------
+
+.. _type-splice-wallet-transferpreapproval-transferpreapprovalproposalacceptresult-56845:
+
+**data** `TransferPreapprovalProposal_AcceptResult <type-splice-wallet-transferpreapproval-transferpreapprovalproposalacceptresult-56845_>`_
+
+  .. _constr-splice-wallet-transferpreapproval-transferpreapprovalproposalacceptresult-12116:
+
+  `TransferPreapprovalProposal_AcceptResult <constr-splice-wallet-transferpreapproval-transferpreapprovalproposalacceptresult-12116_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - transferPreapprovalCid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TransferPreapproval
+         -
+       * - transferResult
+         - TransferResult
+         -
+       * - amuletPaid
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"amuletPaid\" `TransferPreapprovalProposal_AcceptResult <type-splice-wallet-transferpreapproval-transferpreapprovalproposalacceptresult-56845_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"transferPreapprovalCid\" `TransferPreapprovalProposal_AcceptResult <type-splice-wallet-transferpreapproval-transferpreapprovalproposalacceptresult-56845_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TransferPreapproval)
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"transferResult\" `TransferPreapprovalProposal_AcceptResult <type-splice-wallet-transferpreapproval-transferpreapprovalproposalacceptresult-56845_>`_ TransferResult
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"amuletPaid\" `TransferPreapprovalProposal_AcceptResult <type-splice-wallet-transferpreapproval-transferpreapprovalproposalacceptresult-56845_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"transferPreapprovalCid\" `TransferPreapprovalProposal_AcceptResult <type-splice-wallet-transferpreapproval-transferpreapprovalproposalacceptresult-56845_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TransferPreapproval)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"transferResult\" `TransferPreapprovalProposal_AcceptResult <type-splice-wallet-transferpreapproval-transferpreapprovalproposalacceptresult-56845_>`_ TransferResult
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `TransferPreapprovalProposal <type-splice-wallet-transferpreapproval-transferpreapprovalproposal-39002_>`_ `TransferPreapprovalProposal_Accept <type-splice-wallet-transferpreapproval-transferpreapprovalproposalaccept-6548_>`_ `TransferPreapprovalProposal_AcceptResult <type-splice-wallet-transferpreapproval-transferpreapprovalproposalacceptresult-56845_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `TransferPreapprovalProposal <type-splice-wallet-transferpreapproval-transferpreapprovalproposal-39002_>`_ `TransferPreapprovalProposal_Accept <type-splice-wallet-transferpreapproval-transferpreapprovalproposalaccept-6548_>`_ `TransferPreapprovalProposal_AcceptResult <type-splice-wallet-transferpreapproval-transferpreapprovalproposalacceptresult-56845_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `TransferPreapprovalProposal <type-splice-wallet-transferpreapproval-transferpreapprovalproposal-39002_>`_ `TransferPreapprovalProposal_Accept <type-splice-wallet-transferpreapproval-transferpreapprovalproposalaccept-6548_>`_ `TransferPreapprovalProposal_AcceptResult <type-splice-wallet-transferpreapproval-transferpreapprovalproposalacceptresult-56845_>`_

@@ -1,0 +1,66 @@
+.. _module-splice-dso-amuletprice-58480:
+
+Splice.DSO.AmuletPrice
+======================
+
+Templates and code for the SVs to agree on a amulet price using median\-based voting\.
+
+Every sv can change its desired amulet price at any time they like provided they
+wait at least one tick duration (2\.5 minutes by default) between changes\.
+
+New ``OpenMiningRounds`` are always openened with the median of the amulet prices voted for
+by the SVs\.
+
+Templates
+---------
+
+.. _type-splice-dso-amuletprice-amuletpricevote-96658:
+
+**template** `AmuletPriceVote <type-splice-dso-amuletprice-amuletpricevote-96658_>`_
+
+  A vote by an SV for their desired amulet price\.
+
+  Signatory\: dso
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - dso
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - sv
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - amuletPrice
+       - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+       - Set to None for new svs, but defined thereafter\.
+     * - lastUpdatedAt
+       - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+       - The last time this price was updated\. Tracked to limit svs from changing their vote more than once per tick\.
+
+  + **Choice** Archive
+
+    Controller\: dso
+
+    Returns\: ()
+
+    (no fields)
+
+Functions
+---------
+
+.. _function-splice-dso-amuletprice-fetchmedianamuletprice-30507:
+
+`fetchMedianAmuletPrice <function-splice-dso-amuletprice-fetchmedianamuletprice-30507_>`_
+  \: `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> \[`Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_\] \-\> \[`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `AmuletPriceVote <type-splice-dso-amuletprice-amuletpricevote-96658_>`_\] \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+.. _function-splice-dso-amuletprice-median-98146:
+
+`median <function-splice-dso-amuletprice-median-98146_>`_
+  \: \[`Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_\] \-\> `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  See https\://en\.wikipedia\.org/wiki/Median

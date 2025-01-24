@@ -1,0 +1,249 @@
+.. _module-splice-cometbft-61948:
+
+Splice.CometBft
+===============
+
+Data Types
+----------
+
+.. _type-splice-cometbft-cometbftconfig-79018:
+
+**data** `CometBftConfig <type-splice-cometbft-cometbftconfig-79018_>`_
+
+  Config for all CometBFT nodes and keys under the control of a single SV node operator\.
+
+  .. _constr-splice-cometbft-cometbftconfig-91607:
+
+  `CometBftConfig <constr-splice-cometbft-cometbftconfig-91607_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - nodes
+         - `Map <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-map-90052>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_ `CometBftNodeConfig <type-splice-cometbft-cometbftnodeconfig-40106_>`_
+         - A map from CometBft node\-ids to their configuration\.
+       * - governanceKeys
+         - \[`GovernanceKeyConfig <type-splice-cometbft-governancekeyconfig-71820_>`_\]
+         -
+       * - sequencingKeys
+         - \[`SequencingKeyConfig <type-splice-cometbft-sequencingkeyconfig-30402_>`_\]
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `CometBftConfig <type-splice-cometbft-cometbftconfig-79018_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `CometBftConfig <type-splice-cometbft-cometbftconfig-79018_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"cometBft\" :ref:`SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457>` `CometBftConfig <type-splice-cometbft-cometbftconfig-79018_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"governanceKeys\" `CometBftConfig <type-splice-cometbft-cometbftconfig-79018_>`_ \[`GovernanceKeyConfig <type-splice-cometbft-governancekeyconfig-71820_>`_\]
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"nodes\" `CometBftConfig <type-splice-cometbft-cometbftconfig-79018_>`_ (`Map <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-map-90052>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_ `CometBftNodeConfig <type-splice-cometbft-cometbftnodeconfig-40106_>`_)
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"sequencingKeys\" `CometBftConfig <type-splice-cometbft-cometbftconfig-79018_>`_ \[`SequencingKeyConfig <type-splice-cometbft-sequencingkeyconfig-30402_>`_\]
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"cometBft\" :ref:`SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457>` `CometBftConfig <type-splice-cometbft-cometbftconfig-79018_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"governanceKeys\" `CometBftConfig <type-splice-cometbft-cometbftconfig-79018_>`_ \[`GovernanceKeyConfig <type-splice-cometbft-governancekeyconfig-71820_>`_\]
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"nodes\" `CometBftConfig <type-splice-cometbft-cometbftconfig-79018_>`_ (`Map <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-map-90052>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_ `CometBftNodeConfig <type-splice-cometbft-cometbftnodeconfig-40106_>`_)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"sequencingKeys\" `CometBftConfig <type-splice-cometbft-cometbftconfig-79018_>`_ \[`SequencingKeyConfig <type-splice-cometbft-sequencingkeyconfig-30402_>`_\]
+
+.. _type-splice-cometbft-cometbftconfiglimits-81004:
+
+**data** `CometBftConfigLimits <type-splice-cometbft-cometbftconfiglimits-81004_>`_
+
+  Limits on the configurations that SV node operators can choose for their CometBFT nodes and keys\.
+
+  .. _constr-splice-cometbft-cometbftconfiglimits-44281:
+
+  `CometBftConfigLimits <constr-splice-cometbft-cometbftconfiglimits-44281_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - maxNumCometBftNodes
+         - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         -
+       * - maxNumGovernanceKeys
+         - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         -
+       * - maxNumSequencingKeys
+         - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         -
+       * - maxNodeIdLength
+         - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         -
+       * - maxPubKeyLength
+         - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `CometBftConfigLimits <type-splice-cometbft-cometbftconfiglimits-81004_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `CometBftConfigLimits <type-splice-cometbft-cometbftconfiglimits-81004_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"cometBft\" :ref:`SynchronizerNodeConfigLimits <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfiglimits-3659>` `CometBftConfigLimits <type-splice-cometbft-cometbftconfiglimits-81004_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"maxNodeIdLength\" `CometBftConfigLimits <type-splice-cometbft-cometbftconfiglimits-81004_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"maxNumCometBftNodes\" `CometBftConfigLimits <type-splice-cometbft-cometbftconfiglimits-81004_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"maxNumGovernanceKeys\" `CometBftConfigLimits <type-splice-cometbft-cometbftconfiglimits-81004_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"maxNumSequencingKeys\" `CometBftConfigLimits <type-splice-cometbft-cometbftconfiglimits-81004_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"maxPubKeyLength\" `CometBftConfigLimits <type-splice-cometbft-cometbftconfiglimits-81004_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"cometBft\" :ref:`SynchronizerNodeConfigLimits <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfiglimits-3659>` `CometBftConfigLimits <type-splice-cometbft-cometbftconfiglimits-81004_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"maxNodeIdLength\" `CometBftConfigLimits <type-splice-cometbft-cometbftconfiglimits-81004_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"maxNumCometBftNodes\" `CometBftConfigLimits <type-splice-cometbft-cometbftconfiglimits-81004_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"maxNumGovernanceKeys\" `CometBftConfigLimits <type-splice-cometbft-cometbftconfiglimits-81004_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"maxNumSequencingKeys\" `CometBftConfigLimits <type-splice-cometbft-cometbftconfiglimits-81004_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"maxPubKeyLength\" `CometBftConfigLimits <type-splice-cometbft-cometbftconfiglimits-81004_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+.. _type-splice-cometbft-cometbftnodeconfig-40106:
+
+**data** `CometBftNodeConfig <type-splice-cometbft-cometbftnodeconfig-40106_>`_
+
+  Config for a single CometBFT node\.
+
+  .. _constr-splice-cometbft-cometbftnodeconfig-66571:
+
+  `CometBftNodeConfig <constr-splice-cometbft-cometbftnodeconfig-66571_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - validatorPubKey
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         -
+       * - votingPower
+         - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `CometBftNodeConfig <type-splice-cometbft-cometbftnodeconfig-40106_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `CometBftNodeConfig <type-splice-cometbft-cometbftnodeconfig-40106_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"nodes\" `CometBftConfig <type-splice-cometbft-cometbftconfig-79018_>`_ (`Map <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-map-90052>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_ `CometBftNodeConfig <type-splice-cometbft-cometbftnodeconfig-40106_>`_)
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"validatorPubKey\" `CometBftNodeConfig <type-splice-cometbft-cometbftnodeconfig-40106_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"votingPower\" `CometBftNodeConfig <type-splice-cometbft-cometbftnodeconfig-40106_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"nodes\" `CometBftConfig <type-splice-cometbft-cometbftconfig-79018_>`_ (`Map <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-map-90052>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_ `CometBftNodeConfig <type-splice-cometbft-cometbftnodeconfig-40106_>`_)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"validatorPubKey\" `CometBftNodeConfig <type-splice-cometbft-cometbftnodeconfig-40106_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"votingPower\" `CometBftNodeConfig <type-splice-cometbft-cometbftnodeconfig-40106_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+.. _type-splice-cometbft-governancekeyconfig-71820:
+
+**data** `GovernanceKeyConfig <type-splice-cometbft-governancekeyconfig-71820_>`_
+
+  Config for a key used by the SvApp to create CometBFT network governance transactions\.
+
+  .. _constr-splice-cometbft-governancekeyconfig-53123:
+
+  `GovernanceKeyConfig <constr-splice-cometbft-governancekeyconfig-53123_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - pubKey
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `GovernanceKeyConfig <type-splice-cometbft-governancekeyconfig-71820_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `GovernanceKeyConfig <type-splice-cometbft-governancekeyconfig-71820_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"governanceKeys\" `CometBftConfig <type-splice-cometbft-cometbftconfig-79018_>`_ \[`GovernanceKeyConfig <type-splice-cometbft-governancekeyconfig-71820_>`_\]
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"pubKey\" `GovernanceKeyConfig <type-splice-cometbft-governancekeyconfig-71820_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"governanceKeys\" `CometBftConfig <type-splice-cometbft-cometbftconfig-79018_>`_ \[`GovernanceKeyConfig <type-splice-cometbft-governancekeyconfig-71820_>`_\]
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"pubKey\" `GovernanceKeyConfig <type-splice-cometbft-governancekeyconfig-71820_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+.. _type-splice-cometbft-sequencingkeyconfig-30402:
+
+**data** `SequencingKeyConfig <type-splice-cometbft-sequencingkeyconfig-30402_>`_
+
+  Config for a key used by the CometBFT Sequencer Driver to sequence messages via the CometBFT network\.
+
+  .. _constr-splice-cometbft-sequencingkeyconfig-16921:
+
+  `SequencingKeyConfig <constr-splice-cometbft-sequencingkeyconfig-16921_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - pubKey
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `SequencingKeyConfig <type-splice-cometbft-sequencingkeyconfig-30402_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `SequencingKeyConfig <type-splice-cometbft-sequencingkeyconfig-30402_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"pubKey\" `SequencingKeyConfig <type-splice-cometbft-sequencingkeyconfig-30402_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"sequencingKeys\" `CometBftConfig <type-splice-cometbft-cometbftconfig-79018_>`_ \[`SequencingKeyConfig <type-splice-cometbft-sequencingkeyconfig-30402_>`_\]
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"pubKey\" `SequencingKeyConfig <type-splice-cometbft-sequencingkeyconfig-30402_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"sequencingKeys\" `CometBftConfig <type-splice-cometbft-cometbftconfig-79018_>`_ \[`SequencingKeyConfig <type-splice-cometbft-sequencingkeyconfig-30402_>`_\]
+
+Functions
+---------
+
+.. _function-splice-cometbft-emptycometbftconfig-94578:
+
+`emptyCometBftConfig <function-splice-cometbft-emptycometbftconfig-94578_>`_
+  \: `CometBftConfig <type-splice-cometbft-cometbftconfig-79018_>`_
+
+.. _function-splice-cometbft-defaultcometbftconfiglimits-24082:
+
+`defaultCometBftConfigLimits <function-splice-cometbft-defaultcometbftconfiglimits-24082_>`_
+  \: `CometBftConfigLimits <type-splice-cometbft-cometbftconfiglimits-81004_>`_
+
+.. _function-splice-cometbft-validcometbftconfig-37027:
+
+`validCometBftConfig <function-splice-cometbft-validcometbftconfig-37027_>`_
+  \: `CometBftConfigLimits <type-splice-cometbft-cometbftconfiglimits-81004_>`_ \-\> `CometBftConfig <type-splice-cometbft-cometbftconfig-79018_>`_ \-\> `Bool <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-bool-66265>`_
+
+.. _function-splice-cometbft-validcometbftnodeconfig-27003:
+
+`validCometBftNodeConfig <function-splice-cometbft-validcometbftnodeconfig-27003_>`_
+  \: `CometBftConfigLimits <type-splice-cometbft-cometbftconfiglimits-81004_>`_ \-\> (`Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_, `CometBftNodeConfig <type-splice-cometbft-cometbftnodeconfig-40106_>`_) \-\> `Bool <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-bool-66265>`_
+
+.. _function-splice-cometbft-totalvotingpower-81580:
+
+`totalVotingPower <function-splice-cometbft-totalvotingpower-81580_>`_
+  \: `CometBftConfig <type-splice-cometbft-cometbftconfig-79018_>`_ \-\> `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_

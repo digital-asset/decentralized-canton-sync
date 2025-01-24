@@ -1,0 +1,114 @@
+.. _module-splice-util-50740:
+
+Splice.Util
+===========
+
+Utility functions shared across all splice apps\.
+
+Typeclasses
+-----------
+
+.. _class-splice-util-hascheckedfetch-36555:
+
+**class** (`HasFetch <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfetch-52387>`_ t, `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ t, `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ cgid, `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ cgid) \=\> `HasCheckedFetch <class-splice-util-hascheckedfetch-36555_>`_ t cgid **where**
+
+  Contracts typically come in groups\. For example, all contracts managed by a specific DSO party\.
+
+  We aim to always fetch with a specific contract group identifier to ensure that we do not mixup
+  contracts from different groups\.
+
+  .. _function-splice-util-contractgroupid-63283:
+
+  `contractGroupId <function-splice-util-contractgroupid-63283_>`_
+    \: t \-\> cgid
+
+Functions
+---------
+
+.. _function-splice-util-requirematchingcontract-54053:
+
+`requireMatchingContract <function-splice-util-requirematchingcontract-54053_>`_
+  \: (`Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ t, `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ t, `HasFetch <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfetch-52387>`_ t) \=\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ t \-\> t \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ ()
+
+  Require that a contract\-id refers to a specific contract\.
+
+.. _function-splice-util-require-11486:
+
+`require <function-splice-util-require-11486_>`_
+  \: `CanAssert <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-assert-canassert-67323>`_ m \=\> `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_ \-\> `Bool <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-bool-66265>`_ \-\> m ()
+
+  Check whether a required condition is true\. If it's not, abort the
+  transaction with a message saying that the requirement was not met\.
+
+.. _function-splice-util-fetchandarchive-96960:
+
+`fetchAndArchive <function-splice-util-fetchandarchive-96960_>`_
+  \: (`HasCheckedFetch <class-splice-util-hascheckedfetch-36555_>`_ t cgid, `HasArchive <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasarchive-7071>`_ t) \=\> cgid \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ t \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ t
+
+  Fetch and archive a contract in one go\.
+
+  Use this when implementing choices that mutate another contract by
+  fetching, archiving, and then creating the updated contract\.
+
+.. _function-splice-util-fetchreferencedata-72475:
+
+`fetchReferenceData <function-splice-util-fetchreferencedata-72475_>`_
+  \: `HasCheckedFetch <class-splice-util-hascheckedfetch-36555_>`_ t cgid \=\> cgid \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ t \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ t
+
+  Fetch a contract that serves as reference data\.
+
+  Use this whenever you need to fetch a contract that you do not intend to mutate\.
+
+.. _function-splice-util-fetchbutarchivelater-86159:
+
+`fetchButArchiveLater <function-splice-util-fetchbutarchivelater-86159_>`_
+  \: `HasCheckedFetch <class-splice-util-hascheckedfetch-36555_>`_ t cgid \=\> cgid \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ t \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ t
+
+  Fetch a contract that is not reference data, and should be archived later in some cases\.
+
+  Prefer ``fetchAndArchive`` over this function, as it avoids forgetting to archive the contract\.
+
+.. _function-splice-util-fetchpublicreferencedata-76996:
+
+`fetchPublicReferenceData <function-splice-util-fetchpublicreferencedata-76996_>`_
+  \: (`HasCheckedFetch <class-splice-util-hascheckedfetch-36555_>`_ t cgid, `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ t ch t) \=\> cgid \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ t \-\> ch \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ t
+
+  Fetch a contract that offers a choice anybody to be read as reference data\.
+
+.. _function-splice-util-fetchuncheckedandarchive-65397:
+
+`fetchUncheckedAndArchive <function-splice-util-fetchuncheckedandarchive-65397_>`_
+  \: (`HasFetch <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfetch-52387>`_ b, `HasArchive <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasarchive-7071>`_ b) \=\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ b \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ b
+
+  Fetch and archive a contract in one go\.
+
+  Use this when implementing choices that mutate another contract by
+  fetching, archiving, and then creating the updated contract\.
+
+.. _function-splice-util-fetchuncheckedreferencedata-5520:
+
+`fetchUncheckedReferenceData <function-splice-util-fetchuncheckedreferencedata-5520_>`_
+  \: `HasFetch <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfetch-52387>`_ t \=\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ t \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ t
+
+  Fetch a contract that serves as reference data\.
+
+  Use this whenever you need to fetch a contract that you do not intend to mutate\.
+
+.. _function-splice-util-fetchuncheckedbutarchivelater-82900:
+
+`fetchUncheckedButArchiveLater <function-splice-util-fetchuncheckedbutarchivelater-82900_>`_
+  \: `HasFetch <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfetch-52387>`_ t \=\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ t \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ t
+
+  Fetch a contract that is not reference data, and should be archived later in some cases\.
+
+  Prefer ``fetchAndArchive`` over this function, as it avoids forgetting to archive the contract\.
+
+.. _function-splice-util-potentiallyunsafearchive-47027:
+
+`potentiallyUnsafeArchive <function-splice-util-potentiallyunsafearchive-47027_>`_
+  \: `HasArchive <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasarchive-7071>`_ t \=\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ t \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ ()
+
+  A more appropriately named version of ``archive``\.
+
+  Please justify all its uses, and where possible prefer ``fetchAndArchive``
+  so that the contract group identifier is surely performed\.

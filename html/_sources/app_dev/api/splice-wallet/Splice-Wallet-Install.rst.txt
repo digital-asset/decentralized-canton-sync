@@ -1,0 +1,1397 @@
+.. _module-splice-wallet-install-94326:
+
+Splice.Wallet.Install
+=====================
+
+Templates
+---------
+
+.. _type-splice-wallet-install-walletappinstall-78445:
+
+**template** `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_
+
+  Signatory\: endUserParty, validatorParty
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - dsoParty
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - validatorParty
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - endUserName
+       - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+       -
+     * - endUserParty
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+
+  + **Choice** Archive
+
+    Controller\: endUserParty, validatorParty
+
+    Returns\: ()
+
+    (no fields)
+
+  + .. _type-splice-wallet-install-walletappinstallacceptedtransferofferabort-68763:
+
+    **Choice** `WalletAppInstall_AcceptedTransferOffer_Abort <type-splice-wallet-install-walletappinstallacceptedtransferofferabort-68763_>`_
+
+    Controller\: validatorParty
+
+    Returns\: `WalletAppInstall_AcceptedTransferOffer_AbortResult <type-splice-wallet-install-walletappinstallacceptedtransferofferabortresult-76594_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - cid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`AcceptedTransferOffer <type-splice-wallet-transferoffer-acceptedtransferoffer-37657>`
+         -
+       * - reason
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         -
+
+  + .. _type-splice-wallet-install-walletappinstallacceptedtransferofferexpire-57521:
+
+    **Choice** `WalletAppInstall_AcceptedTransferOffer_Expire <type-splice-wallet-install-walletappinstallacceptedtransferofferexpire-57521_>`_
+
+    Controller\: validatorParty
+
+    Returns\: `WalletAppInstall_AcceptedTransferOffer_ExpireResult <type-splice-wallet-install-walletappinstallacceptedtransferofferexpireresult-73364_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - cid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`AcceptedTransferOffer <type-splice-wallet-transferoffer-acceptedtransferoffer-37657>`
+         -
+
+  + .. _type-splice-wallet-install-walletappinstallacceptedtransferofferwithdraw-52092:
+
+    **Choice** `WalletAppInstall_AcceptedTransferOffer_Withdraw <type-splice-wallet-install-walletappinstallacceptedtransferofferwithdraw-52092_>`_
+
+    Controller\: validatorParty
+
+    Returns\: `WalletAppInstall_AcceptedTransferOffer_WithdrawResult <type-splice-wallet-install-walletappinstallacceptedtransferofferwithdrawresult-30981_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - cid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`AcceptedTransferOffer <type-splice-wallet-transferoffer-acceptedtransferoffer-37657>`
+         -
+       * - reason
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         -
+
+  + .. _type-splice-wallet-install-walletappinstallapppaymentrequestexpire-63657:
+
+    **Choice** `WalletAppInstall_AppPaymentRequest_Expire <type-splice-wallet-install-walletappinstallapppaymentrequestexpire-63657_>`_
+
+    Controller\: validatorParty
+
+    Returns\: `WalletAppInstall_AppPaymentRequest_ExpireResult <type-splice-wallet-install-walletappinstallapppaymentrequestexpireresult-40772_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - cid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ AppPaymentRequest
+         -
+
+  + .. _type-splice-wallet-install-walletappinstallapppaymentrequestreject-30597:
+
+    **Choice** `WalletAppInstall_AppPaymentRequest_Reject <type-splice-wallet-install-walletappinstallapppaymentrequestreject-30597_>`_
+
+    Controller\: validatorParty
+
+    Returns\: `WalletAppInstall_AppPaymentRequest_RejectResult <type-splice-wallet-install-walletappinstallapppaymentrequestrejectresult-13912_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - cid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ AppPaymentRequest
+         -
+
+  + .. _type-splice-wallet-install-walletappinstallbuytrafficrequestcancel-57332:
+
+    **Choice** `WalletAppInstall_BuyTrafficRequest_Cancel <type-splice-wallet-install-walletappinstallbuytrafficrequestcancel-57332_>`_
+
+    Controller\: validatorParty
+
+    Returns\: `WalletAppInstall_BuyTrafficRequest_CancelResult <type-splice-wallet-install-walletappinstallbuytrafficrequestcancelresult-7425_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - requestCid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`BuyTrafficRequest <type-splice-wallet-buytrafficrequest-buytrafficrequest-65116>`
+         -
+       * - reason
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         -
+
+  + .. _type-splice-wallet-install-walletappinstallbuytrafficrequestexpire-56287:
+
+    **Choice** `WalletAppInstall_BuyTrafficRequest_Expire <type-splice-wallet-install-walletappinstallbuytrafficrequestexpire-56287_>`_
+
+    Controller\: validatorParty
+
+    Returns\: `WalletAppInstall_BuyTrafficRequest_ExpireResult <type-splice-wallet-install-walletappinstallbuytrafficrequestexpireresult-53806_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - requestCid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`BuyTrafficRequest <type-splice-wallet-buytrafficrequest-buytrafficrequest-65116>`
+         -
+
+  + .. _type-splice-wallet-install-walletappinstallcreatebuytrafficrequest-33718:
+
+    **Choice** `WalletAppInstall_CreateBuyTrafficRequest <type-splice-wallet-install-walletappinstallcreatebuytrafficrequest-33718_>`_
+
+    Controller\: validatorParty
+
+    Returns\: `WalletAppInstall_CreateBuyTrafficRequestResult <type-splice-wallet-install-walletappinstallcreatebuytrafficrequestresult-63991_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - memberId
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         -
+       * - synchronizerId
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         -
+       * - migrationId
+         - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         -
+       * - trafficAmount
+         - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         -
+       * - expiresAt
+         - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+         -
+       * - trackingId
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         -
+
+  + .. _type-splice-wallet-install-walletappinstallcreatetransferoffer-6821:
+
+    **Choice** `WalletAppInstall_CreateTransferOffer <type-splice-wallet-install-walletappinstallcreatetransferoffer-6821_>`_
+
+    Controller\: validatorParty
+
+    Returns\: `WalletAppInstall_CreateTransferOfferResult <type-splice-wallet-install-walletappinstallcreatetransferofferresult-68160_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - receiver
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - amount
+         - PaymentAmount
+         -
+       * - description
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         -
+       * - expiresAt
+         - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+         -
+       * - trackingId
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         -
+
+  + .. _type-splice-wallet-install-walletappinstallexecutebatch-90628:
+
+    **Choice** `WalletAppInstall_ExecuteBatch <type-splice-wallet-install-walletappinstallexecutebatch-90628_>`_
+
+    Controller\: validatorParty
+
+    Returns\: `WalletAppInstall_ExecuteBatchResult <type-splice-wallet-install-walletappinstallexecutebatchresult-15097_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - context
+         - PaymentTransferContext
+         -
+       * - inputs
+         - \[TransferInput\]
+         -
+       * - operations
+         - \[`AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_\]
+         -
+
+  + .. _type-splice-wallet-install-walletappinstallfeaturedapprightscancel-92504:
+
+    **Choice** `WalletAppInstall_FeaturedAppRights_Cancel <type-splice-wallet-install-walletappinstallfeaturedapprightscancel-92504_>`_
+
+    Controller\: validatorParty
+
+    Returns\: `WalletAppInstall_FeaturedAppRights_CancelResult <type-splice-wallet-install-walletappinstallfeaturedapprightscancelresult-9581_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - cid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ FeaturedAppRight
+         -
+
+  + .. _type-splice-wallet-install-walletappinstallfeaturedapprightsselfgrant-7751:
+
+    **Choice** `WalletAppInstall_FeaturedAppRights_SelfGrant <type-splice-wallet-install-walletappinstallfeaturedapprightsselfgrant-7751_>`_
+
+    Controller\: validatorParty
+
+    Returns\: `WalletAppInstall_FeaturedAppRights_SelfGrantResult <type-splice-wallet-install-walletappinstallfeaturedapprightsselfgrantresult-93142_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - amuletRulesCid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ AmuletRules
+         -
+
+  + .. _type-splice-wallet-install-walletappinstallsubscriptionidlestatecancelsubscription-97037:
+
+    **Choice** `WalletAppInstall_SubscriptionIdleState_CancelSubscription <type-splice-wallet-install-walletappinstallsubscriptionidlestatecancelsubscription-97037_>`_
+
+    Controller\: validatorParty
+
+    Returns\: `WalletAppInstall_SubscriptionIdleState_CancelSubscriptionResult <type-splice-wallet-install-walletappinstallsubscriptionidlestatecancelsubscriptionresult-84496_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - cid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ SubscriptionIdleState
+         -
+
+  + .. _type-splice-wallet-install-walletappinstallsubscriptionrequestreject-94073:
+
+    **Choice** `WalletAppInstall_SubscriptionRequest_Reject <type-splice-wallet-install-walletappinstallsubscriptionrequestreject-94073_>`_
+
+    Controller\: validatorParty
+
+    Returns\: `WalletAppInstall_SubscriptionRequest_RejectResult <type-splice-wallet-install-walletappinstallsubscriptionrequestrejectresult-88896_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - cid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ SubscriptionRequest
+         -
+
+  + .. _type-splice-wallet-install-walletappinstalltransferofferaccept-7295:
+
+    **Choice** `WalletAppInstall_TransferOffer_Accept <type-splice-wallet-install-walletappinstalltransferofferaccept-7295_>`_
+
+    Controller\: validatorParty
+
+    Returns\: `WalletAppInstall_TransferOffer_AcceptResult <type-splice-wallet-install-walletappinstalltransferofferacceptresult-54230_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - cid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`TransferOffer <type-splice-wallet-transferoffer-transferoffer-51604>`
+         -
+
+  + .. _type-splice-wallet-install-walletappinstalltransferofferexpire-5606:
+
+    **Choice** `WalletAppInstall_TransferOffer_Expire <type-splice-wallet-install-walletappinstalltransferofferexpire-5606_>`_
+
+    Controller\: validatorParty
+
+    Returns\: `WalletAppInstall_TransferOffer_ExpireResult <type-splice-wallet-install-walletappinstalltransferofferexpireresult-53807_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - cid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`TransferOffer <type-splice-wallet-transferoffer-transferoffer-51604>`
+         -
+
+  + .. _type-splice-wallet-install-walletappinstalltransferofferreject-96746:
+
+    **Choice** `WalletAppInstall_TransferOffer_Reject <type-splice-wallet-install-walletappinstalltransferofferreject-96746_>`_
+
+    Controller\: validatorParty
+
+    Returns\: `WalletAppInstall_TransferOffer_RejectResult <type-splice-wallet-install-walletappinstalltransferofferrejectresult-95787_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - cid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`TransferOffer <type-splice-wallet-transferoffer-transferoffer-51604>`
+         -
+
+  + .. _type-splice-wallet-install-walletappinstalltransferofferwithdraw-19519:
+
+    **Choice** `WalletAppInstall_TransferOffer_Withdraw <type-splice-wallet-install-walletappinstalltransferofferwithdraw-19519_>`_
+
+    Controller\: validatorParty
+
+    Returns\: `WalletAppInstall_TransferOffer_WithdrawResult <type-splice-wallet-install-walletappinstalltransferofferwithdrawresult-71362_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - cid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`TransferOffer <type-splice-wallet-transferoffer-transferoffer-51604>`
+         -
+       * - reason
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         -
+
+Data Types
+----------
+
+.. _type-splice-wallet-install-amuletoperation-34848:
+
+**data** `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_
+
+  .. _constr-splice-wallet-install-coapppayment-62800:
+
+  `CO_AppPayment <constr-splice-wallet-install-coapppayment-62800_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ AppPaymentRequest)
+
+
+  .. _constr-splice-wallet-install-cocompleteacceptedtransfer-10636:
+
+  `CO_CompleteAcceptedTransfer <constr-splice-wallet-install-cocompleteacceptedtransfer-10636_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`AcceptedTransferOffer <type-splice-wallet-transferoffer-acceptedtransferoffer-37657>`)
+
+
+  .. _constr-splice-wallet-install-cosubscriptionacceptandmakeinitialpayment-39374:
+
+  `CO_SubscriptionAcceptAndMakeInitialPayment <constr-splice-wallet-install-cosubscriptionacceptandmakeinitialpayment-39374_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ SubscriptionRequest)
+
+
+  .. _constr-splice-wallet-install-cosubscriptionmakepayment-67209:
+
+  `CO_SubscriptionMakePayment <constr-splice-wallet-install-cosubscriptionmakepayment-67209_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ SubscriptionIdleState)
+
+
+  .. _constr-splice-wallet-install-comergetransferinputs-20390:
+
+  `CO_MergeTransferInputs <constr-splice-wallet-install-comergetransferinputs-20390_>`_
+
+
+  .. _constr-splice-wallet-install-cobuymembertraffic-66746:
+
+  `CO_BuyMemberTraffic <constr-splice-wallet-install-cobuymembertraffic-66746_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - trafficAmount
+         - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         -
+       * - memberId
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         -
+       * - synchronizerId
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         -
+       * - migrationId
+         - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         -
+       * - minTopupInterval
+         - `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_
+         -
+       * - topupStateCid
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`ValidatorTopUpState <type-splice-wallet-topupstate-validatortopupstate-56541>`)
+         -
+
+  .. _constr-splice-wallet-install-cocompletebuytrafficrequest-39331:
+
+  `CO_CompleteBuyTrafficRequest <constr-splice-wallet-install-cocompletebuytrafficrequest-39331_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - trafficRequestCid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`BuyTrafficRequest <type-splice-wallet-buytrafficrequest-buytrafficrequest-65116>`
+         -
+
+  .. _constr-splice-wallet-install-cotap-54191:
+
+  `CO_Tap <constr-splice-wallet-install-cotap-54191_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - tapAmount
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         -
+
+  .. _constr-splice-wallet-install-extamuletoperation-64373:
+
+  `ExtAmuletOperation <constr-splice-wallet-install-extamuletoperation-64373_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - dummyUnitField
+         - ()
+         - Extension constructor (and field) to work around the current lack of upgrading for variants in Daml 3\.0
+
+  .. _constr-splice-wallet-install-cocreateexternalpartysetupproposal-60911:
+
+  `CO_CreateExternalPartySetupProposal <constr-splice-wallet-install-cocreateexternalpartysetupproposal-60911_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - externalParty
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - preapprovalExpiresAt
+         - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+         -
+
+  .. _constr-splice-wallet-install-coaccepttransferpreapprovalproposal-59253:
+
+  `CO_AcceptTransferPreapprovalProposal <constr-splice-wallet-install-coaccepttransferpreapprovalproposal-59253_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - preapprovalProposalCid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`TransferPreapprovalProposal <type-splice-wallet-transferpreapproval-transferpreapprovalproposal-39002>`
+         -
+       * - expiresAt
+         - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+         -
+
+  .. _constr-splice-wallet-install-corenewtransferpreapproval-62183:
+
+  `CO_RenewTransferPreapproval <constr-splice-wallet-install-corenewtransferpreapproval-62183_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - previousApprovalCid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TransferPreapproval
+         -
+       * - newExpiresAt
+         - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+         -
+
+  .. _constr-splice-wallet-install-cotransferpreapprovalsend-6635:
+
+  `CO_TransferPreapprovalSend <constr-splice-wallet-install-cotransferpreapprovalsend-6635_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - transferPreapprovalCid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TransferPreapproval
+         -
+       * - providerFeaturedAppRightCid
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ FeaturedAppRight)
+         -
+       * - amount
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"amount\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"dummyUnitField\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ ()
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"expiresAt\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"externalParty\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"memberId\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"migrationId\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"minTopupInterval\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"newExpiresAt\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"operations\" `WalletAppInstall_ExecuteBatch <type-splice-wallet-install-walletappinstallexecutebatch-90628_>`_ \[`AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_\]
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"preapprovalExpiresAt\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"preapprovalProposalCid\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`TransferPreapprovalProposal <type-splice-wallet-transferpreapproval-transferpreapprovalproposal-39002>`)
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"previousApprovalCid\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TransferPreapproval)
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"providerFeaturedAppRightCid\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ FeaturedAppRight))
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"synchronizerId\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"tapAmount\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"topupStateCid\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`ValidatorTopUpState <type-splice-wallet-topupstate-validatortopupstate-56541>`))
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trafficAmount\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trafficRequestCid\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`BuyTrafficRequest <type-splice-wallet-buytrafficrequest-buytrafficrequest-65116>`)
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"transferPreapprovalCid\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TransferPreapproval)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"amount\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"dummyUnitField\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ ()
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"expiresAt\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"externalParty\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"memberId\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"migrationId\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"minTopupInterval\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"newExpiresAt\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"operations\" `WalletAppInstall_ExecuteBatch <type-splice-wallet-install-walletappinstallexecutebatch-90628_>`_ \[`AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_\]
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"preapprovalExpiresAt\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"preapprovalProposalCid\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`TransferPreapprovalProposal <type-splice-wallet-transferpreapproval-transferpreapprovalproposal-39002>`)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"previousApprovalCid\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TransferPreapproval)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"providerFeaturedAppRightCid\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ FeaturedAppRight))
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"synchronizerId\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"tapAmount\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"topupStateCid\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`ValidatorTopUpState <type-splice-wallet-topupstate-validatortopupstate-56541>`))
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trafficAmount\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trafficRequestCid\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`BuyTrafficRequest <type-splice-wallet-buytrafficrequest-buytrafficrequest-65116>`)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"transferPreapprovalCid\" `AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TransferPreapproval)
+
+.. _type-splice-wallet-install-amuletoperationoutcome-52121:
+
+**data** `AmuletOperationOutcome <type-splice-wallet-install-amuletoperationoutcome-52121_>`_
+
+  .. _constr-splice-wallet-install-cooacceptedapppayment-45545:
+
+  `COO_AcceptedAppPayment <constr-splice-wallet-install-cooacceptedapppayment-45545_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ AcceptedAppPayment)
+
+
+  .. _constr-splice-wallet-install-coocompleteacceptedtransfer-44398:
+
+  `COO_CompleteAcceptedTransfer <constr-splice-wallet-install-coocompleteacceptedtransfer-44398_>`_ (TransferResult, :ref:`TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959>`)
+
+
+  .. _constr-splice-wallet-install-coosubscriptioninitialpayment-16470:
+
+  `COO_SubscriptionInitialPayment <constr-splice-wallet-install-coosubscriptioninitialpayment-16470_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ SubscriptionInitialPayment)
+
+
+  .. _constr-splice-wallet-install-coosubscriptionpayment-22077:
+
+  `COO_SubscriptionPayment <constr-splice-wallet-install-coosubscriptionpayment-22077_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ SubscriptionPayment)
+
+
+  .. _constr-splice-wallet-install-coomergetransferinputs-47604:
+
+  `COO_MergeTransferInputs <constr-splice-wallet-install-coomergetransferinputs-47604_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Amulet))
+
+
+  .. _constr-splice-wallet-install-coobuymembertraffic-30084:
+
+  `COO_BuyMemberTraffic <constr-splice-wallet-install-coobuymembertraffic-30084_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ MemberTraffic)
+
+
+  .. _constr-splice-wallet-install-coocompletebuytrafficrequest-58397:
+
+  `COO_CompleteBuyTrafficRequest <constr-splice-wallet-install-coocompletebuytrafficrequest-58397_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ MemberTraffic, :ref:`BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943>`)
+
+
+  .. _constr-splice-wallet-install-cootap-14325:
+
+  `COO_Tap <constr-splice-wallet-install-cootap-14325_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Amulet)
+
+
+  .. _constr-splice-wallet-install-cooerror-5538:
+
+  `COO_Error <constr-splice-wallet-install-cooerror-5538_>`_ InvalidTransferReason
+
+
+  .. _constr-splice-wallet-install-extamuletoperationoutcome-44318:
+
+  `ExtAmuletOperationOutcome <constr-splice-wallet-install-extamuletoperationoutcome-44318_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - dummyUnitField
+         - ()
+         - Extension constructor (and field) to work around the current lack of upgrading for variants in Daml 3\.0
+
+  .. _constr-splice-wallet-install-coocreateexternalpartysetupproposal-75945:
+
+  `COO_CreateExternalPartySetupProposal <constr-splice-wallet-install-coocreateexternalpartysetupproposal-75945_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ ExternalPartySetupProposal)
+
+
+  .. _constr-splice-wallet-install-cooaccepttransferpreapprovalproposal-26799:
+
+  `COO_AcceptTransferPreapprovalProposal <constr-splice-wallet-install-cooaccepttransferpreapprovalproposal-26799_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TransferPreapproval)
+
+
+  .. _constr-splice-wallet-install-coorenewtransferpreapproval-16241:
+
+  `COO_RenewTransferPreapproval <constr-splice-wallet-install-coorenewtransferpreapproval-16241_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TransferPreapproval)
+
+
+  .. _constr-splice-wallet-install-cootransferpreapprovalsend-96669:
+
+  `COO_TransferPreapprovalSend <constr-splice-wallet-install-cootransferpreapprovalsend-96669_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Amulet))
+
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `AmuletOperationOutcome <type-splice-wallet-install-amuletoperationoutcome-52121_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `AmuletOperationOutcome <type-splice-wallet-install-amuletoperationoutcome-52121_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"dummyUnitField\" `AmuletOperationOutcome <type-splice-wallet-install-amuletoperationoutcome-52121_>`_ ()
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"outcomes\" `WalletAppInstall_ExecuteBatchResult <type-splice-wallet-install-walletappinstallexecutebatchresult-15097_>`_ \[`AmuletOperationOutcome <type-splice-wallet-install-amuletoperationoutcome-52121_>`_\]
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"dummyUnitField\" `AmuletOperationOutcome <type-splice-wallet-install-amuletoperationoutcome-52121_>`_ ()
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"outcomes\" `WalletAppInstall_ExecuteBatchResult <type-splice-wallet-install-walletappinstallexecutebatchresult-15097_>`_ \[`AmuletOperationOutcome <type-splice-wallet-install-amuletoperationoutcome-52121_>`_\]
+
+.. _type-splice-wallet-install-executioncontext-4075:
+
+**data** `ExecutionContext <type-splice-wallet-install-executioncontext-4075_>`_
+
+  .. _constr-splice-wallet-install-executioncontext-25706:
+
+  `ExecutionContext <constr-splice-wallet-install-executioncontext-25706_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - dso
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - endUser
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - validator
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - paymentContext
+         - PaymentTransferContext
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"dso\" `ExecutionContext <type-splice-wallet-install-executioncontext-4075_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"endUser\" `ExecutionContext <type-splice-wallet-install-executioncontext-4075_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"paymentContext\" `ExecutionContext <type-splice-wallet-install-executioncontext-4075_>`_ PaymentTransferContext
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"validator\" `ExecutionContext <type-splice-wallet-install-executioncontext-4075_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"dso\" `ExecutionContext <type-splice-wallet-install-executioncontext-4075_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"endUser\" `ExecutionContext <type-splice-wallet-install-executioncontext-4075_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"paymentContext\" `ExecutionContext <type-splice-wallet-install-executioncontext-4075_>`_ PaymentTransferContext
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"validator\" `ExecutionContext <type-splice-wallet-install-executioncontext-4075_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+.. _type-splice-wallet-install-walletappinstallacceptedtransferofferabortresult-76594:
+
+**data** `WalletAppInstall_AcceptedTransferOffer_AbortResult <type-splice-wallet-install-walletappinstallacceptedtransferofferabortresult-76594_>`_
+
+  .. _constr-splice-wallet-install-walletappinstallacceptedtransferofferabortresult-71839:
+
+  `WalletAppInstall_AcceptedTransferOffer_AbortResult <constr-splice-wallet-install-walletappinstallacceptedtransferofferabortresult-71839_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - trackingInfo
+         - :ref:`TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959>`
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" `WalletAppInstall_AcceptedTransferOffer_AbortResult <type-splice-wallet-install-walletappinstallacceptedtransferofferabortresult-76594_>`_ :ref:`TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959>`
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" `WalletAppInstall_AcceptedTransferOffer_AbortResult <type-splice-wallet-install-walletappinstallacceptedtransferofferabortresult-76594_>`_ :ref:`TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959>`
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_AcceptedTransferOffer_Abort <type-splice-wallet-install-walletappinstallacceptedtransferofferabort-68763_>`_ `WalletAppInstall_AcceptedTransferOffer_AbortResult <type-splice-wallet-install-walletappinstallacceptedtransferofferabortresult-76594_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_AcceptedTransferOffer_Abort <type-splice-wallet-install-walletappinstallacceptedtransferofferabort-68763_>`_ `WalletAppInstall_AcceptedTransferOffer_AbortResult <type-splice-wallet-install-walletappinstallacceptedtransferofferabortresult-76594_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_AcceptedTransferOffer_Abort <type-splice-wallet-install-walletappinstallacceptedtransferofferabort-68763_>`_ `WalletAppInstall_AcceptedTransferOffer_AbortResult <type-splice-wallet-install-walletappinstallacceptedtransferofferabortresult-76594_>`_
+
+.. _type-splice-wallet-install-walletappinstallacceptedtransferofferexpireresult-73364:
+
+**data** `WalletAppInstall_AcceptedTransferOffer_ExpireResult <type-splice-wallet-install-walletappinstallacceptedtransferofferexpireresult-73364_>`_
+
+  .. _constr-splice-wallet-install-walletappinstallacceptedtransferofferexpireresult-63931:
+
+  `WalletAppInstall_AcceptedTransferOffer_ExpireResult <constr-splice-wallet-install-walletappinstallacceptedtransferofferexpireresult-63931_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - trackingInfo
+         - :ref:`TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959>`
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" `WalletAppInstall_AcceptedTransferOffer_ExpireResult <type-splice-wallet-install-walletappinstallacceptedtransferofferexpireresult-73364_>`_ :ref:`TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959>`
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" `WalletAppInstall_AcceptedTransferOffer_ExpireResult <type-splice-wallet-install-walletappinstallacceptedtransferofferexpireresult-73364_>`_ :ref:`TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959>`
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_AcceptedTransferOffer_Expire <type-splice-wallet-install-walletappinstallacceptedtransferofferexpire-57521_>`_ `WalletAppInstall_AcceptedTransferOffer_ExpireResult <type-splice-wallet-install-walletappinstallacceptedtransferofferexpireresult-73364_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_AcceptedTransferOffer_Expire <type-splice-wallet-install-walletappinstallacceptedtransferofferexpire-57521_>`_ `WalletAppInstall_AcceptedTransferOffer_ExpireResult <type-splice-wallet-install-walletappinstallacceptedtransferofferexpireresult-73364_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_AcceptedTransferOffer_Expire <type-splice-wallet-install-walletappinstallacceptedtransferofferexpire-57521_>`_ `WalletAppInstall_AcceptedTransferOffer_ExpireResult <type-splice-wallet-install-walletappinstallacceptedtransferofferexpireresult-73364_>`_
+
+.. _type-splice-wallet-install-walletappinstallacceptedtransferofferwithdrawresult-30981:
+
+**data** `WalletAppInstall_AcceptedTransferOffer_WithdrawResult <type-splice-wallet-install-walletappinstallacceptedtransferofferwithdrawresult-30981_>`_
+
+  .. _constr-splice-wallet-install-walletappinstallacceptedtransferofferwithdrawresult-50854:
+
+  `WalletAppInstall_AcceptedTransferOffer_WithdrawResult <constr-splice-wallet-install-walletappinstallacceptedtransferofferwithdrawresult-50854_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - trackingInfo
+         - :ref:`TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959>`
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" `WalletAppInstall_AcceptedTransferOffer_WithdrawResult <type-splice-wallet-install-walletappinstallacceptedtransferofferwithdrawresult-30981_>`_ :ref:`TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959>`
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" `WalletAppInstall_AcceptedTransferOffer_WithdrawResult <type-splice-wallet-install-walletappinstallacceptedtransferofferwithdrawresult-30981_>`_ :ref:`TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959>`
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_AcceptedTransferOffer_Withdraw <type-splice-wallet-install-walletappinstallacceptedtransferofferwithdraw-52092_>`_ `WalletAppInstall_AcceptedTransferOffer_WithdrawResult <type-splice-wallet-install-walletappinstallacceptedtransferofferwithdrawresult-30981_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_AcceptedTransferOffer_Withdraw <type-splice-wallet-install-walletappinstallacceptedtransferofferwithdraw-52092_>`_ `WalletAppInstall_AcceptedTransferOffer_WithdrawResult <type-splice-wallet-install-walletappinstallacceptedtransferofferwithdrawresult-30981_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_AcceptedTransferOffer_Withdraw <type-splice-wallet-install-walletappinstallacceptedtransferofferwithdraw-52092_>`_ `WalletAppInstall_AcceptedTransferOffer_WithdrawResult <type-splice-wallet-install-walletappinstallacceptedtransferofferwithdrawresult-30981_>`_
+
+.. _type-splice-wallet-install-walletappinstallapppaymentrequestexpireresult-40772:
+
+**data** `WalletAppInstall_AppPaymentRequest_ExpireResult <type-splice-wallet-install-walletappinstallapppaymentrequestexpireresult-40772_>`_
+
+  .. _constr-splice-wallet-install-walletappinstallapppaymentrequestexpireresult-9239:
+
+  `WalletAppInstall_AppPaymentRequest_ExpireResult <constr-splice-wallet-install-walletappinstallapppaymentrequestexpireresult-9239_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - terminatedAppPayment
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TerminatedAppPayment
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"terminatedAppPayment\" `WalletAppInstall_AppPaymentRequest_ExpireResult <type-splice-wallet-install-walletappinstallapppaymentrequestexpireresult-40772_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TerminatedAppPayment)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"terminatedAppPayment\" `WalletAppInstall_AppPaymentRequest_ExpireResult <type-splice-wallet-install-walletappinstallapppaymentrequestexpireresult-40772_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TerminatedAppPayment)
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_AppPaymentRequest_Expire <type-splice-wallet-install-walletappinstallapppaymentrequestexpire-63657_>`_ `WalletAppInstall_AppPaymentRequest_ExpireResult <type-splice-wallet-install-walletappinstallapppaymentrequestexpireresult-40772_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_AppPaymentRequest_Expire <type-splice-wallet-install-walletappinstallapppaymentrequestexpire-63657_>`_ `WalletAppInstall_AppPaymentRequest_ExpireResult <type-splice-wallet-install-walletappinstallapppaymentrequestexpireresult-40772_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_AppPaymentRequest_Expire <type-splice-wallet-install-walletappinstallapppaymentrequestexpire-63657_>`_ `WalletAppInstall_AppPaymentRequest_ExpireResult <type-splice-wallet-install-walletappinstallapppaymentrequestexpireresult-40772_>`_
+
+.. _type-splice-wallet-install-walletappinstallapppaymentrequestrejectresult-13912:
+
+**data** `WalletAppInstall_AppPaymentRequest_RejectResult <type-splice-wallet-install-walletappinstallapppaymentrequestrejectresult-13912_>`_
+
+  .. _constr-splice-wallet-install-walletappinstallapppaymentrequestrejectresult-2323:
+
+  `WalletAppInstall_AppPaymentRequest_RejectResult <constr-splice-wallet-install-walletappinstallapppaymentrequestrejectresult-2323_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - terminatedAppPayment
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TerminatedAppPayment
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"terminatedAppPayment\" `WalletAppInstall_AppPaymentRequest_RejectResult <type-splice-wallet-install-walletappinstallapppaymentrequestrejectresult-13912_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TerminatedAppPayment)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"terminatedAppPayment\" `WalletAppInstall_AppPaymentRequest_RejectResult <type-splice-wallet-install-walletappinstallapppaymentrequestrejectresult-13912_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TerminatedAppPayment)
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_AppPaymentRequest_Reject <type-splice-wallet-install-walletappinstallapppaymentrequestreject-30597_>`_ `WalletAppInstall_AppPaymentRequest_RejectResult <type-splice-wallet-install-walletappinstallapppaymentrequestrejectresult-13912_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_AppPaymentRequest_Reject <type-splice-wallet-install-walletappinstallapppaymentrequestreject-30597_>`_ `WalletAppInstall_AppPaymentRequest_RejectResult <type-splice-wallet-install-walletappinstallapppaymentrequestrejectresult-13912_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_AppPaymentRequest_Reject <type-splice-wallet-install-walletappinstallapppaymentrequestreject-30597_>`_ `WalletAppInstall_AppPaymentRequest_RejectResult <type-splice-wallet-install-walletappinstallapppaymentrequestrejectresult-13912_>`_
+
+.. _type-splice-wallet-install-walletappinstallbuytrafficrequestcancelresult-7425:
+
+**data** `WalletAppInstall_BuyTrafficRequest_CancelResult <type-splice-wallet-install-walletappinstallbuytrafficrequestcancelresult-7425_>`_
+
+  .. _constr-splice-wallet-install-walletappinstallbuytrafficrequestcancelresult-5910:
+
+  `WalletAppInstall_BuyTrafficRequest_CancelResult <constr-splice-wallet-install-walletappinstallbuytrafficrequestcancelresult-5910_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - trackingInfo
+         - :ref:`BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943>`
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" `WalletAppInstall_BuyTrafficRequest_CancelResult <type-splice-wallet-install-walletappinstallbuytrafficrequestcancelresult-7425_>`_ :ref:`BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943>`
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" `WalletAppInstall_BuyTrafficRequest_CancelResult <type-splice-wallet-install-walletappinstallbuytrafficrequestcancelresult-7425_>`_ :ref:`BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943>`
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_BuyTrafficRequest_Cancel <type-splice-wallet-install-walletappinstallbuytrafficrequestcancel-57332_>`_ `WalletAppInstall_BuyTrafficRequest_CancelResult <type-splice-wallet-install-walletappinstallbuytrafficrequestcancelresult-7425_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_BuyTrafficRequest_Cancel <type-splice-wallet-install-walletappinstallbuytrafficrequestcancel-57332_>`_ `WalletAppInstall_BuyTrafficRequest_CancelResult <type-splice-wallet-install-walletappinstallbuytrafficrequestcancelresult-7425_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_BuyTrafficRequest_Cancel <type-splice-wallet-install-walletappinstallbuytrafficrequestcancel-57332_>`_ `WalletAppInstall_BuyTrafficRequest_CancelResult <type-splice-wallet-install-walletappinstallbuytrafficrequestcancelresult-7425_>`_
+
+.. _type-splice-wallet-install-walletappinstallbuytrafficrequestexpireresult-53806:
+
+**data** `WalletAppInstall_BuyTrafficRequest_ExpireResult <type-splice-wallet-install-walletappinstallbuytrafficrequestexpireresult-53806_>`_
+
+  .. _constr-splice-wallet-install-walletappinstallbuytrafficrequestexpireresult-73389:
+
+  `WalletAppInstall_BuyTrafficRequest_ExpireResult <constr-splice-wallet-install-walletappinstallbuytrafficrequestexpireresult-73389_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - trackingInfo
+         - :ref:`BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943>`
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" `WalletAppInstall_BuyTrafficRequest_ExpireResult <type-splice-wallet-install-walletappinstallbuytrafficrequestexpireresult-53806_>`_ :ref:`BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943>`
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" `WalletAppInstall_BuyTrafficRequest_ExpireResult <type-splice-wallet-install-walletappinstallbuytrafficrequestexpireresult-53806_>`_ :ref:`BuyTrafficRequestTrackingInfo <type-splice-wallet-buytrafficrequest-buytrafficrequesttrackinginfo-63943>`
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_BuyTrafficRequest_Expire <type-splice-wallet-install-walletappinstallbuytrafficrequestexpire-56287_>`_ `WalletAppInstall_BuyTrafficRequest_ExpireResult <type-splice-wallet-install-walletappinstallbuytrafficrequestexpireresult-53806_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_BuyTrafficRequest_Expire <type-splice-wallet-install-walletappinstallbuytrafficrequestexpire-56287_>`_ `WalletAppInstall_BuyTrafficRequest_ExpireResult <type-splice-wallet-install-walletappinstallbuytrafficrequestexpireresult-53806_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_BuyTrafficRequest_Expire <type-splice-wallet-install-walletappinstallbuytrafficrequestexpire-56287_>`_ `WalletAppInstall_BuyTrafficRequest_ExpireResult <type-splice-wallet-install-walletappinstallbuytrafficrequestexpireresult-53806_>`_
+
+.. _type-splice-wallet-install-walletappinstallcreatebuytrafficrequestresult-63991:
+
+**data** `WalletAppInstall_CreateBuyTrafficRequestResult <type-splice-wallet-install-walletappinstallcreatebuytrafficrequestresult-63991_>`_
+
+  .. _constr-splice-wallet-install-walletappinstallcreatebuytrafficrequestresult-84558:
+
+  `WalletAppInstall_CreateBuyTrafficRequestResult <constr-splice-wallet-install-walletappinstallcreatebuytrafficrequestresult-84558_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - buyTrafficRequest
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`BuyTrafficRequest <type-splice-wallet-buytrafficrequest-buytrafficrequest-65116>`
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"buyTrafficRequest\" `WalletAppInstall_CreateBuyTrafficRequestResult <type-splice-wallet-install-walletappinstallcreatebuytrafficrequestresult-63991_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`BuyTrafficRequest <type-splice-wallet-buytrafficrequest-buytrafficrequest-65116>`)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"buyTrafficRequest\" `WalletAppInstall_CreateBuyTrafficRequestResult <type-splice-wallet-install-walletappinstallcreatebuytrafficrequestresult-63991_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`BuyTrafficRequest <type-splice-wallet-buytrafficrequest-buytrafficrequest-65116>`)
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_CreateBuyTrafficRequest <type-splice-wallet-install-walletappinstallcreatebuytrafficrequest-33718_>`_ `WalletAppInstall_CreateBuyTrafficRequestResult <type-splice-wallet-install-walletappinstallcreatebuytrafficrequestresult-63991_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_CreateBuyTrafficRequest <type-splice-wallet-install-walletappinstallcreatebuytrafficrequest-33718_>`_ `WalletAppInstall_CreateBuyTrafficRequestResult <type-splice-wallet-install-walletappinstallcreatebuytrafficrequestresult-63991_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_CreateBuyTrafficRequest <type-splice-wallet-install-walletappinstallcreatebuytrafficrequest-33718_>`_ `WalletAppInstall_CreateBuyTrafficRequestResult <type-splice-wallet-install-walletappinstallcreatebuytrafficrequestresult-63991_>`_
+
+.. _type-splice-wallet-install-walletappinstallcreatetransferofferresult-68160:
+
+**data** `WalletAppInstall_CreateTransferOfferResult <type-splice-wallet-install-walletappinstallcreatetransferofferresult-68160_>`_
+
+  .. _constr-splice-wallet-install-walletappinstallcreatetransferofferresult-22589:
+
+  `WalletAppInstall_CreateTransferOfferResult <constr-splice-wallet-install-walletappinstallcreatetransferofferresult-22589_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - transferOffer
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`TransferOffer <type-splice-wallet-transferoffer-transferoffer-51604>`
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"transferOffer\" `WalletAppInstall_CreateTransferOfferResult <type-splice-wallet-install-walletappinstallcreatetransferofferresult-68160_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`TransferOffer <type-splice-wallet-transferoffer-transferoffer-51604>`)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"transferOffer\" `WalletAppInstall_CreateTransferOfferResult <type-splice-wallet-install-walletappinstallcreatetransferofferresult-68160_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`TransferOffer <type-splice-wallet-transferoffer-transferoffer-51604>`)
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_CreateTransferOffer <type-splice-wallet-install-walletappinstallcreatetransferoffer-6821_>`_ `WalletAppInstall_CreateTransferOfferResult <type-splice-wallet-install-walletappinstallcreatetransferofferresult-68160_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_CreateTransferOffer <type-splice-wallet-install-walletappinstallcreatetransferoffer-6821_>`_ `WalletAppInstall_CreateTransferOfferResult <type-splice-wallet-install-walletappinstallcreatetransferofferresult-68160_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_CreateTransferOffer <type-splice-wallet-install-walletappinstallcreatetransferoffer-6821_>`_ `WalletAppInstall_CreateTransferOfferResult <type-splice-wallet-install-walletappinstallcreatetransferofferresult-68160_>`_
+
+.. _type-splice-wallet-install-walletappinstallexecutebatchresult-15097:
+
+**data** `WalletAppInstall_ExecuteBatchResult <type-splice-wallet-install-walletappinstallexecutebatchresult-15097_>`_
+
+  .. _constr-splice-wallet-install-walletappinstallexecutebatchresult-44858:
+
+  `WalletAppInstall_ExecuteBatchResult <constr-splice-wallet-install-walletappinstallexecutebatchresult-44858_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - endUserName
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         -
+       * - outcomes
+         - \[`AmuletOperationOutcome <type-splice-wallet-install-amuletoperationoutcome-52121_>`_\]
+         -
+       * - optEndUserParty
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `WalletAppInstall_ExecuteBatchResult <type-splice-wallet-install-walletappinstallexecutebatchresult-15097_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `WalletAppInstall_ExecuteBatchResult <type-splice-wallet-install-walletappinstallexecutebatchresult-15097_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"endUserName\" `WalletAppInstall_ExecuteBatchResult <type-splice-wallet-install-walletappinstallexecutebatchresult-15097_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"optEndUserParty\" `WalletAppInstall_ExecuteBatchResult <type-splice-wallet-install-walletappinstallexecutebatchresult-15097_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_)
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"outcomes\" `WalletAppInstall_ExecuteBatchResult <type-splice-wallet-install-walletappinstallexecutebatchresult-15097_>`_ \[`AmuletOperationOutcome <type-splice-wallet-install-amuletoperationoutcome-52121_>`_\]
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"endUserName\" `WalletAppInstall_ExecuteBatchResult <type-splice-wallet-install-walletappinstallexecutebatchresult-15097_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"optEndUserParty\" `WalletAppInstall_ExecuteBatchResult <type-splice-wallet-install-walletappinstallexecutebatchresult-15097_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"outcomes\" `WalletAppInstall_ExecuteBatchResult <type-splice-wallet-install-walletappinstallexecutebatchresult-15097_>`_ \[`AmuletOperationOutcome <type-splice-wallet-install-amuletoperationoutcome-52121_>`_\]
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_ExecuteBatch <type-splice-wallet-install-walletappinstallexecutebatch-90628_>`_ `WalletAppInstall_ExecuteBatchResult <type-splice-wallet-install-walletappinstallexecutebatchresult-15097_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_ExecuteBatch <type-splice-wallet-install-walletappinstallexecutebatch-90628_>`_ `WalletAppInstall_ExecuteBatchResult <type-splice-wallet-install-walletappinstallexecutebatchresult-15097_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_ExecuteBatch <type-splice-wallet-install-walletappinstallexecutebatch-90628_>`_ `WalletAppInstall_ExecuteBatchResult <type-splice-wallet-install-walletappinstallexecutebatchresult-15097_>`_
+
+.. _type-splice-wallet-install-walletappinstallfeaturedapprightscancelresult-9581:
+
+**data** `WalletAppInstall_FeaturedAppRights_CancelResult <type-splice-wallet-install-walletappinstallfeaturedapprightscancelresult-9581_>`_
+
+  .. _constr-splice-wallet-install-walletappinstallfeaturedapprightscancelresult-72714:
+
+  `WalletAppInstall_FeaturedAppRights_CancelResult <constr-splice-wallet-install-walletappinstallfeaturedapprightscancelresult-72714_>`_
+
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_FeaturedAppRights_Cancel <type-splice-wallet-install-walletappinstallfeaturedapprightscancel-92504_>`_ `WalletAppInstall_FeaturedAppRights_CancelResult <type-splice-wallet-install-walletappinstallfeaturedapprightscancelresult-9581_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_FeaturedAppRights_Cancel <type-splice-wallet-install-walletappinstallfeaturedapprightscancel-92504_>`_ `WalletAppInstall_FeaturedAppRights_CancelResult <type-splice-wallet-install-walletappinstallfeaturedapprightscancelresult-9581_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_FeaturedAppRights_Cancel <type-splice-wallet-install-walletappinstallfeaturedapprightscancel-92504_>`_ `WalletAppInstall_FeaturedAppRights_CancelResult <type-splice-wallet-install-walletappinstallfeaturedapprightscancelresult-9581_>`_
+
+.. _type-splice-wallet-install-walletappinstallfeaturedapprightsselfgrantresult-93142:
+
+**data** `WalletAppInstall_FeaturedAppRights_SelfGrantResult <type-splice-wallet-install-walletappinstallfeaturedapprightsselfgrantresult-93142_>`_
+
+  .. _constr-splice-wallet-install-walletappinstallfeaturedapprightsselfgrantresult-62683:
+
+  `WalletAppInstall_FeaturedAppRights_SelfGrantResult <constr-splice-wallet-install-walletappinstallfeaturedapprightsselfgrantresult-62683_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - featuredAppRight
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ FeaturedAppRight
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"featuredAppRight\" `WalletAppInstall_FeaturedAppRights_SelfGrantResult <type-splice-wallet-install-walletappinstallfeaturedapprightsselfgrantresult-93142_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ FeaturedAppRight)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"featuredAppRight\" `WalletAppInstall_FeaturedAppRights_SelfGrantResult <type-splice-wallet-install-walletappinstallfeaturedapprightsselfgrantresult-93142_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ FeaturedAppRight)
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_FeaturedAppRights_SelfGrant <type-splice-wallet-install-walletappinstallfeaturedapprightsselfgrant-7751_>`_ `WalletAppInstall_FeaturedAppRights_SelfGrantResult <type-splice-wallet-install-walletappinstallfeaturedapprightsselfgrantresult-93142_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_FeaturedAppRights_SelfGrant <type-splice-wallet-install-walletappinstallfeaturedapprightsselfgrant-7751_>`_ `WalletAppInstall_FeaturedAppRights_SelfGrantResult <type-splice-wallet-install-walletappinstallfeaturedapprightsselfgrantresult-93142_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_FeaturedAppRights_SelfGrant <type-splice-wallet-install-walletappinstallfeaturedapprightsselfgrant-7751_>`_ `WalletAppInstall_FeaturedAppRights_SelfGrantResult <type-splice-wallet-install-walletappinstallfeaturedapprightsselfgrantresult-93142_>`_
+
+.. _type-splice-wallet-install-walletappinstallsubscriptionidlestatecancelsubscriptionresult-84496:
+
+**data** `WalletAppInstall_SubscriptionIdleState_CancelSubscriptionResult <type-splice-wallet-install-walletappinstallsubscriptionidlestatecancelsubscriptionresult-84496_>`_
+
+  .. _constr-splice-wallet-install-walletappinstallsubscriptionidlestatecancelsubscriptionresult-61435:
+
+  `WalletAppInstall_SubscriptionIdleState_CancelSubscriptionResult <constr-splice-wallet-install-walletappinstallsubscriptionidlestatecancelsubscriptionresult-61435_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - terminatedSubscription
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TerminatedSubscription
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"terminatedSubscription\" `WalletAppInstall_SubscriptionIdleState_CancelSubscriptionResult <type-splice-wallet-install-walletappinstallsubscriptionidlestatecancelsubscriptionresult-84496_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TerminatedSubscription)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"terminatedSubscription\" `WalletAppInstall_SubscriptionIdleState_CancelSubscriptionResult <type-splice-wallet-install-walletappinstallsubscriptionidlestatecancelsubscriptionresult-84496_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TerminatedSubscription)
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_SubscriptionIdleState_CancelSubscription <type-splice-wallet-install-walletappinstallsubscriptionidlestatecancelsubscription-97037_>`_ `WalletAppInstall_SubscriptionIdleState_CancelSubscriptionResult <type-splice-wallet-install-walletappinstallsubscriptionidlestatecancelsubscriptionresult-84496_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_SubscriptionIdleState_CancelSubscription <type-splice-wallet-install-walletappinstallsubscriptionidlestatecancelsubscription-97037_>`_ `WalletAppInstall_SubscriptionIdleState_CancelSubscriptionResult <type-splice-wallet-install-walletappinstallsubscriptionidlestatecancelsubscriptionresult-84496_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_SubscriptionIdleState_CancelSubscription <type-splice-wallet-install-walletappinstallsubscriptionidlestatecancelsubscription-97037_>`_ `WalletAppInstall_SubscriptionIdleState_CancelSubscriptionResult <type-splice-wallet-install-walletappinstallsubscriptionidlestatecancelsubscriptionresult-84496_>`_
+
+.. _type-splice-wallet-install-walletappinstallsubscriptionrequestrejectresult-88896:
+
+**data** `WalletAppInstall_SubscriptionRequest_RejectResult <type-splice-wallet-install-walletappinstallsubscriptionrequestrejectresult-88896_>`_
+
+  .. _constr-splice-wallet-install-walletappinstallsubscriptionrequestrejectresult-60059:
+
+  `WalletAppInstall_SubscriptionRequest_RejectResult <constr-splice-wallet-install-walletappinstallsubscriptionrequestrejectresult-60059_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - terminatedSubscription
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TerminatedSubscription
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"terminatedSubscription\" `WalletAppInstall_SubscriptionRequest_RejectResult <type-splice-wallet-install-walletappinstallsubscriptionrequestrejectresult-88896_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TerminatedSubscription)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"terminatedSubscription\" `WalletAppInstall_SubscriptionRequest_RejectResult <type-splice-wallet-install-walletappinstallsubscriptionrequestrejectresult-88896_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TerminatedSubscription)
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_SubscriptionRequest_Reject <type-splice-wallet-install-walletappinstallsubscriptionrequestreject-94073_>`_ `WalletAppInstall_SubscriptionRequest_RejectResult <type-splice-wallet-install-walletappinstallsubscriptionrequestrejectresult-88896_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_SubscriptionRequest_Reject <type-splice-wallet-install-walletappinstallsubscriptionrequestreject-94073_>`_ `WalletAppInstall_SubscriptionRequest_RejectResult <type-splice-wallet-install-walletappinstallsubscriptionrequestrejectresult-88896_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_SubscriptionRequest_Reject <type-splice-wallet-install-walletappinstallsubscriptionrequestreject-94073_>`_ `WalletAppInstall_SubscriptionRequest_RejectResult <type-splice-wallet-install-walletappinstallsubscriptionrequestrejectresult-88896_>`_
+
+.. _type-splice-wallet-install-walletappinstalltransferofferacceptresult-54230:
+
+**data** `WalletAppInstall_TransferOffer_AcceptResult <type-splice-wallet-install-walletappinstalltransferofferacceptresult-54230_>`_
+
+  .. _constr-splice-wallet-install-walletappinstalltransferofferacceptresult-12149:
+
+  `WalletAppInstall_TransferOffer_AcceptResult <constr-splice-wallet-install-walletappinstalltransferofferacceptresult-12149_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - acceptedTransferOffer
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`AcceptedTransferOffer <type-splice-wallet-transferoffer-acceptedtransferoffer-37657>`
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"acceptedTransferOffer\" `WalletAppInstall_TransferOffer_AcceptResult <type-splice-wallet-install-walletappinstalltransferofferacceptresult-54230_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`AcceptedTransferOffer <type-splice-wallet-transferoffer-acceptedtransferoffer-37657>`)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"acceptedTransferOffer\" `WalletAppInstall_TransferOffer_AcceptResult <type-splice-wallet-install-walletappinstalltransferofferacceptresult-54230_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`AcceptedTransferOffer <type-splice-wallet-transferoffer-acceptedtransferoffer-37657>`)
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_TransferOffer_Accept <type-splice-wallet-install-walletappinstalltransferofferaccept-7295_>`_ `WalletAppInstall_TransferOffer_AcceptResult <type-splice-wallet-install-walletappinstalltransferofferacceptresult-54230_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_TransferOffer_Accept <type-splice-wallet-install-walletappinstalltransferofferaccept-7295_>`_ `WalletAppInstall_TransferOffer_AcceptResult <type-splice-wallet-install-walletappinstalltransferofferacceptresult-54230_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_TransferOffer_Accept <type-splice-wallet-install-walletappinstalltransferofferaccept-7295_>`_ `WalletAppInstall_TransferOffer_AcceptResult <type-splice-wallet-install-walletappinstalltransferofferacceptresult-54230_>`_
+
+.. _type-splice-wallet-install-walletappinstalltransferofferexpireresult-53807:
+
+**data** `WalletAppInstall_TransferOffer_ExpireResult <type-splice-wallet-install-walletappinstalltransferofferexpireresult-53807_>`_
+
+  .. _constr-splice-wallet-install-walletappinstalltransferofferexpireresult-15612:
+
+  `WalletAppInstall_TransferOffer_ExpireResult <constr-splice-wallet-install-walletappinstalltransferofferexpireresult-15612_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - trackingInfo
+         - :ref:`TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959>`
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" `WalletAppInstall_TransferOffer_ExpireResult <type-splice-wallet-install-walletappinstalltransferofferexpireresult-53807_>`_ :ref:`TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959>`
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" `WalletAppInstall_TransferOffer_ExpireResult <type-splice-wallet-install-walletappinstalltransferofferexpireresult-53807_>`_ :ref:`TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959>`
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_TransferOffer_Expire <type-splice-wallet-install-walletappinstalltransferofferexpire-5606_>`_ `WalletAppInstall_TransferOffer_ExpireResult <type-splice-wallet-install-walletappinstalltransferofferexpireresult-53807_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_TransferOffer_Expire <type-splice-wallet-install-walletappinstalltransferofferexpire-5606_>`_ `WalletAppInstall_TransferOffer_ExpireResult <type-splice-wallet-install-walletappinstalltransferofferexpireresult-53807_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_TransferOffer_Expire <type-splice-wallet-install-walletappinstalltransferofferexpire-5606_>`_ `WalletAppInstall_TransferOffer_ExpireResult <type-splice-wallet-install-walletappinstalltransferofferexpireresult-53807_>`_
+
+.. _type-splice-wallet-install-walletappinstalltransferofferrejectresult-95787:
+
+**data** `WalletAppInstall_TransferOffer_RejectResult <type-splice-wallet-install-walletappinstalltransferofferrejectresult-95787_>`_
+
+  .. _constr-splice-wallet-install-walletappinstalltransferofferrejectresult-23888:
+
+  `WalletAppInstall_TransferOffer_RejectResult <constr-splice-wallet-install-walletappinstalltransferofferrejectresult-23888_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - trackingInfo
+         - :ref:`TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959>`
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" `WalletAppInstall_TransferOffer_RejectResult <type-splice-wallet-install-walletappinstalltransferofferrejectresult-95787_>`_ :ref:`TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959>`
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" `WalletAppInstall_TransferOffer_RejectResult <type-splice-wallet-install-walletappinstalltransferofferrejectresult-95787_>`_ :ref:`TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959>`
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_TransferOffer_Reject <type-splice-wallet-install-walletappinstalltransferofferreject-96746_>`_ `WalletAppInstall_TransferOffer_RejectResult <type-splice-wallet-install-walletappinstalltransferofferrejectresult-95787_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_TransferOffer_Reject <type-splice-wallet-install-walletappinstalltransferofferreject-96746_>`_ `WalletAppInstall_TransferOffer_RejectResult <type-splice-wallet-install-walletappinstalltransferofferrejectresult-95787_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_TransferOffer_Reject <type-splice-wallet-install-walletappinstalltransferofferreject-96746_>`_ `WalletAppInstall_TransferOffer_RejectResult <type-splice-wallet-install-walletappinstalltransferofferrejectresult-95787_>`_
+
+.. _type-splice-wallet-install-walletappinstalltransferofferwithdrawresult-71362:
+
+**data** `WalletAppInstall_TransferOffer_WithdrawResult <type-splice-wallet-install-walletappinstalltransferofferwithdrawresult-71362_>`_
+
+  .. _constr-splice-wallet-install-walletappinstalltransferofferwithdrawresult-55293:
+
+  `WalletAppInstall_TransferOffer_WithdrawResult <constr-splice-wallet-install-walletappinstalltransferofferwithdrawresult-55293_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - trackingInfo
+         - :ref:`TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959>`
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" `WalletAppInstall_TransferOffer_WithdrawResult <type-splice-wallet-install-walletappinstalltransferofferwithdrawresult-71362_>`_ :ref:`TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959>`
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" `WalletAppInstall_TransferOffer_WithdrawResult <type-splice-wallet-install-walletappinstalltransferofferwithdrawresult-71362_>`_ :ref:`TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959>`
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_TransferOffer_Withdraw <type-splice-wallet-install-walletappinstalltransferofferwithdraw-19519_>`_ `WalletAppInstall_TransferOffer_WithdrawResult <type-splice-wallet-install-walletappinstalltransferofferwithdrawresult-71362_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_TransferOffer_Withdraw <type-splice-wallet-install-walletappinstalltransferofferwithdraw-19519_>`_ `WalletAppInstall_TransferOffer_WithdrawResult <type-splice-wallet-install-walletappinstalltransferofferwithdrawresult-71362_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `WalletAppInstall <type-splice-wallet-install-walletappinstall-78445_>`_ `WalletAppInstall_TransferOffer_Withdraw <type-splice-wallet-install-walletappinstalltransferofferwithdraw-19519_>`_ `WalletAppInstall_TransferOffer_WithdrawResult <type-splice-wallet-install-walletappinstalltransferofferwithdrawresult-71362_>`_
+
+.. _type-splice-wallet-install-walletappinstalltransferpreapprovalproposalcreateresult-12514:
+
+**data** `WalletAppInstall_TransferPreapprovalProposal_CreateResult <type-splice-wallet-install-walletappinstalltransferpreapprovalproposalcreateresult-12514_>`_
+
+  .. _constr-splice-wallet-install-walletappinstalltransferpreapprovalproposalcreateresult-3417:
+
+  `WalletAppInstall_TransferPreapprovalProposal_CreateResult <constr-splice-wallet-install-walletappinstalltransferpreapprovalproposalcreateresult-3417_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - preapprovalProposalCid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`TransferPreapprovalProposal <type-splice-wallet-transferpreapproval-transferpreapprovalproposal-39002>`
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"preapprovalProposalCid\" `WalletAppInstall_TransferPreapprovalProposal_CreateResult <type-splice-wallet-install-walletappinstalltransferpreapprovalproposalcreateresult-12514_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`TransferPreapprovalProposal <type-splice-wallet-transferpreapproval-transferpreapprovalproposal-39002>`)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"preapprovalProposalCid\" `WalletAppInstall_TransferPreapprovalProposal_CreateResult <type-splice-wallet-install-walletappinstalltransferpreapprovalproposalcreateresult-12514_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`TransferPreapprovalProposal <type-splice-wallet-transferpreapproval-transferpreapprovalproposal-39002>`)
+
+Functions
+---------
+
+.. _function-splice-wallet-install-catchall-96802:
+
+`catchAll <function-splice-wallet-install-catchall-96802_>`_
+  \: `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ a \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ (`Either <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-types-either-56020>`_ InvalidTransferReason a)
+
+.. _function-splice-wallet-install-executeamuletoperationrec-79799:
+
+`executeAmuletOperationRec <function-splice-wallet-install-executeamuletoperationrec-79799_>`_
+  \: `ExecutionContext <type-splice-wallet-install-executioncontext-4075_>`_ \-\> \[TransferInput\] \-\> \[`AmuletOperationOutcome <type-splice-wallet-install-amuletoperationoutcome-52121_>`_\] \-\> \[`AmuletOperation <type-splice-wallet-install-amuletoperation-34848_>`_\] \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ \[`AmuletOperationOutcome <type-splice-wallet-install-amuletoperationoutcome-52121_>`_\]
+
+.. _function-splice-wallet-install-mkmergeamuletandrewardstransfer-3655:
+
+`mkMergeAmuletAndRewardsTransfer <function-splice-wallet-install-mkmergeamuletandrewardstransfer-3655_>`_
+  \: `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> \[TransferInput\] \-\> Transfer

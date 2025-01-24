@@ -1,0 +1,572 @@
+.. _module-splice-wallet-transferoffer-28108:
+
+Splice.Wallet.TransferOffer
+===========================
+
+Templates
+---------
+
+.. _type-splice-wallet-transferoffer-acceptedtransferoffer-37657:
+
+**template** `AcceptedTransferOffer <type-splice-wallet-transferoffer-acceptedtransferoffer-37657_>`_
+
+  Signatory\: sender, receiver
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - sender
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - receiver
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - dso
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - amount
+       - PaymentAmount
+       -
+     * - expiresAt
+       - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+       -
+     * - trackingId
+       - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+       -
+
+  + .. _type-splice-wallet-transferoffer-acceptedtransferofferabort-66868:
+
+    **Choice** `AcceptedTransferOffer_Abort <type-splice-wallet-transferoffer-acceptedtransferofferabort-66868_>`_
+
+    Controller\: sender
+
+    Returns\: `AcceptedTransferOffer_AbortResult <type-splice-wallet-transferoffer-acceptedtransferofferabortresult-19853_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - reason
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         -
+
+  + .. _type-splice-wallet-transferoffer-acceptedtransferoffercomplete-88466:
+
+    **Choice** `AcceptedTransferOffer_Complete <type-splice-wallet-transferoffer-acceptedtransferoffercomplete-88466_>`_
+
+    Controller\: sender, walletProvider
+
+    Returns\: `AcceptedTransferOffer_CompleteResult <type-splice-wallet-transferoffer-acceptedtransferoffercompleteresult-69887_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - inputs
+         - \[TransferInput\]
+         -
+       * - transferContext
+         - PaymentTransferContext
+         -
+       * - walletProvider
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+
+  + .. _type-splice-wallet-transferoffer-acceptedtransferofferexpire-98344:
+
+    **Choice** `AcceptedTransferOffer_Expire <type-splice-wallet-transferoffer-acceptedtransferofferexpire-98344_>`_
+
+    Controller\: actor
+
+    Returns\: `AcceptedTransferOffer_ExpireResult <type-splice-wallet-transferoffer-acceptedtransferofferexpireresult-60205_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - actor
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+
+  + .. _type-splice-wallet-transferoffer-acceptedtransferofferwithdraw-26317:
+
+    **Choice** `AcceptedTransferOffer_Withdraw <type-splice-wallet-transferoffer-acceptedtransferofferwithdraw-26317_>`_
+
+    Controller\: receiver
+
+    Returns\: `AcceptedTransferOffer_WithdrawResult <type-splice-wallet-transferoffer-acceptedtransferofferwithdrawresult-79292_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - reason
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         -
+
+  + **Choice** Archive
+
+    Controller\: sender, receiver
+
+    Returns\: ()
+
+    (no fields)
+
+.. _type-splice-wallet-transferoffer-transferoffer-51604:
+
+**template** `TransferOffer <type-splice-wallet-transferoffer-transferoffer-51604_>`_
+
+  Signatory\: sender
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - sender
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - receiver
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - dso
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - amount
+       - PaymentAmount
+       -
+     * - description
+       - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+       -
+     * - expiresAt
+       - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+       -
+     * - trackingId
+       - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+       -
+
+  + **Choice** Archive
+
+    Controller\: sender
+
+    Returns\: ()
+
+    (no fields)
+
+  + .. _type-splice-wallet-transferoffer-transferofferaccept-78794:
+
+    **Choice** `TransferOffer_Accept <type-splice-wallet-transferoffer-transferofferaccept-78794_>`_
+
+    Controller\: receiver
+
+    Returns\: `TransferOffer_AcceptResult <type-splice-wallet-transferoffer-transferofferacceptresult-62459_>`_
+
+    (no fields)
+
+  + .. _type-splice-wallet-transferoffer-transferofferexpire-75051:
+
+    **Choice** `TransferOffer_Expire <type-splice-wallet-transferoffer-transferofferexpire-75051_>`_
+
+    Controller\: actor
+
+    Returns\: `TransferOffer_ExpireResult <type-splice-wallet-transferoffer-transferofferexpireresult-84418_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - actor
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+
+  + .. _type-splice-wallet-transferoffer-transferofferreject-41375:
+
+    **Choice** `TransferOffer_Reject <type-splice-wallet-transferoffer-transferofferreject-41375_>`_
+
+    Controller\: receiver
+
+    Returns\: `TransferOffer_RejectResult <type-splice-wallet-transferoffer-transferofferrejectresult-40046_>`_
+
+    (no fields)
+
+  + .. _type-splice-wallet-transferoffer-transferofferwithdraw-41986:
+
+    **Choice** `TransferOffer_Withdraw <type-splice-wallet-transferoffer-transferofferwithdraw-41986_>`_
+
+    Controller\: sender
+
+    Returns\: `TransferOffer_WithdrawResult <type-splice-wallet-transferoffer-transferofferwithdrawresult-27711_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - reason
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         -
+
+Data Types
+----------
+
+.. _type-splice-wallet-transferoffer-acceptedtransferofferabortresult-19853:
+
+**data** `AcceptedTransferOffer_AbortResult <type-splice-wallet-transferoffer-acceptedtransferofferabortresult-19853_>`_
+
+  .. _constr-splice-wallet-transferoffer-acceptedtransferofferabortresult-99882:
+
+  `AcceptedTransferOffer_AbortResult <constr-splice-wallet-transferoffer-acceptedtransferofferabortresult-99882_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - trackingInfo
+         - `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" `AcceptedTransferOffer_AbortResult <type-splice-wallet-transferoffer-acceptedtransferofferabortresult-19853_>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" `AcceptedTransferOffer_AbortResult <type-splice-wallet-transferoffer-acceptedtransferofferabortresult-19853_>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `AcceptedTransferOffer <type-splice-wallet-transferoffer-acceptedtransferoffer-37657_>`_ `AcceptedTransferOffer_Abort <type-splice-wallet-transferoffer-acceptedtransferofferabort-66868_>`_ `AcceptedTransferOffer_AbortResult <type-splice-wallet-transferoffer-acceptedtransferofferabortresult-19853_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `AcceptedTransferOffer <type-splice-wallet-transferoffer-acceptedtransferoffer-37657_>`_ `AcceptedTransferOffer_Abort <type-splice-wallet-transferoffer-acceptedtransferofferabort-66868_>`_ `AcceptedTransferOffer_AbortResult <type-splice-wallet-transferoffer-acceptedtransferofferabortresult-19853_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `AcceptedTransferOffer <type-splice-wallet-transferoffer-acceptedtransferoffer-37657_>`_ `AcceptedTransferOffer_Abort <type-splice-wallet-transferoffer-acceptedtransferofferabort-66868_>`_ `AcceptedTransferOffer_AbortResult <type-splice-wallet-transferoffer-acceptedtransferofferabortresult-19853_>`_
+
+.. _type-splice-wallet-transferoffer-acceptedtransferoffercompleteresult-69887:
+
+**data** `AcceptedTransferOffer_CompleteResult <type-splice-wallet-transferoffer-acceptedtransferoffercompleteresult-69887_>`_
+
+  .. _constr-splice-wallet-transferoffer-acceptedtransferoffercompleteresult-43306:
+
+  `AcceptedTransferOffer_CompleteResult <constr-splice-wallet-transferoffer-acceptedtransferoffercompleteresult-43306_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - transferResult
+         - TransferResult
+         -
+       * - trackingInfo
+         - `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+         -
+       * - senderChangeAmulet
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Amulet)
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"senderChangeAmulet\" `AcceptedTransferOffer_CompleteResult <type-splice-wallet-transferoffer-acceptedtransferoffercompleteresult-69887_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Amulet))
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" `AcceptedTransferOffer_CompleteResult <type-splice-wallet-transferoffer-acceptedtransferoffercompleteresult-69887_>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"transferResult\" `AcceptedTransferOffer_CompleteResult <type-splice-wallet-transferoffer-acceptedtransferoffercompleteresult-69887_>`_ TransferResult
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"senderChangeAmulet\" `AcceptedTransferOffer_CompleteResult <type-splice-wallet-transferoffer-acceptedtransferoffercompleteresult-69887_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Amulet))
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" `AcceptedTransferOffer_CompleteResult <type-splice-wallet-transferoffer-acceptedtransferoffercompleteresult-69887_>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"transferResult\" `AcceptedTransferOffer_CompleteResult <type-splice-wallet-transferoffer-acceptedtransferoffercompleteresult-69887_>`_ TransferResult
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `AcceptedTransferOffer <type-splice-wallet-transferoffer-acceptedtransferoffer-37657_>`_ `AcceptedTransferOffer_Complete <type-splice-wallet-transferoffer-acceptedtransferoffercomplete-88466_>`_ `AcceptedTransferOffer_CompleteResult <type-splice-wallet-transferoffer-acceptedtransferoffercompleteresult-69887_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `AcceptedTransferOffer <type-splice-wallet-transferoffer-acceptedtransferoffer-37657_>`_ `AcceptedTransferOffer_Complete <type-splice-wallet-transferoffer-acceptedtransferoffercomplete-88466_>`_ `AcceptedTransferOffer_CompleteResult <type-splice-wallet-transferoffer-acceptedtransferoffercompleteresult-69887_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `AcceptedTransferOffer <type-splice-wallet-transferoffer-acceptedtransferoffer-37657_>`_ `AcceptedTransferOffer_Complete <type-splice-wallet-transferoffer-acceptedtransferoffercomplete-88466_>`_ `AcceptedTransferOffer_CompleteResult <type-splice-wallet-transferoffer-acceptedtransferoffercompleteresult-69887_>`_
+
+.. _type-splice-wallet-transferoffer-acceptedtransferofferexpireresult-60205:
+
+**data** `AcceptedTransferOffer_ExpireResult <type-splice-wallet-transferoffer-acceptedtransferofferexpireresult-60205_>`_
+
+  .. _constr-splice-wallet-transferoffer-acceptedtransferofferexpireresult-67584:
+
+  `AcceptedTransferOffer_ExpireResult <constr-splice-wallet-transferoffer-acceptedtransferofferexpireresult-67584_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - trackingInfo
+         - `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" `AcceptedTransferOffer_ExpireResult <type-splice-wallet-transferoffer-acceptedtransferofferexpireresult-60205_>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" `AcceptedTransferOffer_ExpireResult <type-splice-wallet-transferoffer-acceptedtransferofferexpireresult-60205_>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `AcceptedTransferOffer <type-splice-wallet-transferoffer-acceptedtransferoffer-37657_>`_ `AcceptedTransferOffer_Expire <type-splice-wallet-transferoffer-acceptedtransferofferexpire-98344_>`_ `AcceptedTransferOffer_ExpireResult <type-splice-wallet-transferoffer-acceptedtransferofferexpireresult-60205_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `AcceptedTransferOffer <type-splice-wallet-transferoffer-acceptedtransferoffer-37657_>`_ `AcceptedTransferOffer_Expire <type-splice-wallet-transferoffer-acceptedtransferofferexpire-98344_>`_ `AcceptedTransferOffer_ExpireResult <type-splice-wallet-transferoffer-acceptedtransferofferexpireresult-60205_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `AcceptedTransferOffer <type-splice-wallet-transferoffer-acceptedtransferoffer-37657_>`_ `AcceptedTransferOffer_Expire <type-splice-wallet-transferoffer-acceptedtransferofferexpire-98344_>`_ `AcceptedTransferOffer_ExpireResult <type-splice-wallet-transferoffer-acceptedtransferofferexpireresult-60205_>`_
+
+.. _type-splice-wallet-transferoffer-acceptedtransferofferwithdrawresult-79292:
+
+**data** `AcceptedTransferOffer_WithdrawResult <type-splice-wallet-transferoffer-acceptedtransferofferwithdrawresult-79292_>`_
+
+  .. _constr-splice-wallet-transferoffer-acceptedtransferofferwithdrawresult-34065:
+
+  `AcceptedTransferOffer_WithdrawResult <constr-splice-wallet-transferoffer-acceptedtransferofferwithdrawresult-34065_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - trackingInfo
+         - `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" `AcceptedTransferOffer_WithdrawResult <type-splice-wallet-transferoffer-acceptedtransferofferwithdrawresult-79292_>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" `AcceptedTransferOffer_WithdrawResult <type-splice-wallet-transferoffer-acceptedtransferofferwithdrawresult-79292_>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `AcceptedTransferOffer <type-splice-wallet-transferoffer-acceptedtransferoffer-37657_>`_ `AcceptedTransferOffer_Withdraw <type-splice-wallet-transferoffer-acceptedtransferofferwithdraw-26317_>`_ `AcceptedTransferOffer_WithdrawResult <type-splice-wallet-transferoffer-acceptedtransferofferwithdrawresult-79292_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `AcceptedTransferOffer <type-splice-wallet-transferoffer-acceptedtransferoffer-37657_>`_ `AcceptedTransferOffer_Withdraw <type-splice-wallet-transferoffer-acceptedtransferofferwithdraw-26317_>`_ `AcceptedTransferOffer_WithdrawResult <type-splice-wallet-transferoffer-acceptedtransferofferwithdrawresult-79292_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `AcceptedTransferOffer <type-splice-wallet-transferoffer-acceptedtransferoffer-37657_>`_ `AcceptedTransferOffer_Withdraw <type-splice-wallet-transferoffer-acceptedtransferofferwithdraw-26317_>`_ `AcceptedTransferOffer_WithdrawResult <type-splice-wallet-transferoffer-acceptedtransferofferwithdrawresult-79292_>`_
+
+.. _type-splice-wallet-transferoffer-transferoffertrackinginfo-52959:
+
+**data** `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  .. _constr-splice-wallet-transferoffer-transferoffertrackinginfo-29420:
+
+  `TransferOfferTrackingInfo <constr-splice-wallet-transferoffer-transferoffertrackinginfo-29420_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - trackingId
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         -
+       * - sender
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - receiver
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"receiver\" `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"sender\" `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingId\" `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" :ref:`WalletAppInstall_AcceptedTransferOffer_AbortResult <type-splice-wallet-install-walletappinstallacceptedtransferofferabortresult-76594>` `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" :ref:`WalletAppInstall_AcceptedTransferOffer_ExpireResult <type-splice-wallet-install-walletappinstallacceptedtransferofferexpireresult-73364>` `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" :ref:`WalletAppInstall_AcceptedTransferOffer_WithdrawResult <type-splice-wallet-install-walletappinstallacceptedtransferofferwithdrawresult-30981>` `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" :ref:`WalletAppInstall_TransferOffer_ExpireResult <type-splice-wallet-install-walletappinstalltransferofferexpireresult-53807>` `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" :ref:`WalletAppInstall_TransferOffer_RejectResult <type-splice-wallet-install-walletappinstalltransferofferrejectresult-95787>` `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" :ref:`WalletAppInstall_TransferOffer_WithdrawResult <type-splice-wallet-install-walletappinstalltransferofferwithdrawresult-71362>` `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" `AcceptedTransferOffer_AbortResult <type-splice-wallet-transferoffer-acceptedtransferofferabortresult-19853_>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" `AcceptedTransferOffer_CompleteResult <type-splice-wallet-transferoffer-acceptedtransferoffercompleteresult-69887_>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" `AcceptedTransferOffer_ExpireResult <type-splice-wallet-transferoffer-acceptedtransferofferexpireresult-60205_>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" `AcceptedTransferOffer_WithdrawResult <type-splice-wallet-transferoffer-acceptedtransferofferwithdrawresult-79292_>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" `TransferOffer_ExpireResult <type-splice-wallet-transferoffer-transferofferexpireresult-84418_>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" `TransferOffer_RejectResult <type-splice-wallet-transferoffer-transferofferrejectresult-40046_>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" `TransferOffer_WithdrawResult <type-splice-wallet-transferoffer-transferofferwithdrawresult-27711_>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"receiver\" `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"sender\" `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingId\" `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" :ref:`WalletAppInstall_AcceptedTransferOffer_AbortResult <type-splice-wallet-install-walletappinstallacceptedtransferofferabortresult-76594>` `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" :ref:`WalletAppInstall_AcceptedTransferOffer_ExpireResult <type-splice-wallet-install-walletappinstallacceptedtransferofferexpireresult-73364>` `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" :ref:`WalletAppInstall_AcceptedTransferOffer_WithdrawResult <type-splice-wallet-install-walletappinstallacceptedtransferofferwithdrawresult-30981>` `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" :ref:`WalletAppInstall_TransferOffer_ExpireResult <type-splice-wallet-install-walletappinstalltransferofferexpireresult-53807>` `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" :ref:`WalletAppInstall_TransferOffer_RejectResult <type-splice-wallet-install-walletappinstalltransferofferrejectresult-95787>` `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" :ref:`WalletAppInstall_TransferOffer_WithdrawResult <type-splice-wallet-install-walletappinstalltransferofferwithdrawresult-71362>` `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" `AcceptedTransferOffer_AbortResult <type-splice-wallet-transferoffer-acceptedtransferofferabortresult-19853_>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" `AcceptedTransferOffer_CompleteResult <type-splice-wallet-transferoffer-acceptedtransferoffercompleteresult-69887_>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" `AcceptedTransferOffer_ExpireResult <type-splice-wallet-transferoffer-acceptedtransferofferexpireresult-60205_>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" `AcceptedTransferOffer_WithdrawResult <type-splice-wallet-transferoffer-acceptedtransferofferwithdrawresult-79292_>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" `TransferOffer_ExpireResult <type-splice-wallet-transferoffer-transferofferexpireresult-84418_>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" `TransferOffer_RejectResult <type-splice-wallet-transferoffer-transferofferrejectresult-40046_>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" `TransferOffer_WithdrawResult <type-splice-wallet-transferoffer-transferofferwithdrawresult-27711_>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+.. _type-splice-wallet-transferoffer-transferofferacceptresult-62459:
+
+**data** `TransferOffer_AcceptResult <type-splice-wallet-transferoffer-transferofferacceptresult-62459_>`_
+
+  .. _constr-splice-wallet-transferoffer-transferofferacceptresult-68938:
+
+  `TransferOffer_AcceptResult <constr-splice-wallet-transferoffer-transferofferacceptresult-68938_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - acceptedTransferOffer
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `AcceptedTransferOffer <type-splice-wallet-transferoffer-acceptedtransferoffer-37657_>`_
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"acceptedTransferOffer\" `TransferOffer_AcceptResult <type-splice-wallet-transferoffer-transferofferacceptresult-62459_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `AcceptedTransferOffer <type-splice-wallet-transferoffer-acceptedtransferoffer-37657_>`_)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"acceptedTransferOffer\" `TransferOffer_AcceptResult <type-splice-wallet-transferoffer-transferofferacceptresult-62459_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `AcceptedTransferOffer <type-splice-wallet-transferoffer-acceptedtransferoffer-37657_>`_)
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `TransferOffer <type-splice-wallet-transferoffer-transferoffer-51604_>`_ `TransferOffer_Accept <type-splice-wallet-transferoffer-transferofferaccept-78794_>`_ `TransferOffer_AcceptResult <type-splice-wallet-transferoffer-transferofferacceptresult-62459_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `TransferOffer <type-splice-wallet-transferoffer-transferoffer-51604_>`_ `TransferOffer_Accept <type-splice-wallet-transferoffer-transferofferaccept-78794_>`_ `TransferOffer_AcceptResult <type-splice-wallet-transferoffer-transferofferacceptresult-62459_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `TransferOffer <type-splice-wallet-transferoffer-transferoffer-51604_>`_ `TransferOffer_Accept <type-splice-wallet-transferoffer-transferofferaccept-78794_>`_ `TransferOffer_AcceptResult <type-splice-wallet-transferoffer-transferofferacceptresult-62459_>`_
+
+.. _type-splice-wallet-transferoffer-transferofferexpireresult-84418:
+
+**data** `TransferOffer_ExpireResult <type-splice-wallet-transferoffer-transferofferexpireresult-84418_>`_
+
+  .. _constr-splice-wallet-transferoffer-transferofferexpireresult-36631:
+
+  `TransferOffer_ExpireResult <constr-splice-wallet-transferoffer-transferofferexpireresult-36631_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - trackingInfo
+         - `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" `TransferOffer_ExpireResult <type-splice-wallet-transferoffer-transferofferexpireresult-84418_>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" `TransferOffer_ExpireResult <type-splice-wallet-transferoffer-transferofferexpireresult-84418_>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `TransferOffer <type-splice-wallet-transferoffer-transferoffer-51604_>`_ `TransferOffer_Expire <type-splice-wallet-transferoffer-transferofferexpire-75051_>`_ `TransferOffer_ExpireResult <type-splice-wallet-transferoffer-transferofferexpireresult-84418_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `TransferOffer <type-splice-wallet-transferoffer-transferoffer-51604_>`_ `TransferOffer_Expire <type-splice-wallet-transferoffer-transferofferexpire-75051_>`_ `TransferOffer_ExpireResult <type-splice-wallet-transferoffer-transferofferexpireresult-84418_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `TransferOffer <type-splice-wallet-transferoffer-transferoffer-51604_>`_ `TransferOffer_Expire <type-splice-wallet-transferoffer-transferofferexpire-75051_>`_ `TransferOffer_ExpireResult <type-splice-wallet-transferoffer-transferofferexpireresult-84418_>`_
+
+.. _type-splice-wallet-transferoffer-transferofferrejectresult-40046:
+
+**data** `TransferOffer_RejectResult <type-splice-wallet-transferoffer-transferofferrejectresult-40046_>`_
+
+  .. _constr-splice-wallet-transferoffer-transferofferrejectresult-28795:
+
+  `TransferOffer_RejectResult <constr-splice-wallet-transferoffer-transferofferrejectresult-28795_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - trackingInfo
+         - `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" `TransferOffer_RejectResult <type-splice-wallet-transferoffer-transferofferrejectresult-40046_>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" `TransferOffer_RejectResult <type-splice-wallet-transferoffer-transferofferrejectresult-40046_>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `TransferOffer <type-splice-wallet-transferoffer-transferoffer-51604_>`_ `TransferOffer_Reject <type-splice-wallet-transferoffer-transferofferreject-41375_>`_ `TransferOffer_RejectResult <type-splice-wallet-transferoffer-transferofferrejectresult-40046_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `TransferOffer <type-splice-wallet-transferoffer-transferoffer-51604_>`_ `TransferOffer_Reject <type-splice-wallet-transferoffer-transferofferreject-41375_>`_ `TransferOffer_RejectResult <type-splice-wallet-transferoffer-transferofferrejectresult-40046_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `TransferOffer <type-splice-wallet-transferoffer-transferoffer-51604_>`_ `TransferOffer_Reject <type-splice-wallet-transferoffer-transferofferreject-41375_>`_ `TransferOffer_RejectResult <type-splice-wallet-transferoffer-transferofferrejectresult-40046_>`_
+
+.. _type-splice-wallet-transferoffer-transferofferwithdrawresult-27711:
+
+**data** `TransferOffer_WithdrawResult <type-splice-wallet-transferoffer-transferofferwithdrawresult-27711_>`_
+
+  .. _constr-splice-wallet-transferoffer-transferofferwithdrawresult-1170:
+
+  `TransferOffer_WithdrawResult <constr-splice-wallet-transferoffer-transferofferwithdrawresult-1170_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - trackingInfo
+         - `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"trackingInfo\" `TransferOffer_WithdrawResult <type-splice-wallet-transferoffer-transferofferwithdrawresult-27711_>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"trackingInfo\" `TransferOffer_WithdrawResult <type-splice-wallet-transferoffer-transferofferwithdrawresult-27711_>`_ `TransferOfferTrackingInfo <type-splice-wallet-transferoffer-transferoffertrackinginfo-52959_>`_
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `TransferOffer <type-splice-wallet-transferoffer-transferoffer-51604_>`_ `TransferOffer_Withdraw <type-splice-wallet-transferoffer-transferofferwithdraw-41986_>`_ `TransferOffer_WithdrawResult <type-splice-wallet-transferoffer-transferofferwithdrawresult-27711_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `TransferOffer <type-splice-wallet-transferoffer-transferoffer-51604_>`_ `TransferOffer_Withdraw <type-splice-wallet-transferoffer-transferofferwithdraw-41986_>`_ `TransferOffer_WithdrawResult <type-splice-wallet-transferoffer-transferofferwithdrawresult-27711_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `TransferOffer <type-splice-wallet-transferoffer-transferoffer-51604_>`_ `TransferOffer_Withdraw <type-splice-wallet-transferoffer-transferofferwithdraw-41986_>`_ `TransferOffer_WithdrawResult <type-splice-wallet-transferoffer-transferofferwithdrawresult-27711_>`_

@@ -1,0 +1,158 @@
+.. _module-splice-validatoronboarding-49132:
+
+Splice.ValidatorOnboarding
+==========================
+
+Templates
+---------
+
+.. _type-splice-validatoronboarding-usedsecret-49603:
+
+**template** `UsedSecret <type-splice-validatoronboarding-usedsecret-49603_>`_
+
+  Template used by a sponsoring SV node for enforcing that an onboarding secret is used only once\.
+
+  Signatory\: sv
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - sv
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       - The SV node that sponsored the onboarding\.
+     * - secret
+       - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+       - An onboarding secret\.
+     * - validator
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       - The validator that onboarded using the secret\.
+
+  + **Choice** Archive
+
+    Controller\: sv
+
+    Returns\: ()
+
+    (no fields)
+
+.. _type-splice-validatoronboarding-validatoronboarding-92198:
+
+**template** `ValidatorOnboarding <type-splice-validatoronboarding-validatoronboarding-92198_>`_
+
+  Template used by a sponsoring SV node to keep track of the onboarding of a validator candidate\.
+  We use a secret for authenticating the candidate once he has set up his participant\.
+  The secret should be unique, contain at least 256\-bits of entropy,
+  and be communicated to the candidate via a secure off\-ledger channel\.
+  Once the candidate has set up his participants, he contacts the SV node via an API call
+  and presents his secret, which triggers the SV node to add him as a validator
+  (as a separate on\-ledger action for reducing coupling with the DSO governance contracts)\.
+
+  Signatory\: sv
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - sv
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       - The SV node sponsoring this onboarding\.
+     * - candidateSecret
+       - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+       - The unique secret given to the candidate\.
+     * - expiresAt
+       - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+       - Can be used by the SV for time\-bounding the offer\.
+
+  + **Choice** Archive
+
+    Controller\: sv
+
+    Returns\: ()
+
+    (no fields)
+
+  + .. _type-splice-validatoronboarding-validatoronboardingexpire-7877:
+
+    **Choice** `ValidatorOnboarding_Expire <type-splice-validatoronboarding-validatoronboardingexpire-7877_>`_
+
+    Controller\: sv
+
+    Returns\: `ValidatorOnboarding_ExpireResult <type-splice-validatoronboarding-validatoronboardingexpireresult-28676_>`_
+
+    (no fields)
+
+  + .. _type-splice-validatoronboarding-validatoronboardingmatch-2118:
+
+    **Choice** `ValidatorOnboarding_Match <type-splice-validatoronboarding-validatoronboardingmatch-2118_>`_
+
+    Controller\: sv
+
+    Returns\: `ValidatorOnboarding_MatchResult <type-splice-validatoronboarding-validatoronboardingmatchresult-68567_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - providedSecret
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         -
+       * - validator
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+
+Data Types
+----------
+
+.. _type-splice-validatoronboarding-validatoronboardingexpireresult-28676:
+
+**data** `ValidatorOnboarding_ExpireResult <type-splice-validatoronboarding-validatoronboardingexpireresult-28676_>`_
+
+  .. _constr-splice-validatoronboarding-validatoronboardingexpireresult-66123:
+
+  `ValidatorOnboarding_ExpireResult <constr-splice-validatoronboarding-validatoronboardingexpireresult-66123_>`_
+
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `ValidatorOnboarding <type-splice-validatoronboarding-validatoronboarding-92198_>`_ `ValidatorOnboarding_Expire <type-splice-validatoronboarding-validatoronboardingexpire-7877_>`_ `ValidatorOnboarding_ExpireResult <type-splice-validatoronboarding-validatoronboardingexpireresult-28676_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `ValidatorOnboarding <type-splice-validatoronboarding-validatoronboarding-92198_>`_ `ValidatorOnboarding_Expire <type-splice-validatoronboarding-validatoronboardingexpire-7877_>`_ `ValidatorOnboarding_ExpireResult <type-splice-validatoronboarding-validatoronboardingexpireresult-28676_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `ValidatorOnboarding <type-splice-validatoronboarding-validatoronboarding-92198_>`_ `ValidatorOnboarding_Expire <type-splice-validatoronboarding-validatoronboardingexpire-7877_>`_ `ValidatorOnboarding_ExpireResult <type-splice-validatoronboarding-validatoronboardingexpireresult-28676_>`_
+
+.. _type-splice-validatoronboarding-validatoronboardingmatchresult-68567:
+
+**data** `ValidatorOnboarding_MatchResult <type-splice-validatoronboarding-validatoronboardingmatchresult-68567_>`_
+
+  .. _constr-splice-validatoronboarding-validatoronboardingmatchresult-91618:
+
+  `ValidatorOnboarding_MatchResult <constr-splice-validatoronboarding-validatoronboardingmatchresult-91618_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - usedSecret
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `UsedSecret <type-splice-validatoronboarding-usedsecret-49603_>`_
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"usedSecret\" `ValidatorOnboarding_MatchResult <type-splice-validatoronboarding-validatoronboardingmatchresult-68567_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `UsedSecret <type-splice-validatoronboarding-usedsecret-49603_>`_)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"usedSecret\" `ValidatorOnboarding_MatchResult <type-splice-validatoronboarding-validatoronboardingmatchresult-68567_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `UsedSecret <type-splice-validatoronboarding-usedsecret-49603_>`_)
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `ValidatorOnboarding <type-splice-validatoronboarding-validatoronboarding-92198_>`_ `ValidatorOnboarding_Match <type-splice-validatoronboarding-validatoronboardingmatch-2118_>`_ `ValidatorOnboarding_MatchResult <type-splice-validatoronboarding-validatoronboardingmatchresult-68567_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `ValidatorOnboarding <type-splice-validatoronboarding-validatoronboarding-92198_>`_ `ValidatorOnboarding_Match <type-splice-validatoronboarding-validatoronboardingmatch-2118_>`_ `ValidatorOnboarding_MatchResult <type-splice-validatoronboarding-validatoronboardingmatchresult-68567_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `ValidatorOnboarding <type-splice-validatoronboarding-validatoronboarding-92198_>`_ `ValidatorOnboarding_Match <type-splice-validatoronboarding-validatoronboardingmatch-2118_>`_ `ValidatorOnboarding_MatchResult <type-splice-validatoronboarding-validatoronboardingmatchresult-68567_>`_

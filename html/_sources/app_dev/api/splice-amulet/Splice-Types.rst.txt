@@ -1,0 +1,273 @@
+.. _module-splice-types-4572:
+
+Splice.Types
+============
+
+Data Types
+----------
+
+.. _type-splice-types-fordso-8725:
+
+**data** `ForDso <type-splice-types-fordso-8725_>`_
+
+  The group of contracts managed by the DSO party\.
+
+  Used for checked fetches\.
+
+  .. _constr-splice-types-fordso-8586:
+
+  `ForDso <constr-splice-types-fordso-8586_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - dso
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `ForDso <type-splice-types-fordso-8725_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `ForDso <type-splice-types-fordso-8725_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"dso\" `ForDso <type-splice-types-fordso-8725_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"dso\" `ForDso <type-splice-types-fordso-8725_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** HasCheckedFetch :ref:`UnclaimedReward <type-splice-amulet-unclaimedreward-7814>` `ForDso <type-splice-types-fordso-8725_>`_
+
+  **instance** HasCheckedFetch :ref:`ValidatorRewardCoupon <type-splice-amulet-validatorrewardcoupon-76808>` `ForDso <type-splice-types-fordso-8725_>`_
+
+  **instance** HasCheckedFetch :ref:`AmuletRules <type-splice-amuletrules-amuletrules-32426>` `ForDso <type-splice-types-fordso-8725_>`_
+
+  **instance** HasCheckedFetch :ref:`MemberTraffic <type-splice-decentralizedsynchronizer-membertraffic-74049>` `ForDso <type-splice-types-fordso-8725_>`_
+
+  **instance** HasCheckedFetch :ref:`TransferCommand <type-splice-externalpartyamuletrules-transfercommand-52429>` `ForDso <type-splice-types-fordso-8725_>`_
+
+  **instance** HasCheckedFetch :ref:`ClosedMiningRound <type-splice-round-closedmininground-12506>` `ForDso <type-splice-types-fordso-8725_>`_
+
+  **instance** HasCheckedFetch :ref:`IssuingMiningRound <type-splice-round-issuingmininground-98097>` `ForDso <type-splice-types-fordso-8725_>`_
+
+  **instance** HasCheckedFetch :ref:`OpenMiningRound <type-splice-round-openmininground-90060>` `ForDso <type-splice-types-fordso-8725_>`_
+
+  **instance** HasCheckedFetch :ref:`SummarizingMiningRound <type-splice-round-summarizingmininground-36579>` `ForDso <type-splice-types-fordso-8725_>`_
+
+  **instance** HasCheckedFetch :ref:`ValidatorLicense <type-splice-validatorlicense-validatorlicense-33456>` `ForDso <type-splice-types-fordso-8725_>`_
+
+.. _type-splice-types-forowner-62144:
+
+**data** `ForOwner <type-splice-types-forowner-62144_>`_
+
+  The group of contracts managed by the DSO party and owned by a specific party\.
+
+  Used for checked fetches\.
+
+  .. _constr-splice-types-forowner-89915:
+
+  `ForOwner <constr-splice-types-forowner-89915_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - dso
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - owner
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `ForOwner <type-splice-types-forowner-62144_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `ForOwner <type-splice-types-forowner-62144_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"dso\" `ForOwner <type-splice-types-forowner-62144_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"owner\" `ForOwner <type-splice-types-forowner-62144_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"dso\" `ForOwner <type-splice-types-forowner-62144_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"owner\" `ForOwner <type-splice-types-forowner-62144_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** HasCheckedFetch :ref:`Amulet <type-splice-amulet-amulet-63582>` `ForOwner <type-splice-types-forowner-62144_>`_
+
+  **instance** HasCheckedFetch :ref:`AppRewardCoupon <type-splice-amulet-apprewardcoupon-57229>` `ForOwner <type-splice-types-forowner-62144_>`_
+
+  **instance** HasCheckedFetch :ref:`LockedAmulet <type-splice-amulet-lockedamulet-7030>` `ForOwner <type-splice-types-forowner-62144_>`_
+
+  **instance** HasCheckedFetch :ref:`SvRewardCoupon <type-splice-amulet-svrewardcoupon-68580>` `ForOwner <type-splice-types-forowner-62144_>`_
+
+  **instance** HasCheckedFetch :ref:`TransferPreapproval <type-splice-amuletrules-transferpreapproval-36220>` `ForOwner <type-splice-types-forowner-62144_>`_
+
+  **instance** HasCheckedFetch :ref:`TransferCommandCounter <type-splice-externalpartyamuletrules-transfercommandcounter-30214>` `ForOwner <type-splice-types-forowner-62144_>`_
+
+  **instance** HasCheckedFetch :ref:`ValidatorFaucetCoupon <type-splice-validatorlicense-validatorfaucetcoupon-19254>` `ForOwner <type-splice-types-forowner-62144_>`_
+
+  **instance** HasCheckedFetch :ref:`ValidatorLivenessActivityRecord <type-splice-validatorlicense-validatorlivenessactivityrecord-17293>` `ForOwner <type-splice-types-forowner-62144_>`_
+
+.. _type-splice-types-forround-72197:
+
+**data** `ForRound <type-splice-types-forround-72197_>`_
+
+  The group of contracts managed by the DSO party for a specific mining round\.
+
+  Used for checked fetches\.
+
+  .. _constr-splice-types-forround-96474:
+
+  `ForRound <constr-splice-types-forround-96474_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - dso
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - round
+         - `Round <type-splice-types-round-16181_>`_
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `ForRound <type-splice-types-forround-72197_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `ForRound <type-splice-types-forround-72197_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"dso\" `ForRound <type-splice-types-forround-72197_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"round\" `ForRound <type-splice-types-forround-72197_>`_ `Round <type-splice-types-round-16181_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"dso\" `ForRound <type-splice-types-forround-72197_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"round\" `ForRound <type-splice-types-forround-72197_>`_ `Round <type-splice-types-round-16181_>`_
+
+  **instance** HasCheckedFetch :ref:`ClosedMiningRound <type-splice-round-closedmininground-12506>` `ForRound <type-splice-types-forround-72197_>`_
+
+  **instance** HasCheckedFetch :ref:`IssuingMiningRound <type-splice-round-issuingmininground-98097>` `ForRound <type-splice-types-forround-72197_>`_
+
+  **instance** HasCheckedFetch :ref:`OpenMiningRound <type-splice-round-openmininground-90060>` `ForRound <type-splice-types-forround-72197_>`_
+
+  **instance** HasCheckedFetch :ref:`SummarizingMiningRound <type-splice-round-summarizingmininground-36579>` `ForRound <type-splice-types-forround-72197_>`_
+
+.. _type-splice-types-round-16181:
+
+**data** `Round <type-splice-types-round-16181_>`_
+
+  .. _constr-splice-types-round-29804:
+
+  `Round <constr-splice-types-round-29804_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - number
+         - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `Round <type-splice-types-round-16181_>`_
+
+  **instance** `Ord <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-ord-6395>`_ `Round <type-splice-types-round-16181_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `Round <type-splice-types-round-16181_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"createdAt\" :ref:`ExpiringAmount <type-splice-fees-expiringamount-39537>` `Round <type-splice-types-round-16181_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"firstReceivedFor\" :ref:`FaucetState <type-splice-validatorlicense-faucetstate-67607>` `Round <type-splice-types-round-16181_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"issuingMiningRounds\" :ref:`TransferContext <type-splice-amuletrules-transfercontext-68991>` (`Map <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-map-90052>`_ `Round <type-splice-types-round-16181_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`IssuingMiningRound <type-splice-round-issuingmininground-98097>`))
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"issuingMiningRounds\" :ref:`TransferContextSummary <type-splice-amuletrules-transfercontextsummary-99392>` (`Map <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-map-90052>`_ `Round <type-splice-types-round-16181_>`_ :ref:`IssuingMiningRound <type-splice-round-issuingmininground-98097>`)
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"lastReceivedFor\" :ref:`FaucetState <type-splice-validatorlicense-faucetstate-67607>` `Round <type-splice-types-round-16181_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"number\" `Round <type-splice-types-round-16181_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"round\" (:ref:`AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609>` amuletContractId) `Round <type-splice-types-round-16181_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"round\" :ref:`AmuletExpireSummary <type-splice-amulet-amuletexpiresummary-4706>` `Round <type-splice-types-round-16181_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"round\" :ref:`AppRewardCoupon <type-splice-amulet-apprewardcoupon-57229>` `Round <type-splice-types-round-16181_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"round\" :ref:`SvRewardCoupon <type-splice-amulet-svrewardcoupon-68580>` `Round <type-splice-types-round-16181_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"round\" :ref:`ValidatorRewardCoupon <type-splice-amulet-validatorrewardcoupon-76808>` `Round <type-splice-types-round-16181_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"round\" :ref:`AmuletRules_BuyMemberTrafficResult <type-splice-amuletrules-amuletrulesbuymembertrafficresult-65734>` `Round <type-splice-types-round-16181_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"round\" :ref:`TransferResult <type-splice-amuletrules-transferresult-93164>` `Round <type-splice-types-round-16181_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"round\" :ref:`ClosedMiningRound <type-splice-round-closedmininground-12506>` `Round <type-splice-types-round-16181_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"round\" :ref:`IssuingMiningRound <type-splice-round-issuingmininground-98097>` `Round <type-splice-types-round-16181_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"round\" :ref:`OpenMiningRound <type-splice-round-openmininground-90060>` `Round <type-splice-types-round-16181_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"round\" :ref:`SummarizingMiningRound <type-splice-round-summarizingmininground-36579>` `Round <type-splice-types-round-16181_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"round\" `ForRound <type-splice-types-forround-72197_>`_ `Round <type-splice-types-round-16181_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"round\" :ref:`ValidatorFaucetCoupon <type-splice-validatorlicense-validatorfaucetcoupon-19254>` `Round <type-splice-types-round-16181_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"round\" :ref:`ValidatorLivenessActivityRecord <type-splice-validatorlicense-validatorlivenessactivityrecord-17293>` `Round <type-splice-types-round-16181_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"createdAt\" :ref:`ExpiringAmount <type-splice-fees-expiringamount-39537>` `Round <type-splice-types-round-16181_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"firstReceivedFor\" :ref:`FaucetState <type-splice-validatorlicense-faucetstate-67607>` `Round <type-splice-types-round-16181_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"issuingMiningRounds\" :ref:`TransferContext <type-splice-amuletrules-transfercontext-68991>` (`Map <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-map-90052>`_ `Round <type-splice-types-round-16181_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`IssuingMiningRound <type-splice-round-issuingmininground-98097>`))
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"issuingMiningRounds\" :ref:`TransferContextSummary <type-splice-amuletrules-transfercontextsummary-99392>` (`Map <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-map-90052>`_ `Round <type-splice-types-round-16181_>`_ :ref:`IssuingMiningRound <type-splice-round-issuingmininground-98097>`)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"lastReceivedFor\" :ref:`FaucetState <type-splice-validatorlicense-faucetstate-67607>` `Round <type-splice-types-round-16181_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"number\" `Round <type-splice-types-round-16181_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"round\" (:ref:`AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609>` amuletContractId) `Round <type-splice-types-round-16181_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"round\" :ref:`AmuletExpireSummary <type-splice-amulet-amuletexpiresummary-4706>` `Round <type-splice-types-round-16181_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"round\" :ref:`AppRewardCoupon <type-splice-amulet-apprewardcoupon-57229>` `Round <type-splice-types-round-16181_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"round\" :ref:`SvRewardCoupon <type-splice-amulet-svrewardcoupon-68580>` `Round <type-splice-types-round-16181_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"round\" :ref:`ValidatorRewardCoupon <type-splice-amulet-validatorrewardcoupon-76808>` `Round <type-splice-types-round-16181_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"round\" :ref:`AmuletRules_BuyMemberTrafficResult <type-splice-amuletrules-amuletrulesbuymembertrafficresult-65734>` `Round <type-splice-types-round-16181_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"round\" :ref:`TransferResult <type-splice-amuletrules-transferresult-93164>` `Round <type-splice-types-round-16181_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"round\" :ref:`ClosedMiningRound <type-splice-round-closedmininground-12506>` `Round <type-splice-types-round-16181_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"round\" :ref:`IssuingMiningRound <type-splice-round-issuingmininground-98097>` `Round <type-splice-types-round-16181_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"round\" :ref:`OpenMiningRound <type-splice-round-openmininground-90060>` `Round <type-splice-types-round-16181_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"round\" :ref:`SummarizingMiningRound <type-splice-round-summarizingmininground-36579>` `Round <type-splice-types-round-16181_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"round\" `ForRound <type-splice-types-forround-72197_>`_ `Round <type-splice-types-round-16181_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"round\" :ref:`ValidatorFaucetCoupon <type-splice-validatorlicense-validatorfaucetcoupon-19254>` `Round <type-splice-types-round-16181_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"round\" :ref:`ValidatorLivenessActivityRecord <type-splice-validatorlicense-validatorlivenessactivityrecord-17293>` `Round <type-splice-types-round-16181_>`_
+
+Functions
+---------
+
+.. _function-splice-types-isdefinedround-76197:
+
+`isDefinedRound <function-splice-types-isdefinedround-76197_>`_
+  \: `Round <type-splice-types-round-16181_>`_ \-\> `Bool <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-bool-66265>`_
+
+  Check if a round has a positive round number
