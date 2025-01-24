@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.8-ci-snapshot.20250124.1.0.v06ba4e48
+                0.3.8-ci-snapshot.20250124.1.0.vcbc4f7bd
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -597,9 +597,9 @@
 VPN or you need a static egress IP. In the latter case,
 please provide that IP address to your contact at Digital Asset to
 add it to the firewall rules.</p></li>
-<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.8-ci-snapshot.20250124.1.0.v06ba4e48_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
+<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.8-ci-snapshot.20250124.1.0.vcbc4f7bd_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
 </ol>
-<pre class="literal-block">tar xzvf 0.3.8-ci-snapshot.20250124.1.0.v06ba4e48_splice-node.tar.gz</pre>
+<pre class="literal-block">tar xzvf 0.3.8-ci-snapshot.20250124.1.0.vcbc4f7bd_splice-node.tar.gz</pre>
 <section id="required-network-parameters">
 <h3>Required Network Parameters<a class="headerlink" href="#required-network-parameters" title="Link to this heading"></a></h3>
 <p>To initialize your validator node, you need the following parameters
@@ -881,7 +881,7 @@ kubectl<span class="w"> </span>create<span class="w"> </span>--namespace<span cl
 cluster, you will need to meet a few preconditions. The first is that
 there needs to be an environment variable defined to refer to the
 version of the Helm charts necessary to connect to this environment:</p>
-<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.8-ci-snapshot.20250124.1.0.v06ba4e48</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.8-ci-snapshot.20250124.1.0.vcbc4f7bd</span></code></p>
 <p>Please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/participant-values.yaml</span></code> as follows:</p>
 <ul class="simple">
 <li><p>Replace <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_LEDGER_API_AUDIENCE</span></code> in the <cite>auth.targetAudience</cite> entry with audience for the ledger API. e.g. <code class="docutils literal notranslate"><span class="pre">https://ledger_api.example.com</span></code>. If you are not ready to use a custom audience, you can use the suggested default <code class="docutils literal notranslate"><span class="pre">https://canton.network.global</span></code>.</p></li>
@@ -958,12 +958,9 @@ validator operator party. It must be of the format
 <p>With these files in place, you can execute the following helm commands
 in sequence. It’s generally a good idea to wait until each deployment
 reaches a stable state prior to moving on to the next step.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>repo<span class="w"> </span>update
-helm<span class="w"> </span>install<span class="w"> </span>postgres<span class="w"> </span>canton-network-helm/splice-postgres<span class="w"> </span>-n<span class="w"> </span>validator<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/postgres-values-validator-participant.yaml<span class="w"> </span>--wait
-helm<span class="w"> </span>install<span class="w"> </span>participant<span class="w"> </span>canton-network-helm/splice-participant<span class="w"> </span>-n<span class="w"> </span>validator<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/participant-values.yaml<span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/standalone-participant-values.yaml<span class="w"> </span>--wait
-helm<span class="w"> </span>install<span class="w"> </span>validator<span class="w"> </span>canton-network-helm/splice-validator<span class="w"> </span>-n<span class="w"> </span>validator<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/validator-values.yaml<span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/standalone-validator-values.yaml<span class="w"> </span>--wait
-</pre></div>
-</div>
+<pre class="literal-block">helm install postgres oci://ghcr.io/digital-asset/decentralized-canton-sync/helm/splice-postgres -n validator --version ${CHART_VERSION} -f splice-node/examples/sv-helm/postgres-values-validator-participant.yaml --wait
+helm install participant oci://ghcr.io/digital-asset/decentralized-canton-sync/helm/splice-participant -n validator --version ${CHART_VERSION} -f splice-node/examples/sv-helm/participant-values.yaml -f splice-node/examples/sv-helm/standalone-participant-values.yaml --wait
+helm install validator oci://ghcr.io/digital-asset/decentralized-canton-sync/helm/splice-validator -n validator --version ${CHART_VERSION} -f splice-node/examples/sv-helm/validator-values.yaml -f splice-node/examples/sv-helm/standalone-validator-values.yaml --wait</pre>
 <p>Once this is running, you should be able to inspect the state of the
 cluster and observe pods running in the new
 namespace. A typical query might look as follows:</p>
@@ -1073,9 +1070,7 @@ definition:</p>
 </div>
 <p>A reference Helm chart installing a gateway that uses this service is also provided.
 To install it, run the following (assuming the environment variable <cite>YOUR_HOSTNAME</cite> is set to your hostname):</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>install<span class="w"> </span>cluster-gateway<span class="w"> </span>canton-network-helm/splice-istio-gateway<span class="w"> </span>-n<span class="w"> </span>cluster-ingress<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>--set<span class="w"> </span>cluster.daHostname<span class="o">=</span><span class="si">${</span><span class="nv">YOUR_HOSTNAME</span><span class="si">}</span><span class="w"> </span>--set<span class="w"> </span>cluster.cantonHostname<span class="o">=</span><span class="si">${</span><span class="nv">YOUR_HOSTNAME</span><span class="si">}</span>
-</pre></div>
-</div>
+<pre class="literal-block">helm install cluster-gateway oci://ghcr.io/digital-asset/decentralized-canton-sync/helm/splice-istio-gateway -n cluster-ingress --version ${CHART_VERSION} --set cluster.daHostname=${YOUR_HOSTNAME} --set cluster.cantonHostname=${YOUR_HOSTNAME}</pre>
 <p>This gateway terminates tls using the secret that you configured above, and exposes raw http traffic in its outbound port 443.
 Istio VirtualServices can now be created to route traffic from there to the required pods within the cluster.
 Another reference Helm chart is provided for that, which can be installed after</p>
@@ -1084,9 +1079,7 @@ Another reference Helm chart is provided for that, which can be installed after<
 <li><p>setting <code class="docutils literal notranslate"><span class="pre">nameServiceDomain</span></code> in the same file to <code class="docutils literal notranslate"><span class="pre">&quot;cns&quot;</span></code></p></li>
 </ol>
 <p>using:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>install<span class="w"> </span>cluster-ingress-validator<span class="w"> </span>canton-network-helm/splice-cluster-ingress-runbook<span class="w"> </span>-n<span class="w"> </span>validator<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/validator-cluster-ingress-values.yaml
-</pre></div>
-</div>
+<pre class="literal-block">helm install cluster-ingress-validator oci://ghcr.io/digital-asset/decentralized-canton-sync/helm/splice-cluster-ingress-runbook -n validator --version ${CHART_VERSION} -f splice-node/examples/sv-helm/validator-cluster-ingress-values.yaml</pre>
 </section>
 </section>
 <section id="logging-into-the-wallet-ui">

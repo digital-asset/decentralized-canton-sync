@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.8-ci-snapshot.20250124.1.0.v06ba4e48
+                0.3.8-ci-snapshot.20250124.1.0.vcbc4f7bd
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -599,9 +599,9 @@ target cluster.</p>
 VPN or you need a static egress IP. In the latter case,
 please provide that IP address to your contact at Digital Asset to
 add it to the firewall rules.</p></li>
-<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.8-ci-snapshot.20250124.1.0.v06ba4e48_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
+<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.8-ci-snapshot.20250124.1.0.vcbc4f7bd_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
 </ol>
-<pre class="literal-block">tar xzvf 0.3.8-ci-snapshot.20250124.1.0.v06ba4e48_splice-node.tar.gz</pre>
+<pre class="literal-block">tar xzvf 0.3.8-ci-snapshot.20250124.1.0.vcbc4f7bd_splice-node.tar.gz</pre>
 <ol class="arabic simple" start="5">
 <li><p>Please inquire if the global synchronizer (domain) on your target network has previously undergone a <a class="reference internal" href="sv_major_upgrade.html#sv-upgrades"><span class="std std-ref">synchronizer migration</span></a>.
 If it has, please record the current migration ID of the synchronizer.
@@ -927,9 +927,9 @@ To do that, you first must generate the keys that will identify the node.</p>
 mkdir cometbft
 cd cometbft
 # Init the node
-docker run --rm -v &quot;$(pwd):/init&quot; ghcr.io/digital-asset/decentralized-canton-sync/docker/cometbft:0.3.8-ci-snapshot.20250124.1.0.v06ba4e48 init --home /init
+docker run --rm -v &quot;$(pwd):/init&quot; ghcr.io/digital-asset/decentralized-canton-sync/docker/cometbft:0.3.8-ci-snapshot.20250124.1.0.vcbc4f7bd init --home /init
 # Read the node id and keep a note of it for the deployment
-docker run --rm -v &quot;$(pwd):/init&quot; ghcr.io/digital-asset/decentralized-canton-sync/docker/cometbft:0.3.8-ci-snapshot.20250124.1.0.v06ba4e48 show-node-id --home /init</pre>
+docker run --rm -v &quot;$(pwd):/init&quot; ghcr.io/digital-asset/decentralized-canton-sync/docker/cometbft:0.3.8-ci-snapshot.20250124.1.0.vcbc4f7bd show-node-id --home /init</pre>
 <p>Please keep a note of the node ID printed out above.</p>
 <p>In addition, please retain some of the configuration files generated, as follows (you might need to change the permissions/ownership for them as they are accessible only by the root user):</p>
 <div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="n">cometbft</span><span class="o">/</span><span class="n">config</span><span class="o">/</span><span class="n">node_key</span><span class="p">.</span><span class="n">json</span>
@@ -1003,12 +1003,10 @@ kubectl<span class="w"> </span>create<span class="w"> </span>secret<span class="
 <section id="postgres-in-the-cluster">
 <h3>Postgres in the Cluster<a class="headerlink" href="#postgres-in-the-cluster" title="Link to this heading"></a></h3>
 <p>If you wish to run the Postgres instances as pods in your cluster, you can use the <cite>splice-postgres</cite> Helm chart to install them:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>install<span class="w"> </span>sequencer-pg<span class="w"> </span>canton-network-helm/splice-postgres<span class="w"> </span>-n<span class="w"> </span>sv<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/postgres-values-sequencer.yaml<span class="w"> </span>--wait
-helm<span class="w"> </span>install<span class="w"> </span>mediator-pg<span class="w"> </span>canton-network-helm/splice-postgres<span class="w"> </span>-n<span class="w"> </span>sv<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/postgres-values-mediator.yaml<span class="w"> </span>--wait
-helm<span class="w"> </span>install<span class="w"> </span>participant-pg<span class="w"> </span>canton-network-helm/splice-postgres<span class="w"> </span>-n<span class="w"> </span>sv<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/postgres-values-participant.yaml<span class="w"> </span>--wait
-helm<span class="w"> </span>install<span class="w"> </span>apps-pg<span class="w"> </span>canton-network-helm/splice-postgres<span class="w"> </span>-n<span class="w"> </span>sv<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/postgres-values-apps.yaml<span class="w"> </span>--wait
-</pre></div>
-</div>
+<pre class="literal-block">helm install sequencer-pg oci://ghcr.io/digital-asset/decentralized-canton-sync/helm/splice-postgres -n sv --version ${CHART_VERSION} -f splice-node/examples/sv-helm/postgres-values-sequencer.yaml --wait
+helm install mediator-pg oci://ghcr.io/digital-asset/decentralized-canton-sync/helm/splice-postgres -n sv --version ${CHART_VERSION} -f splice-node/examples/sv-helm/postgres-values-mediator.yaml --wait
+helm install participant-pg oci://ghcr.io/digital-asset/decentralized-canton-sync/helm/splice-postgres -n sv --version ${CHART_VERSION} -f splice-node/examples/sv-helm/postgres-values-participant.yaml --wait
+helm install apps-pg oci://ghcr.io/digital-asset/decentralized-canton-sync/helm/splice-postgres -n sv --version ${CHART_VERSION} -f splice-node/examples/sv-helm/postgres-values-apps.yaml --wait</pre>
 </section>
 <section id="cloud-hosted-postgres">
 <h3>Cloud-Hosted Postgres<a class="headerlink" href="#cloud-hosted-postgres" title="Link to this heading"></a></h3>
@@ -1033,7 +1031,7 @@ you will also need to ensure that <cite>persistence.databaseName</cite> is uniqu
 cluster, you will need to meet a few preconditions. The first is that
 there needs to be an environment variable defined to refer to the
 version of the Helm charts necessary to connect to this environment:</p>
-<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.8-ci-snapshot.20250124.1.0.v06ba4e48</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.8-ci-snapshot.20250124.1.0.vcbc4f7bd</span></code></p>
 <p>An SV node includes a CometBft node so you also need to configure
 that. Please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/cometbft-values.yaml</span></code> as follows:</p>
 <ul class="simple">
@@ -1146,20 +1144,15 @@ The <cite>extraBeneficiaries</cite> can be changed with just a restart of the SV
 in sequence. It’s generally a good idea to wait until each deployment
 reaches a stable state prior to moving on to the next step.</p>
 <p>Install the Canton and CometBFT components:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>repo<span class="w"> </span>update
-helm<span class="w"> </span>install<span class="w"> </span>global-domain-<span class="si">${</span><span class="nv">MIGRATION_ID</span><span class="si">}</span>-cometbft<span class="w"> </span>canton-network-helm/splice-cometbft<span class="w"> </span>-n<span class="w"> </span>sv<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/cometbft-values.yaml<span class="w"> </span>--wait
-helm<span class="w"> </span>install<span class="w"> </span>global-domain-<span class="si">${</span><span class="nv">MIGRATION_ID</span><span class="si">}</span><span class="w"> </span>canton-network-helm/splice-global-domain<span class="w"> </span>-n<span class="w"> </span>sv<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/global-domain-values.yaml<span class="w"> </span>--wait
-helm<span class="w"> </span>install<span class="w"> </span>participant-<span class="si">${</span><span class="nv">MIGRATION_ID</span><span class="si">}</span><span class="w"> </span>canton-network-helm/splice-participant<span class="w"> </span>-n<span class="w"> </span>sv<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/participant-values.yaml<span class="w"> </span>--wait
-</pre></div>
-</div>
+<pre class="literal-block">helm install global-domain-${MIGRATION_ID}-cometbft oci://ghcr.io/digital-asset/decentralized-canton-sync/helm/splice-cometbft -n sv --version ${CHART_VERSION} -f splice-node/examples/sv-helm/cometbft-values.yaml --wait
+helm install global-domain-${MIGRATION_ID} oci://ghcr.io/digital-asset/decentralized-canton-sync/helm/splice-global-domain -n sv --version ${CHART_VERSION} -f splice-node/examples/sv-helm/global-domain-values.yaml --wait
+helm install participant-${MIGRATION_ID} oci://ghcr.io/digital-asset/decentralized-canton-sync/helm/splice-participant -n sv --version ${CHART_VERSION} -f splice-node/examples/sv-helm/participant-values.yaml --wait</pre>
 <p>Note that we use the migration ID when naming Canton components.
 This is to support operating multiple instances of these components side by side as part of a <a class="reference internal" href="sv_major_upgrade.html#sv-upgrades"><span class="std std-ref">synchronizer migration</span></a>.</p>
 <p>Install the SV node apps (replace <code class="docutils literal notranslate"><span class="pre">helm</span> <span class="pre">install</span></code> in these commands with <code class="docutils literal notranslate"><span class="pre">helm</span> <span class="pre">upgrade</span></code> if you are following <a class="reference internal" href="sv_major_upgrade.html#sv-upgrades-deploying-apps"><span class="std std-ref">Updating Apps</span></a>):</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>install<span class="w"> </span>sv<span class="w"> </span>canton-network-helm/splice-sv-node<span class="w"> </span>-n<span class="w"> </span>sv<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/sv-values.yaml<span class="w"> </span>-f<span class="w"> </span><span class="si">${</span><span class="nv">SV_IDENTITIES_FILE</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span><span class="si">${</span><span class="nv">UI_CONFIG_VALUES_FILE</span><span class="si">}</span><span class="w"> </span>--wait
-helm<span class="w"> </span>install<span class="w"> </span>scan<span class="w"> </span>canton-network-helm/splice-scan<span class="w"> </span>-n<span class="w"> </span>sv<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/scan-values.yaml<span class="w"> </span>-f<span class="w"> </span><span class="si">${</span><span class="nv">UI_CONFIG_VALUES_FILE</span><span class="si">}</span><span class="w"> </span>--wait
-helm<span class="w"> </span>install<span class="w"> </span>validator<span class="w"> </span>canton-network-helm/splice-validator<span class="w"> </span>-n<span class="w"> </span>sv<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/validator-values.yaml<span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/sv-validator-values.yaml<span class="w"> </span>-f<span class="w"> </span><span class="si">${</span><span class="nv">UI_CONFIG_VALUES_FILE</span><span class="si">}</span><span class="w"> </span>--wait
-</pre></div>
-</div>
+<pre class="literal-block">helm install sv oci://ghcr.io/digital-asset/decentralized-canton-sync/helm/splice-sv-node -n sv --version ${CHART_VERSION} -f splice-node/examples/sv-helm/sv-values.yaml -f ${SV_IDENTITIES_FILE} -f ${UI_CONFIG_VALUES_FILE} --wait
+helm install scan oci://ghcr.io/digital-asset/decentralized-canton-sync/helm/splice-scan -n sv --version ${CHART_VERSION} -f splice-node/examples/sv-helm/scan-values.yaml -f ${UI_CONFIG_VALUES_FILE} --wait
+helm install validator oci://ghcr.io/digital-asset/decentralized-canton-sync/helm/splice-validator -n sv --version ${CHART_VERSION} -f splice-node/examples/sv-helm/validator-values.yaml -f splice-node/examples/sv-helm/sv-validator-values.yaml -f ${UI_CONFIG_VALUES_FILE} --wait</pre>
 <p>Once everything is running, you should be able to inspect the state of the
 cluster and observe pods running in the new
 namespace. A typical query might look as follows:</p>
@@ -1301,9 +1294,7 @@ definition:</p>
 </div>
 <p>A reference Helm chart installing a gateway that uses this service is also provided.
 To install it, run the following (assuming the environment variable <cite>YOUR_HOSTNAME</cite> is set to your hostname):</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>install<span class="w"> </span>cluster-gateway<span class="w"> </span>canton-network-helm/splice-istio-gateway<span class="w"> </span>-n<span class="w"> </span>cluster-ingress<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>--set<span class="w"> </span>cluster.daHostname<span class="o">=</span><span class="si">${</span><span class="nv">YOUR_HOSTNAME</span><span class="si">}</span><span class="w"> </span>--set<span class="w"> </span>cluster.cantonHostname<span class="o">=</span><span class="si">${</span><span class="nv">YOUR_HOSTNAME</span><span class="si">}</span>
-</pre></div>
-</div>
+<pre class="literal-block">helm install cluster-gateway oci://ghcr.io/digital-asset/decentralized-canton-sync/helm/splice-istio-gateway -n cluster-ingress --version ${CHART_VERSION} --set cluster.daHostname=${YOUR_HOSTNAME} --set cluster.cantonHostname=${YOUR_HOSTNAME}</pre>
 <p>This gateway terminates tls using the secret that you configured above, and exposes raw http traffic in its outbound port 443.
 Istio VirtualServices can now be created to route traffic from there to the required pods within the cluster.
 Another reference Helm chart is provided for that, which can be installed after</p>
@@ -1312,9 +1303,7 @@ Another reference Helm chart is provided for that, which can be installed after<
 <li><p>setting <code class="docutils literal notranslate"><span class="pre">nameServiceDomain</span></code> in the same file to <code class="docutils literal notranslate"><span class="pre">&quot;cns&quot;</span></code></p></li>
 </ol>
 <p>using:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>install<span class="w"> </span>cluster-ingress-sv<span class="w"> </span>canton-network-helm/splice-cluster-ingress-runbook<span class="w"> </span>-n<span class="w"> </span>sv<span class="w"> </span>--version<span class="w"> </span><span class="si">${</span><span class="nv">CHART_VERSION</span><span class="si">}</span><span class="w"> </span>-f<span class="w"> </span>splice-node/examples/sv-helm/sv-cluster-ingress-values.yaml
-</pre></div>
-</div>
+<pre class="literal-block">helm install cluster-ingress-sv oci://ghcr.io/digital-asset/decentralized-canton-sync/helm/splice-cluster-ingress-runbook -n sv --version ${CHART_VERSION} -f splice-node/examples/sv-helm/sv-cluster-ingress-values.yaml</pre>
 </section>
 </section>
 <section id="configuring-the-cluster-egress">
