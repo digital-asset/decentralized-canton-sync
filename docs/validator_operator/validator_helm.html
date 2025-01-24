@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.8-ci-snapshot.20250124.1.0.ve70aab06
+                0.3.8-ci-snapshot.20250124.1.0.vfbb717a2
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -62,6 +62,7 @@
 <li class="toctree-l2"><a class="reference internal" href="validator_compose.html">Docker-Compose Based Deployment</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="validator_compose.html#docker-compose-based-deployment-of-a-validator-node">Docker-Compose Based Deployment of a Validator Node</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="validator_compose.html#requirements">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="validator_compose.html#required-network-parameters">Required Network Parameters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="validator_compose.html#preparing-for-validator-onboarding">Preparing for Validator Onboarding</a></li>
 <li class="toctree-l4"><a class="reference internal" href="validator_compose.html#deployment">Deployment</a></li>
 <li class="toctree-l4"><a class="reference internal" href="validator_compose.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
@@ -72,7 +73,10 @@
 </ul>
 </li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Kubernetes-Based Deployment of a Validator node</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#requirements">Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#requirements">Requirements</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#required-network-parameters">Required Network Parameters</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#preparing-a-cluster-for-installation">Preparing a Cluster for Installation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#configuring-postgresql-authentication">Configuring PostgreSQL authentication</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#preparing-for-validator-onboarding">Preparing for Validator Onboarding</a></li>
@@ -593,17 +597,38 @@
 VPN or you need a static egress IP. In the latter case,
 please provide that IP address to your contact at Digital Asset to
 add it to the firewall rules.</p></li>
-<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.8-ci-snapshot.20250124.1.0.ve70aab06_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
+<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.8-ci-snapshot.20250124.1.0.vfbb717a2_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
 </ol>
-<pre class="literal-block">tar xzvf 0.3.8-ci-snapshot.20250124.1.0.ve70aab06_splice-node.tar.gz</pre>
-<ol class="arabic simple" start="5">
-<li><p>Please inquire if the global synchronizer (domain) on your target network has previously undergone a <a class="reference internal" href="validator_major_upgrades.html#validator-upgrades"><span class="std std-ref">synchronizer migration</span></a>.
-If it has, please record the current migration ID of the synchronizer.
-The migration ID is 0 for the initial synchronizer deployment and is incremented by 1 for each subsequent migration.</p></li>
-</ol>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">MIGRATION_ID</span><span class="o">=</span><span class="m">0</span>
+<pre class="literal-block">tar xzvf 0.3.8-ci-snapshot.20250124.1.0.vfbb717a2_splice-node.tar.gz</pre>
+<section id="required-network-parameters">
+<h3>Required Network Parameters<a class="headerlink" href="#required-network-parameters" title="Link to this heading"></a></h3>
+<p>To initialize your validator node, you need the following parameters
+that define the network you’re onboarding to and the secret
+required for doing so.</p>
+<dl>
+<dt>MIGRATION_ID</dt><dd><p>The current migration id of the network (dev/test/mainnet) you are trying to connect to. You can find this on <a class="reference external" href="https://sync.global/sv-network/">https://sync.global/sv-network/</a>.</p>
+</dd>
+<dt>SPONSOR_SV_URL</dt><dd><p>The URL of the SV app of your SV sponsor. This should be of the form <a class="reference external" href="https://sv.sv-1.TARGET_CLUSTER.global.canton.network.YOUR_SV_SPONSOR">https://sv.sv-1.TARGET_CLUSTER.global.canton.network.YOUR_SV_SPONSOR</a>, e.g., <a class="reference external" href="https://sv.sv-1.TARGET_CLUSTER.global.canton.network.sync.global">https://sv.sv-1.TARGET_CLUSTER.global.canton.network.sync.global</a> for the GSF SV.</p>
+</dd>
+<dt>ONBOARDING_SECRET</dt><dd><p>The onboarding secret provided by your sponsor. If you don’t already have one, ask your sponsor. Note that onboarding secrets are one-time use and expire after 24h.
+If you don’t join before it expires, you need to request a new secret from your SV sponsor.</p>
+<div class="admonition-devnet-only admonition">
+<p class="admonition-title">DevNet-only</p>
+<p>On DevNet, you can obtain an onboarding secret automatically by
+calling the following endpoint on any SV (replace <code class="docutils literal notranslate"><span class="pre">SPONSOR_SV_URL</span></code> with the URL of your SV sponsor):</p>
+<div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="n">curl</span><span class="w"> </span><span class="o">-</span><span class="nc">X</span><span class="w"> </span><span class="nc">POST</span><span class="w"> </span><span class="nc">SPONSOR_SV_URL</span><span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="n">sv</span><span class="o">/</span><span class="n">v0</span><span class="o">/</span><span class="n">devnet</span><span class="o">/</span><span class="n">onboard</span><span class="o">/</span><span class="n">validator</span><span class="o">/</span><span class="n">prepare</span>
 </pre></div>
 </div>
+</div>
+</dd>
+</dl>
+<dl class="simple">
+<dt>TRUSTED_SCAN_URL</dt><dd><p>The scan URL of an SV that you trust and that is reachable by your validator. This should be of the form <a class="reference external" href="https://scan.sv-1.TARGET_CLUSTER.global.canton.network.YOUR_SV_SPONSOR">https://scan.sv-1.TARGET_CLUSTER.global.canton.network.YOUR_SV_SPONSOR</a>,
+e.g., <a class="reference external" href="https://scan.sv-1.TARGET_CLUSTER.global.canton.network.sync.global">https://scan.sv-1.TARGET_CLUSTER.global.canton.network.sync.global</a> for the GSF SV.</p>
+</dd>
+</dl>
+<p>Additional parameters describing your own setup as opposed to the connection to the network are described below.</p>
+</section>
 </section>
 <section id="preparing-a-cluster-for-installation">
 <span id="validator-identity-token"></span><h2>Preparing a Cluster for Installation<a class="headerlink" href="#preparing-a-cluster-for-installation" title="Link to this heading"></a></h2>
@@ -625,20 +650,7 @@ The password can be setup with the following command, assuming you set the envir
 </section>
 <section id="preparing-for-validator-onboarding">
 <span id="validator-onboarding"></span><h2>Preparing for Validator Onboarding<a class="headerlink" href="#preparing-for-validator-onboarding" title="Link to this heading"></a></h2>
-<p>In order to become a validator, you need the sponsorship of an SV.
-Your SV will provide you with a required secret to authorize yourself towards their SV.</p>
-<p>The onboarding secret is a one-time use secret that expires after 24 hours. If you don’t join before it expires, you need to request a new secret from your SV sponsor.</p>
-<div class="admonition-devnet-only admonition">
-<p class="admonition-title">DevNet-only</p>
-<p>On DevNet, you can obtain an onboarding secret automatically by
-calling the following endpoint on your sponsoring SV (GSF used here for illustration):</p>
-<div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="n">curl</span><span class="w"> </span><span class="o">-</span><span class="nc">X</span><span class="w"> </span><span class="nc">POST</span><span class="w"> </span><span class="n">https</span><span class="p">:</span><span class="c1">//sv.sv-1.TARGET_CLUSTER.global.canton.network.sync.global/api/sv/v0/devnet/onboard/validator/prepare</span>
-</pre></div>
-</div>
-<p>Note that this most be called on the same SV that sponsors your validator. Please double check the URL
-with your sponsoring SV.</p>
-</div>
-<p>Ensure that your validator onboarding secret <code class="docutils literal notranslate"><span class="pre">VALIDATOR_SECRET</span></code> is set in the namespace you created earlier. The value should be provided by the SV sponsoring the onboarding of your validator.</p>
+<p>Ensure that your validator onboarding secret <code class="docutils literal notranslate"><span class="pre">ONBOARDING_SECRET</span></code> is set in the namespace you created earlier.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>create<span class="w"> </span>secret<span class="w"> </span>generic<span class="w"> </span>splice-app-validator-onboarding-validator<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span><span class="s2">&quot;--from-literal=secret=</span><span class="si">${</span><span class="nv">VALIDATOR_SECRET</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>-n<span class="w"> </span>validator
@@ -869,7 +881,7 @@ kubectl<span class="w"> </span>create<span class="w"> </span>--namespace<span cl
 cluster, you will need to meet a few preconditions. The first is that
 there needs to be an environment variable defined to refer to the
 version of the Helm charts necessary to connect to this environment:</p>
-<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.8-ci-snapshot.20250124.1.0.ve70aab06</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.8-ci-snapshot.20250124.1.0.vfbb717a2</span></code></p>
 <p>Please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/participant-values.yaml</span></code> as follows:</p>
 <ul class="simple">
 <li><p>Replace <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_LEDGER_API_AUDIENCE</span></code> in the <cite>auth.targetAudience</cite> entry with audience for the ledger API. e.g. <code class="docutils literal notranslate"><span class="pre">https://ledger_api.example.com</span></code>. If you are not ready to use a custom audience, you can use the suggested default <code class="docutils literal notranslate"><span class="pre">https://canton.network.global</span></code>.</p></li>
@@ -916,9 +928,7 @@ This does mean that you depend on that single SV and if it is broken or maliciou
 <p>Additionally, please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/standalone-validator-values.yaml</span></code> as follows:</p>
 <ul class="simple">
 <li><p>Replace <code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code> with the migration ID of the global synchronizer on your target cluster.</p></li>
-<li><p>Replace <code class="docutils literal notranslate"><span class="pre">SPONSOR_SV_URL</span></code> with the URL of the SV that will sponsor the onboarding of your validator, for example,
-<code class="docutils literal notranslate"><span class="pre">https://sv-1.TARGET_CLUSTER.global.canton.network.sync.global</span></code> for the GSF. Please make sure that you use the URL
-of your sponsoring SV.</p></li>
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">SPONSOR_SV_URL</span></code> with the URL of the SV that provided you your secret.</p></li>
 <li><p>Replace <code class="docutils literal notranslate"><span class="pre">YOUR_VALIDATOR_PARTY_HINT</span></code> with the desired name for your
 validator operator party. It must be of the format
 <code class="docutils literal notranslate"><span class="pre">&lt;organization&gt;-&lt;function&gt;-&lt;enumerator&gt;</span></code>.</p></li>
