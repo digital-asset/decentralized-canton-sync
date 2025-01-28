@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.9-ci-snapshot.20250127.1.0.v3d03fa6a
+                0.3.9-ci-snapshot.20250128.1.0.v04ec8445
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -74,6 +74,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#required-network-parameters">Required Network Parameters</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#validator-network-diagram">Validator Network Diagram</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#preparing-a-cluster-for-installation">Preparing a Cluster for Installation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#configuring-postgresql-authentication">Configuring PostgreSQL authentication</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#preparing-for-validator-onboarding">Preparing for Validator Onboarding</a></li>
@@ -89,7 +90,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#configuring-the-cluster-ingress">Configuring the Cluster Ingress</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#id3">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id4">Requirements</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#installation-instructions">Installation Instructions</a></li>
 </ul>
 </li>
@@ -596,9 +597,9 @@
 VPN or you need a static egress IP. In the latter case,
 please provide that IP address to your contact at Digital Asset to
 add it to the firewall rules.</p></li>
-<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.9-ci-snapshot.20250127.1.0.v3d03fa6a_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
+<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.9-ci-snapshot.20250128.1.0.v04ec8445_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
 </ol>
-<pre class="literal-block">tar xzvf 0.3.9-ci-snapshot.20250127.1.0.v3d03fa6a_splice-node.tar.gz</pre>
+<pre class="literal-block">tar xzvf 0.3.9-ci-snapshot.20250128.1.0.v04ec8445_splice-node.tar.gz</pre>
 <section id="required-network-parameters">
 <h3>Required Network Parameters<a class="headerlink" href="#required-network-parameters" title="Link to this heading"></a></h3>
 <p>To initialize your validator node, you need the following parameters
@@ -628,6 +629,11 @@ e.g., <a class="reference external" href="https://scan.sv-1.TARGET_CLUSTER.globa
 </dl>
 <p>Additional parameters describing your own setup as opposed to the connection to the network are described below.</p>
 </section>
+</section>
+<section id="validator-network-diagram">
+<span id="id1"></span><h2>Validator Network Diagram<a class="headerlink" href="#validator-network-diagram" title="Link to this heading"></a></h2>
+<a class="reference internal image-reference" href="../_images/validator-network-diagram.png"><img alt="Validator Network Diagram" src="../_images/validator-network-diagram.png" style="width: 600px;" />
+</a>
 </section>
 <section id="preparing-a-cluster-for-installation">
 <span id="validator-identity-token"></span><h2>Preparing a Cluster for Installation<a class="headerlink" href="#preparing-a-cluster-for-installation" title="Link to this heading"></a></h2>
@@ -670,7 +676,7 @@ You must:</p>
 <span id="helm-validator-auth-requirements"></span><h3>OIDC Provider Requirements<a class="headerlink" href="#oidc-provider-requirements" title="Link to this heading"></a></h3>
 <p>This section provides pointers for setting up an OIDC provider for use with your Validator node.
 Feel free to skip directly to <a class="reference internal" href="#helm-validator-auth0"><span class="std std-ref">Configuring an Auth0 Tenant</span></a> if you plan to use <a class="reference external" href="https://auth0.com">Auth0</a> for your Validator node’s authentication needs.</p>
-<p>Your OIDC provider must be reachable <a class="footnote-reference brackets" href="#reach" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a> at a well known (HTTPS) URL.
+<p>Your OIDC provider must be reachable <a class="footnote-reference brackets" href="#reach" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a> at a well known (HTTPS) URL.
 In the following, we will refer to this URL as <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_URL</span></code>.
 Both your Validator node and any users that wish to authenticate to a web UI connected to your Validator node must be able to reach the <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_URL</span></code>.
 We require your OIDC provider to provide a <a class="reference external" href="https://openid.net/specs/openid-connect-discovery-1_0.html">discovery document</a> at <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_URL/.well-known/openid-configuration</span></code>.
@@ -748,7 +754,7 @@ We will refer to these using the following configuration values:</p>
 it can be beneficial to skim the instructions in <a class="reference internal" href="#helm-validator-auth0"><span class="std std-ref">Configuring an Auth0 Tenant</span></a> as well, to check for functionality or configuration details that your OIDC provider setup might be missing.</p>
 <aside class="footnote-list brackets">
 <aside class="footnote brackets" id="reach" role="doc-footnote">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">1</a><span class="fn-bracket">]</span></span>
 <p>The URL must be reachable from the Canton participant and validator app running in your cluster, as well as from all web browsers that should be able to interact with the wallet and CNS UIs.</p>
 </aside>
 </aside>
@@ -880,7 +886,7 @@ kubectl<span class="w"> </span>create<span class="w"> </span>--namespace<span cl
 cluster, you will need to meet a few preconditions. The first is that
 there needs to be an environment variable defined to refer to the
 version of the Helm charts necessary to connect to this environment:</p>
-<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.9-ci-snapshot.20250127.1.0.v3d03fa6a</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.9-ci-snapshot.20250128.1.0.v04ec8445</span></code></p>
 <p>Please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/participant-values.yaml</span></code> as follows:</p>
 <ul class="simple">
 <li><p>Replace <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_LEDGER_API_AUDIENCE</span></code> in the <cite>auth.targetAudience</cite> entry with audience for the ledger API. e.g. <code class="docutils literal notranslate"><span class="pre">https://ledger_api.example.com</span></code>. If you are not ready to use a custom audience, you can use the suggested default <code class="docutils literal notranslate"><span class="pre">https://canton.network.global</span></code>.</p></li>
@@ -1014,8 +1020,8 @@ controller.</p>
 <p>Internet ingress configuration is often specific to the network configuration and scenario of the
 cluster being configured. To illustrate the basic requirements of a Validator node ingress, we have
 provided a Helm chart that configures the above cluster according to the routes above, as detailed in the sections below.</p>
-<section id="id3">
-<h3>Requirements<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<section id="id4">
+<h3>Requirements<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
 <p>In order to install the reference charts, the following must be satisfied in your cluster:</p>
 <ul class="simple">
 <li><p><em>cert-manager</em> must be available in the cluster (See <a class="reference external" href="https://cert-manager.io/docs/installation/helm/">cert-manager documentation</a>)</p></li>
