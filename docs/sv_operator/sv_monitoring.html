@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Synchronizer Upgrades with Downtime &mdash; Splice  documentation</title>
+  <title>Monitoring &mdash; Splice  documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -25,8 +25,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Backups" href="sv_backup.html" />
-    <link rel="prev" title="Upgrades" href="sv_upgrades.html" /> 
+    <link rel="next" title="Monitoring and Observability" href="../deployment/observability/index.html" />
+    <link rel="prev" title="How to Bootstrap a Network" href="sv_scratchnet.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -188,25 +188,25 @@
 <li class="toctree-l3"><a class="reference internal" href="sv_helm.html#observing-the-canton-coin-scan-ui">Observing the Canton Coin Scan UI</a></li>
 </ul>
 </li>
-<li class="toctree-l2 current"><a class="reference internal" href="sv_upgrades.html">Upgrades</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Synchronizer Upgrades with Downtime</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#technical-details">Technical Details</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="#state-and-migration-ids">State and Migration IDs</a></li>
-<li class="toctree-l5"><a class="reference internal" href="#migration-dumps">Migration Dumps</a></li>
-<li class="toctree-l5"><a class="reference internal" href="#deploying-new-canton-components-and-cometbft-node">Deploying new Canton Components and CometBFT Node</a></li>
-<li class="toctree-l5"><a class="reference internal" href="#catching-up-before-the-migration">Catching Up Before the Migration</a></li>
-<li class="toctree-l5"><a class="reference internal" href="#updating-apps">Updating Apps</a></li>
-<li class="toctree-l5"><a class="reference internal" href="#recovering-from-a-failed-upgrade">Recovering from a failed upgrade</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sv_upgrades.html">Upgrades</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="sv_major_upgrade.html">Synchronizer Upgrades with Downtime</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="sv_major_upgrade.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sv_major_upgrade.html#technical-details">Technical Details</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#state-and-migration-ids">State and Migration IDs</a></li>
+<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#migration-dumps">Migration Dumps</a></li>
+<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#deploying-new-canton-components-and-cometbft-node">Deploying new Canton Components and CometBFT Node</a></li>
+<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#catching-up-before-the-migration">Catching Up Before the Migration</a></li>
+<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#updating-apps">Updating Apps</a></li>
+<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#recovering-from-a-failed-upgrade">Recovering from a failed upgrade</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="#organizational-details">Organizational Details</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="#coordination-calls">Coordination calls</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sv_major_upgrade.html#organizational-details">Organizational Details</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#coordination-calls">Coordination calls</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="#testing">Testing</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="#individual-preparation">Individual Preparation</a></li>
-<li class="toctree-l5"><a class="reference internal" href="#coordinated-tests">Coordinated Tests</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sv_major_upgrade.html#testing">Testing</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#individual-preparation">Individual Preparation</a></li>
+<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#coordinated-tests">Coordinated Tests</a></li>
 </ul>
 </li>
 </ul>
@@ -258,9 +258,9 @@
 <li class="toctree-l3"><a class="reference internal" href="sv_scratchnet.html#how-to-run-through-a-hdm">How to run through a HDM</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="sv_monitoring.html">Monitoring</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="sv_monitoring.html#metrics">Metrics</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="sv_monitoring.html#configuring-a-helm-deployment-to-enable-metrics">Configuring a helm deployment to enable metrics</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Monitoring</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#metrics">Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#configuring-a-helm-deployment-to-enable-metrics">Configuring a helm deployment to enable metrics</a></li>
 </ul>
 </li>
 </ul>
@@ -629,10 +629,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="index.html">Supervalidators</a></li>
-          <li class="breadcrumb-item"><a href="sv_upgrades.html">Upgrades</a></li>
-      <li class="breadcrumb-item active">Synchronizer Upgrades with Downtime</li>
+      <li class="breadcrumb-item active">Monitoring</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/sv_operator/sv_major_upgrade.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/sv_operator/sv_monitoring.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -640,193 +639,22 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="synchronizer-upgrades-with-downtime">
-<span id="sv-upgrades"></span><h1>Synchronizer Upgrades with Downtime<a class="headerlink" href="#synchronizer-upgrades-with-downtime" title="Link to this heading"></a></h1>
-<p>For supporting non-backwards-compatible major version upgrades of the Canton software the Global Synchronizer will implement a procedure for synchronizer (i.e., domain) upgrades with downtime.</p>
-<section id="overview">
-<span id="sv-upgrades-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
-<ol class="arabic simple">
-<li><p>Canton releases containing breaking changes become available and Splice releases compatible with these Canton releases become available.</p></li>
-<li><p>SVs agree and eventually confirm via an on-ledger vote (cast via the SV UI) on which specific date and time the network downtime necessary for the upgrade will start. It is the responsibility of the DSO to make sure that validator operators are informed about planned upgrades and upgrade timelines.</p></li>
-<li><p>Once the downtime has been scheduled, all SVs deploy new Kubernetes pods containing the new versions of the Canton components of their Super Validator node (participant, sequencer, and mediator) as well as a new CometBFT node, alongside the old versioned ones which are not yet deleted. See <a class="reference internal" href="#sv-upgrades-deploying-domain"><span class="std std-ref">Deploying new Canton Components and CometBFT Node</span></a>.</p></li>
-<li><p>At the start of the downtime window, the SV app of SVs automatically pauses all traffic on the operating version of the global synchronizer.</p></li>
-<li><p>Shortly after pausing traffic on the global synchronizer (there is a short delay to ensure that all components have synced up to the final state of the existing synchronizer), the node software of SVs and validators automatically exports so-called migration dumps to attached Kubernetes volumes. See <a class="reference internal" href="#sv-upgrades-dumps"><span class="std std-ref">Migration Dumps</span></a>.</p></li>
-<li><p>SV operators verify that their nodes have caught up to the now-paused global synchronizer. See <a class="reference internal" href="#sv-upgrades-catching-up"><span class="std std-ref">Catching Up Before the Migration</span></a>.</p></li>
-<li><p>All SVs and validators previously using the now-paused global synchronizer create full backups of their nodes. (Both for disaster recovery and for supporting audit requirements). See <a class="reference internal" href="sv_backup.html#sv-backups"><span class="std std-ref">Backups</span></a>.</p></li>
-<li><p>All SVs upgrade theirs CN apps pods. See <a class="reference internal" href="#sv-upgrades-deploying-apps"><span class="std std-ref">Updating Apps</span></a>.</p></li>
-<li><p>Upon (re-)initialization, the SV node backend automatically consumes the migration dump and initializes all components based on the contents of this dump. The process is analogous for validators, where the validator app is tasked with importing the dump and initializing components. App databases are <a class="reference internal" href="#sv-upgrades-state"><span class="std std-ref">preserved</span></a>.</p></li>
-<li><p>Once a BFT majority (i.e., &gt;⅔) of SVs have initialized their upgraded nodes, the new version of the synchronizer (with an incremented migration ID and, typically, a new version of the core Canton components) becomes operational automatically. The end of the downtime window is therefore determined by the speed at which a sufficient number of SVs complete the necessary deployment and initialization steps.</p></li>
-<li><p>The remaining (Canton and CometBFT) components of the old synchronizer can be retired now. We recommend to only do so after (non-super) validators have had sufficient time to <a class="reference internal" href="../validator_operator/validator_major_upgrades.html#validator-upgrades"><span class="std std-ref">catch up</span></a> to the latest state from before the pause.</p></li>
-</ol>
-</section>
-<section id="technical-details">
-<h2>Technical Details<a class="headerlink" href="#technical-details" title="Link to this heading"></a></h2>
-<p>The following section assumes that the SV node on the original synchronizer was deployed using the instructions in <a class="reference internal" href="sv_helm.html#sv-helm"><span class="std std-ref">Kubernetes-Based Deployment of a Super Validator node</span></a>.</p>
-<section id="state-and-migration-ids">
-<span id="sv-upgrades-state"></span><h3>State and Migration IDs<a class="headerlink" href="#state-and-migration-ids" title="Link to this heading"></a></h3>
-<p>Synchronizer upgrades with downtime effectively clone the state of the existing synchronizer, with some finer points:</p>
+  <section id="monitoring">
+<span id="sv-monitoring"></span><h1>Monitoring<a class="headerlink" href="#monitoring" title="Link to this heading"></a></h1>
+<section id="metrics">
+<h2>Metrics<a class="headerlink" href="#metrics" title="Link to this heading"></a></h2>
+<p>Every SV deployment exposes a set of metrics on the port 10013 under the path <cite>/metrics</cite>. These metrics can be used to monitor the health of the validator node, and to diagnose issues. The metrics are exposed in the Prometheus format, and can be scraped by a Prometheus server.</p>
+<p>The following components expose metrics:</p>
 <ul class="simple">
-<li><p>All <a class="reference internal" href="sv_operations.html#sv-identities-overview"><span class="std std-ref">identities</span></a> are reused, which includes all party IDs, all participant, sequencer and mediator (node) identities, as well as CometBFT node identities.
-This is realized through exporting and importing a <a class="reference internal" href="#sv-upgrades-dumps"><span class="std std-ref">migration dump</span></a>.</p></li>
-<li><p>Active ledger state is preserved.
-This is also realized through exporting and importing a <a class="reference internal" href="#sv-upgrades-dumps"><span class="std std-ref">migration dump</span></a>.</p></li>
-<li><p>Historical app state (such as transaction history) is preserved.
-This is realized through persisting and reusing the (PostgreSQL) databases of the SV node apps (<code class="docutils literal notranslate"><span class="pre">sv</span></code>, <code class="docutils literal notranslate"><span class="pre">scan</span></code>, <code class="docutils literal notranslate"><span class="pre">validator</span></code>).</p></li>
-<li><p>The CometBFT blockchain is <strong>not</strong> preserved.
-The upgraded synchronizer starts with a fresh CometBFT chain.
-CometBFT node state from the existing synchronizer is discarded.</p></li>
+<li><p>The sv app</p></li>
+<li><p>The scan app</p></li>
+<li><p>The validator app</p></li>
+<li><p>The participant</p></li>
 </ul>
-<p>For avoiding conflicts across migrations, we use the concept of a migration ID:</p>
-<ul class="simple">
-<li><p>The migration ID is 0 during the initial bootstrapping of a network and incremented after each synchronizer upgrade with downtime.</p></li>
-<li><p>The SV node apps (<code class="docutils literal notranslate"><span class="pre">sv</span></code>, <code class="docutils literal notranslate"><span class="pre">scan</span></code>, <code class="docutils literal notranslate"><span class="pre">validator</span></code>) are aware of the migration ID and use it for ensuring the consistency of their internal stores and avoiding connections to nodes on the “wrong” synchronizer.</p></li>
-<li><p>The SV node Canton components (participant, sequencer, mediator) are <strong>not</strong> directly aware of the migration ID.
-To keep Canton components apart across migrations
-(new Canton components are needed to upgrade across non-backwards-compatible changes to the Canton software),
-we deploy them with migration ID-specific names and ingress rules (see <a class="reference internal" href="#sv-upgrades-deploying-domain"><span class="std std-ref">Deploying new Canton Components and CometBFT Node</span></a>).
-We furthermore configure Canton components to create and use migration ID-specific (PostgreSQL) database names.
-As part of <a class="reference internal" href="#sv-upgrades-deploying-apps"><span class="std std-ref">Updating Apps</span></a>, the SV app will initialize Canton components based on its configured migration ID.</p></li>
-<li><p>The SV node CometBFT component is aware of the migration ID - it is used for forming the CometBFT chain ID.</p></li>
-</ul>
-</section>
-<section id="migration-dumps">
-<span id="sv-upgrades-dumps"></span><h3>Migration Dumps<a class="headerlink" href="#migration-dumps" title="Link to this heading"></a></h3>
-<p>Migration dumps contain identity and transaction data from all of an SV’s Canton components
-(participant, sequencer, and mediator) connected to the global synchronizer that is being upgraded.
-When using the official Helm charts and following the <a class="reference internal" href="sv_helm.html#sv-helm"><span class="std std-ref">Helm-based deployment documentation</span></a>,
-the migration dump is automatically created once a scheduled synchronizer upgrade begins and the existing synchronizer has been paused.
-As part of the Helm-based deployment of the SV app (<code class="docutils literal notranslate"><span class="pre">splice-sv-node</span></code>),
-a persistent Kubernetes volume is attached to the <code class="docutils literal notranslate"><span class="pre">sv-app</span></code> pod and configured as the target storage location for migration dumps.
-When redeploying the SV app as part of the migration process (see <a class="reference internal" href="#sv-upgrades-deploying-apps"><span class="std std-ref">Updating Apps</span></a>),
-the SV app will automatically consume the migration dump and initialize new components (see <a class="reference internal" href="#sv-upgrades-deploying-domain"><span class="std std-ref">Deploying new Canton Components and CometBFT Node</span></a>)
-based on the contents of this dump.</p>
-</section>
-<section id="deploying-new-canton-components-and-cometbft-node">
-<span id="sv-upgrades-deploying-domain"></span><h3>Deploying new Canton Components and CometBFT Node<a class="headerlink" href="#deploying-new-canton-components-and-cometbft-node" title="Link to this heading"></a></h3>
-<p>Repeat the steps described in <a class="reference internal" href="sv_helm.html#helm-sv-install"><span class="std std-ref">Installing the Software</span></a> for installing the participant, sequencer, mediator and CometBFT components,
-substituting the migration ID (<code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code>) with the target migration ID after the upgrade (typically the existing synchronizer’s migration ID + 1).</p>
-<p>While doing so, please note the following:</p>
-<ul class="simple">
-<li><p>You don’t need to wait for the existing synchronizer to have paused before performing these steps.
-Performing them well in advance of the scheduled downtime can reduce the downtime (s.a. <a class="reference internal" href="#sv-upgrades-testing-preparation"><span class="std std-ref">Individual Preparation</span></a>).</p></li>
-<li><p>Please make sure to pick the correct (incremented) <code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code> when following the steps.</p></li>
-<li><p>Please make sure that all new Helm charts you install as part of this step have the expected Helm chart version; during an actual upgrade this version will be different from the one on your existing deployment.</p></li>
-<li><p>Please don’t uninstall any Helm charts installed as part of the original deployment run (with the smaller migration ID).
-We deliberately keep SV participants and core synchronizer components running longer so that validators get a chance to sync up to the latest state from before the pause,
-which they need to do for successfully completing their part of the migration.</p></li>
-<li><p>Note that repeating the process with the incremented migration ID will result in the deployment of new pods with new Canton components and a new CometBFT node.
-Among other things, these deployments differ in k8s-internal host names, which are formed based on the migration ID.</p></li>
-<li><p>We recommend disabling CometBFT <a class="reference internal" href="sv_helm.html#helm-cometbft-state-sync"><span class="std std-ref">state sync</span></a> while going through a synchronizer migration, to reduce dependencies on the readiness of other SVs.
-To do so, please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/cometbft-values.yaml</span></code> so that <code class="docutils literal notranslate"><span class="pre">stateSync.enable</span></code> is set to <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p></li>
-<li><p>Please ensure that your ingress rules are extended accordingly to accommodate the new pods.
-Revisit <a class="reference internal" href="sv_helm.html#helm-sv-ingress"><span class="std std-ref">Configuring the Cluster Ingress</span></a> with the updated migration ID in mind.</p></li>
-<li><p>Note that the exposed CometBFT port and CometBFT <code class="docutils literal notranslate"><span class="pre">externalAddress</span></code> are changed due to a limitation in CometBFT.
-There is no fundamental need to use the port numbers suggested in the runbook, the only requirement is that either the (external) host IP of the CometBFT pod must be different for each migration ID or its (external) port number.</p></li>
-</ul>
-</section>
-<section id="catching-up-before-the-migration">
-<span id="sv-upgrades-catching-up"></span><h3>Catching Up Before the Migration<a class="headerlink" href="#catching-up-before-the-migration" title="Link to this heading"></a></h3>
-<p>In order for the migration to the new synchronizer to be safe and successful, it is important that the SV node is fully caught up on the existing synchronizer before proceeding to <a class="reference internal" href="#sv-upgrades-deploying-apps"><span class="std std-ref">Updating Apps</span></a>.</p>
-<ul class="simple">
-<li><p>For making sure that the SV participant has caught up and the <a class="reference internal" href="#sv-upgrades-dumps"><span class="std std-ref">migration dump</span></a> has been created as expected, operators can check the logs of the <code class="docutils literal notranslate"><span class="pre">sv-app</span></code> pod for the message <code class="docutils literal notranslate"><span class="pre">Wrote</span> <span class="pre">domain</span> <span class="pre">migration</span> <span class="pre">dump</span></code>.</p></li>
-<li><p>For making sure that alls apps - <code class="docutils literal notranslate"><span class="pre">sv-app</span></code>, <code class="docutils literal notranslate"><span class="pre">scan-app</span></code>, and <code class="docutils literal notranslate"><span class="pre">validator-app</span></code> - have caught up, operators can check the logs of the respective pods for <code class="docutils literal notranslate"><span class="pre">Ingested</span> <span class="pre">transaction</span></code> messages.
-If the latest such message for a given app is 10 or more minutes old, that app has very likely (with a large safety margin) caught up to the state on the participant, and hence to the state of the existing (paused) synchronizer.</p></li>
-</ul>
-</section>
-<section id="updating-apps">
-<span id="sv-upgrades-deploying-apps"></span><h3>Updating Apps<a class="headerlink" href="#updating-apps" title="Link to this heading"></a></h3>
-<p>Repeat the steps described in <a class="reference internal" href="sv_helm.html#helm-sv-install"><span class="std std-ref">Installing the Software</span></a> for installing the <code class="docutils literal notranslate"><span class="pre">sv</span></code>, <code class="docutils literal notranslate"><span class="pre">scan</span></code> and <code class="docutils literal notranslate"><span class="pre">validator</span></code> components,
-substituting the migration ID (<code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code>) with the target migration ID after the upgrade (typically the existing synchronizer’s migration ID + 1).</p>
-<p>While doing so, please note the following:</p>
-<ul class="simple">
-<li><p>Please make sure to pick the correct (incremented) <code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code> when following the steps.</p></li>
-<li><p>Please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/sv-values.yaml</span></code> so that <code class="docutils literal notranslate"><span class="pre">migration.migrating</span></code> is set to <code class="docutils literal notranslate"><span class="pre">true</span></code>.
-This will ensure that the SV app will consume the migration dump and initialize new components based on the contents of this dump.
-Also set <code class="docutils literal notranslate"><span class="pre">migration.legacyId</span></code> to the value of migration ID before incremented. (<code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code> - 1).</p></li>
-<li><p>Use <code class="docutils literal notranslate"><span class="pre">helm</span> <span class="pre">upgrade</span></code> in place of <code class="docutils literal notranslate"><span class="pre">helm</span> <span class="pre">install</span></code> for the <code class="docutils literal notranslate"><span class="pre">sv</span></code>, <code class="docutils literal notranslate"><span class="pre">scan</span></code> and <code class="docutils literal notranslate"><span class="pre">validator</span></code> charts
-and do not uninstall any Helm charts installed as part of the original deployment run (with the smaller migration ID).</p></li>
-<li><p>Please make sure that all Helm chart deployments you upgrade as part of this step are upgraded to the expected Helm chart version; during an actual upgrade this version will be different from the one on your existing deployment.</p></li>
-<li><p>No ingress rules need to be updated as part of this step.
-Once the redeployment is complete the existing ingress rules will apply to the updated pods.</p></li>
-</ul>
-</section>
-<section id="recovering-from-a-failed-upgrade">
-<h3>Recovering from a failed upgrade<a class="headerlink" href="#recovering-from-a-failed-upgrade" title="Link to this heading"></a></h3>
-<p>In the event of a failed upgrade, Each SV must submit a topology transaction to resume the old synchronizer. This can be triggered using the following command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span><span class="s2">&quot;https://sv.sv.YOUR_HOSTNAME/api/sv/v0/admin/domain/unpause&quot;</span><span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;authorization: Bearer &lt;token&gt;&quot;</span>
-</pre></div>
-</div>
-<p>where <cite>&lt;token&gt;</cite> is an OAuth2 Bearer Token obtained from your OAuth provider. For context, see the Authentication section <a class="reference internal" href="../app_dev/splice_app_apis/index.html#app-auth"><span class="std std-ref">here</span></a>.</p>
-<p>The command will complete successfully once a sufficient number of SVs have executed it. The old synchronizer will then be un-paused.</p>
-</section>
-</section>
-<section id="organizational-details">
-<span id="sv-upgrades-organization"></span><h2>Organizational Details<a class="headerlink" href="#organizational-details" title="Link to this heading"></a></h2>
-<section id="coordination-calls">
-<span id="sv-upgrades-coordination"></span><h3>Coordination calls<a class="headerlink" href="#coordination-calls" title="Link to this heading"></a></h3>
-<p>For keeping upgrade downtimes short and assisting with the quick resolution of individual issues, we propose to perform upgrades and <a class="reference internal" href="#sv-upgrades-testing"><span class="std std-ref">upgrade tests</span></a> in a synchronized manner, with coordination over a group call (Zoom meeting). All SV operators will hereby be invited to join a call that starts shortly before the beginning of the downtime window (step 4 above) and ends once the upgrade and synchronizer migration has concluded (step 10 above). Our aim is that the core of the upgrade procedure (steps 4-10) can in principle be completed within one hour, realizing that the first coordinated tests will likely take longer.</p>
-<p>Each SV must be represented in these calls by at least one person that is capable of performing the steps described in <a class="reference internal" href="#sv-upgrades-deploying-domain"><span class="std std-ref">Deploying new Canton Components and CometBFT Node</span></a> and <a class="reference internal" href="#sv-upgrades-deploying-apps"><span class="std std-ref">Updating Apps</span></a>.
-The operators representing an SV must be:</p>
-<ul class="simple">
-<li><p>Familiar with the technical details around the SV’s deployment.</p></li>
-<li><p>Capable (in terms of both skills and permissions) to interact with the SV’s node deployment via Helm and (for debugging with support from the CN team) Kubernetes (kubectl) commands.</p></li>
-<li><p>For being able to amend potential errors during <a class="reference internal" href="#sv-upgrades-testing-preparation"><span class="std std-ref">preparation</span></a>: Capable (in terms of both skills and permissions) to register new ingress rules for internal synchronizer components (sequencer, mediator and CometBFT) and SV participants. Resulting addresses will only be relevant to technical personnel and will follow a schema such as <code class="docutils literal notranslate"><span class="pre">component-migrationId.hostname</span></code>. Note that for fully supporting the migration flow for CometBFT nodes, it will also be necessary to allow communication over additional ports.</p></li>
-</ul>
-</section>
-</section>
-<section id="testing">
-<span id="sv-upgrades-testing"></span><h2>Testing<a class="headerlink" href="#testing" title="Link to this heading"></a></h2>
-<p>The success of synchronizer upgrades and the duration of downtime both depend on the effectiveness of all SVs in performing the necessary upgrading steps. We therefore recommend that the DSO performs <a class="reference internal" href="#sv-upgrades-testing-coordinated"><span class="std std-ref">coordinated tests</span></a>
-before attempting an upgrade on MainNet.
-Mirroring the recommended process for an actual upgrade,
-we also recommend that SVs perform <a class="reference internal" href="#sv-upgrades-testing-preparation"><span class="std std-ref">preparation</span></a> steps in advance of every coordinated test.</p>
-<section id="individual-preparation">
-<span id="sv-upgrades-testing-preparation"></span><h3>Individual Preparation<a class="headerlink" href="#individual-preparation" title="Link to this heading"></a></h3>
-<p>The following steps can be performed before the downtime window has started
-and even before a synchronizer upgrade has been formally scheduled:</p>
-<ol class="arabic simple">
-<li><p>Ensure that the <a class="reference internal" href="sv_backup.html#sv-backups"><span class="std std-ref">backup and restore</span></a> process for the SV works as expected.</p></li>
-<li><p>Deploy a new version of the CometBFT component as per <a class="reference internal" href="#sv-upgrades-deploying-domain"><span class="std std-ref">Deploying new Canton Components and CometBFT Node</span></a>
-(<code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span> <span class="pre">+=</span> <span class="pre">1</span></code> compared to the currently active synchronizer),
-including setting up the ingress for this component.
-Ensure that the pod reports as healthy.
-For checking that the ingress rules are set up correctly, ensure that TCP connections to the new CometBFT port are possible,
-for example by using the <code class="docutils literal notranslate"><span class="pre">nc</span></code> command: <code class="docutils literal notranslate"><span class="pre">nc</span> <span class="pre">-vz</span> <span class="pre">&lt;cometbft</span> <span class="pre">host&gt;</span> <span class="pre">&lt;cometbft</span> <span class="pre">port&gt;</span></code>.</p></li>
-<li><p>Deploy new versions of the Canton components (participant, sequencer, mediator) as per <a class="reference internal" href="#sv-upgrades-deploying-domain"><span class="std std-ref">Deploying new Canton Components and CometBFT Node</span></a>
-(<code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span> <span class="pre">+=</span> <span class="pre">1</span></code> compared to the currently active synchronizer),
-including setting up the ingress for the new sequencer.
-Note that these components are only initialized by the SV app once the synchronizer migration has started.
-Ensure that all pods report as healthy.
-Note that when using <code class="docutils literal notranslate"><span class="pre">grpcurl</span></code> to check that the ingress rule for the new sequencer is set up correctly
-(as described in <a class="reference internal" href="sv_helm.html#helm-sv-ingress"><span class="std std-ref">Configuring the Cluster Ingress</span></a>), you will get a <code class="docutils literal notranslate"><span class="pre">rpc</span> <span class="pre">error:</span> <span class="pre">code</span> <span class="pre">=</span> <span class="pre">Unavailable</span></code> error as the sequencer is not yet initialized
-(and its public gRPC endpoint is therefore not yet available).
-If the rpc error details include a <code class="docutils literal notranslate"><span class="pre">delayed</span> <span class="pre">connect</span> <span class="pre">error:</span> <span class="pre">111</span></code> message,
-this is an indicator that the ingress rule is set up correctly.</p></li>
-</ol>
-<p>We recommend that all SVs perform these steps before a <a class="reference internal" href="#sv-upgrades-testing-coordinated"><span class="std std-ref">coordinated test</span></a> starts and signal their readiness once they have done so.</p>
-</section>
-<section id="coordinated-tests">
-<span id="sv-upgrades-testing-coordinated"></span><h3>Coordinated Tests<a class="headerlink" href="#coordinated-tests" title="Link to this heading"></a></h3>
-<p>Coordinated tests mirror the steps that will later be used for upgrading MainNet (see <a class="reference internal" href="#sv-upgrades-overview"><span class="std std-ref">above</span></a>).
-Specifically, coordinated tests involve:</p>
-<ul class="simple">
-<li><p>Scheduling a <a class="reference internal" href="#sv-upgrades-coordination"><span class="std std-ref">group call</span></a> covering the planned synchronizer downtime.</p></li>
-<li><p>Pausing the global synchronizer via a governance vote.</p></li>
-<li><p>Each SV making sure that all of its node’s components have caught up to the final state of the existing synchronizer - see <a class="reference internal" href="#sv-upgrades-catching-up"><span class="std std-ref">Catching Up Before the Migration</span></a>.</p></li>
-<li><p>Creating full backups of SV nodes after they have fully caught up and the synchronizer has been paused.</p></li>
-<li><p>Performing all remaining deployment steps necessary for a successful migration to the new synchronizer.
-If <a class="reference internal" href="#sv-upgrades-testing-preparation"><span class="std std-ref">Individual Preparation</span></a> was followed, this involves only the steps outlined in <a class="reference internal" href="#sv-upgrades-deploying-apps"><span class="std std-ref">Updating Apps</span></a>.
-It is fully supported that SVs perform these deployment steps concurrently after the synchronizer has been paused.</p></li>
-<li><p>Each SV verifying that its local state is consistent with the state of the global synchronizer before the pause.
-For example, verifying that their own coin balance is as expected.</p></li>
-<li><p>Once all SVs (or a governance threshold of SVs) have completed the migration:
-Collectively verifying that the new synchronizer is healthy and operational.
-Synchronizer health can be inferred from monitoring signals such as timely <code class="docutils literal notranslate"><span class="pre">SV</span> <span class="pre">Status</span> <span class="pre">Reports</span></code> from all SVs.</p></li>
-<li><p>Agreeing on a timeline for decommissioning the Canton and CometBFT nodes connected to the original (pre-migration) synchronizer.</p></li>
-<li><p>Before we decommission the Canton and CometBFT nodes connected to the original (pre-migration) synchronizer, we should remove <code class="docutils literal notranslate"><span class="pre">migration.legacyId</span></code> we have set previously in the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/sv-values.yaml</span></code>.</p></li>
-</ul>
-<p>We recommend to perform at least one coordinated test on TestNet, with the exact same configuration and versions that will be used for the upgrade on MainNet,
-before scheduling a MainNet upgrade with downtime.</p>
+<section id="configuring-a-helm-deployment-to-enable-metrics">
+<h3>Configuring a helm deployment to enable metrics<a class="headerlink" href="#configuring-a-helm-deployment-to-enable-metrics" title="Link to this heading"></a></h3>
+<p>To enable metrics in a helm deployment, set the <cite>metrics.enabled</cite> value to <cite>true</cite> (default <cite>false</cite>) in the helm values. This will create a <cite>ServiceMonitor</cite> kubernetes custom resource. For this to work it would require that the Prometheus operator is installed in the cluster.</p>
+<p>Alternatively you can add prometheus scrape annotations to the charts that are configured to scrape port 10013.</p>
 </section>
 </section>
 </section>
@@ -835,8 +663,8 @@ before scheduling a MainNet upgrade with downtime.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="sv_upgrades.html" class="btn btn-neutral float-left" title="Upgrades" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="sv_backup.html" class="btn btn-neutral float-right" title="Backups" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="sv_scratchnet.html" class="btn btn-neutral float-left" title="How to Bootstrap a Network" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../deployment/observability/index.html" class="btn btn-neutral float-right" title="Monitoring and Observability" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

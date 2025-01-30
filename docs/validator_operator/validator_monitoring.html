@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Docker-Compose Based Deployment of a Super Validator Node &mdash; Splice  documentation</title>
+  <title>Monitoring &mdash; Splice  documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -25,8 +25,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Splice App APIs" href="splice_app_apis/index.html" />
-    <link rel="prev" title="Overview" href="index.html" /> 
+    <link rel="next" title="Supervalidators" href="../sv_operator/index.html" />
+    <link rel="prev" title="Users, Parties and Wallets in the Splice Wallet" href="validator_users.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -52,93 +52,93 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Deployment and Operations</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../deployment.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../validator_operator/index.html">Validators</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_hardware_requirements.html">Validator Hardware Requirements</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_hardware_requirements.html#database-latency">Database Latency</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Validators</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="validator_hardware_requirements.html">Validator Hardware Requirements</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="validator_hardware_requirements.html#database-latency">Database Latency</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_compose.html">Docker-Compose Based Deployment of a Validator Node</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_compose.html#requirements">Requirements</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_compose.html#required-network-parameters">Required Network Parameters</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_compose.html#preparing-for-validator-onboarding">Preparing for Validator Onboarding</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_compose.html#deployment">Deployment</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_compose.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_compose.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_compose.html#configuring-authentication">Configuring Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="validator_compose.html">Docker-Compose Based Deployment of a Validator Node</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="validator_compose.html#requirements">Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_compose.html#required-network-parameters">Required Network Parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_compose.html#preparing-for-validator-onboarding">Preparing for Validator Onboarding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_compose.html#deployment">Deployment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_compose.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_compose.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_compose.html#configuring-authentication">Configuring Authentication</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_helm.html">Kubernetes-Based Deployment of a Validator node</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#requirements">Requirements</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#required-network-parameters">Required Network Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="validator_helm.html">Kubernetes-Based Deployment of a Validator node</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#requirements">Requirements</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="validator_helm.html#required-network-parameters">Required Network Parameters</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#validator-network-diagram">Validator Network Diagram</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#preparing-a-cluster-for-installation">Preparing a Cluster for Installation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-postgresql-authentication">Configuring PostgreSQL authentication</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#preparing-for-validator-onboarding">Preparing for Validator Onboarding</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-authentication">Configuring Authentication</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#oidc-provider-requirements">OIDC Provider Requirements</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-an-auth0-tenant">Configuring an Auth0 Tenant</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-authentication-on-your-validator">Configuring Authentication on your Validator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#validator-network-diagram">Validator Network Diagram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#preparing-a-cluster-for-installation">Preparing a Cluster for Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#configuring-postgresql-authentication">Configuring PostgreSQL authentication</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#preparing-for-validator-onboarding">Preparing for Validator Onboarding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#configuring-authentication">Configuring Authentication</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="validator_helm.html#oidc-provider-requirements">OIDC Provider Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="validator_helm.html#configuring-an-auth0-tenant">Configuring an Auth0 Tenant</a></li>
+<li class="toctree-l4"><a class="reference internal" href="validator_helm.html#configuring-authentication-on-your-validator">Configuring Authentication on your Validator</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#installing-the-software">Installing the Software</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-the-helm-charts">Configuring the Helm Charts</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#installing-the-helm-charts">Installing the Helm Charts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#installing-the-software">Installing the Software</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="validator_helm.html#configuring-the-helm-charts">Configuring the Helm Charts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="validator_helm.html#installing-the-helm-charts">Installing the Helm Charts</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-the-cluster-ingress">Configuring the Cluster Ingress</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#id4">Requirements</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#installation-instructions">Installation Instructions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#configuring-the-cluster-ingress">Configuring the Cluster Ingress</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="validator_helm.html#id4">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="validator_helm.html#installation-instructions">Installation Instructions</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#testnet-only-granting-coin-to-the-validator-for-traffic-purchases">(Testnet-only) Granting coin to the validator for traffic purchases</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-top-ups">Configuring top-ups</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-sweeps-and-auto-accepts-of-transfer-offers">Configuring sweeps and auto-accepts of transfer offers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#testnet-only-granting-coin-to-the-validator-for-traffic-purchases">(Testnet-only) Granting coin to the validator for traffic purchases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#configuring-top-ups">Configuring top-ups</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#configuring-sweeps-and-auto-accepts-of-transfer-offers">Configuring sweeps and auto-accepts of transfer offers</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_upgrades.html">Upgrades</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html">Synchronizer Upgrades with Downtime</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html#technical-details">Technical Details</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html#state-and-migration-ids">State and Migration IDs</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html#migration-dumps">Migration Dumps</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html#catching-up-before-the-migration">Catching Up Before the Migration</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html#deploying-the-validator-app-and-participant-kubernetes">Deploying the Validator App and Participant (Kubernetes)</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html#deploying-the-validator-app-and-participant-docker-compose">Deploying the validator App and Participant (Docker-Compose)</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_backups.html">Backups</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_backups.html#backup-of-node-identities">Backup of Node Identities</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_backups.html#backups-of-postgres-instances">Backups of postgres instances</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html">Disaster Recovery</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#restoring-a-validator-from-backups">Restoring a validator from backups</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#re-onboard-a-validator-and-recover-balances-of-all-users-it-hosts">Re-onboard a validator and recover balances of all users it hosts</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#docker-compose-deployment">Docker-Compose Deployment</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#kubernetes-deployment">Kubernetes Deployment</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#disaster-recovery-from-loss-of-the-cometbft-storage-layer-of-the-global-synchronizer">Disaster recovery from loss of the CometBFT storage layer of the global synchronizer</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#technical-details">Technical Details</a></li>
+<li class="toctree-l2"><a class="reference internal" href="validator_upgrades.html">Upgrades</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="validator_major_upgrades.html">Synchronizer Upgrades with Downtime</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="validator_major_upgrades.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="validator_major_upgrades.html#technical-details">Technical Details</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#state-and-migration-ids">State and Migration IDs</a></li>
+<li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#migration-dumps">Migration Dumps</a></li>
+<li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#catching-up-before-the-migration">Catching Up Before the Migration</a></li>
+<li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#deploying-the-validator-app-and-participant-kubernetes">Deploying the Validator App and Participant (Kubernetes)</a></li>
+<li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#deploying-the-validator-app-and-participant-docker-compose">Deploying the validator App and Participant (Docker-Compose)</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_users.html">Users, Parties and Wallets in the Splice Wallet</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_monitoring.html">Monitoring</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_monitoring.html#metrics">Metrics</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_monitoring.html#configuring-a-helm-deployment-to-enable-metrics">Configuring a helm deployment to enable metrics</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_monitoring.html#configuring-a-docker-compose-deployment-to-enable-metrics">Configuring a docker compose deployment to enable metrics</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="validator_backups.html">Backups</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="validator_backups.html#backup-of-node-identities">Backup of Node Identities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_backups.html#backups-of-postgres-instances">Backups of postgres instances</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="validator_disaster_recovery.html">Disaster Recovery</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="validator_disaster_recovery.html#restoring-a-validator-from-backups">Restoring a validator from backups</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_disaster_recovery.html#re-onboard-a-validator-and-recover-balances-of-all-users-it-hosts">Re-onboard a validator and recover balances of all users it hosts</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="validator_disaster_recovery.html#docker-compose-deployment">Docker-Compose Deployment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="validator_disaster_recovery.html#kubernetes-deployment">Kubernetes Deployment</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="validator_disaster_recovery.html#disaster-recovery-from-loss-of-the-cometbft-storage-layer-of-the-global-synchronizer">Disaster recovery from loss of the CometBFT storage layer of the global synchronizer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="validator_disaster_recovery.html#technical-details">Technical Details</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="validator_users.html">Users, Parties and Wallets in the Splice Wallet</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Monitoring</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#metrics">Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#configuring-a-helm-deployment-to-enable-metrics">Configuring a helm deployment to enable metrics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuring-a-docker-compose-deployment-to-enable-metrics">Configuring a docker compose deployment to enable metrics</a></li>
 </ul>
 </li>
 </ul>
@@ -321,199 +321,199 @@
 </li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Application Development</span></p>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="index.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="index.html#version-information">Version Information</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html#testing">Testing</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Docker-Compose Based Deployment of a Super Validator Node</a></li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../app_dev/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../app_dev/index.html#version-information">Version Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../app_dev/index.html#testing">Testing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../app_dev/localnet.html">Docker-Compose Based Deployment of a Super Validator Node</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="index.html#api-reference">API Reference</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="splice_app_apis/index.html">Splice App APIs</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="splice_app_apis/index.html#openapi-specifications">OpenAPI Specifications</a></li>
-<li class="toctree-l3"><a class="reference internal" href="splice_app_apis/index.html#api-stability">API Stability</a></li>
-<li class="toctree-l3"><a class="reference internal" href="splice_app_apis/index.html#contract-payload-encoding">Contract Payload Encoding</a></li>
-<li class="toctree-l3"><a class="reference internal" href="splice_app_apis/index.html#authentication">Authentication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../app_dev/index.html#api-reference">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../app_dev/splice_app_apis/index.html">Splice App APIs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/splice_app_apis/index.html#openapi-specifications">OpenAPI Specifications</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/splice_app_apis/index.html#api-stability">API Stability</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/splice_app_apis/index.html#contract-payload-encoding">Contract Payload Encoding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/splice_app_apis/index.html#authentication">Authentication</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="daml.html">Daml API Reference</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/splice-amulet/index.html">splice-amulet docs</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-amulet/Splice-Amulet.html">Splice.Amulet</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-Amulet.html#templates">Templates</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-Amulet.html#data-types">Data Types</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-Amulet.html#functions">Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../app_dev/daml.html">Daml API Reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/api/splice-amulet/index.html">splice-amulet docs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Amulet.html">Splice.Amulet</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Amulet.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Amulet.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Amulet.html#functions">Functions</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-amulet/Splice-AmuletConfig.html">Splice.AmuletConfig</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-AmuletConfig.html#data-types">Data Types</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-AmuletConfig.html#functions">Functions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-AmuletConfig.html">Splice.AmuletConfig</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-AmuletConfig.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-AmuletConfig.html#functions">Functions</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-amulet/Splice-AmuletRules.html">Splice.AmuletRules</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-AmuletRules.html#templates">Templates</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-AmuletRules.html#data-types">Data Types</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-AmuletRules.html#functions">Functions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-AmuletRules.html">Splice.AmuletRules</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-AmuletRules.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-AmuletRules.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-AmuletRules.html#functions">Functions</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-amulet/Splice-DecentralizedSynchronizer.html">Splice.DecentralizedSynchronizer</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-DecentralizedSynchronizer.html#templates">Templates</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-DecentralizedSynchronizer.html#data-types">Data Types</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-DecentralizedSynchronizer.html#functions">Functions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-DecentralizedSynchronizer.html">Splice.DecentralizedSynchronizer</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-DecentralizedSynchronizer.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-DecentralizedSynchronizer.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-DecentralizedSynchronizer.html#functions">Functions</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-amulet/Splice-Expiry.html">Splice.Expiry</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-Expiry.html#data-types">Data Types</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-Expiry.html#functions">Functions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Expiry.html">Splice.Expiry</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Expiry.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Expiry.html#functions">Functions</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-amulet/Splice-ExternalPartyAmuletRules.html">Splice.ExternalPartyAmuletRules</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-ExternalPartyAmuletRules.html#templates">Templates</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-ExternalPartyAmuletRules.html#data-types">Data Types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-ExternalPartyAmuletRules.html">Splice.ExternalPartyAmuletRules</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-ExternalPartyAmuletRules.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-ExternalPartyAmuletRules.html#data-types">Data Types</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-amulet/Splice-Fees.html">Splice.Fees</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-Fees.html#data-types">Data Types</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-Fees.html#functions">Functions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Fees.html">Splice.Fees</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Fees.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Fees.html#functions">Functions</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-amulet/Splice-Issuance.html">Splice.Issuance</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-Issuance.html#data-types">Data Types</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-Issuance.html#functions">Functions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Issuance.html">Splice.Issuance</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Issuance.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Issuance.html#functions">Functions</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-amulet/Splice-RelRound.html">Splice.RelRound</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-RelRound.html#data-types">Data Types</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-RelRound.html#functions">Functions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-RelRound.html">Splice.RelRound</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-RelRound.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-RelRound.html#functions">Functions</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-amulet/Splice-Round.html">Splice.Round</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-Round.html#templates">Templates</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-Round.html#functions">Functions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Round.html">Splice.Round</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Round.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Round.html#functions">Functions</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-amulet/Splice-Schedule.html">Splice.Schedule</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-Schedule.html#data-types">Data Types</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-Schedule.html#functions">Functions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Schedule.html">Splice.Schedule</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Schedule.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Schedule.html#functions">Functions</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-amulet/Splice-Types.html">Splice.Types</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-Types.html#data-types">Data Types</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-Types.html#functions">Functions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Types.html">Splice.Types</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Types.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-Types.html#functions">Functions</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-amulet/Splice-ValidatorLicense.html">Splice.ValidatorLicense</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-ValidatorLicense.html#templates">Templates</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-ValidatorLicense.html#data-types">Data Types</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet/Splice-ValidatorLicense.html#functions">Functions</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="api/splice-amulet-name-service/index.html">splice-amulet-name-service docs</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-amulet-name-service/Splice-Ans.html">Splice.Ans</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet-name-service/Splice-Ans.html#templates">Templates</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet-name-service/Splice-Ans.html#data-types">Data Types</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-amulet-name-service/Splice-Ans.html#functions">Functions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-ValidatorLicense.html">Splice.ValidatorLicense</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-ValidatorLicense.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-ValidatorLicense.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet/Splice-ValidatorLicense.html#functions">Functions</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="api/splice-dso-governance/index.html">splice-dso-governance docs</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-dso-governance/Splice-CometBft.html">Splice.CometBft</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-dso-governance/Splice-CometBft.html#data-types">Data Types</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-dso-governance/Splice-CometBft.html#functions">Functions</a></li>
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-dso-governance/Splice-DSO-AmuletPrice.html">Splice.DSO.AmuletPrice</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-dso-governance/Splice-DSO-AmuletPrice.html#templates">Templates</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-dso-governance/Splice-DSO-AmuletPrice.html#functions">Functions</a></li>
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-dso-governance/Splice-DSO-DecentralizedSynchronizer.html">Splice.DSO.DecentralizedSynchronizer</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-dso-governance/Splice-DSO-DecentralizedSynchronizer.html#data-types">Data Types</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-dso-governance/Splice-DSO-DecentralizedSynchronizer.html#functions">Functions</a></li>
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-dso-governance/Splice-DSO-SvState.html">Splice.DSO.SvState</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-dso-governance/Splice-DSO-SvState.html#templates">Templates</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-dso-governance/Splice-DSO-SvState.html#data-types">Data Types</a></li>
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-dso-governance/Splice-DsoBootstrap.html">Splice.DsoBootstrap</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-dso-governance/Splice-DsoBootstrap.html#templates">Templates</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-dso-governance/Splice-DsoBootstrap.html#data-types">Data Types</a></li>
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-dso-governance/Splice-DsoRules.html">Splice.DsoRules</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-dso-governance/Splice-DsoRules.html#templates">Templates</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-dso-governance/Splice-DsoRules.html#orphan-typeclass-instances">Orphan Typeclass Instances</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-dso-governance/Splice-DsoRules.html#data-types">Data Types</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-dso-governance/Splice-DsoRules.html#functions">Functions</a></li>
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-dso-governance/Splice-SvOnboarding.html">Splice.SvOnboarding</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-dso-governance/Splice-SvOnboarding.html#templates">Templates</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-dso-governance/Splice-SvOnboarding.html#data-types">Data Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/api/splice-amulet-name-service/index.html">splice-amulet-name-service docs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-amulet-name-service/Splice-Ans.html">Splice.Ans</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet-name-service/Splice-Ans.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet-name-service/Splice-Ans.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-amulet-name-service/Splice-Ans.html#functions">Functions</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="api/splice-util/index.html">splice-util docs</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-util/Splice-Util.html">Splice.Util</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-util/Splice-Util.html#typeclasses">Typeclasses</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-util/Splice-Util.html#functions">Functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/api/splice-dso-governance/index.html">splice-dso-governance docs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-CometBft.html">Splice.CometBft</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-CometBft.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-CometBft.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DSO-AmuletPrice.html">Splice.DSO.AmuletPrice</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DSO-AmuletPrice.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DSO-AmuletPrice.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DSO-DecentralizedSynchronizer.html">Splice.DSO.DecentralizedSynchronizer</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DSO-DecentralizedSynchronizer.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DSO-DecentralizedSynchronizer.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DSO-SvState.html">Splice.DSO.SvState</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DSO-SvState.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DSO-SvState.html#data-types">Data Types</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DsoBootstrap.html">Splice.DsoBootstrap</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DsoBootstrap.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DsoBootstrap.html#data-types">Data Types</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DsoRules.html">Splice.DsoRules</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DsoRules.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DsoRules.html#orphan-typeclass-instances">Orphan Typeclass Instances</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DsoRules.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-DsoRules.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-SvOnboarding.html">Splice.SvOnboarding</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-SvOnboarding.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-dso-governance/Splice-SvOnboarding.html#data-types">Data Types</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="api/splice-validator-lifecycle/index.html">splice-validator-life-cycle docs</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-validator-lifecycle/Splice-ValidatorOnboarding.html">Splice.ValidatorOnboarding</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-validator-lifecycle/Splice-ValidatorOnboarding.html#templates">Templates</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-validator-lifecycle/Splice-ValidatorOnboarding.html#data-types">Data Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/api/splice-util/index.html">splice-util docs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-util/Splice-Util.html">Splice.Util</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-util/Splice-Util.html#typeclasses">Typeclasses</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-util/Splice-Util.html#functions">Functions</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="api/splice-wallet/index.html">splice-wallet docs</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-wallet/Splice-Wallet-BuyTrafficRequest.html">Splice.Wallet.BuyTrafficRequest</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-wallet/Splice-Wallet-BuyTrafficRequest.html#templates">Templates</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-wallet/Splice-Wallet-BuyTrafficRequest.html#data-types">Data Types</a></li>
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-wallet/Splice-Wallet-Install.html">Splice.Wallet.Install</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-wallet/Splice-Wallet-Install.html#templates">Templates</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-wallet/Splice-Wallet-Install.html#data-types">Data Types</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-wallet/Splice-Wallet-Install.html#functions">Functions</a></li>
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-wallet/Splice-Wallet-TopUpState.html">Splice.Wallet.TopUpState</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-wallet/Splice-Wallet-TopUpState.html#templates">Templates</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-wallet/Splice-Wallet-TopUpState.html#functions">Functions</a></li>
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-wallet/Splice-Wallet-TransferOffer.html">Splice.Wallet.TransferOffer</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-wallet/Splice-Wallet-TransferOffer.html#templates">Templates</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-wallet/Splice-Wallet-TransferOffer.html#data-types">Data Types</a></li>
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-wallet/Splice-Wallet-TransferPreapproval.html">Splice.Wallet.TransferPreapproval</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-wallet/Splice-Wallet-TransferPreapproval.html#templates">Templates</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-wallet/Splice-Wallet-TransferPreapproval.html#data-types">Data Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/api/splice-validator-lifecycle/index.html">splice-validator-life-cycle docs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-validator-lifecycle/Splice-ValidatorOnboarding.html">Splice.ValidatorOnboarding</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-validator-lifecycle/Splice-ValidatorOnboarding.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-validator-lifecycle/Splice-ValidatorOnboarding.html#data-types">Data Types</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="api/splice-wallet-payments/index.html">splice-wallet-payments docs</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-wallet-payments/Splice-Wallet-Payment.html">Splice.Wallet.Payment</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-wallet-payments/Splice-Wallet-Payment.html#templates">Templates</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-wallet-payments/Splice-Wallet-Payment.html#data-types">Data Types</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-wallet-payments/Splice-Wallet-Payment.html#functions">Functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/api/splice-wallet/index.html">splice-wallet docs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-BuyTrafficRequest.html">Splice.Wallet.BuyTrafficRequest</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-BuyTrafficRequest.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-BuyTrafficRequest.html#data-types">Data Types</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="api/splice-wallet-payments/Splice-Wallet-Subscriptions.html">Splice.Wallet.Subscriptions</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-wallet-payments/Splice-Wallet-Subscriptions.html#templates">Templates</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-wallet-payments/Splice-Wallet-Subscriptions.html#data-types">Data Types</a></li>
-<li class="toctree-l5"><a class="reference internal" href="api/splice-wallet-payments/Splice-Wallet-Subscriptions.html#functions">Functions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-Install.html">Splice.Wallet.Install</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-Install.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-Install.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-Install.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-TopUpState.html">Splice.Wallet.TopUpState</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-TopUpState.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-TopUpState.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-TransferOffer.html">Splice.Wallet.TransferOffer</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-TransferOffer.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-TransferOffer.html#data-types">Data Types</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-TransferPreapproval.html">Splice.Wallet.TransferPreapproval</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-TransferPreapproval.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet/Splice-Wallet-TransferPreapproval.html#data-types">Data Types</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/api/splice-wallet-payments/index.html">splice-wallet-payments docs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-wallet-payments/Splice-Wallet-Payment.html">Splice.Wallet.Payment</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet-payments/Splice-Wallet-Payment.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet-payments/Splice-Wallet-Payment.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet-payments/Splice-Wallet-Payment.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/api/splice-wallet-payments/Splice-Wallet-Subscriptions.html">Splice.Wallet.Subscriptions</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet-payments/Splice-Wallet-Subscriptions.html#templates">Templates</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet-payments/Splice-Wallet-Subscriptions.html#data-types">Data Types</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/api/splice-wallet-payments/Splice-Wallet-Subscriptions.html#functions">Functions</a></li>
 </ul>
 </li>
 </ul>
@@ -628,10 +628,10 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="index.html">Overview</a></li>
-      <li class="breadcrumb-item active">Docker-Compose Based Deployment of a Super Validator Node</li>
+          <li class="breadcrumb-item"><a href="index.html">Validators</a></li>
+      <li class="breadcrumb-item active">Monitoring</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/app_dev/localnet.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/validator_operator/validator_monitoring.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -639,45 +639,34 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="docker-compose-based-deployment-of-a-super-validator-node">
-<span id="compose-sv"></span><h1>Docker-Compose Based Deployment of a Super Validator Node<a class="headerlink" href="#docker-compose-based-deployment-of-a-super-validator-node" title="Link to this heading"></a></h1>
-<p>This section describes how to deploy a standalone super validator node on a local machine
-using docker-compose. This is useful for app developers who want a complete standalone
-environment to develop against.</p>
-<p>If you have already deployed a validator against an existing network, you will need to first
-tear it down and wipe all its data, as a validator cannot be moved between networks.
-To do that, first stop the validator with <cite>./stop.sh</cite> from the <cite>compose/validator</cite> directory,
-and wipe out all its data with <cite>docker volume rm compose_postgres-splice</cite>.</p>
-<p>Now you can spin up a docker-compose based Super-Validator as follows:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>splice-node/docker-compose/sv
-./start.sh<span class="w"> </span>-w
-</pre></div>
-</div>
-<p>It will take a few minutes for the SV to be ready, after which you can use it to onboard a new
-validator.</p>
-<p>This is quite similar to the steps for spinning up a validator that were performed above.
-First, fetch a new onboarding secret from the SV:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://sv.localhost:8080/api/sv/v0/devnet/onboard/validator/prepare
-</pre></div>
-</div>
-<p>Now you can onboard a new validator to the SV:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>../validator
-./start.sh<span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;&lt;onboarding_secret&gt;&quot;</span><span class="w"> </span>-p<span class="w"> </span>&lt;party_hint&gt;<span class="w"> </span>-l<span class="w"> </span>-w
-</pre></div>
-</div>
-<p>Note that <code class="docutils literal notranslate"><span class="pre">-l</span></code> automatically configures the validator with the correct configuration required
-in order for it to use the docker-compose SV created above.</p>
-<p>To tear everything down, run <cite>./stop.sh</cite> from both the <cite>compose/validator</cite> and <cite>compose/sv</cite>
-directories. As above, this will retain the data for reuse. In order to completely wipe out
-the network’s and validator’s data, also run <cite>docker volume rm splice-validator_postgres-splice splice-sv_postgres-splice-sv</cite>.</p>
+  <section id="monitoring">
+<span id="validator-monitoring"></span><h1>Monitoring<a class="headerlink" href="#monitoring" title="Link to this heading"></a></h1>
+<section id="metrics">
+<h2>Metrics<a class="headerlink" href="#metrics" title="Link to this heading"></a></h2>
+<p>Every validator node exposes a set of metrics on the port 10013 under the path <cite>/metrics</cite>. These metrics can be used to monitor the health of the validator node, and to diagnose issues. The metrics are exposed in the Prometheus format, and can be scraped by a Prometheus server.</p>
+<p>The following components expose metrics:</p>
+<ul class="simple">
+<li><p>The validator app</p></li>
+<li><p>The participant</p></li>
+</ul>
+<section id="configuring-a-helm-deployment-to-enable-metrics">
+<h3>Configuring a helm deployment to enable metrics<a class="headerlink" href="#configuring-a-helm-deployment-to-enable-metrics" title="Link to this heading"></a></h3>
+<p>To enable metrics in a helm deployment, set the <cite>metrics.enabled</cite> value to <cite>true</cite> (default <cite>false</cite>) in the helm values. This will create a <cite>ServiceMonitor</cite> kubernetes custom resource. For this to work it would require that the Prometheus operator is installed in the cluster.</p>
+<p>Alternatively you can add prometheus scrape annotations to the charts that are configured to scrape port 10013.</p>
+</section>
+<section id="configuring-a-docker-compose-deployment-to-enable-metrics">
+<h3>Configuring a docker compose deployment to enable metrics<a class="headerlink" href="#configuring-a-docker-compose-deployment-to-enable-metrics" title="Link to this heading"></a></h3>
+<p>When using docker compose for the deployment, the metrics are enabled by default. The metrics are exposed on the port 10013 deployment. You need to manually configure a Prometheus server to scrape these metrics.</p>
+</section>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="index.html" class="btn btn-neutral float-left" title="Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="splice_app_apis/index.html" class="btn btn-neutral float-right" title="Splice App APIs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="validator_users.html" class="btn btn-neutral float-left" title="Users, Parties and Wallets in the Splice Wallet" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../sv_operator/index.html" class="btn btn-neutral float-right" title="Supervalidators" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
