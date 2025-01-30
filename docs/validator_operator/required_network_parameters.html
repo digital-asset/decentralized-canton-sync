@@ -39,7 +39,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.10-ci-snapshot.20250130.1.0.v73bb0744
+                0.3.10-ci-snapshot.20250130.1.0.v35679e23
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -133,14 +133,6 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="validator_users.html">Users, Parties and Wallets in the Splice Wallet</a></li>
-<li class="toctree-l2"><a class="reference internal" href="validator_monitoring.html">Monitoring</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="validator_monitoring.html#metrics">Metrics</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="validator_monitoring.html#configuring-a-helm-deployment-to-enable-metrics">Configuring a helm deployment to enable metrics</a></li>
-<li class="toctree-l4"><a class="reference internal" href="validator_monitoring.html#configuring-a-docker-compose-deployment-to-enable-metrics">Configuring a docker compose deployment to enable metrics</a></li>
-</ul>
-</li>
-</ul>
-</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../sv_operator/index.html">Supervalidators</a><ul>
@@ -256,16 +248,17 @@
 <li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_scratchnet.html#how-to-run-through-a-hdm">How to run through a HDM</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../sv_operator/sv_monitoring.html">Monitoring</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_monitoring.html#metrics">Metrics</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_monitoring.html#configuring-a-helm-deployment-to-enable-metrics">Configuring a helm deployment to enable metrics</a></li>
-</ul>
-</li>
-</ul>
-</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment/observability/index.html">Monitoring and Observability</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../deployment/observability/metrics.html">Metrics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../deployment/observability/metrics.html#scraping-the-metrics">Scraping the metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics.html#configuring-a-helm-deployment-to-enable-metrics">Configuring a helm deployment to enable metrics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics.html#configuring-a-docker-compose-deployment-to-enable-metrics">Configuring a docker compose deployment to enable metrics</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="../deployment/observability/metrics_reference.html">Metrics Reference</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../deployment/observability/metrics_reference.html#common-metrics">Common Metrics</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-domain-params-store-confirmation-requests-max-rate">splice.domain_params_store.confirmation-requests-max-rate</a></li>
@@ -298,7 +291,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-sv-status-report-creation-time-us">splice.sv_status_report.creation_time_us</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-sv-status-report-cometbft-height">splice.sv_status_report.cometbft_height</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-sv-status-report-domain-time-us">splice.sv_status_report.domain_time_us</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics_reference.html#id1">splice.sv_status_report.domain_time_us</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics_reference.html#id2">splice.sv_status_report.domain_time_us</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-sv-status-report-latest-open-round">splice.sv_status_report.latest_open_round</a></li>
 </ul>
 </li>
@@ -646,7 +639,7 @@ required for doing so.</p>
 <dl>
 <dt>MIGRATION_ID</dt><dd><p>The current migration id of the network (dev/test/mainnet) you are trying to connect to. You can find this on <a class="reference external" href="https://sync.global/sv-network/">https://sync.global/sv-network/</a>.</p>
 </dd>
-<dt>SPONSOR_SV_URL</dt><dd><p>The URL of the SV app of your SV sponsor. This should be of the form <a class="reference external" href="https://sv.sv-1.TARGET_CLUSTER.global.canton.network.YOUR_SV_SPONSOR">https://sv.sv-1.TARGET_CLUSTER.global.canton.network.YOUR_SV_SPONSOR</a>, e.g., <a class="reference external" href="https://sv.sv-1.TARGET_CLUSTER.global.canton.network.sync.global">https://sv.sv-1.TARGET_CLUSTER.global.canton.network.sync.global</a> for the GSF SV.</p>
+<dt>SPONSOR_SV_URL</dt><dd><p>The URL of the SV app of your SV sponsor. This should be of the form <span class="raw-html">https://sv.sv-1.<span class="splice-url-prefix">unknown_cluster.</span>global.canton.network.YOUR_SV_SPONSOR</span>, e.g., if the Global Synchronizer Foundation is your sponsor use <span class="raw-html">https://sv.sv-1.<span class="splice-url-prefix">unknown_cluster.</span>global.canton.network.sync.global</span>.</p>
 </dd>
 <dt>ONBOARDING_SECRET</dt><dd><p>The onboarding secret provided by your sponsor. If you don’t already have one, ask your sponsor. Note that onboarding secrets are one-time use and expire after 24h.
 If you don’t join before it expires, you need to request a new secret from your SV sponsor.</p>

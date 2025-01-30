@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.10-ci-snapshot.20250130.1.0.v73bb0744
+                0.3.10-ci-snapshot.20250130.1.0.v35679e23
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -135,14 +135,6 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_users.html">Users, Parties and Wallets in the Splice Wallet</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_monitoring.html">Monitoring</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_monitoring.html#metrics">Metrics</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_monitoring.html#configuring-a-helm-deployment-to-enable-metrics">Configuring a helm deployment to enable metrics</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_monitoring.html#configuring-a-docker-compose-deployment-to-enable-metrics">Configuring a docker compose deployment to enable metrics</a></li>
-</ul>
-</li>
-</ul>
-</li>
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Supervalidators</a><ul class="current">
@@ -258,16 +250,17 @@
 <li class="toctree-l3"><a class="reference internal" href="sv_scratchnet.html#how-to-run-through-a-hdm">How to run through a HDM</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="sv_monitoring.html">Monitoring</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="sv_monitoring.html#metrics">Metrics</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="sv_monitoring.html#configuring-a-helm-deployment-to-enable-metrics">Configuring a helm deployment to enable metrics</a></li>
-</ul>
-</li>
-</ul>
-</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment/observability/index.html">Monitoring and Observability</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../deployment/observability/metrics.html">Metrics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../deployment/observability/metrics.html#scraping-the-metrics">Scraping the metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics.html#configuring-a-helm-deployment-to-enable-metrics">Configuring a helm deployment to enable metrics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics.html#configuring-a-docker-compose-deployment-to-enable-metrics">Configuring a docker compose deployment to enable metrics</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="../deployment/observability/metrics_reference.html">Metrics Reference</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../deployment/observability/metrics_reference.html#common-metrics">Common Metrics</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-domain-params-store-confirmation-requests-max-rate">splice.domain_params_store.confirmation-requests-max-rate</a></li>
@@ -300,7 +293,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-sv-status-report-creation-time-us">splice.sv_status_report.creation_time_us</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-sv-status-report-cometbft-height">splice.sv_status_report.cometbft_height</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-sv-status-report-domain-time-us">splice.sv_status_report.domain_time_us</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics_reference.html#id1">splice.sv_status_report.domain_time_us</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics_reference.html#id2">splice.sv_status_report.domain_time_us</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-sv-status-report-latest-open-round">splice.sv_status_report.latest_open_round</a></li>
 </ul>
 </li>
@@ -662,9 +655,9 @@ target cluster.</p>
 VPN or you need a static egress IP. In the latter case,
 please provide that IP address to your contact at Digital Asset to
 add it to the firewall rules.</p></li>
-<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.10-ci-snapshot.20250130.1.0.v73bb0744_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
+<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.10-ci-snapshot.20250130.1.0.v35679e23_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
 </ol>
-<pre class="literal-block">tar xzvf 0.3.10-ci-snapshot.20250130.1.0.v73bb0744_splice-node.tar.gz</pre>
+<pre class="literal-block">tar xzvf 0.3.10-ci-snapshot.20250130.1.0.v35679e23_splice-node.tar.gz</pre>
 <ol class="arabic simple" start="5">
 <li><p>Please inquire if the global synchronizer (domain) on your target network has previously undergone a <a class="reference internal" href="sv_major_upgrade.html#sv-upgrades"><span class="std std-ref">synchronizer migration</span></a>.
 If it has, please record the current migration ID of the synchronizer.
@@ -990,9 +983,9 @@ To do that, you first must generate the keys that will identify the node.</p>
 mkdir cometbft
 cd cometbft
 # Init the node
-docker run --rm -v &quot;$(pwd):/init&quot; ghcr.io/digital-asset/decentralized-canton-sync/docker/cometbft:0.3.10-ci-snapshot.20250130.1.0.v73bb0744 init --home /init
+docker run --rm -v &quot;$(pwd):/init&quot; ghcr.io/digital-asset/decentralized-canton-sync/docker/cometbft:0.3.10-ci-snapshot.20250130.1.0.v35679e23 init --home /init
 # Read the node id and keep a note of it for the deployment
-docker run --rm -v &quot;$(pwd):/init&quot; ghcr.io/digital-asset/decentralized-canton-sync/docker/cometbft:0.3.10-ci-snapshot.20250130.1.0.v73bb0744 show-node-id --home /init</pre>
+docker run --rm -v &quot;$(pwd):/init&quot; ghcr.io/digital-asset/decentralized-canton-sync/docker/cometbft:0.3.10-ci-snapshot.20250130.1.0.v35679e23 show-node-id --home /init</pre>
 <p>Please keep a note of the node ID printed out above.</p>
 <p>In addition, please retain some of the configuration files generated, as follows (you might need to change the permissions/ownership for them as they are accessible only by the root user):</p>
 <div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="n">cometbft</span><span class="o">/</span><span class="n">config</span><span class="o">/</span><span class="n">node_key</span><span class="p">.</span><span class="n">json</span>
@@ -1094,12 +1087,12 @@ you will also need to ensure that <cite>persistence.databaseName</cite> is uniqu
 cluster, you will need to meet a few preconditions. The first is that
 there needs to be an environment variable defined to refer to the
 version of the Helm charts necessary to connect to this environment:</p>
-<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.10-ci-snapshot.20250130.1.0.v73bb0744</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.10-ci-snapshot.20250130.1.0.v35679e23</span></code></p>
 <p>An SV node includes a CometBft node so you also need to configure
 that. Please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/cometbft-values.yaml</span></code> as follows:</p>
 <ul class="simple">
 <li><p>Replace all instances of <code class="docutils literal notranslate"><span class="pre">TARGET_CLUSTER</span></code> with <span class="raw-html"><span class="splice-cluster">unknown_cluster</span></span>, per the cluster to which you are connecting.</p></li>
-<li><p>Replace all instances of <code class="docutils literal notranslate"><span class="pre">TARGET_HOSTNAME</span></code> with <span class="raw-html"><span class="splice-url-prefix">unknown_cluster</span>global.canton.network.digitalasset.com</span>, per the cluster to which you are connecting.</p></li>
+<li><p>Replace all instances of <code class="docutils literal notranslate"><span class="pre">TARGET_HOSTNAME</span></code> with <span class="raw-html"><span class="splice-url-prefix">unknown_cluster.</span>global.canton.network.digitalasset.com</span>, per the cluster to which you are connecting.</p></li>
 <li><p>Replace all instances of <code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code> with the migration ID of the global synchronizer on your target cluster. Note that <code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code> is also used within port numbers in URLs here!</p></li>
 <li><p>Replace <code class="docutils literal notranslate"><span class="pre">YOUR_SV_NAME</span></code> with the name you chose when creating the SV identity (this must be an exact match of the string for your SV to be approved to onboard)</p></li>
 <li><p>Replace <code class="docutils literal notranslate"><span class="pre">YOUR_COMETBFT_NODE_ID</span></code> with the id obtained when generating the config for the CometBft node</p></li>
@@ -1142,7 +1135,7 @@ Note that if the wallet is disabled, you shouldn’t install the wallet or CNS U
 </ul>
 <p>Additionally, please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/sv-validator-values.yaml</span></code> as follows:</p>
 <ul class="simple">
-<li><p>Replace all instances of <code class="docutils literal notranslate"><span class="pre">TARGET_HOSTNAME</span></code> with <span class="raw-html"><span class="splice-url-prefix">unknown_cluster</span>global.canton.network.digitalasset.com</span>, per the cluster to which you are connecting.</p></li>
+<li><p>Replace all instances of <code class="docutils literal notranslate"><span class="pre">TARGET_HOSTNAME</span></code> with <span class="raw-html"><span class="splice-url-prefix">unknown_cluster.</span>global.canton.network.digitalasset.com</span>, per the cluster to which you are connecting.</p></li>
 <li><p>Replace all instances of <code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code> with the migration ID of the global synchronizer on your target cluster.</p></li>
 </ul>
 <p>The private and public key for your SV are defined in a K8s secret.
@@ -1159,7 +1152,7 @@ identity.</p>
 </div>
 <p>For configuring your sv app, please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/sv-values.yaml</span></code> as follows:</p>
 <ul class="simple">
-<li><p>Replace all instances of <code class="docutils literal notranslate"><span class="pre">TARGET_HOSTNAME</span></code> with <span class="raw-html"><span class="splice-url-prefix">unknown_cluster</span>global.canton.network.digitalasset.com</span>, per the cluster to which you are connecting.</p></li>
+<li><p>Replace all instances of <code class="docutils literal notranslate"><span class="pre">TARGET_HOSTNAME</span></code> with <span class="raw-html"><span class="splice-url-prefix">unknown_cluster.</span>global.canton.network.digitalasset.com</span>, per the cluster to which you are connecting.</p></li>
 <li><p>Replace all instances of <code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code> with the migration ID of the global synchronizer on your target cluster.</p></li>
 <li><p>If you want to configure the audience for the SV app backend API, replace <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_SV_AUDIENCE</span></code> in the <cite>auth.audience</cite> entry with audience for the SV app backend API. e.g. <code class="docutils literal notranslate"><span class="pre">https://sv.example.com/api</span></code>.</p></li>
 <li><p>Replace <code class="docutils literal notranslate"><span class="pre">YOUR_SV_NAME</span></code> with the name you chose when creating the SV identity (this must be an exact match of the string for your SV to be approved to onboard)</p></li>

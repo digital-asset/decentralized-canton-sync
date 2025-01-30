@@ -26,7 +26,7 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Troubleshooting" href="../../troubleshooting.html" />
-    <link rel="prev" title="Monitoring and Observability" href="index.html" /> 
+    <link rel="prev" title="Metrics" href="metrics.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.10-ci-snapshot.20250130.1.0.v73bb0744
+                0.3.10-ci-snapshot.20250130.1.0.v35679e23
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -135,14 +135,6 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../validator_operator/validator_users.html">Users, Parties and Wallets in the Splice Wallet</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../validator_operator/validator_monitoring.html">Monitoring</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_monitoring.html#metrics">Metrics</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../validator_operator/validator_monitoring.html#configuring-a-helm-deployment-to-enable-metrics">Configuring a helm deployment to enable metrics</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../validator_operator/validator_monitoring.html#configuring-a-docker-compose-deployment-to-enable-metrics">Configuring a docker compose deployment to enable metrics</a></li>
-</ul>
-</li>
-</ul>
-</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../sv_operator/index.html">Supervalidators</a><ul>
@@ -258,16 +250,17 @@
 <li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_scratchnet.html#how-to-run-through-a-hdm">How to run through a HDM</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../sv_operator/sv_monitoring.html">Monitoring</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_monitoring.html#metrics">Metrics</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../sv_operator/sv_monitoring.html#configuring-a-helm-deployment-to-enable-metrics">Configuring a helm deployment to enable metrics</a></li>
-</ul>
-</li>
-</ul>
-</li>
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Monitoring and Observability</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="metrics.html">Metrics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="metrics.html#scraping-the-metrics">Scraping the metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="metrics.html#configuring-a-helm-deployment-to-enable-metrics">Configuring a helm deployment to enable metrics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="metrics.html#configuring-a-docker-compose-deployment-to-enable-metrics">Configuring a docker compose deployment to enable metrics</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Metrics Reference</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#common-metrics">Common Metrics</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#splice-domain-params-store-confirmation-requests-max-rate">splice.domain_params_store.confirmation-requests-max-rate</a></li>
@@ -300,7 +293,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#splice-sv-status-report-creation-time-us">splice.sv_status_report.creation_time_us</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#splice-sv-status-report-cometbft-height">splice.sv_status_report.cometbft_height</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#splice-sv-status-report-domain-time-us">splice.sv_status_report.domain_time_us</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id1">splice.sv_status_report.domain_time_us</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id2">splice.sv_status_report.domain_time_us</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#splice-sv-status-report-latest-open-round">splice.sv_status_report.latest_open_round</a></li>
 </ul>
 </li>
@@ -642,7 +635,7 @@
            <div itemprop="articleBody">
              
   <section id="metrics-reference">
-<h1>Metrics Reference<a class="headerlink" href="#metrics-reference" title="Link to this heading"></a></h1>
+<span id="id1"></span><h1>Metrics Reference<a class="headerlink" href="#metrics-reference" title="Link to this heading"></a></h1>
 <section id="common-metrics">
 <h2>Common Metrics<a class="headerlink" href="#common-metrics" title="Link to this heading"></a></h2>
 <section id="splice-domain-params-store-confirmation-requests-max-rate">
@@ -867,8 +860,8 @@
 <li><p><strong>Qualification</strong>: Debug</p></li>
 </ul>
 </section>
-<section id="id1">
-<h3>splice.sv_status_report.domain_time_us<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<section id="id2">
+<h3>splice.sv_status_report.domain_time_us<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p><strong>Summary</strong>: The domain time as observed during the last report</p></li>
 <li><p><strong>Description</strong>:</p></li>
@@ -913,7 +906,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="index.html" class="btn btn-neutral float-left" title="Monitoring and Observability" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="metrics.html" class="btn btn-neutral float-left" title="Metrics" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="../../troubleshooting.html" class="btn btn-neutral float-right" title="Troubleshooting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
