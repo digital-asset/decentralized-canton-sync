@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Docker-Compose Based Deployment of a Super Validator Node &mdash; Splice  documentation</title>
+  <title>Docker-Compose Based Deployment of a Local Network &mdash; Splice  documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.10-ci-snapshot.20250130.1.0.v2323309b
+                0.3.10-ci-snapshot.20250131.1.0.v23ac68b7
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -514,7 +514,12 @@
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Testing</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Docker-Compose Based Deployment of a Super Validator Node</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Docker-Compose Based Deployment of a Local Network</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#requirements">Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#depoying-the-nodes">Depoying the nodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#uis">UIs</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -624,7 +629,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="index.html">Testing</a></li>
-      <li class="breadcrumb-item active">Docker-Compose Based Deployment of a Super Validator Node</li>
+      <li class="breadcrumb-item active">Docker-Compose Based Deployment of a Local Network</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/app_dev/testing/localnet.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -634,37 +639,92 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="docker-compose-based-deployment-of-a-super-validator-node">
-<span id="compose-sv"></span><h1>Docker-Compose Based Deployment of a Super Validator Node<a class="headerlink" href="#docker-compose-based-deployment-of-a-super-validator-node" title="Link to this heading"></a></h1>
-<p>This section describes how to deploy a standalone super validator node on a local machine
-using docker-compose. This is useful for app developers who want a complete standalone
-environment to develop against.</p>
-<p>If you have already deployed a validator against an existing network, you will need to first
-tear it down and wipe all its data, as a validator cannot be moved between networks.
-To do that, first stop the validator with <cite>./stop.sh</cite> from the <cite>compose/validator</cite> directory,
-and wipe out all its data with <cite>docker volume rm compose_postgres-splice</cite>.</p>
-<p>Now you can spin up a docker-compose based Super-Validator as follows:</p>
+  <section id="docker-compose-based-deployment-of-a-local-network">
+<span id="compose-sv"></span><h1>Docker-Compose Based Deployment of a Local Network<a class="headerlink" href="#docker-compose-based-deployment-of-a-local-network" title="Link to this heading"></a></h1>
+<p>This section describes how to deploy a local network using docker-compose.
+This is useful for app developers who want a complete standalone environment to develop against. We will be deploying 2 main nodes namely:</p>
+<ol class="arabic simple">
+<li><p>A super validator node</p></li>
+<li><p>A validator node</p></li>
+</ol>
+<p>Each node will be deployed with all its dependencies.
+The details of what each node deploys can be seen in the <cite>docker-compose.yaml</cite> files in the <cite>docker-compose</cite> directory of the release bundle described below.</p>
+<section id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>A working docker and docker-compose installation</p></li>
+<li><p>The release artifacts that can be downloaded from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.10-ci-snapshot.20250131.1.0.v23ac68b7_splice-node.tar.gz">Download Bundle</a></span>. Extract the bundle once complete.</p></li>
+</ol>
+</section>
+<section id="depoying-the-nodes">
+<h2>Depoying the nodes<a class="headerlink" href="#depoying-the-nodes" title="Link to this heading"></a></h2>
+<p>You can spin up a docker-compose based Super-Validator as follows:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>splice-node/docker-compose/sv
 ./start.sh<span class="w"> </span>-w
 </pre></div>
 </div>
 <p>It will take a few minutes for the SV to be ready, after which you can use it to onboard a new
-validator.</p>
-<p>This is quite similar to the steps for spinning up a validator that were performed above.
-First, fetch a new onboarding secret from the SV:</p>
+validator. You can verify that the SV is up and running by opening a browser at <a class="reference external" href="http://sv.localhost:8080">http://sv.localhost:8080</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you have already deployed a validator against an existing network, you will need to first
+tear it down and wipe all its data, as a validator cannot be moved between networks.
+To do that, stop the validator with <cite>./stop.sh</cite> from the <cite>compose/validator</cite> directory,
+and wipe out all its data with <cite>docker volume rm compose_postgres-splice</cite>.</p>
+</div>
+<p>Before you can onboard a new validator, you need to generate an onboarding secret for it and create a party_hint.
+You can generate the secret by running the following command:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://sv.localhost:8080/api/sv/v0/devnet/onboard/validator/prepare
 </pre></div>
 </div>
-<p>Now you can onboard a new validator to the SV:</p>
+<p>You should get a 200 OK text response that contains the onboarding secret in the body.</p>
+<p>The <cite>party_hint</cite> should be chosen by you and should match the format <code class="docutils literal notranslate"><span class="pre">&lt;organization&gt;-&lt;function&gt;-&lt;enumerator&gt;</span></code>, where organization &amp; function are alphanumerical, and enumerator is an integer.</p>
+<p>Once you have the onboarding secret and the party hint, you can start and onboard a new validator with the following command:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>../validator
 ./start.sh<span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;&lt;onboarding_secret&gt;&quot;</span><span class="w"> </span>-p<span class="w"> </span>&lt;party_hint&gt;<span class="w"> </span>-l<span class="w"> </span>-w
 </pre></div>
 </div>
-<p>Note that <code class="docutils literal notranslate"><span class="pre">-l</span></code> automatically configures the validator with the correct configuration required
-in order for it to use the docker-compose SV created above.</p>
-<p>To tear everything down, run <cite>./stop.sh</cite> from both the <cite>compose/validator</cite> and <cite>compose/sv</cite>
-directories. As above, this will retain the data for reuse. In order to completely wipe out
-the network’s and validator’s data, also run <cite>docker volume rm splice-validator_postgres-splice splice-sv_postgres-splice-sv</cite>.</p>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">-l</span></code> automatically configures the validator with the correct configuration required in order for it to use the docker-compose SV created above.
+You can verify the validator is up and running by opening a browser at <a class="reference external" href="http://wallet.localhost:8080">http://wallet.localhost:8080</a>.</p>
+<p>To tear everything down, run <code class="docutils literal notranslate"><span class="pre">./stop.sh</span></code> from both the <code class="docutils literal notranslate"><span class="pre">compose/validator</span></code> and <code class="docutils literal notranslate"><span class="pre">compose/sv</span></code> directories.
+As above, this will retain the data for reuse. In order to completely wipe out
+the network’s and validator’s data, also run <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">volume</span> <span class="pre">rm</span> <span class="pre">splice-validator_postgres-splice</span> <span class="pre">splice-sv_postgres-splice-sv</span></code>.</p>
+</section>
+<section id="uis">
+<h2>UIs<a class="headerlink" href="#uis" title="Link to this heading"></a></h2>
+<p>The following table lists the UIs available for the deployed nodes.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 35.0%" />
+<col style="width: 40.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Application</p></th>
+<th class="head"><p>URL</p></th>
+<th class="head"><p>Credentials</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>SV UI</p></td>
+<td><p><a class="reference external" href="http://sv.localhost:8080">http://sv.localhost:8080</a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">administrator</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Wallet</p></td>
+<td><p><a class="reference external" href="http://wallet.localhost:8080">http://wallet.localhost:8080</a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">administrator</span></code> and <code class="docutils literal notranslate"><span class="pre">alice</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Scan</p></td>
+<td><p><a class="reference external" href="http://scan.localhost:8080">http://scan.localhost:8080</a></p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-odd"><td><p>ANS</p></td>
+<td><p><a class="reference external" href="http://ans.localhost:8080">http://ans.localhost:8080</a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">administrator</span></code> and <code class="docutils literal notranslate"><span class="pre">alice</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 
 
