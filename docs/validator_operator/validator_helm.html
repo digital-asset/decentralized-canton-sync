@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.10-ci-snapshot.20250131.1.0.v01268982
+                0.3.10-ci-snapshot.20250131.1.0.v257789dd
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -520,6 +520,13 @@
 <li class="toctree-l3"><a class="reference internal" href="../app_dev/testing/localnet.html#uis">UIs</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../app_dev/testing/networks_and_usecases.html">SV Operated networks and Use-cases</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/testing/networks_and_usecases.html#devnet">DevNet</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/testing/networks_and_usecases.html#testnet">TestNet</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/testing/networks_and_usecases.html#mainnet">MainNet</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../app_dev/testing/networks_and_usecases.html#testing-guidelines">Testing Guidelines</a></li>
 </ul>
 </li>
 </ul>
@@ -658,9 +665,9 @@
 VPN or you need a static egress IP. In the latter case,
 please provide that IP address to your contact at Digital Asset to
 add it to the firewall rules.</p></li>
-<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.10-ci-snapshot.20250131.1.0.v01268982_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
+<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.10-ci-snapshot.20250131.1.0.v257789dd_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
 </ol>
-<pre class="literal-block">tar xzvf 0.3.10-ci-snapshot.20250131.1.0.v01268982_splice-node.tar.gz</pre>
+<pre class="literal-block">tar xzvf 0.3.10-ci-snapshot.20250131.1.0.v257789dd_splice-node.tar.gz</pre>
 <section id="required-network-parameters">
 <h3>Required Network Parameters<a class="headerlink" href="#required-network-parameters" title="Link to this heading"></a></h3>
 <p>To initialize your validator node, you need the following parameters
@@ -947,7 +954,7 @@ kubectl<span class="w"> </span>create<span class="w"> </span>--namespace<span cl
 cluster, you will need to meet a few preconditions. The first is that
 there needs to be an environment variable defined to refer to the
 version of the Helm charts necessary to connect to this environment:</p>
-<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.10-ci-snapshot.20250131.1.0.v01268982</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.10-ci-snapshot.20250131.1.0.v257789dd</span></code></p>
 <p>Please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/participant-values.yaml</span></code> as follows:</p>
 <ul class="simple">
 <li><p>Replace <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_LEDGER_API_AUDIENCE</span></code> in the <cite>auth.targetAudience</cite> entry with audience for the ledger API. e.g. <code class="docutils literal notranslate"><span class="pre">https://ledger_api.example.com</span></code>. If you are not ready to use a custom audience, you can use the suggested default <code class="docutils literal notranslate"><span class="pre">https://canton.network.global</span></code>.</p></li>
