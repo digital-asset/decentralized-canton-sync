@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.10-ci-snapshot.20250203.1.0.ve938bc93
+                0.3.10-ci-snapshot.20250203.1.0.vee59b897
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -333,7 +333,20 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="app_dev/scan_api/index.html">Scan API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="app_dev/validator_api/index.html">Validator API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="app_dev/validator_api/index.html">Validator API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="app_dev/validator_api/index.html#user-wallet-api">User wallet API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="app_dev/validator_api/index.html#transfer-offers">Transfer Offers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="app_dev/validator_api/index.html#buying-traffic">Buying Traffic</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="app_dev/validator_api/index.html#internal-user-wallet-api">Internal user wallet API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="app_dev/validator_api/index.html#external-custody-api">External Custody API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="app_dev/validator_api/index.html#user-management-api">User management API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="app_dev/validator_api/index.html#validator-management-api">Validator management API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="app_dev/validator_api/index.html#ans-api">ANS API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="app_dev/validator_api/index.html#scan-proxy-api">Scan Proxy API</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="app_dev/ledger_api/index.html">Ledger API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="app_dev/daml_api/index.html">Daml API</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="app_dev/api/splice-amulet/index.html">splice-amulet docs</a><ul>
@@ -698,6 +711,13 @@ validator reward for validator that hosts sender</p></li>
 <li><p>consists of canton participant, validator app, wallet app</p></li>
 <li><p>validator app for admin operations by the validator operator like
 user/party management</p></li>
+</ul>
+</dd>
+<dt id="term-CN-Supervalidator">CN Supervalidator<a class="headerlink" href="#term-CN-Supervalidator" title="Link to this term"></a></dt><dd><ul class="simple">
+<li><p>One node in the CN</p></li>
+<li><p>In addition to CN Validator components, also consists of canton sequencer, canton mediator, sv app and scan app</p></li>
+<li><p>sv app for admin operations of the <a class="reference internal" href="#term-CN-Global-Domain"><span class="xref std std-term">CN Global Domain</span></a></p></li>
+<li><p>scan app for providing publicly visible data</p></li>
 </ul>
 </dd>
 <dt id="term-CN-Wallet">CN Wallet<a class="headerlink" href="#term-CN-Wallet" title="Link to this term"></a></dt><dd><ul class="simple">

@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.10-ci-snapshot.20250203.1.0.ve938bc93
+                0.3.10-ci-snapshot.20250203.1.0.vee59b897
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -333,7 +333,20 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../scan_api/index.html">Scan API</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Validator API</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Validator API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#user-wallet-api">User wallet API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#transfer-offers">Transfer Offers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#buying-traffic">Buying Traffic</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#internal-user-wallet-api">Internal user wallet API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#external-custody-api">External Custody API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#user-management-api">User management API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#validator-management-api">Validator management API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ans-api">ANS API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#scan-proxy-api">Scan Proxy API</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../ledger_api/index.html">Ledger API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../daml_api/index.html">Daml API</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../api/splice-amulet/index.html">splice-amulet docs</a><ul>
@@ -653,6 +666,404 @@
              
   <section id="validator-api">
 <span id="app-dev-validator-api"></span><h1>Validator API<a class="headerlink" href="#validator-api" title="Link to this heading"></a></h1>
+<p>The Validator App is part of a <a class="reference internal" href="../../glossary.html#term-CN-Validator"><span class="xref std std-term">CN Validator</span></a> or <a class="reference internal" href="../../glossary.html#term-CN-Supervalidator"><span class="xref std std-term">CN Supervalidator</span></a> node.
+It connects to a Canton participant and provides the following functionality:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>It manages the Canton participant.
+Examples are automatically setting up the participant’s connection to <a class="reference internal" href="../../glossary.html#term-Canton-Network"><span class="xref std std-term">Canton Network</span></a> synchronizer,
+uploading DAR files, or managing daml parties.</p></li>
+<li><p>It automates core <a class="reference internal" href="../../glossary.html#term-Canton-Network"><span class="xref std std-term">Canton Network</span></a> daml workflows (except those related to supervalidator operations).
+Examples are minting validator rewards or executing recurring <a class="reference internal" href="../../glossary.html#term-Canton-Coin"><span class="xref std std-term">Canton Coin</span></a> payments.</p></li>
+<li><p>It exposes a REST API for interacting with core <a class="reference internal" href="../../glossary.html#term-Canton-Network"><span class="xref std std-term">Canton Network</span></a> daml workflows (except those related to supervalidator operations).
+Examples are users programmatically managing their <a class="reference internal" href="../../glossary.html#term-CN-Wallet"><span class="xref std std-term">CN Wallet</span></a>.</p></li>
+</ul>
+</div></blockquote>
+<p>The REST API consists of a large number of endpoints with different purposes,
+which are listed below grouped as follows:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 75.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>API</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#validator-api-user-wallet"><span class="std std-ref">User wallet API</span></a></p></td>
+<td><p>Users interacting with their wallets</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#validator-api-user-wallet-internal"><span class="std std-ref">Internal user wallet API</span></a></p></td>
+<td><p>Internal components interacting with user wallets</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#validator-api-external-custody"><span class="std std-ref">External Custody API</span></a></p></td>
+<td><p>External custody for <a class="reference internal" href="../../glossary.html#term-Canton-Coin"><span class="xref std std-term">Canton Coin</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#validator-api-user-management"><span class="std std-ref">User management API</span></a></p></td>
+<td><p>Managing users hosted by the (super)validator node</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#validator-api-internal"><span class="std std-ref">Validator management API</span></a></p></td>
+<td><p>Operators managing the (super)validator node</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#validator-api-ans"><span class="std std-ref">ANS API</span></a></p></td>
+<td><p>Used for the Amulet Name Service</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#validator-api-scan-proxy"><span class="std std-ref">Scan Proxy API</span></a></p></td>
+<td><p>BFT proxy to the public scan API</p></td>
+</tr>
+</tbody>
+</table>
+<section id="user-wallet-api">
+<span id="validator-api-user-wallet"></span><h2>User wallet API<a class="headerlink" href="#user-wallet-api" title="Link to this heading"></a></h2>
+<p>These endpoints are intended for users to programmatically interact with their wallets.</p>
+<p><strong>Authorization:</strong> Authentication with a JWT token as described in <a class="reference internal" href="../overview/splice_app_apis.html#app-auth"><span class="std std-ref">Authentication</span></a>,
+where the subject claim of the token is the user whose wallet the endpoint operates on.</p>
+<p><strong>Backwards compatibility:</strong> External API with backwards compatibility guarantees.</p>
+<p><strong>Reference:</strong> For details, see the <a class="reference external" href="https://raw.githubusercontent.com/hyperledger-labs/splice/refs/heads/main/apps/wallet/src/main/openapi/wallet-external.yaml">wallet-external.yaml</a> OpenAPI spec.</p>
+<section id="transfer-offers">
+<span id="validator-api-user-wallet-transfer-offers"></span><h3>Transfer Offers<a class="headerlink" href="#transfer-offers" title="Link to this heading"></a></h3>
+<p>Transfer offers are used to in a two-step workflow to transfer Canton Coin between users:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>The sender creates a <code class="docutils literal notranslate"><span class="pre">Splice.Wallet.TransferOffer</span></code> daml contract.</p></li>
+<li><p>The receiver accepts the offer, which immediately transfers the agreed coin.</p></li>
+</ul>
+</div></blockquote>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.4%" />
+<col style="width: 79.6%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Endpoint</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>POST</strong> /v0/wallet/transfer-offers</p></td>
+<td><p>Create a transfer offer</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>POST</strong> /v0/wallet/transfer-offers/{tracking_id}/status</p></td>
+<td><p>Check the status of a transfer offer</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>GET</strong> /v0/wallet/transfer-offers</p></td>
+<td><p>List transfer offers</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="buying-traffic">
+<span id="validator-api-user-wallet-buying-traffic"></span><h3>Buying Traffic<a class="headerlink" href="#buying-traffic" title="Link to this heading"></a></h3>
+<p>Traffic on the <a class="reference internal" href="../../glossary.html#term-CN-Global-Domain"><span class="xref std std-term">CN Global Domain</span></a> is limited.
+Every validator has a budget of traffic that they can use,
+and daml transactions submitted to the synchronizer consume this traffic.
+A certain amount of traffic is free, additional traffic has to be bought with Canton Coin.</p>
+<p>Any user can buy traffic for any validator.
+Buying traffic is a multi-step process:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>The user creates a <code class="docutils literal notranslate"><span class="pre">Splice.Wallet.BuyTrafficRequest</span></code> daml contract.</p></li>
+<li><p>The users wallet automation picks up the request, burns the required coin from the users wallet,
+and increases the traffic budget of the target validator.</p></li>
+</ul>
+</div></blockquote>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 75.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Endpoint</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>POST</strong> /v0/wallet/buy-traffic-requests</p></td>
+<td><p>Create a request to buy traffic</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>POST</strong> /v0/wallet/buy-traffic-requests/{tracking_id}/status</p></td>
+<td><p>Check the status of a buy traffic request</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="internal-user-wallet-api">
+<span id="validator-api-user-wallet-internal"></span><h2>Internal user wallet API<a class="headerlink" href="#internal-user-wallet-api" title="Link to this heading"></a></h2>
+<p>These endpoints are used internally to interact with a users wallet,
+for example by the web frontend of the user wallet.</p>
+<p><strong>Authorization:</strong> Authentication with a JWT token as described in <a class="reference internal" href="../overview/splice_app_apis.html#app-auth"><span class="std std-ref">Authentication</span></a>,
+where the subject claim of the token is the user whose wallet the endpoint operates on.</p>
+<p><strong>Backwards compatibility:</strong> Internal API with no guarantees.</p>
+<p><strong>Reference:</strong> For details, see the <a class="reference external" href="https://raw.githubusercontent.com/hyperledger-labs/splice/refs/heads/main/apps/wallet/src/main/openapi/wallet-internal.yaml">wallet-internal.yaml</a> OpenAPI spec.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 100.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Endpoint</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>POST</strong> /v0/wallet/transfer-offers/{contract_id}/accept</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>POST</strong> /v0/wallet/transfer-offers/{contract_id}/reject</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>POST</strong> /v0/wallet/transfer-offers/{contract_id}/withdraw</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>GET</strong> /v0/wallet/app-payment-requests</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>POST</strong> /v0/wallet/app-payment-requests/{contract_id}/reject</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>POST</strong> /v0/wallet/app-payment-requests/{contract_id}/accept</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>GET</strong> /v0/wallet/app-payment-requests/{contract_id}</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>GET</strong> /v0/wallet/subscription-requests</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>POST</strong> /v0/wallet/subscription-requests/{contract_id}/reject</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>POST</strong> /v0/wallet/subscription-requests/{contract_id}/accept</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>DELETE</strong> /v0/wallet/subscription-requests/{contract_id}</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>GET</strong> /v0/wallet/subscription-requests/{contract_id}</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>DELETE</strong> /v0/wallet/cancel-featured-app-rights</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>POST</strong> /v0/wallet/transfer-preapproval</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>POST</strong> /v0/wallet/transfer-preapproval/send</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>GET</strong> /v0/wallet/balance</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>GET</strong> /v0/wallet/amulets</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>GET</strong> /v0/wallet/accepted-app-payments</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>GET</strong> /v0/wallet/accepted-transfer-offers</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>GET</strong> /v0/wallet/app-reward-coupons</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>GET</strong> /v0/wallet/subscription-initial-payments</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>GET</strong> /v0/wallet/subscriptions</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>GET</strong> /v0/wallet/sv-reward-coupons</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>POST</strong> /v0/wallet/transactions</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>GET</strong> /v0/wallet/validator-faucet-coupons</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>GET</strong> /v0/wallet/validator-liveness-activity-records</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>GET</strong> /v0/wallet/validator-reward-coupons</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>POST</strong> /v0/wallet/self-grant-feature-app-right</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>POST</strong> /v0/wallet/tap</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>GET</strong> /v0/wallet/user-status</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="external-custody-api">
+<span id="validator-api-external-custody"></span><h2>External Custody API<a class="headerlink" href="#external-custody-api" title="Link to this heading"></a></h2>
+<p>These endpoints are used to implement external signing of <a class="reference internal" href="../../glossary.html#term-Canton-Coin"><span class="xref std std-term">Canton Coin</span></a> transactions.</p>
+<p>External signing is a Canton feature allows setting up a party such that transaction submissions must be signed by keys held outside of the participant.
+For more information on external signing in general, see the
+<a class="reference external" href="https://github.com/digital-asset/canton/tree/release-line-3.2/community/app/src/pack/examples/08-interactive-submission/v1">example</a>,
+<a class="reference external" href="https://github.com/digital-asset/canton/blob/release-line-3.2/community/ledger-api/src/main/protobuf/com/daml/ledger/api/v2/interactive/interactive_submission_service.proto">service protobuf definition</a>,
+and <a class="reference external" href="https://github.com/digital-asset/canton/blob/release-line-3.2/community/ledger-api/src/main/protobuf/com/daml/ledger/api/v2/interactive/README.md">readme</a>
+in Canton.</p>
+<p>For the common case of wanting to set up an external party in a topology where the executing, preparing and confirming participant
+are the same node and that party should hold and transfer Canton Coin, the validator provides high-level APIs.</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">/v0/admin/external-party/topology/*</span></code> to set up an external party</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">/v0/admin/external-party/setup-proposal</span></code> to start setting up a <code class="docutils literal notranslate"><span class="pre">Splice.Wallet.TransferPreapproval</span></code> daml contract for the external party,
+which allows the party to send and receive Canton Coin without having to approve individual <a class="reference internal" href="#validator-api-user-wallet-transfer-offers"><span class="std std-ref">transfer offers</span></a>.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">/v0/admin/external-party/setup-proposal/*</span></code> to finish setting up the transfer preapproval.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">/v0/admin/external-party/transfer-preapproval/*</span></code> to send Canton Coin to other parties.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">/v0/admin/external-party/balance</span></code> to check the balance of the external party.</p></li>
+</ol>
+</div></blockquote>
+<p><strong>Authorization:</strong> Authentication with any valid JWT token as described in <a class="reference internal" href="../overview/splice_app_apis.html#app-auth"><span class="std std-ref">Authentication</span></a>.</p>
+<p><strong>Backwards compatibility:</strong> Internal API with no guarantees.</p>
+<p><strong>Reference:</strong> For details, see the <a class="reference external" href="https://raw.githubusercontent.com/hyperledger-labs/splice/refs/heads/main/apps/validator/src/main/openapi/validator-internal.yaml">validator-internal.yaml</a> OpenAPI spec.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 100.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Endpoint</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>POST</strong> /v0/admin/external-party/topology/generate</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>POST</strong> /v0/admin/external-party/topology/submit</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>GET</strong> /v0/admin/external-party/setup-proposal</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>POST</strong> /v0/admin/external-party/setup-proposal</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>POST</strong> /v0/admin/external-party/setup-proposal/prepare-accept</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>POST</strong> /v0/admin/external-party/setup-proposal/submit-accept</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>GET</strong> /v0/admin/transfer-preapprovals</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>GET</strong> /v0/admin/transfer-preapprovals/by-party/{receiver-party}</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>DELETE</strong> /v0/admin/transfer-preapprovals/by-party/{receiver-party}</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>POST</strong> /v0/admin/external-party/transfer-preapproval/prepare-send</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>POST</strong> /v0/admin/external-party/transfer-preapproval/submit-send</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>GET</strong> /v0/admin/external-party/balance</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="user-management-api">
+<span id="validator-api-user-management"></span><h2>User management API<a class="headerlink" href="#user-management-api" title="Link to this heading"></a></h2>
+<p>These endpoints are used to manage users hosted on the validator node.</p>
+<p>Users can either onboard themselves (<code class="docutils literal notranslate"><span class="pre">/v0/register</span></code>),
+or an admin may onboard arbitrary users (<code class="docutils literal notranslate"><span class="pre">/v0/admin/users</span></code>).</p>
+<p><strong>Authorization:</strong> Authentication with a JWT token as described in <a class="reference internal" href="../overview/splice_app_apis.html#app-auth"><span class="std std-ref">Authentication</span></a>,
+where the subject claim of the token is the validator operator user (for <code class="docutils literal notranslate"><span class="pre">/v0/admin/users</span></code>),
+or the user onboarding itself (for <code class="docutils literal notranslate"><span class="pre">/v0/register</span></code>).</p>
+<p><strong>Backwards compatibility:</strong> Internal API with no guarantees.</p>
+<p><strong>Reference:</strong> For details, see the <a class="reference external" href="https://raw.githubusercontent.com/hyperledger-labs/splice/refs/heads/main/apps/validator/src/main/openapi/validator-internal.yaml">validator-internal.yaml</a> OpenAPI spec.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 100.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Endpoint</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>GET</strong> /v0/admin/users</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>POST</strong> /v0/admin/users/offboard</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>POST</strong> /v0/admin/users</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>POST</strong> /v0/register</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="validator-management-api">
+<span id="validator-api-internal"></span><h2>Validator management API<a class="headerlink" href="#validator-management-api" title="Link to this heading"></a></h2>
+<p>These endpoints are used by validator and supervalidator operators to manage their node.
+There is no need to call these endpoints unless instructed so by an operational manual,
+such as <a class="reference internal" href="../../validator_operator/index.html#validator-operator"><span class="std std-ref">Validators</span></a> or <a class="reference internal" href="../../sv_operator/index.html#sv-operator"><span class="std std-ref">Supervalidators</span></a>.</p>
+<p><strong>Authorization:</strong> Authentication with a JWT token as described in <a class="reference internal" href="../overview/splice_app_apis.html#app-auth"><span class="std std-ref">Authentication</span></a>,
+where the subject claim of the token is the validator operator user.</p>
+<p><strong>Backwards compatibility:</strong> Internal API with no guarantees.</p>
+<p><strong>Reference:</strong> For details, see the <a class="reference external" href="https://raw.githubusercontent.com/hyperledger-labs/splice/refs/heads/main/apps/validator/src/main/openapi/validator-internal.yaml">validator-internal.yaml</a> OpenAPI spec.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 100.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Endpoint</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>GET</strong> /v0/admin/participant/identities</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>GET</strong> /v0/admin/participant/global-domain-connection-config</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>GET</strong> /v0/admin/domain/data-snapshot</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="ans-api">
+<span id="validator-api-ans"></span><h2>ANS API<a class="headerlink" href="#ans-api" title="Link to this heading"></a></h2>
+<p>These endpoints are used to interact with the <a class="reference internal" href="../../glossary.html#term-Amulet-Name-Service"><span class="xref std std-term">Amulet Name Service</span></a> (ANS).
+The (ANS) is a service that allows parties to buy a globally unique, human readable name for a time period mapped to their party.
+Users can request the creation of new ANS entries, upon which a subscription payment request is created.
+Once the payment is accepted in the wallet UI, the entry is created and the user can use it to refer to their party.</p>
+<p><strong>Authorization:</strong> Authentication with a JWT token as described in <a class="reference internal" href="../overview/splice_app_apis.html#app-auth"><span class="std std-ref">Authentication</span></a>,
+where the subject claim of the token is the user who is requesting the new ANS entry.</p>
+<p><strong>Backwards compatibility:</strong> External API with backwards compatibility guarantees.</p>
+<p><strong>Reference:</strong> For details, see the <a class="reference external" href="https://raw.githubusercontent.com/hyperledger-labs/splice/refs/heads/main/apps/validator/src/main/openapi/ans-external.yaml">ans-external.yaml</a> OpenAPI spec.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 75.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Endpoint</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>POST</strong> /v0/entry/create</p></td>
+<td><p>Requests the creation of a new entry</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>GET</strong> /v0/entry/all</p></td>
+<td><p>Lists all entries</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="scan-proxy-api">
+<span id="validator-api-scan-proxy"></span><h2>Scan Proxy API<a class="headerlink" href="#scan-proxy-api" title="Link to this heading"></a></h2>
+<p>These endpoints implement a BFT proxy to the public scan API.
+They have the same interfaces as the equally named endpoints in the public <a class="reference internal" href="../scan_api/index.html#app-dev-scan-api"><span class="std std-ref">Scan API</span></a>.</p>
+<p>If the validator app is part of a <a class="reference internal" href="../../glossary.html#term-CN-Validator"><span class="xref std std-term">CN Validator</span></a> node,
+then each call to one of these endpoints is broadcast to the scan services of multiple supervalidator nodes,
+and the consensus result is returned to the caller.
+Use these endpoints instead of calling a scan service directly to avoid the need to trust a single supervalidator node.</p>
+<p>If the validator app is part of a <a class="reference internal" href="../../glossary.html#term-CN-Supervalidator"><span class="xref std std-term">CN Supervalidator</span></a> node,
+then each call to one of these endpoints is simply forwarded to the scan service of the same node.</p>
+<p><strong>Authorization:</strong> Authentication with any valid JWT token as described in <a class="reference internal" href="../overview/splice_app_apis.html#app-auth"><span class="std std-ref">Authentication</span></a>.</p>
+<p><strong>Backwards compatibility:</strong> See the corresponding endpoint in the <a class="reference internal" href="../scan_api/index.html#app-dev-scan-api"><span class="std std-ref">Scan API</span></a>.</p>
+<p><strong>Reference:</strong> For details, see the <a class="reference external" href="https://raw.githubusercontent.com/hyperledger-labs/splice/refs/heads/main/apps/validator/src/main/openapi/scan-proxy.yaml">scan-proxy.yaml</a> OpenAPI spec.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 100.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Endpoint</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>GET</strong> /v0/scan-proxy/amulet-rules</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>POST</strong> /v0/scan-proxy/ans-rules</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>GET</strong> /v0/scan-proxy/dso-party-id</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>GET</strong> /v0/scan-proxy/open-and-issuing-mining-rounds</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>GET</strong> /v0/scan-proxy/ans-entries</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>GET</strong> /v0/scan-proxy/ans-entries/by-name/{name}</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>GET</strong> /v0/scan-proxy/ans-entries/by-party/{party}</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>GET</strong> /v0/scan-proxy/featured-apps/{provider_party_id}</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>GET</strong> /v0/scan-proxy/transfer-command-counter/{party}</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>GET</strong> /v0/scan-proxy/transfer-command/status</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>GET</strong> /v0/scan-proxy/transfer-preapprovals/by-party/{party}</p></td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 
 
