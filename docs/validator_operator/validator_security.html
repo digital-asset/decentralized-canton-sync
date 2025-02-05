@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Users, Parties and Wallets in the Splice Wallet &mdash; Splice  documentation</title>
+  <title>Security Hardening &mdash; Splice  documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -25,8 +25,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Supervalidators" href="../sv_operator/index.html" />
-    <link rel="prev" title="Security Hardening" href="validator_security.html" /> 
+    <link rel="next" title="Users, Parties and Wallets in the Splice Wallet" href="validator_users.html" />
+    <link rel="prev" title="Disaster Recovery" href="validator_disaster_recovery.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -145,15 +145,15 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="validator_security.html">Security Hardening</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="validator_security.html#using-an-external-kms-for-managing-participant-keys">Using an external KMS for managing participant keys</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="validator_security.html#migrating-an-existing-validator-to-use-an-external-kms">Migrating an existing validator to use an external KMS</a></li>
-<li class="toctree-l4"><a class="reference internal" href="validator_security.html#configuring-a-fresh-validator-to-use-an-external-kms">Configuring a fresh validator to use an external KMS</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Security Hardening</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#using-an-external-kms-for-managing-participant-keys">Using an external KMS for managing participant keys</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#migrating-an-existing-validator-to-use-an-external-kms">Migrating an existing validator to use an external KMS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuring-a-fresh-validator-to-use-an-external-kms">Configuring a fresh validator to use an external KMS</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Users, Parties and Wallets in the Splice Wallet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="validator_users.html">Users, Parties and Wallets in the Splice Wallet</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../sv_operator/index.html">Supervalidators</a><ul>
@@ -681,9 +681,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="index.html">Validators</a></li>
-      <li class="breadcrumb-item active">Users, Parties and Wallets in the Splice Wallet</li>
+      <li class="breadcrumb-item active">Security Hardening</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/validator_operator/validator_users.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/validator_operator/validator_security.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -691,54 +691,105 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="users-parties-and-wallets-in-the-splice-wallet">
-<span id="validator-users"></span><h1>Users, Parties and Wallets in the Splice Wallet<a class="headerlink" href="#users-parties-and-wallets-in-the-splice-wallet" title="Link to this heading"></a></h1>
-<p>Canton distinguishes between parties and users, as documented in detail in the
-[Canton docs](<a class="reference external" href="https://docs.daml.com/app-dev/parties-users.html">https://docs.daml.com/app-dev/parties-users.html</a>). In essence,
-a party is an identity on-ledger, while a user represents an off-ledger entity
-that can be associated with one or more parties.</p>
-<p>By default, when a user logs in for the first time in the wallet, and presses the “Onboard yourself” button,
-the Validator allocates a fresh party, with a fresh Party ID, and associates that user
-with the newly allocated party. As part of validator initialization, a party is automatically created for the
-Validator Operator. The user provided during installation as the <cite>validatorWalletUser</cite> will be
-associated with this party as its primary party.</p>
-<p>More users can be configured such that their primary party is that of the validator operator.
-In effect, when such users login to the wallet UI, they will be accessing the wallet of the validator
-operator. Note that this will be the same wallet accessed by different users, with currently
-no support for finer grained permissions per user.</p>
-<p>In order to associate a user with the party of the validator operator, the following steps are required:</p>
+  <section id="security-hardening">
+<span id="validator-security"></span><h1>Security Hardening<a class="headerlink" href="#security-hardening" title="Link to this heading"></a></h1>
+<section id="using-an-external-kms-for-managing-participant-keys">
+<span id="validator-kms"></span><h2>Using an external KMS for managing participant keys<a class="headerlink" href="#using-an-external-kms-for-managing-participant-keys" title="Link to this heading"></a></h2>
+<p>By default, Canton participants use cryptographic <a class="reference external" href="https://docs.daml.com/canton/usermanual/security.html">keys</a> that are generated by the participant itself and stored in the regular database used by the participant.
+To improve key security, participants can be configured to use an external Key Management System (KMS) to generate and store keys.
+Please consult the official <a class="reference external" href="https://docs.daml.com/canton/usermanual/kms/kms.html">Canton documentation on KMS support</a> for additional details and a list of supported KMS providers.
+Splice participants support the <a class="reference external" href="https://docs.daml.com/canton/usermanual/kms/external_key_storage/external_key_storage.html">External Key Storage</a> mode of KMS usage.</p>
+<p>In the following, we describe how to configure a Splice validator so that its participant keys are managed by an external KMS.
+This guide assumes that you are using the <a class="reference internal" href="validator_helm.html#k8s-validator"><span class="std std-ref">Helm-based deployment</span></a> of the Splice validator.
+KMS usage is not currently supported for <a class="reference internal" href="validator_compose.html#compose-validator"><span class="std std-ref">Docker Compose-based deployments</span></a>.</p>
+<section id="migrating-an-existing-validator-to-use-an-external-kms">
+<span id="validator-kms-migrating"></span><h3>Migrating an existing validator to use an external KMS<a class="headerlink" href="#migrating-an-existing-validator-to-use-an-external-kms" title="Link to this heading"></a></h3>
+<p>It is not generally supported to migrate an existing validator from “non-KMS-based” to “KMS-based” operation, or to migrate from one KMS provider to another.
+The main reason for this is that a participant’s root namespace key cannot be rotated,
+and importing it from a potentially unsafe location into a KMS would diminish the security gain of using the KMS.
+Some KMS providers do not support importing existing keys at all and can only be used for managing keys generated by the KMS itself.</p>
+<p>Our recommended approach for switching to use KMS is to:</p>
 <ol class="arabic simple">
-<li><p>Do not onboard the user through the UI, to avoid the validator allocating a new party for the user.</p></li>
-<li><p>Create a new user in your OIDC provider, and obtain its user ID, e.g. <cite>auth0|123456789</cite>.
-Save it in a USER environment variable: <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">USER=auth0|123456789</span></code>.</p></li>
-<li><p>Obtain validator operator credentials for interacting with the validator’s API.
-One way of achieving this is by inspecting the network activity logs of the wallet when logged
-in as the operator, and copying from there the Bearer token used for API requests.
-Save it in a TOKEN environment variable: <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">TOKEN=&lt;content</span> <span class="pre">of</span> <span class="pre">the</span> <span class="pre">token</span> <span class="pre">you</span> <span class="pre">obtained&gt;</span></code></p></li>
-<li><p>Obtain the PartyID of the validator operator. You can find that in the wallet UI when
-logged in as the operator, in the top right corner, next to the logout button.
-Save it in a PARTY_ID environment variable: <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">PARTY_ID=&lt;PartyID</span> <span class="pre">of</span> <span class="pre">the</span> <span class="pre">operator&gt;</span></code></p></li>
-<li><p>Run the following command to associate the user with the party of the validator operator:</p></li>
+<li><p>Set up a fresh validator from scratch with the desired KMS configuration. (Rest of this guide.)</p></li>
+<li><p>Transfer all relevant assets from the existing non-KMS validator to the new KMS-enabled validator.</p></li>
+<li><p>Retire the non-KMS validator.</p></li>
 </ol>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: Bearer </span><span class="nv">$TOKEN</span><span class="s2">&quot;</span><span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
---data-raw<span class="w"> </span><span class="s2">&quot;{\&quot;party_id\&quot;:\&quot;</span><span class="nv">$PARTY_ID</span><span class="s2">\&quot;,\&quot;name\&quot;:\&quot;</span><span class="nv">$USER</span><span class="s2">\&quot;}&quot;</span><span class="w"> </span><span class="se">\</span>
-https://&lt;URL<span class="w"> </span>of<span class="w"> </span>your<span class="w"> </span>wallet&gt;/api/validator/v0/admin/users
+</section>
+<section id="configuring-a-fresh-validator-to-use-an-external-kms">
+<h3>Configuring a fresh validator to use an external KMS<a class="headerlink" href="#configuring-a-fresh-validator-to-use-an-external-kms" title="Link to this heading"></a></h3>
+<p>Please refer to the <a class="reference external" href="https://docs.daml.com/canton/usermanual/kms/kms_setup.html">Canton documentation on configuring KMS support</a> for determining the right configuration options to match your desired KMS provider and setup.
+We provide example Helm configurations for configuring Splice participants for either Google Cloud KMS (<code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/kms-participant-gcp-values.yaml</span></code>)…</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Participant using GCP KMS (mock values; please modify to match your setup)</span>
+<span class="c1"># See https://docs.daml.com/canton/usermanual/kms/kms_gcp_setup.html</span>
+
+<span class="nt">kms</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gcp</span>
+<span class="w">  </span><span class="c1"># All Canton options supported; camelCase keys here are automatically converted to kebab-case</span>
+<span class="w">  </span><span class="nt">locationId</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">us-east1</span>
+<span class="w">  </span><span class="nt">projectId</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gcp-kms-testing</span>
+<span class="w">  </span><span class="nt">keyRingId</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">canton-test-keys-2023</span>
+
+<span class="c1"># Adds an env var on the participant pod that points to the location of the Google credentials file</span>
+<span class="nt">additionalEnvVars</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">GOOGLE_APPLICATION_CREDENTIALS</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/app/gcp-credentials.json&quot;</span>
+<span class="c1"># Mount the Google credentials file as a volume, reading its contents from a secret</span>
+<span class="nt">extraVolumeMounts</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gcp-credentials</span>
+<span class="w">    </span><span class="nt">mountPath</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/app/gcp-credentials.json&quot;</span>
+<span class="w">    </span><span class="nt">subPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">googleCredentials</span>
+<span class="nt">extraVolumes</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gcp-credentials</span>
+<span class="w">    </span><span class="nt">secret</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">secretName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gke-credentials</span>
 </pre></div>
 </div>
-<ol class="arabic simple" start="6">
-<li><p>The user can now login to the wallet UI, and will be accessing the wallet of the validator operator.
-Note that the user should not be greeted with the “Onboard yourself” button, as the user is already
-onboarded through the API call above. If you do see the button, it means that something has gone wrong
-in the process above (do not click the button!).</p></li>
-</ol>
+<p>…or Amazon Web Services KMS (<code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/kms-participant-aws-values.yaml</span></code>).</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Participant using AWS KMS (mock values; please modify to match your setup)</span>
+<span class="c1"># See https://docs.daml.com/canton/usermanual/kms/kms_aws_setup.html</span>
+<span class="nt">kms</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">aws</span>
+<span class="w">  </span><span class="c1"># All Canton options supported; camelCase keys here are automatically converted to kebab-case</span>
+<span class="w">  </span><span class="nt">region</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">us-east-1</span>
+
+<span class="c1"># Adds env vars on the participant pod for configuring authentication to AWS,</span>
+<span class="c1"># reading the relevant values from a secret</span>
+<span class="nt">additionalEnvVars</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">AWS_ACCESS_KEY_ID</span>
+<span class="w">    </span><span class="nt">valueFrom</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">secretKeyRef</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">aws-credentials</span>
+<span class="w">        </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">accessKeyId</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">AWS_SECRET_ACCESS_KEY</span>
+<span class="w">    </span><span class="nt">valueFrom</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">secretKeyRef</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">aws-credentials</span>
+<span class="w">        </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">secretAccessKey</span>
+</pre></div>
+</div>
+<p>Note the following:</p>
+<ul class="simple">
+<li><p>Values in the <code class="docutils literal notranslate"><span class="pre">kms</span></code> section of the participant Helm chart are implicitly mapped to the Canton participant <code class="docutils literal notranslate"><span class="pre">crypto.kms</span></code> config.
+This implies that all configuration keys supported by Canton are supported.
+Key names in camelCase are automatically converted to kebab-case.</p></li>
+<li><p>For setting extra environment variables and mounting files to configure authentication to the KMS,
+you can use the <code class="docutils literal notranslate"><span class="pre">.additionalEnvVars</span></code>, <code class="docutils literal notranslate"><span class="pre">.extraVolumeMounts</span></code>, and <code class="docutils literal notranslate"><span class="pre">.extraVolumes</span></code> fields of the Splice participant Helm chart
+(see the examples above).</p></li>
+<li><p>Make sure that your KMS configuration is always included in the values files you pass to <code class="docutils literal notranslate"><span class="pre">helm</span> <span class="pre">install</span> <span class="pre">participant</span> <span class="pre">...</span></code> or <code class="docutils literal notranslate"><span class="pre">helm</span> <span class="pre">upgrade</span> <span class="pre">participant</span> <span class="pre">...</span></code>.</p></li>
+<li><p>Only configuration changes to <code class="docutils literal notranslate"><span class="pre">splice-participant</span></code> are required to deploy a KMS-enabled validator.</p></li>
+<li><p>You need to deploy a <strong>fresh</strong> participant in order for KMS to be used correctly,
+which implies that you will need to setup the remaining validator components afresh as well (see <a class="reference internal" href="#validator-kms-migrating"><span class="std std-ref">above</span></a>).</p></li>
+</ul>
+</section>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="validator_security.html" class="btn btn-neutral float-left" title="Security Hardening" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../sv_operator/index.html" class="btn btn-neutral float-right" title="Supervalidators" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="validator_disaster_recovery.html" class="btn btn-neutral float-left" title="Disaster Recovery" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="validator_users.html" class="btn btn-neutral float-right" title="Users, Parties and Wallets in the Splice Wallet" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
