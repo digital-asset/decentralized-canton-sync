@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.10-ci-snapshot.20250205.1.0.vcad3815a
+                0.3.10-ci-snapshot.20250205.1.0.vd5bfda98
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -777,17 +777,10 @@ environment unless you also plan to deploy a validator</p></li>
 </section>
 <section id="infra-level-things-you-might-want-to-consider">
 <h2>Infra-level things you might want to consider<a class="headerlink" href="#infra-level-things-you-might-want-to-consider" title="Link to this heading"></a></h2>
-<p>IP allowlist: just set it to our devnet VPNs:</p>
-<div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="n">allowlist_json_modified</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">merge</span><span class="p">(</span><span class="n">local</span><span class="p">.</span><span class="n">allowlist_json</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
-<span class="w"> </span><span class="n">scratchnet</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">   </span><span class="n">vpns</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">     </span><span class="s">&quot;Digital Asset&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">local</span><span class="p">.</span><span class="n">allowlist_json</span><span class="p">[</span><span class="s">&quot;devnet&quot;</span><span class="p">].</span><span class="n">vpns</span><span class="p">[</span><span class="s">&quot;Digital Asset&quot;</span><span class="p">]</span>
-<span class="w">   </span><span class="p">}</span>
-<span class="w"> </span><span class="p">}</span>
-<span class="p">})</span>
-</pre></div>
-</div>
 <ul class="simple">
+<li><p>Configure the IP allowlist to expose the cluster to an internal VPN
+or similar network you control. It is not recommended to expose it
+to the public internet at this point.</p></li>
 <li><p>approved SV identities (which make their way into sv helm values): if
 you are deploying a single bootstraping node, you can set this to []</p></li>
 </ul>
