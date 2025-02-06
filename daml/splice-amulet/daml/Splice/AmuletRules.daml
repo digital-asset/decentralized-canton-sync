@@ -18,7 +18,7 @@ import DA.Traversable (forA)
 import DA.Time
 
 import Splice.Amulet
-import Splice.AmuletConfig (AmuletConfig(..), TransferConfig(..), validAmuletConfig, defaultTransferPreapprovalFee)
+import Splice.AmuletConfig (AmuletConfig(..), TransferConfig(..), validAmuletConfig, defaultFeaturedAppActivityMarkerAmount, defaultTransferPreapprovalFee)
 import qualified Splice.AmuletConfig as Unit
 import Splice.Schedule
 import Splice.Expiry
@@ -76,6 +76,8 @@ data AmuletRules_RemoveFutureAmuletConfigScheduleResult = AmuletRules_RemoveFutu
 data AmuletRules_UpdateFutureAmuletConfigScheduleResult = AmuletRules_UpdateFutureAmuletConfigScheduleResult with
     newAmuletRules : ContractId AmuletRules
 
+data AmuletRules_ConvertFeaturedAppActivityMarkersResult = AmuletRules_ConvertFeaturedAppActivityMarkersResult with
+    appRewardCouponCids : [ContractId AppRewardCoupon]
 
 -- | The rules governing how Amulet users can modify the Amulet state managed by the DSO party.
 template AmuletRules
@@ -573,6 +575,28 @@ template AmuletRules
         newAmuletRules <- create this with configSchedule = prune now (update scheduleItem this.configSchedule)
         return AmuletRules_UpdateFutureAmuletConfigScheduleResult with ..
 
+    nonconsuming choice AmuletRules_ConvertFeaturedAppActivityMarkers : AmuletRules_ConvertFeaturedAppActivityMarkersResult
+      with
+        markerCids : [ContractId FeaturedAppActivityMarker]
+        openMiningRoundCid : ContractId OpenMiningRound
+      controller dso
+      do now <- getTime
+         markers <- mapA (fetchAndArchive (ForDso dso)) markerCids
+         let groupedMarkers = Map.fromListWithR (<>) (map (\m -> (m.provider, [m])) markers)
+         round <- fetchReferenceData (ForDso dso) openMiningRoundCid
+         require ("mining round is open: " <> show round) (round.opensAt <= now)
+         let configUsd = getValueAsOf now configSchedule
+             amountUsd = fromOptional defaultFeaturedAppActivityMarkerAmount configUsd.featuredAppActivityMarkerAmount
+             amountAmulet = amountUsd / round.amuletPrice
+         appRewardCouponCids <- forA (Map.toList groupedMarkers) $ \(provider, markers) ->
+           create AppRewardCoupon with
+             dso
+             provider
+             featured = True
+             round = round.round
+             amount = amountAmulet * intToDecimal (length markers)
+         pure AmuletRules_ConvertFeaturedAppActivityMarkersResult with appRewardCouponCids
+
 -- Transfer logic
 -- ==============
 
@@ -592,6 +616,7 @@ scaleAmuletConfig amuletPrice config = AmuletConfig with
   tickDuration = config.tickDuration
   packageConfig = config.packageConfig
   transferPreapprovalFee = config.transferPreapprovalFee
+  featuredAppActivityMarkerAmount = fmap (/amuletPrice) config.featuredAppActivityMarkerAmount
 
 computeFees : Party -> TransferContext -> Party -> [TransferOutput] -> Update [Decimal]
 computeFees dso context sender outputs = do

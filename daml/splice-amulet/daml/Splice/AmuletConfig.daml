@@ -42,11 +42,18 @@ data AmuletConfig unit = AmuletConfig with
       -- ^ Configuration determining the version of each package
       -- that should be used for command submissions.
     transferPreapprovalFee : Optional Decimal -- ^ Fee for keeping a transfer pre-approval around.
+    featuredAppActivityMarkerAmount : Optional Decimal -- ^ $-amount used for the conversion from FeaturedAppActivityMarker -> AppRewardCoupon
   deriving (Eq, Show)
 
 -- $1/year specified as a daily rate
 defaultTransferPreapprovalFee : Decimal
 defaultTransferPreapprovalFee = 0.00274
+
+-- approximation of the $ value of the traffic burned due to a featured app's transaction
+-- set by default to the same $ value as the `extraFeaturedAppRewardAmount` for
+-- Amulet transfers of featured apps.
+defaultFeaturedAppActivityMarkerAmount : Decimal
+defaultFeaturedAppActivityMarkerAmount = 1.0
 
 -- Check constraints on config params on which the implementation of the choices rely.
 validAmuletConfig : AmuletConfig unit -> Bool

@@ -40,11 +40,19 @@ bpsMultiplier = 10000
 initMainNet : Script (AmuletApp, Party, (Party, Party, Party, Party))
 initMainNet = initDecentralizedSynchronizer False
 
+
+initMainNetWithAmuletPrice : Decimal -> Script (AmuletApp, Party, (Party, Party, Party, Party))
+initMainNetWithAmuletPrice = initDecentralizedSynchronizerWithAmuletPrice False
+
 initDevNet : Script (AmuletApp, Party, (Party, Party, Party, Party))
 initDevNet = initDecentralizedSynchronizer True
 
+
 initDecentralizedSynchronizer : Bool -> Script (AmuletApp, Party, (Party, Party, Party, Party))
-initDecentralizedSynchronizer isDevNet = do
+initDecentralizedSynchronizer isDevNet = initDecentralizedSynchronizerWithAmuletPrice isDevNet 1.0
+
+initDecentralizedSynchronizerWithAmuletPrice : Bool -> Decimal -> Script (AmuletApp, Party, (Party, Party, Party, Party))
+initDecentralizedSynchronizerWithAmuletPrice isDevNet amuletPrice = do
   [sv1, sv2, sv3, sv4] <- forA ["sv1", "sv2", "sv3", "sv4"] allocateParty
 
   dso <- allocateParty "dso-party"
@@ -100,7 +108,7 @@ initDecentralizedSynchronizer isDevNet = do
                 legacySequencerConfig = None
         )]
       amuletConfig
-      amuletPrice = 1.0
+      amuletPrice
       round0Duration = hours 24
       ansRulesConfig
       config

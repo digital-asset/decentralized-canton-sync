@@ -9,6 +9,7 @@ import DA.Action (void)
 
 import Splice.Expiry
 import Splice.Fees
+import qualified Splice.Api.FeaturedAppRightV1
 import Splice.Round
 import Splice.Types
 
@@ -49,6 +50,9 @@ data ValidatorRight_ArchiveAsUserResult = ValidatorRight_ArchiveAsUserResult
 data FeaturedAppRight_WithdrawResult = FeaturedAppRight_WithdrawResult
 
 data FeaturedAppRight_CancelResult = FeaturedAppRight_CancelResult
+
+data FeaturedAppRight_CreateActivityMarkerResult = FeaturedAppRight_CreateActivityMarkerResult with
+  featuredAppActivityMarkerCid : ContractId FeaturedAppActivityMarker
 
 data AppRewardCoupon_DsoExpireResult = AppRewardCoupon_DsoExpireResult with
   featured : Bool
@@ -177,6 +181,30 @@ template FeaturedAppRight with
     choice FeaturedAppRight_Cancel : FeaturedAppRight_CancelResult
       controller provider
       do return FeaturedAppRight_CancelResult
+
+
+    interface instance Splice.Api.FeaturedAppRightV1.FeaturedAppRight for FeaturedAppRight where
+      view = Splice.Api.FeaturedAppRightV1.FeaturedAppRightView with dso, provider
+
+      featuredAppRight_CreateActivityMarkerImpl = do
+         cid <- create FeaturedAppActivityMarker with dso, provider
+         pure (Splice.Api.FeaturedAppRightV1.FeaturedAppRight_CreateActivityMarkerResult $ toInterfaceContractId cid)
+
+-- | A marker created by a featured application for activity generated from that app. This is used
+-- to record activity other than amulet transfers where regular AppRewardCoupons are not created directly.
+--
+-- Will be converted to a AppRewardCoupon through automation run by the SVs and can then be
+-- minted as part of the normal minting process.
+template FeaturedAppActivityMarker
+  with
+    dso : Party
+    provider : Party
+  where
+    signatory dso
+    observer provider
+
+    interface instance Splice.Api.FeaturedAppRightV1.FeaturedAppActivityMarker for FeaturedAppActivityMarker where
+      view = Splice.Api.FeaturedAppRightV1.FeaturedAppActivityMarkerView with dso, provider
 
 
 -- | A coupon for receiving app rewards proportional to the usage fee paid as part of a
@@ -319,3 +347,9 @@ instance HasCheckedFetch ValidatorRewardCoupon ForDso where
 
 instance HasCheckedFetch UnclaimedReward ForDso where
   contractGroupId UnclaimedReward {..} = ForDso with dso
+
+instance HasCheckedFetch FeaturedAppActivityMarker ForOwner where
+  contractGroupId FeaturedAppActivityMarker {..} = ForOwner with dso; owner = provider
+
+instance HasCheckedFetch FeaturedAppActivityMarker ForDso where
+  contractGroupId FeaturedAppActivityMarker {..} = ForDso with dso
