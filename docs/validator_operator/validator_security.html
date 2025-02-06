@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.10-ci-snapshot.20250206.1.0.v6c070004
+                0.3.10-ci-snapshot.20250206.1.0.vf05f2383
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -148,7 +148,11 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Security Hardening</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#using-an-external-kms-for-managing-participant-keys">Using an external KMS for managing participant keys</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#migrating-an-existing-validator-to-use-an-external-kms">Migrating an existing validator to use an external KMS</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#configuring-a-fresh-validator-to-use-an-external-kms">Configuring a fresh validator to use an external KMS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuring-a-fresh-validator-to-use-an-external-kms">Configuring a fresh validator to use an external KMS</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#google-cloud-kms">Google Cloud KMS</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#amazon-web-services-kms">Amazon Web Services KMS</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -334,15 +338,22 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../deployment/troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../deployment/console_access.html">Getting console access to Canton nodes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../deployment/console_access.html#participant-console">Participant console</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../deployment/console_access.html#sequencer-console">Sequencer console</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../deployment/console_access.html#mediator-console">Mediator console</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../deployment/console_access.html#access-in-a-k8s-cluster">Access in a K8s cluster</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../troubleshooting.html#where-to-find-logs">Where to find logs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../troubleshooting.html#debugging-issues-in-web-uis">Debugging issues in Web UIs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../troubleshooting.html#configurations">Configurations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../troubleshooting.html#common-error-messages">Common Error Messages</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../troubleshooting.html#traffic-balance-below-reserved-amount">Traffic balance below reserved amount</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../troubleshooting.html#insufficient-funds-to-buy-configured-traffic-amount">Insufficient funds to buy configured traffic amount</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../deployment/troubleshooting.html#where-to-find-logs">Where to find logs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../deployment/troubleshooting.html#debugging-issues-in-web-uis">Debugging issues in Web UIs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../deployment/troubleshooting.html#configurations">Configurations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../deployment/troubleshooting.html#common-error-messages">Common Error Messages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../deployment/troubleshooting.html#traffic-balance-below-reserved-amount">Traffic balance below reserved amount</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../deployment/troubleshooting.html#insufficient-funds-to-buy-configured-traffic-amount">Insufficient funds to buy configured traffic amount</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -728,22 +739,44 @@ Some KMS providers do not support importing existing keys at all and can only be
 <section id="configuring-a-fresh-validator-to-use-an-external-kms">
 <h3>Configuring a fresh validator to use an external KMS<a class="headerlink" href="#configuring-a-fresh-validator-to-use-an-external-kms" title="Link to this heading"></a></h3>
 <p>Please refer to the <a class="reference external" href="https://docs.daml.com/canton/usermanual/kms/kms_setup.html">Canton documentation on configuring KMS support</a> for determining the right configuration options to match your desired KMS provider and setup.
-We provide example Helm configurations for configuring Splice participants for either Google Cloud KMS (<code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/kms-participant-gcp-values.yaml</span></code>)…</p>
+We provide minimal Helm configuration examples for Google Cloud (GCP) KMS and Amazon Web Services (AWS) KMS below.</p>
+<p>Whatever KMS provider you choose, please note:</p>
+<ul class="simple">
+<li><p>Values in the <code class="docutils literal notranslate"><span class="pre">kms</span></code> section of the participant Helm chart are implicitly mapped to the Canton participant <code class="docutils literal notranslate"><span class="pre">crypto.kms</span></code> config.
+This implies that all configuration keys supported by Canton are supported, not only the ones shown in the examples above.
+Key names in camelCase are automatically converted to kebab-case.</p></li>
+<li><p>For setting extra environment variables and mounting files to configure authentication to the KMS,
+you can use the <code class="docutils literal notranslate"><span class="pre">.additionalEnvVars</span></code>, <code class="docutils literal notranslate"><span class="pre">.extraVolumeMounts</span></code>, and <code class="docutils literal notranslate"><span class="pre">.extraVolumes</span></code> fields of the Splice participant Helm chart
+(see the examples).</p></li>
+<li><p>Make sure that your KMS configuration is always included in the values files you pass to <code class="docutils literal notranslate"><span class="pre">helm</span> <span class="pre">install</span> <span class="pre">participant</span> <span class="pre">...</span></code> or <code class="docutils literal notranslate"><span class="pre">helm</span> <span class="pre">upgrade</span> <span class="pre">participant</span> <span class="pre">...</span></code>.</p></li>
+<li><p>Only configuration changes to <code class="docutils literal notranslate"><span class="pre">splice-participant</span></code> are required to deploy a KMS-enabled validator.</p></li>
+<li><p>You need to deploy a <strong>fresh</strong> participant in order for KMS to be used correctly,
+which implies that you will need to setup the remaining validator components afresh as well (see <a class="reference internal" href="#validator-kms-migrating"><span class="std std-ref">above</span></a>).</p></li>
+</ul>
+<section id="google-cloud-kms">
+<h4>Google Cloud KMS<a class="headerlink" href="#google-cloud-kms" title="Link to this heading"></a></h4>
+<p>Below mock configuration for GCP KMS is included in <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/kms-participant-gcp-values.yaml</span></code>:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Participant using GCP KMS (mock values; please modify to match your setup)</span>
 <span class="c1"># See https://docs.daml.com/canton/usermanual/kms/kms_gcp_setup.html</span>
 
 <span class="nt">kms</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gcp</span>
-<span class="w">  </span><span class="c1"># All Canton options supported; camelCase keys here are automatically converted to kebab-case</span>
-<span class="w">  </span><span class="nt">locationId</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">us-east1</span>
-<span class="w">  </span><span class="nt">projectId</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gcp-kms-testing</span>
-<span class="w">  </span><span class="nt">keyRingId</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">canton-test-keys-2023</span>
+<span class="w">  </span><span class="c1"># Replace LOCATION_ID, PROJECT_ID, and KEY_RING_ID based on your GCP KMS setup</span>
+<span class="w">  </span><span class="nt">locationId</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">LOCATION_ID</span>
+<span class="w">  </span><span class="nt">projectId</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">PROJECT_ID</span>
+<span class="w">  </span><span class="nt">keyRingId</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">KEY_RING_ID</span>
+<span class="w">  </span><span class="c1"># All other Canton options are supported as well;</span>
+<span class="w">  </span><span class="c1"># camelCase keys here are automatically converted to kebab-case</span>
 
-<span class="c1"># Adds an env var on the participant pod that points to the location of the Google credentials file</span>
+<span class="c1"># Example for configuring authentication to the GCP KMS.</span>
+<span class="c1"># Adds an env var on the participant pod that points to the location of the Google</span>
+<span class="c1"># credentials file and mounts that file as a volume, reading its contents from a secret.</span>
+<span class="c1"># In order for this to work as-is, you need to create the appropriate k8s secret</span>
+<span class="c1"># and ensure that it holds the contents of a valid Google credentials file</span>
+<span class="c1"># (under the `googleCredentials` key).</span>
 <span class="nt">additionalEnvVars</span><span class="p">:</span>
 <span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">GOOGLE_APPLICATION_CREDENTIALS</span>
 <span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/app/gcp-credentials.json&quot;</span>
-<span class="c1"># Mount the Google credentials file as a volume, reading its contents from a secret</span>
 <span class="nt">extraVolumeMounts</span><span class="p">:</span>
 <span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gcp-credentials</span>
 <span class="w">    </span><span class="nt">mountPath</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/app/gcp-credentials.json&quot;</span>
@@ -754,16 +787,38 @@ We provide example Helm configurations for configuring Splice participants for e
 <span class="w">      </span><span class="nt">secretName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gke-credentials</span>
 </pre></div>
 </div>
-<p>…or Amazon Web Services KMS (<code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/kms-participant-aws-values.yaml</span></code>).</p>
+<p>Please refer to the <a class="reference external" href="https://docs.daml.com/canton/usermanual/kms/kms_gcp_setup.html">Canton documentation</a>
+for a list of supported configuration options and their meaning,
+as well as for instructions on configuring authentication to the KMS.
+Note again that Splice participants support the External Key Storage mode of KMS usage,
+so that (per the <a class="reference external" href="https://docs.daml.com/canton/usermanual/kms/external_key_storage/external_key_storage_gcp.html">relevant Canton docs</a>)
+the authentication credentials you supply must correspond to a GCP service account with the following IAM permissions:</p>
+<ul class="simple">
+<li><p><cite>cloudkms.cryptoKeyVersions.create</cite></p></li>
+<li><p><cite>cloudkms.cryptoKeyVersions.useToDecrypt</cite></p></li>
+<li><p><cite>cloudkms.cryptoKeyVersions.useToSign</cite></p></li>
+<li><p><cite>cloudkms.cryptoKeyVersions.get</cite></p></li>
+<li><p><cite>cloudkms.cryptoKeyVersions.viewPublicKey</cite></p></li>
+</ul>
+<p>For example, you can grant the <cite>Cloud KMS Admin</cite> and <cite>Cloud KMS Crypto Operator</cite> roles to the validator KMS service account.</p>
+</section>
+<section id="amazon-web-services-kms">
+<h4>Amazon Web Services KMS<a class="headerlink" href="#amazon-web-services-kms" title="Link to this heading"></a></h4>
+<p>Below mock configuration for AWS KMS is included in <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/kms-participant-aws-values.yaml</span></code>:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Participant using AWS KMS (mock values; please modify to match your setup)</span>
 <span class="c1"># See https://docs.daml.com/canton/usermanual/kms/kms_aws_setup.html</span>
 <span class="nt">kms</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">aws</span>
-<span class="w">  </span><span class="c1"># All Canton options supported; camelCase keys here are automatically converted to kebab-case</span>
-<span class="w">  </span><span class="nt">region</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">us-east-1</span>
+<span class="w">  </span><span class="c1"># Replace REGION based on your AWS KMS setup</span>
+<span class="w">  </span><span class="nt">region</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">REGION</span>
+<span class="w">  </span><span class="c1"># All other Canton options are supported as well;</span>
+<span class="w">  </span><span class="c1"># camelCase keys here are automatically converted to kebab-case</span>
 
-<span class="c1"># Adds env vars on the participant pod for configuring authentication to AWS,</span>
-<span class="c1"># reading the relevant values from a secret</span>
+<span class="c1"># Example for configuring authentication to the AWS KMS.</span>
+<span class="c1"># Adds env vars on the participant pod with credentials read from a k8s secret.</span>
+<span class="c1"># In order for this to work as-is, you need to create the appropriate k8s secret</span>
+<span class="c1"># and ensure that it holds valid credentials</span>
+<span class="c1"># (under the `accessKeyId` and `secretAccessKey` keys).</span>
 <span class="nt">additionalEnvVars</span><span class="p">:</span>
 <span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">AWS_ACCESS_KEY_ID</span>
 <span class="w">    </span><span class="nt">valueFrom</span><span class="p">:</span>
@@ -777,19 +832,21 @@ We provide example Helm configurations for configuring Splice participants for e
 <span class="w">        </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">secretAccessKey</span>
 </pre></div>
 </div>
-<p>Note the following:</p>
+<p>Please refer to the <a class="reference external" href="https://docs.daml.com/canton/usermanual/kms/kms_aws_setup.html">Canton documentation</a>
+for a list of supported configuration options and their meaning,
+as well as for instructions on configuring authentication to the KMS.
+Note again that Splice participants support the External Key Storage mode of KMS usage,
+so that (per the <a class="reference external" href="https://docs.daml.com/canton/usermanual/kms/external_key_storage/external_key_storage_aws.html">relevant Canton docs</a>)
+the authentication credentials you supply must correspond to an entity with the following IAM permissions:</p>
 <ul class="simple">
-<li><p>Values in the <code class="docutils literal notranslate"><span class="pre">kms</span></code> section of the participant Helm chart are implicitly mapped to the Canton participant <code class="docutils literal notranslate"><span class="pre">crypto.kms</span></code> config.
-This implies that all configuration keys supported by Canton are supported.
-Key names in camelCase are automatically converted to kebab-case.</p></li>
-<li><p>For setting extra environment variables and mounting files to configure authentication to the KMS,
-you can use the <code class="docutils literal notranslate"><span class="pre">.additionalEnvVars</span></code>, <code class="docutils literal notranslate"><span class="pre">.extraVolumeMounts</span></code>, and <code class="docutils literal notranslate"><span class="pre">.extraVolumes</span></code> fields of the Splice participant Helm chart
-(see the examples above).</p></li>
-<li><p>Make sure that your KMS configuration is always included in the values files you pass to <code class="docutils literal notranslate"><span class="pre">helm</span> <span class="pre">install</span> <span class="pre">participant</span> <span class="pre">...</span></code> or <code class="docutils literal notranslate"><span class="pre">helm</span> <span class="pre">upgrade</span> <span class="pre">participant</span> <span class="pre">...</span></code>.</p></li>
-<li><p>Only configuration changes to <code class="docutils literal notranslate"><span class="pre">splice-participant</span></code> are required to deploy a KMS-enabled validator.</p></li>
-<li><p>You need to deploy a <strong>fresh</strong> participant in order for KMS to be used correctly,
-which implies that you will need to setup the remaining validator components afresh as well (see <a class="reference internal" href="#validator-kms-migrating"><span class="std std-ref">above</span></a>).</p></li>
+<li><p><cite>kms:CreateKey</cite></p></li>
+<li><p><cite>kms:TagResource</cite></p></li>
+<li><p><cite>kms:Decrypt</cite></p></li>
+<li><p><cite>kms:Sign</cite></p></li>
+<li><p><cite>kms:DescribeKey</cite></p></li>
+<li><p><cite>kms:GetPublicKey</cite></p></li>
 </ul>
+</section>
 </section>
 </section>
 </section>

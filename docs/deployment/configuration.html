@@ -25,7 +25,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Troubleshooting" href="../troubleshooting.html" />
+    <link rel="next" title="Troubleshooting" href="troubleshooting.html" />
     <link rel="prev" title="Metrics Reference" href="observability/metrics_reference.html" /> 
 </head>
 
@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.10-ci-snapshot.20250206.1.0.v6c070004
+                0.3.10-ci-snapshot.20250206.1.0.vf05f2383
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -148,7 +148,11 @@
 <li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_security.html">Security Hardening</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_security.html#using-an-external-kms-for-managing-participant-keys">Using an external KMS for managing participant keys</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_security.html#migrating-an-existing-validator-to-use-an-external-kms">Migrating an existing validator to use an external KMS</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_security.html#configuring-a-fresh-validator-to-use-an-external-kms">Configuring a fresh validator to use an external KMS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_security.html#configuring-a-fresh-validator-to-use-an-external-kms">Configuring a fresh validator to use an external KMS</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../validator_operator/validator_security.html#google-cloud-kms">Google Cloud KMS</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../validator_operator/validator_security.html#amazon-web-services-kms">Amazon Web Services KMS</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -334,15 +338,22 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="console_access.html">Getting console access to Canton nodes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="console_access.html#participant-console">Participant console</a></li>
+<li class="toctree-l4"><a class="reference internal" href="console_access.html#sequencer-console">Sequencer console</a></li>
+<li class="toctree-l4"><a class="reference internal" href="console_access.html#mediator-console">Mediator console</a></li>
+<li class="toctree-l4"><a class="reference internal" href="console_access.html#access-in-a-k8s-cluster">Access in a K8s cluster</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../troubleshooting.html#where-to-find-logs">Where to find logs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../troubleshooting.html#debugging-issues-in-web-uis">Debugging issues in Web UIs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../troubleshooting.html#configurations">Configurations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../troubleshooting.html#common-error-messages">Common Error Messages</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../troubleshooting.html#traffic-balance-below-reserved-amount">Traffic balance below reserved amount</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../troubleshooting.html#insufficient-funds-to-buy-configured-traffic-amount">Insufficient funds to buy configured traffic amount</a></li>
+<li class="toctree-l3"><a class="reference internal" href="troubleshooting.html#where-to-find-logs">Where to find logs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="troubleshooting.html#debugging-issues-in-web-uis">Debugging issues in Web UIs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="troubleshooting.html#configurations">Configurations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="troubleshooting.html#common-error-messages">Common Error Messages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="troubleshooting.html#traffic-balance-below-reserved-amount">Traffic balance below reserved amount</a></li>
+<li class="toctree-l4"><a class="reference internal" href="troubleshooting.html#insufficient-funds-to-buy-configured-traffic-amount">Insufficient funds to buy configured traffic amount</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -737,7 +748,7 @@ All the environment variables passed to the apps, that start with <cite>ADDITION
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="observability/metrics_reference.html" class="btn btn-neutral float-left" title="Metrics Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../troubleshooting.html" class="btn btn-neutral float-right" title="Troubleshooting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="troubleshooting.html" class="btn btn-neutral float-right" title="Troubleshooting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
