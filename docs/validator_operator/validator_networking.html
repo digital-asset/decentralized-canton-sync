@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Operations &mdash; Splice  documentation</title>
+  <title>Validator Ingress &amp; Egress requirements &mdash; Splice  documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -25,8 +25,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Monitoring and Observability" href="observability/index.html" />
-    <link rel="prev" title="How to Bootstrap a Network" href="../sv_operator/sv_scratchnet.html" /> 
+    <link rel="next" title="Supervalidators" href="../sv_operator/index.html" />
+    <link rel="prev" title="Users, Parties and Wallets in the Splice Wallet" href="validator_users.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -54,113 +54,113 @@
               <p class="caption" role="heading"><span class="caption-text">Deployment and Operations</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../deployment.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../validator_operator/index.html">Validators</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_onboarding.html">Validator Onboarding Process</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_onboarding.html#networks">Networks</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_onboarding.html#onboarding-process-overview">Onboarding Process Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_onboarding.html#validating-that-your-ip-has-been-approved">Validating that your IP has been approved</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_onboarding.html#stay-connected">Stay Connected</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_onboarding.html#slack">Slack</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_onboarding.html#mailing-lists">Mailing Lists</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Validators</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="validator_onboarding.html">Validator Onboarding Process</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="validator_onboarding.html#networks">Networks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_onboarding.html#onboarding-process-overview">Onboarding Process Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_onboarding.html#validating-that-your-ip-has-been-approved">Validating that your IP has been approved</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_onboarding.html#stay-connected">Stay Connected</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="validator_onboarding.html#slack">Slack</a></li>
+<li class="toctree-l4"><a class="reference internal" href="validator_onboarding.html#mailing-lists">Mailing Lists</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_hardware_requirements.html">Validator Hardware Requirements</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_hardware_requirements.html#database-latency">Database Latency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="validator_hardware_requirements.html">Validator Hardware Requirements</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="validator_hardware_requirements.html#database-latency">Database Latency</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_compose.html">Docker-Compose Based Deployment of a Validator Node</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_compose.html#requirements">Requirements</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_compose.html#required-network-parameters">Required Network Parameters</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_compose.html#preparing-for-validator-onboarding">Preparing for Validator Onboarding</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_compose.html#deployment">Deployment</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_compose.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_compose.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_compose.html#configuring-authentication">Configuring Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="validator_compose.html">Docker-Compose Based Deployment of a Validator Node</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="validator_compose.html#requirements">Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_compose.html#required-network-parameters">Required Network Parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_compose.html#preparing-for-validator-onboarding">Preparing for Validator Onboarding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_compose.html#deployment">Deployment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_compose.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_compose.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_compose.html#configuring-authentication">Configuring Authentication</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_helm.html">Kubernetes-Based Deployment of a Validator node</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#requirements">Requirements</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#required-network-parameters">Required Network Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="validator_helm.html">Kubernetes-Based Deployment of a Validator node</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#requirements">Requirements</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="validator_helm.html#required-network-parameters">Required Network Parameters</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#validator-network-diagram">Validator Network Diagram</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#preparing-a-cluster-for-installation">Preparing a Cluster for Installation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-postgresql-authentication">Configuring PostgreSQL authentication</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#preparing-for-validator-onboarding">Preparing for Validator Onboarding</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-authentication">Configuring Authentication</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#oidc-provider-requirements">OIDC Provider Requirements</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-an-auth0-tenant">Configuring an Auth0 Tenant</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-authentication-on-your-validator">Configuring Authentication on your Validator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#validator-network-diagram">Validator Network Diagram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#preparing-a-cluster-for-installation">Preparing a Cluster for Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#configuring-postgresql-authentication">Configuring PostgreSQL authentication</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#preparing-for-validator-onboarding">Preparing for Validator Onboarding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#configuring-authentication">Configuring Authentication</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="validator_helm.html#oidc-provider-requirements">OIDC Provider Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="validator_helm.html#configuring-an-auth0-tenant">Configuring an Auth0 Tenant</a></li>
+<li class="toctree-l4"><a class="reference internal" href="validator_helm.html#configuring-authentication-on-your-validator">Configuring Authentication on your Validator</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#installing-the-software">Installing the Software</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-the-helm-charts">Configuring the Helm Charts</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#installing-the-helm-charts">Installing the Helm Charts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#installing-the-software">Installing the Software</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="validator_helm.html#configuring-the-helm-charts">Configuring the Helm Charts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="validator_helm.html#installing-the-helm-charts">Installing the Helm Charts</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-the-cluster-ingress">Configuring the Cluster Ingress</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#id4">Requirements</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#installation-instructions">Installation Instructions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#configuring-the-cluster-ingress">Configuring the Cluster Ingress</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="validator_helm.html#id4">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="validator_helm.html#installation-instructions">Installation Instructions</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#testnet-only-granting-coin-to-the-validator-for-traffic-purchases">(Testnet-only) Granting coin to the validator for traffic purchases</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-top-ups">Configuring top-ups</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-sweeps-and-auto-accepts-of-transfer-offers">Configuring sweeps and auto-accepts of transfer offers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#testnet-only-granting-coin-to-the-validator-for-traffic-purchases">(Testnet-only) Granting coin to the validator for traffic purchases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#configuring-top-ups">Configuring top-ups</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#configuring-sweeps-and-auto-accepts-of-transfer-offers">Configuring sweeps and auto-accepts of transfer offers</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_upgrades.html">Upgrades</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html">Synchronizer Upgrades with Downtime</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html#technical-details">Technical Details</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html#state-and-migration-ids">State and Migration IDs</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html#migration-dumps">Migration Dumps</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html#catching-up-before-the-migration">Catching Up Before the Migration</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html#deploying-the-validator-app-and-participant-kubernetes">Deploying the Validator App and Participant (Kubernetes)</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html#deploying-the-validator-app-and-participant-docker-compose">Deploying the validator App and Participant (Docker-Compose)</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_backups.html">Backups</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_backups.html#backup-of-node-identities">Backup of Node Identities</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_backups.html#backups-of-postgres-instances">Backups of postgres instances</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html">Disaster Recovery</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#restoring-a-validator-from-backups">Restoring a validator from backups</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#re-onboard-a-validator-and-recover-balances-of-all-users-it-hosts">Re-onboard a validator and recover balances of all users it hosts</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#docker-compose-deployment">Docker-Compose Deployment</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#kubernetes-deployment">Kubernetes Deployment</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#disaster-recovery-from-loss-of-the-cometbft-storage-layer-of-the-global-synchronizer">Disaster recovery from loss of the CometBFT storage layer of the global synchronizer</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#technical-details">Technical Details</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_security.html">Security Hardening</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_security.html#using-an-external-kms-for-managing-participant-keys">Using an external KMS for managing participant keys</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_security.html#migrating-an-existing-validator-to-use-an-external-kms">Migrating an existing validator to use an external KMS</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_security.html#configuring-a-fresh-validator-to-use-an-external-kms">Configuring a fresh validator to use an external KMS</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="../validator_operator/validator_security.html#google-cloud-kms">Google Cloud KMS</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../validator_operator/validator_security.html#amazon-web-services-kms">Amazon Web Services KMS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="validator_upgrades.html">Upgrades</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="validator_major_upgrades.html">Synchronizer Upgrades with Downtime</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="validator_major_upgrades.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="validator_major_upgrades.html#technical-details">Technical Details</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#state-and-migration-ids">State and Migration IDs</a></li>
+<li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#migration-dumps">Migration Dumps</a></li>
+<li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#catching-up-before-the-migration">Catching Up Before the Migration</a></li>
+<li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#deploying-the-validator-app-and-participant-kubernetes">Deploying the Validator App and Participant (Kubernetes)</a></li>
+<li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#deploying-the-validator-app-and-participant-docker-compose">Deploying the validator App and Participant (Docker-Compose)</a></li>
 </ul>
 </li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_users.html">Users, Parties and Wallets in the Splice Wallet</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_networking.html">Validator Ingress &amp; Egress requirements</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_networking.html#ingress">Ingress</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_networking.html#egress">Egress</a></li>
+<li class="toctree-l2"><a class="reference internal" href="validator_backups.html">Backups</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="validator_backups.html#backup-of-node-identities">Backup of Node Identities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_backups.html#backups-of-postgres-instances">Backups of postgres instances</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="validator_disaster_recovery.html">Disaster Recovery</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="validator_disaster_recovery.html#restoring-a-validator-from-backups">Restoring a validator from backups</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_disaster_recovery.html#re-onboard-a-validator-and-recover-balances-of-all-users-it-hosts">Re-onboard a validator and recover balances of all users it hosts</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="validator_disaster_recovery.html#docker-compose-deployment">Docker-Compose Deployment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="validator_disaster_recovery.html#kubernetes-deployment">Kubernetes Deployment</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="validator_disaster_recovery.html#disaster-recovery-from-loss-of-the-cometbft-storage-layer-of-the-global-synchronizer">Disaster recovery from loss of the CometBFT storage layer of the global synchronizer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="validator_disaster_recovery.html#technical-details">Technical Details</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="validator_security.html">Security Hardening</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="validator_security.html#using-an-external-kms-for-managing-participant-keys">Using an external KMS for managing participant keys</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="validator_security.html#migrating-an-existing-validator-to-use-an-external-kms">Migrating an existing validator to use an external KMS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="validator_security.html#configuring-a-fresh-validator-to-use-an-external-kms">Configuring a fresh validator to use an external KMS</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="validator_security.html#google-cloud-kms">Google Cloud KMS</a></li>
+<li class="toctree-l5"><a class="reference internal" href="validator_security.html#amazon-web-services-kms">Amazon Web Services KMS</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="validator_users.html">Users, Parties and Wallets in the Splice Wallet</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Validator Ingress &amp; Egress requirements</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ingress">Ingress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#egress">Egress</a></li>
 </ul>
 </li>
 </ul>
@@ -280,83 +280,83 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Operations</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="observability/index.html">Monitoring and Observability</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="observability/metrics.html">Metrics</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics.html#scraping-the-metrics">Scraping the metrics</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics.html#configuring-a-helm-deployment-to-enable-metrics">Configuring a helm deployment to enable metrics</a></li>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics.html#configuring-a-docker-compose-deployment-to-enable-metrics">Configuring a docker compose deployment to enable metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/index.html">Operations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../deployment/observability/index.html">Monitoring and Observability</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../deployment/observability/metrics.html">Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics.html#scraping-the-metrics">Scraping the metrics</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics.html#configuring-a-helm-deployment-to-enable-metrics">Configuring a helm deployment to enable metrics</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics.html#configuring-a-docker-compose-deployment-to-enable-metrics">Configuring a docker compose deployment to enable metrics</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics.html#grafana-dashboards">Grafana Dashboards</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics.html#grafana-dashboards">Grafana Dashboards</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="observability/metrics_reference.html">Metrics Reference</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#common-metrics">Common Metrics</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-domain-params-store-confirmation-requests-max-rate">splice.domain_params_store.confirmation-requests-max-rate</a></li>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-store-signal-when-ingested-latency">splice.store.signal-when-ingested-latency</a></li>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-store-acs-size">splice.store.acs-size</a></li>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#daml-grpc-client">daml.grpc.client</a></li>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#daml-grpc-client-messages-sent">daml.grpc.client.messages.sent</a></li>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#daml-grpc-client-messages-received">daml.grpc.client.messages.received</a></li>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#daml-grpc-client-messages-sent-bytes">daml.grpc.client.messages.sent.bytes</a></li>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#daml-grpc-client-messages-received-bytes">daml.grpc.client.messages.received.bytes</a></li>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#daml-grpc-client-started">daml.grpc.client.started</a></li>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#daml-grpc-client-completed">daml.grpc.client.completed</a></li>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-trigger-latency">splice.trigger.latency</a></li>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-trigger-iterations">splice.trigger.iterations</a></li>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-trigger-completed">splice.trigger.completed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../deployment/observability/metrics_reference.html">Metrics Reference</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics_reference.html#common-metrics">Common Metrics</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-domain-params-store-confirmation-requests-max-rate">splice.domain_params_store.confirmation-requests-max-rate</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-store-signal-when-ingested-latency">splice.store.signal-when-ingested-latency</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-store-acs-size">splice.store.acs-size</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#daml-grpc-client">daml.grpc.client</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#daml-grpc-client-messages-sent">daml.grpc.client.messages.sent</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#daml-grpc-client-messages-received">daml.grpc.client.messages.received</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#daml-grpc-client-messages-sent-bytes">daml.grpc.client.messages.sent.bytes</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#daml-grpc-client-messages-received-bytes">daml.grpc.client.messages.received.bytes</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#daml-grpc-client-started">daml.grpc.client.started</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#daml-grpc-client-completed">daml.grpc.client.completed</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-trigger-latency">splice.trigger.latency</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-trigger-iterations">splice.trigger.iterations</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-trigger-completed">splice.trigger.completed</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#validator-metrics">Validator Metrics</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-wallet-unlocked-amulet-balance">splice.wallet.unlocked-amulet-balance</a></li>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-wallet-locked-amulet-balance">splice.wallet.locked-amulet-balance</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics_reference.html#validator-metrics">Validator Metrics</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-wallet-unlocked-amulet-balance">splice.wallet.unlocked-amulet-balance</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-wallet-locked-amulet-balance">splice.wallet.locked-amulet-balance</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#sv-metrics">SV Metrics</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-sv-dso-store-latest-open-mining-round">splice.sv_dso_store.latest-open-mining-round</a></li>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-sequencer-pruning-latency">splice.sequencer_pruning.latency</a></li>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-sequencer-pruning-disabled-members">splice.sequencer_pruning.disabled_members</a></li>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-sv-cometbft-earliest-block-height">splice.sv_cometbft.earliest_block_height</a></li>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-sv-cometbft-latest-block-height">splice.sv_cometbft.latest_block_height</a></li>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-sv-status-report-number">splice.sv_status_report.number</a></li>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-sv-status-report-creation-time-us">splice.sv_status_report.creation_time_us</a></li>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-sv-status-report-cometbft-height">splice.sv_status_report.cometbft_height</a></li>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-sv-status-report-domain-time-us">splice.sv_status_report.domain_time_us</a></li>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#id2">splice.sv_status_report.domain_time_us</a></li>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-sv-status-report-latest-open-round">splice.sv_status_report.latest_open_round</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics_reference.html#sv-metrics">SV Metrics</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-sv-dso-store-latest-open-mining-round">splice.sv_dso_store.latest-open-mining-round</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-sequencer-pruning-latency">splice.sequencer_pruning.latency</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-sequencer-pruning-disabled-members">splice.sequencer_pruning.disabled_members</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-sv-cometbft-earliest-block-height">splice.sv_cometbft.earliest_block_height</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-sv-cometbft-latest-block-height">splice.sv_cometbft.latest_block_height</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-sv-status-report-number">splice.sv_status_report.number</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-sv-status-report-creation-time-us">splice.sv_status_report.creation_time_us</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-sv-status-report-cometbft-height">splice.sv_status_report.cometbft_height</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-sv-status-report-domain-time-us">splice.sv_status_report.domain_time_us</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#id2">splice.sv_status_report.domain_time_us</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-sv-status-report-latest-open-round">splice.sv_status_report.latest_open_round</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#scan-metrics">Scan Metrics</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-scan-store-earliest-aggregated-round">splice.scan_store.earliest-aggregated-round</a></li>
-<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-scan-store-latest-aggregated-round">splice.scan_store.latest-aggregated-round</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="configuration.html">Configuring deployed apps</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="configuration.html#adding-ad-hoc-configuration">Adding ad-hoc configuration</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="configuration.html#helm-charts-support">Helm charts support</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics_reference.html#scan-metrics">Scan Metrics</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-scan-store-earliest-aggregated-round">splice.scan_store.earliest-aggregated-round</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-scan-store-latest-aggregated-round">splice.scan_store.latest-aggregated-round</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="console_access.html">Getting console access to Canton nodes</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="console_access.html#participant-console">Participant console</a></li>
-<li class="toctree-l4"><a class="reference internal" href="console_access.html#sequencer-console">Sequencer console</a></li>
-<li class="toctree-l4"><a class="reference internal" href="console_access.html#mediator-console">Mediator console</a></li>
-<li class="toctree-l4"><a class="reference internal" href="console_access.html#access-in-a-k8s-cluster">Access in a K8s cluster</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="troubleshooting.html#where-to-find-logs">Where to find logs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="troubleshooting.html#debugging-issues-in-web-uis">Debugging issues in Web UIs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="troubleshooting.html#configurations">Configurations</a></li>
-<li class="toctree-l3"><a class="reference internal" href="troubleshooting.html#common-error-messages">Common Error Messages</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="troubleshooting.html#traffic-balance-below-reserved-amount">Traffic balance below reserved amount</a></li>
-<li class="toctree-l4"><a class="reference internal" href="troubleshooting.html#insufficient-funds-to-buy-configured-traffic-amount">Insufficient funds to buy configured traffic amount</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deployment/configuration.html">Configuring deployed apps</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../deployment/configuration.html#adding-ad-hoc-configuration">Adding ad-hoc configuration</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../deployment/configuration.html#helm-charts-support">Helm charts support</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../deployment/troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../deployment/console_access.html">Getting console access to Canton nodes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../deployment/console_access.html#participant-console">Participant console</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../deployment/console_access.html#sequencer-console">Sequencer console</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../deployment/console_access.html#mediator-console">Mediator console</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../deployment/console_access.html#access-in-a-k8s-cluster">Access in a K8s cluster</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../deployment/troubleshooting.html#where-to-find-logs">Where to find logs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../deployment/troubleshooting.html#debugging-issues-in-web-uis">Debugging issues in Web UIs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../deployment/troubleshooting.html#configurations">Configurations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../deployment/troubleshooting.html#common-error-messages">Common Error Messages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../deployment/troubleshooting.html#traffic-balance-below-reserved-amount">Traffic balance below reserved amount</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../deployment/troubleshooting.html#insufficient-funds-to-buy-configured-traffic-amount">Insufficient funds to buy configured traffic amount</a></li>
 </ul>
 </li>
 </ul>
@@ -706,9 +706,10 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Operations</li>
+          <li class="breadcrumb-item"><a href="index.html">Validators</a></li>
+      <li class="breadcrumb-item active">Validator Ingress &amp; Egress requirements</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/deployment/index.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/validator_operator/validator_networking.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -716,100 +717,24 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="operations">
-<h1>Operations<a class="headerlink" href="#operations" title="Link to this heading"></a></h1>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="observability/index.html">Monitoring and Observability</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="observability/metrics.html">Metrics</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="observability/metrics.html#scraping-the-metrics">Scraping the metrics</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics.html#configuring-a-helm-deployment-to-enable-metrics">Configuring a helm deployment to enable metrics</a></li>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics.html#configuring-a-docker-compose-deployment-to-enable-metrics">Configuring a docker compose deployment to enable metrics</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="observability/metrics.html#grafana-dashboards">Grafana Dashboards</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="observability/metrics_reference.html">Metrics Reference</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="observability/metrics_reference.html#common-metrics">Common Metrics</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#splice-domain-params-store-confirmation-requests-max-rate">splice.domain_params_store.confirmation-requests-max-rate</a></li>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#splice-store-signal-when-ingested-latency">splice.store.signal-when-ingested-latency</a></li>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#splice-store-acs-size">splice.store.acs-size</a></li>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#daml-grpc-client">daml.grpc.client</a></li>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#daml-grpc-client-messages-sent">daml.grpc.client.messages.sent</a></li>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#daml-grpc-client-messages-received">daml.grpc.client.messages.received</a></li>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#daml-grpc-client-messages-sent-bytes">daml.grpc.client.messages.sent.bytes</a></li>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#daml-grpc-client-messages-received-bytes">daml.grpc.client.messages.received.bytes</a></li>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#daml-grpc-client-started">daml.grpc.client.started</a></li>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#daml-grpc-client-completed">daml.grpc.client.completed</a></li>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#splice-trigger-latency">splice.trigger.latency</a></li>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#splice-trigger-iterations">splice.trigger.iterations</a></li>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#splice-trigger-completed">splice.trigger.completed</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="observability/metrics_reference.html#validator-metrics">Validator Metrics</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#splice-wallet-unlocked-amulet-balance">splice.wallet.unlocked-amulet-balance</a></li>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#splice-wallet-locked-amulet-balance">splice.wallet.locked-amulet-balance</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="observability/metrics_reference.html#sv-metrics">SV Metrics</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#splice-sv-dso-store-latest-open-mining-round">splice.sv_dso_store.latest-open-mining-round</a></li>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#splice-sequencer-pruning-latency">splice.sequencer_pruning.latency</a></li>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#splice-sequencer-pruning-disabled-members">splice.sequencer_pruning.disabled_members</a></li>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#splice-sv-cometbft-earliest-block-height">splice.sv_cometbft.earliest_block_height</a></li>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#splice-sv-cometbft-latest-block-height">splice.sv_cometbft.latest_block_height</a></li>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#splice-sv-status-report-number">splice.sv_status_report.number</a></li>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#splice-sv-status-report-creation-time-us">splice.sv_status_report.creation_time_us</a></li>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#splice-sv-status-report-cometbft-height">splice.sv_status_report.cometbft_height</a></li>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#splice-sv-status-report-domain-time-us">splice.sv_status_report.domain_time_us</a></li>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#id2">splice.sv_status_report.domain_time_us</a></li>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#splice-sv-status-report-latest-open-round">splice.sv_status_report.latest_open_round</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="observability/metrics_reference.html#scan-metrics">Scan Metrics</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#splice-scan-store-earliest-aggregated-round">splice.scan_store.earliest-aggregated-round</a></li>
-<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#splice-scan-store-latest-aggregated-round">splice.scan_store.latest-aggregated-round</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuring deployed apps</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="configuration.html#adding-ad-hoc-configuration">Adding ad-hoc configuration</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="configuration.html#helm-charts-support">Helm charts support</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="console_access.html">Getting console access to Canton nodes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="console_access.html#participant-console">Participant console</a></li>
-<li class="toctree-l3"><a class="reference internal" href="console_access.html#sequencer-console">Sequencer console</a></li>
-<li class="toctree-l3"><a class="reference internal" href="console_access.html#mediator-console">Mediator console</a></li>
-<li class="toctree-l3"><a class="reference internal" href="console_access.html#access-in-a-k8s-cluster">Access in a K8s cluster</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#where-to-find-logs">Where to find logs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#debugging-issues-in-web-uis">Debugging issues in Web UIs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#configurations">Configurations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#common-error-messages">Common Error Messages</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="troubleshooting.html#traffic-balance-below-reserved-amount">Traffic balance below reserved amount</a></li>
-<li class="toctree-l3"><a class="reference internal" href="troubleshooting.html#insufficient-funds-to-buy-configured-traffic-amount">Insufficient funds to buy configured traffic amount</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</div>
+  <section id="validator-ingress-egress-requirements">
+<span id="validator-network"></span><h1>Validator Ingress &amp; Egress requirements<a class="headerlink" href="#validator-ingress-egress-requirements" title="Link to this heading"></a></h1>
+<section id="ingress">
+<h2>Ingress<a class="headerlink" href="#ingress" title="Link to this heading"></a></h2>
+<p>The validators have no external ingress requirements and don’t need to whitelist any other SVs or validators.</p>
+</section>
+<section id="egress">
+<h2>Egress<a class="headerlink" href="#egress" title="Link to this heading"></a></h2>
+<p>The validators must be able to connect to all the SVs, thus whitelisting of egress on port 443 for the IPs of all the SVs is required (refer to <a class="reference internal" href="validator_helm.html#validator-network-diagram"><span class="std std-ref">the network diagram</span></a> for a networking overview). Note that egress is often allowed by default so in many cases this requires no action.</p>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../sv_operator/sv_scratchnet.html" class="btn btn-neutral float-left" title="How to Bootstrap a Network" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="observability/index.html" class="btn btn-neutral float-right" title="Monitoring and Observability" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="validator_users.html" class="btn btn-neutral float-left" title="Users, Parties and Wallets in the Splice Wallet" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../sv_operator/index.html" class="btn btn-neutral float-right" title="Supervalidators" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
