@@ -25,7 +25,7 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Troubleshooting" href="../../troubleshooting.html" />
+    <link rel="next" title="Configuring deployed apps" href="../configuration.html" />
     <link rel="prev" title="Metrics" href="metrics.html" /> 
 </head>
 
@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.10-ci-snapshot.20250205.1.0.v3d268b78
+                0.3.10-ci-snapshot.20250206.1.0.v686830cb
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -271,55 +271,65 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">Monitoring and Observability</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="metrics.html">Metrics</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="metrics.html#scraping-the-metrics">Scraping the metrics</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="metrics.html#configuring-a-helm-deployment-to-enable-metrics">Configuring a helm deployment to enable metrics</a></li>
-<li class="toctree-l4"><a class="reference internal" href="metrics.html#configuring-a-docker-compose-deployment-to-enable-metrics">Configuring a docker compose deployment to enable metrics</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Operations</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Monitoring and Observability</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="metrics.html">Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="metrics.html#scraping-the-metrics">Scraping the metrics</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="metrics.html#configuring-a-helm-deployment-to-enable-metrics">Configuring a helm deployment to enable metrics</a></li>
+<li class="toctree-l5"><a class="reference internal" href="metrics.html#configuring-a-docker-compose-deployment-to-enable-metrics">Configuring a docker compose deployment to enable metrics</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="metrics.html#grafana-dashboards">Grafana Dashboards</a></li>
+<li class="toctree-l4"><a class="reference internal" href="metrics.html#grafana-dashboards">Grafana Dashboards</a></li>
 </ul>
 </li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Metrics Reference</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#common-metrics">Common Metrics</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#splice-domain-params-store-confirmation-requests-max-rate">splice.domain_params_store.confirmation-requests-max-rate</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#splice-store-signal-when-ingested-latency">splice.store.signal-when-ingested-latency</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#splice-store-acs-size">splice.store.acs-size</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#daml-grpc-client">daml.grpc.client</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#daml-grpc-client-messages-sent">daml.grpc.client.messages.sent</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#daml-grpc-client-messages-received">daml.grpc.client.messages.received</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#daml-grpc-client-messages-sent-bytes">daml.grpc.client.messages.sent.bytes</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#daml-grpc-client-messages-received-bytes">daml.grpc.client.messages.received.bytes</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#daml-grpc-client-started">daml.grpc.client.started</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#daml-grpc-client-completed">daml.grpc.client.completed</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#splice-trigger-latency">splice.trigger.latency</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#splice-trigger-iterations">splice.trigger.iterations</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#splice-trigger-completed">splice.trigger.completed</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Metrics Reference</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#common-metrics">Common Metrics</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#splice-domain-params-store-confirmation-requests-max-rate">splice.domain_params_store.confirmation-requests-max-rate</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#splice-store-signal-when-ingested-latency">splice.store.signal-when-ingested-latency</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#splice-store-acs-size">splice.store.acs-size</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#daml-grpc-client">daml.grpc.client</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#daml-grpc-client-messages-sent">daml.grpc.client.messages.sent</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#daml-grpc-client-messages-received">daml.grpc.client.messages.received</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#daml-grpc-client-messages-sent-bytes">daml.grpc.client.messages.sent.bytes</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#daml-grpc-client-messages-received-bytes">daml.grpc.client.messages.received.bytes</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#daml-grpc-client-started">daml.grpc.client.started</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#daml-grpc-client-completed">daml.grpc.client.completed</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#splice-trigger-latency">splice.trigger.latency</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#splice-trigger-iterations">splice.trigger.iterations</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#splice-trigger-completed">splice.trigger.completed</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#validator-metrics">Validator Metrics</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#splice-wallet-unlocked-amulet-balance">splice.wallet.unlocked-amulet-balance</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#splice-wallet-locked-amulet-balance">splice.wallet.locked-amulet-balance</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#validator-metrics">Validator Metrics</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#splice-wallet-unlocked-amulet-balance">splice.wallet.unlocked-amulet-balance</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#splice-wallet-locked-amulet-balance">splice.wallet.locked-amulet-balance</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#sv-metrics">SV Metrics</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#splice-sv-dso-store-latest-open-mining-round">splice.sv_dso_store.latest-open-mining-round</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#splice-sequencer-pruning-latency">splice.sequencer_pruning.latency</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#splice-sequencer-pruning-disabled-members">splice.sequencer_pruning.disabled_members</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#splice-sv-cometbft-earliest-block-height">splice.sv_cometbft.earliest_block_height</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#splice-sv-cometbft-latest-block-height">splice.sv_cometbft.latest_block_height</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#splice-sv-status-report-number">splice.sv_status_report.number</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#splice-sv-status-report-creation-time-us">splice.sv_status_report.creation_time_us</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#splice-sv-status-report-cometbft-height">splice.sv_status_report.cometbft_height</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#splice-sv-status-report-domain-time-us">splice.sv_status_report.domain_time_us</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id2">splice.sv_status_report.domain_time_us</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#splice-sv-status-report-latest-open-round">splice.sv_status_report.latest_open_round</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#sv-metrics">SV Metrics</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#splice-sv-dso-store-latest-open-mining-round">splice.sv_dso_store.latest-open-mining-round</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#splice-sequencer-pruning-latency">splice.sequencer_pruning.latency</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#splice-sequencer-pruning-disabled-members">splice.sequencer_pruning.disabled_members</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#splice-sv-cometbft-earliest-block-height">splice.sv_cometbft.earliest_block_height</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#splice-sv-cometbft-latest-block-height">splice.sv_cometbft.latest_block_height</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#splice-sv-status-report-number">splice.sv_status_report.number</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#splice-sv-status-report-creation-time-us">splice.sv_status_report.creation_time_us</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#splice-sv-status-report-cometbft-height">splice.sv_status_report.cometbft_height</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#splice-sv-status-report-domain-time-us">splice.sv_status_report.domain_time_us</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#id2">splice.sv_status_report.domain_time_us</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#splice-sv-status-report-latest-open-round">splice.sv_status_report.latest_open_round</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#scan-metrics">Scan Metrics</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#splice-scan-store-earliest-aggregated-round">splice.scan_store.earliest-aggregated-round</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#splice-scan-store-latest-aggregated-round">splice.scan_store.latest-aggregated-round</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#scan-metrics">Scan Metrics</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#splice-scan-store-earliest-aggregated-round">splice.scan_store.earliest-aggregated-round</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#splice-scan-store-latest-aggregated-round">splice.scan_store.latest-aggregated-round</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../configuration.html">Configuring deployed apps</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../configuration.html#adding-ad-hoc-configuration">Adding ad-hoc configuration</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../configuration.html#helm-charts-support">Helm charts support</a></li>
 </ul>
 </li>
 </ul>
@@ -680,6 +690,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Operations</a></li>
           <li class="breadcrumb-item"><a href="index.html">Monitoring and Observability</a></li>
       <li class="breadcrumb-item active">Metrics Reference</li>
       <li class="wy-breadcrumbs-aside">
@@ -964,7 +975,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="metrics.html" class="btn btn-neutral float-left" title="Metrics" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../../troubleshooting.html" class="btn btn-neutral float-right" title="Troubleshooting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../configuration.html" class="btn btn-neutral float-right" title="Configuring deployed apps" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Disaster Recovery &mdash; Splice  documentation</title>
+  <title>Configuring deployed apps &mdash; Splice  documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -25,8 +25,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="SV Operations" href="sv_operations.html" />
-    <link rel="prev" title="Backups" href="sv_backup.html" /> 
+    <link rel="next" title="Troubleshooting" href="../troubleshooting.html" />
+    <link rel="prev" title="Metrics Reference" href="observability/metrics_reference.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -156,180 +156,180 @@
 <li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_users.html">Users, Parties and Wallets in the Splice Wallet</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">Supervalidators</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="sv_helm.html">Kubernetes-Based Deployment of a Super Validator node</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#requirements">Requirements</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#generating-an-sv-identity">Generating an SV identity</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#preparing-a-cluster-for-installation">Preparing a Cluster for Installation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#configuring-authentication">Configuring Authentication</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#oidc-provider-requirements">OIDC Provider Requirements</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#configuring-an-auth0-tenant">Configuring an Auth0 Tenant</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#configuring-authentication-on-your-sv-node">Configuring Authentication on your SV Node</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sv_operator/index.html">Supervalidators</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../sv_operator/sv_helm.html">Kubernetes-Based Deployment of a Super Validator node</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#requirements">Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#generating-an-sv-identity">Generating an SV identity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#preparing-a-cluster-for-installation">Preparing a Cluster for Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-authentication">Configuring Authentication</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#oidc-provider-requirements">OIDC Provider Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-an-auth0-tenant">Configuring an Auth0 Tenant</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-authentication-on-your-sv-node">Configuring Authentication on your SV Node</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#configuring-your-cometbft-node">Configuring your CometBft node</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#generating-your-cometbft-node-keys">Generating your CometBft node keys</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#configuring-your-cometbft-node-keys">Configuring your CometBft node keys</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#configuring-cometbft-state-sync">Configuring CometBft state sync</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-your-cometbft-node">Configuring your CometBft node</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#generating-your-cometbft-node-keys">Generating your CometBft node keys</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-your-cometbft-node-keys">Configuring your CometBft node keys</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-cometbft-state-sync">Configuring CometBft state sync</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#installing-postgres-instances">Installing Postgres instances</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#creating-k8s-secrets-for-postgres-passwords">Creating k8s Secrets for Postgres Passwords</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#postgres-in-the-cluster">Postgres in the Cluster</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#cloud-hosted-postgres">Cloud-Hosted Postgres</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#installing-postgres-instances">Installing Postgres instances</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#creating-k8s-secrets-for-postgres-passwords">Creating k8s Secrets for Postgres Passwords</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#postgres-in-the-cluster">Postgres in the Cluster</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#cloud-hosted-postgres">Cloud-Hosted Postgres</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#installing-the-software">Installing the Software</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#configuring-the-helm-charts">Configuring the Helm Charts</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#installing-the-helm-charts">Installing the Helm Charts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#installing-the-software">Installing the Software</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-the-helm-charts">Configuring the Helm Charts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#installing-the-helm-charts">Installing the Helm Charts</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#sv-network-diagram">SV Network Diagram</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#configuring-the-cluster-ingress">Configuring the Cluster Ingress</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#hostnames-and-urls">Hostnames and URLs</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#ingress-configuration">Ingress Configuration</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#id4">Requirements</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#installation-instructions">Installation Instructions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#sv-network-diagram">SV Network Diagram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-the-cluster-ingress">Configuring the Cluster Ingress</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#hostnames-and-urls">Hostnames and URLs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#ingress-configuration">Ingress Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#id4">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#installation-instructions">Installation Instructions</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#configuring-the-cluster-egress">Configuring the Cluster Egress</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#logging-into-the-sv-ui">Logging into the SV UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#observing-the-canton-coin-scan-ui">Observing the Canton Coin Scan UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-the-cluster-egress">Configuring the Cluster Egress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#logging-into-the-sv-ui">Logging into the SV UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#observing-the-canton-coin-scan-ui">Observing the Canton Coin Scan UI</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="sv_upgrades.html">Upgrades</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="sv_major_upgrade.html">Synchronizer Upgrades with Downtime</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="sv_major_upgrade.html#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_major_upgrade.html#technical-details">Technical Details</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#state-and-migration-ids">State and Migration IDs</a></li>
-<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#migration-dumps">Migration Dumps</a></li>
-<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#deploying-new-canton-components-and-cometbft-node">Deploying new Canton Components and CometBFT Node</a></li>
-<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#catching-up-before-the-migration">Catching Up Before the Migration</a></li>
-<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#updating-apps">Updating Apps</a></li>
-<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#recovering-from-a-failed-upgrade">Recovering from a failed upgrade</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sv_operator/sv_upgrades.html">Upgrades</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html">Synchronizer Upgrades with Downtime</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#technical-details">Technical Details</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#state-and-migration-ids">State and Migration IDs</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#migration-dumps">Migration Dumps</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#deploying-new-canton-components-and-cometbft-node">Deploying new Canton Components and CometBFT Node</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#catching-up-before-the-migration">Catching Up Before the Migration</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#updating-apps">Updating Apps</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#recovering-from-a-failed-upgrade">Recovering from a failed upgrade</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="sv_major_upgrade.html#organizational-details">Organizational Details</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#coordination-calls">Coordination calls</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#organizational-details">Organizational Details</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#coordination-calls">Coordination calls</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="sv_major_upgrade.html#testing">Testing</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#individual-preparation">Individual Preparation</a></li>
-<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#coordinated-tests">Coordinated Tests</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="sv_backup.html">Backups</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="sv_backup.html#backup-of-node-identities">Backup of Node Identities</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_backup.html#backup-of-postgres-instances">Backup of Postgres Instances</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_backup.html#backup-of-cometbft">Backup of CometBFT</a></li>
-</ul>
-</li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Disaster Recovery</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#restoring-from-data-corruption">Restoring From Data Corruption</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#restoring-a-single-component-from-backups">Restoring a single component from backups</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#restoring-a-full-sv-node-from-backups">Restoring a full SV node from backups</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#re-onboard-an-sv-and-recover-amulets-with-a-validator">Re-onboard an SV and recover Amulets with a validator</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#disaster-recovery-from-loss-of-cometbft-layer">Disaster recovery from loss of CometBFT layer</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#technical-details">Technical Details</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="#finding-a-consistent-timestamp-to-recover-the-synchronizer-from">Finding a Consistent Timestamp to Recover the Synchronizer From</a></li>
-<li class="toctree-l5"><a class="reference internal" href="#creating-a-data-dump-from-the-sv-app">Creating a Data Dump from the SV App</a></li>
-<li class="toctree-l5"><a class="reference internal" href="#migrating-the-data">Migrating the Data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#testing">Testing</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#individual-preparation">Individual Preparation</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#coordinated-tests">Coordinated Tests</a></li>
 </ul>
 </li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="sv_operations.html">SV Operations</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="sv_operations.html#security-notice">Security Notice</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_operations.html#generate-a-validator-onboarding-secret">Generate a validator onboarding secret</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_operations.html#sv-identities-overview">Identities used by SV nodes on different layers</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="sv_operations.html#sv-identity">SV identity</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_operations.html#participant-identities">Participant identities</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_operations.html#cometbft-node-identities">CometBFT node identities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sv_operator/sv_backup.html">Backups</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_backup.html#backup-of-node-identities">Backup of Node Identities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_backup.html#backup-of-postgres-instances">Backup of Postgres Instances</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_backup.html#backup-of-cometbft">Backup of CometBFT</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="sv_operations.html#updating-the-reward-weight-of-an-sv">Updating the reward weight of an SV</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sv_operator/sv_restore.html">Disaster Recovery</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_restore.html#restoring-from-data-corruption">Restoring From Data Corruption</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_restore.html#restoring-a-single-component-from-backups">Restoring a single component from backups</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_restore.html#restoring-a-full-sv-node-from-backups">Restoring a full SV node from backups</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="sv_scratchnet.html">How to Bootstrap a Network</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="sv_scratchnet.html#cometbft-helm-values">cometbft helm values</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_scratchnet.html#scan-helm-values">scan helm values</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_scratchnet.html#sv-helm-values">sv helm values</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_scratchnet.html#other-helm-values-you-may-need-to-consider">other helm values you may need to consider</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_scratchnet.html#infra-level-things-you-might-want-to-consider">Infra-level things you might want to consider</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_scratchnet.html#how-to-run-through-a-hdm">How to run through a HDM</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../deployment/index.html">Operations</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../deployment/observability/index.html">Monitoring and Observability</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../deployment/observability/metrics.html">Metrics</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics.html#scraping-the-metrics">Scraping the metrics</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics.html#configuring-a-helm-deployment-to-enable-metrics">Configuring a helm deployment to enable metrics</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics.html#configuring-a-docker-compose-deployment-to-enable-metrics">Configuring a docker compose deployment to enable metrics</a></li>
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics.html#grafana-dashboards">Grafana Dashboards</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="../deployment/observability/metrics_reference.html">Metrics Reference</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics_reference.html#common-metrics">Common Metrics</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-domain-params-store-confirmation-requests-max-rate">splice.domain_params_store.confirmation-requests-max-rate</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-store-signal-when-ingested-latency">splice.store.signal-when-ingested-latency</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-store-acs-size">splice.store.acs-size</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#daml-grpc-client">daml.grpc.client</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#daml-grpc-client-messages-sent">daml.grpc.client.messages.sent</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#daml-grpc-client-messages-received">daml.grpc.client.messages.received</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#daml-grpc-client-messages-sent-bytes">daml.grpc.client.messages.sent.bytes</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#daml-grpc-client-messages-received-bytes">daml.grpc.client.messages.received.bytes</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#daml-grpc-client-started">daml.grpc.client.started</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#daml-grpc-client-completed">daml.grpc.client.completed</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-trigger-latency">splice.trigger.latency</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-trigger-iterations">splice.trigger.iterations</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-trigger-completed">splice.trigger.completed</a></li>
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics_reference.html#validator-metrics">Validator Metrics</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-wallet-unlocked-amulet-balance">splice.wallet.unlocked-amulet-balance</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-wallet-locked-amulet-balance">splice.wallet.locked-amulet-balance</a></li>
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics_reference.html#sv-metrics">SV Metrics</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-sv-dso-store-latest-open-mining-round">splice.sv_dso_store.latest-open-mining-round</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-sequencer-pruning-latency">splice.sequencer_pruning.latency</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-sequencer-pruning-disabled-members">splice.sequencer_pruning.disabled_members</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-sv-cometbft-earliest-block-height">splice.sv_cometbft.earliest_block_height</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-sv-cometbft-latest-block-height">splice.sv_cometbft.latest_block_height</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-sv-status-report-number">splice.sv_status_report.number</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-sv-status-report-creation-time-us">splice.sv_status_report.creation_time_us</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-sv-status-report-cometbft-height">splice.sv_status_report.cometbft_height</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-sv-status-report-domain-time-us">splice.sv_status_report.domain_time_us</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#id2">splice.sv_status_report.domain_time_us</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-sv-status-report-latest-open-round">splice.sv_status_report.latest_open_round</a></li>
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="../deployment/observability/metrics_reference.html#scan-metrics">Scan Metrics</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-scan-store-earliest-aggregated-round">splice.scan_store.earliest-aggregated-round</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../deployment/observability/metrics_reference.html#splice-scan-store-latest-aggregated-round">splice.scan_store.latest-aggregated-round</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_restore.html#re-onboard-an-sv-and-recover-amulets-with-a-validator">Re-onboard an SV and recover Amulets with a validator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_restore.html#disaster-recovery-from-loss-of-cometbft-layer">Disaster recovery from loss of CometBFT layer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_restore.html#technical-details">Technical Details</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_restore.html#finding-a-consistent-timestamp-to-recover-the-synchronizer-from">Finding a Consistent Timestamp to Recover the Synchronizer From</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_restore.html#creating-a-data-dump-from-the-sv-app">Creating a Data Dump from the SV App</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_restore.html#migrating-the-data">Migrating the Data</a></li>
 </ul>
 </li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../deployment/configuration.html">Configuring deployed apps</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../deployment/configuration.html#adding-ad-hoc-configuration">Adding ad-hoc configuration</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../deployment/configuration.html#helm-charts-support">Helm charts support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sv_operator/sv_operations.html">SV Operations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_operations.html#security-notice">Security Notice</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_operations.html#generate-a-validator-onboarding-secret">Generate a validator onboarding secret</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_operations.html#sv-identities-overview">Identities used by SV nodes on different layers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_operations.html#sv-identity">SV identity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_operations.html#participant-identities">Participant identities</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_operations.html#cometbft-node-identities">CometBFT node identities</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_operations.html#updating-the-reward-weight-of-an-sv">Updating the reward weight of an SV</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../sv_operator/sv_scratchnet.html">How to Bootstrap a Network</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_scratchnet.html#cometbft-helm-values">cometbft helm values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_scratchnet.html#scan-helm-values">scan helm values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_scratchnet.html#sv-helm-values">sv helm values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_scratchnet.html#other-helm-values-you-may-need-to-consider">other helm values you may need to consider</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_scratchnet.html#infra-level-things-you-might-want-to-consider">Infra-level things you might want to consider</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_scratchnet.html#how-to-run-through-a-hdm">How to run through a HDM</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Operations</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="observability/index.html">Monitoring and Observability</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="observability/metrics.html">Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="observability/metrics.html#scraping-the-metrics">Scraping the metrics</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics.html#configuring-a-helm-deployment-to-enable-metrics">Configuring a helm deployment to enable metrics</a></li>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics.html#configuring-a-docker-compose-deployment-to-enable-metrics">Configuring a docker compose deployment to enable metrics</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="observability/metrics.html#grafana-dashboards">Grafana Dashboards</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="observability/metrics_reference.html">Metrics Reference</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#common-metrics">Common Metrics</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-domain-params-store-confirmation-requests-max-rate">splice.domain_params_store.confirmation-requests-max-rate</a></li>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-store-signal-when-ingested-latency">splice.store.signal-when-ingested-latency</a></li>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-store-acs-size">splice.store.acs-size</a></li>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#daml-grpc-client">daml.grpc.client</a></li>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#daml-grpc-client-messages-sent">daml.grpc.client.messages.sent</a></li>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#daml-grpc-client-messages-received">daml.grpc.client.messages.received</a></li>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#daml-grpc-client-messages-sent-bytes">daml.grpc.client.messages.sent.bytes</a></li>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#daml-grpc-client-messages-received-bytes">daml.grpc.client.messages.received.bytes</a></li>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#daml-grpc-client-started">daml.grpc.client.started</a></li>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#daml-grpc-client-completed">daml.grpc.client.completed</a></li>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-trigger-latency">splice.trigger.latency</a></li>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-trigger-iterations">splice.trigger.iterations</a></li>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-trigger-completed">splice.trigger.completed</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#validator-metrics">Validator Metrics</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-wallet-unlocked-amulet-balance">splice.wallet.unlocked-amulet-balance</a></li>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-wallet-locked-amulet-balance">splice.wallet.locked-amulet-balance</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#sv-metrics">SV Metrics</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-sv-dso-store-latest-open-mining-round">splice.sv_dso_store.latest-open-mining-round</a></li>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-sequencer-pruning-latency">splice.sequencer_pruning.latency</a></li>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-sequencer-pruning-disabled-members">splice.sequencer_pruning.disabled_members</a></li>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-sv-cometbft-earliest-block-height">splice.sv_cometbft.earliest_block_height</a></li>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-sv-cometbft-latest-block-height">splice.sv_cometbft.latest_block_height</a></li>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-sv-status-report-number">splice.sv_status_report.number</a></li>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-sv-status-report-creation-time-us">splice.sv_status_report.creation_time_us</a></li>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-sv-status-report-cometbft-height">splice.sv_status_report.cometbft_height</a></li>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-sv-status-report-domain-time-us">splice.sv_status_report.domain_time_us</a></li>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#id2">splice.sv_status_report.domain_time_us</a></li>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-sv-status-report-latest-open-round">splice.sv_status_report.latest_open_round</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="observability/metrics_reference.html#scan-metrics">Scan Metrics</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-scan-store-earliest-aggregated-round">splice.scan_store.earliest-aggregated-round</a></li>
+<li class="toctree-l5"><a class="reference internal" href="observability/metrics_reference.html#splice-scan-store-latest-aggregated-round">splice.scan_store.latest-aggregated-round</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Configuring deployed apps</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#adding-ad-hoc-configuration">Adding ad-hoc configuration</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#helm-charts-support">Helm charts support</a></li>
 </ul>
 </li>
 </ul>
@@ -690,10 +690,10 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="index.html">Supervalidators</a></li>
-      <li class="breadcrumb-item active">Disaster Recovery</li>
+          <li class="breadcrumb-item"><a href="index.html">Operations</a></li>
+      <li class="breadcrumb-item active">Configuring deployed apps</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/sv_operator/sv_restore.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/deployment/configuration.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -701,173 +701,33 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="disaster-recovery">
-<span id="sv-restore"></span><h1>Disaster Recovery<a class="headerlink" href="#disaster-recovery" title="Link to this heading"></a></h1>
-<p>There are three ways to recover from disasters:</p>
-<p>In simple cases where only a single node is affected but the overall
-network is still healthy, a <a class="reference internal" href="#sv-backup-restore"><span class="std std-ref">Restore from backup</span></a> is
-usually sufficient.</p>
-<p>If a full backup is unavailable but an identity backup has been
-created, the balance of the SV can be <a class="reference internal" href="#sv-reonboard"><span class="std std-ref">recovered</span></a> on a dedicated
-validator but the SV must be onboarded as a separate node.</p>
-<p>Lastly, For network-wide failures, a more complex <a class="reference internal" href="#sv-network-dr"><span class="std std-ref">Disaster recovery procedure</span></a> is required.</p>
-<section id="restoring-from-data-corruption">
-<span id="sv-backup-restore"></span><h2>Restoring From Data Corruption<a class="headerlink" href="#restoring-from-data-corruption" title="Link to this heading"></a></h2>
-<p>While all components in the system are designed to be crash-fault-tolerant, there is always
-a chance of failures from which the system cannot immediately recover, e.g. due to misconfiguration or bugs.
-In such cases, we will need to restore a component, a full SV node, or even the whole network,
-from backups or from dumps from components that are still operational.</p>
-<section id="restoring-a-single-component-from-backups">
-<h3>Restoring a single component from backups<a class="headerlink" href="#restoring-a-single-component-from-backups" title="Link to this heading"></a></h3>
-<p>If a single component in an SV node is corrupted, it should be recoverable from
-backups without restoring the whole node. This scenario is not yet tested enough to be
-advisable for production. Moreover, there are certain dependencies between the components
-that are not yet documented here.</p>
-</section>
-<section id="restoring-a-full-sv-node-from-backups">
-<h3>Restoring a full SV node from backups<a class="headerlink" href="#restoring-a-full-sv-node-from-backups" title="Link to this heading"></a></h3>
-<p>Assuming backups have been taken for the storage and DBs of all components per the
-instructions in <a class="reference internal" href="sv_backup.html#sv-backups"><span class="std std-ref">Backups</span></a>, the entire node can be restored from backups. Recall that
-in order for a set of backup snapshots to be consistent, the backup taken from the apps
-database instance must be taken at a time strictly earlier than that of the participant.</p>
-<p>Assuming such a consistent set of backups is available, the following steps can be taken
-to restore the node:</p>
-<p>Scale down all components in the SV node to 0 replicas
-(replace <code class="docutils literal notranslate"><span class="pre">-0</span></code> with the correct migration ID in case a <a class="reference internal" href="sv_major_upgrade.html#sv-upgrades"><span class="std std-ref">migration</span></a> has already been performed):</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>scale<span class="w"> </span>deployment<span class="w"> </span>--replicas<span class="o">=</span><span class="m">0</span><span class="w"> </span>-n<span class="w"> </span>sv<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>global-domain-0-cometbft<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>global-domain-0-mediator<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>global-domain-0-sequencer<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>participant-0<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>scan-app<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>sv-app<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>validator-app
-</pre></div>
+  <section id="configuring-deployed-apps">
+<span id="configuration"></span><h1>Configuring deployed apps<a class="headerlink" href="#configuring-deployed-apps" title="Link to this heading"></a></h1>
+<p>All the apps have an extended set of configuration options which might need tuning based on different scenarios.
+These configurations are accepted in the <a class="reference external" href="https://github.com/lightbend/config/blob/main/HOCON.md">HOCON</a> format.</p>
+<section id="adding-ad-hoc-configuration">
+<h2>Adding ad-hoc configuration<a class="headerlink" href="#adding-ad-hoc-configuration" title="Link to this heading"></a></h2>
+<p>Every app accepts extra configuration through environment variables.
+All the environment variables passed to the apps, that start with <cite>ADDITIONAL_CONFIG</cite> will be processed and the configuration will be applied when the app starts.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Example env: ADDITIONAL_CONFIG_EXAMPLE=”canton.example.key=value”</p>
 </div>
-<p>Restore the storage and DBs of all components from the backups. The exact process for this
-depends on the storage and DBs used by the components, and is not documented here.</p>
-<p>Once all storage has been restored, scale up all components in the SV node back to 1 replica
-(replace <code class="docutils literal notranslate"><span class="pre">-0</span></code> with the correct migration ID in case a <a class="reference internal" href="sv_major_upgrade.html#sv-upgrades"><span class="std std-ref">migration</span></a> has already been performed):</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>scale<span class="w"> </span>deployment<span class="w"> </span>--replicas<span class="o">=</span><span class="m">1</span><span class="w"> </span>-n<span class="w"> </span>sv<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>global-domain-0-cometbft<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>global-domain-0-mediator<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>global-domain-0-sequencer<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>participant-0<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>scan-app<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>sv-app<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>validator-app
-</pre></div>
-</div>
-<p>Once all components are healthy again, they should start catching up their state from peer
-SVs, and eventually become functional again.</p>
-</section>
-</section>
-<section id="re-onboard-an-sv-and-recover-amulets-with-a-validator">
-<span id="sv-reonboard"></span><h2>Re-onboard an SV and recover Amulets with a validator<a class="headerlink" href="#re-onboard-an-sv-and-recover-amulets-with-a-validator" title="Link to this heading"></a></h2>
-<p>In the case of a catastrophic failure of the SV node, the amulets owned by the SV can be recovered via deploying a standalone validator node with control over the SV’s participant keys.
-The SV node can be re-onboarded with a new identity and the amulets can be transferred from the validator to the new SV node.</p>
-<p>In order to be able to recover the amulet, the backup of the identities of your SV node is required.
-The details of fetching the identities are provided in the <a class="reference internal" href="sv_backup.html#sv-backups"><span class="std std-ref">Backup of Node Identities</span></a> section.</p>
-<p>From the backup of Node Identities, copy the content of the field <code class="docutils literal notranslate"><span class="pre">identities.participant</span></code> and save it as a separate JSON file.
-This file will be used as identities bootstrap dump for the validator runbook.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>jq<span class="w"> </span><span class="s1">&#39;.identities.participant&#39;</span><span class="w"> </span>backup.json<span class="w"> </span>&gt;<span class="w"> </span>dump.json
-</pre></div>
-</div>
-<p>Once the failed SV node is offboarded by a majority of SVs (via a governance vote on a <code class="docutils literal notranslate"><span class="pre">OffboardMember</span></code> action), we can deploy a standalone validator node for recovering the SV’s amulets.</p>
-<p>Repeat the steps described in <a class="reference internal" href="../validator_operator/validator_helm.html#helm-validator-install"><span class="std std-ref">Installing the Software</span></a> for installing the validator app and participant,</p>
-<p>While doing so, please note the following:</p>
+<p>The full configuration for each app can be observed in the scala code, with the configuration key being kebab case compared to the camel case in the scala code:</p>
 <ul class="simple">
-<li><p>Modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/standalone-validator-values.yaml</span></code> so that <code class="docutils literal notranslate"><span class="pre">validatorPartyHint</span></code> is set to the name you chose when creating the SV identity.</p></li>
-<li><p>Follow the notes in <a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#validator-reonboard"><span class="std std-ref">Restoring from a Participant Identities Dump</span></a> to restore the validator with the identities from the backup.
-Use the separate JSON file prepared previously.</p></li>
+<li><p><a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/main/apps/validator/src/main/scala/org/lfdecentralizedtrust/splice/validator/config/ValidatorAppConfig.scala#L141">Validator App</a></p></li>
+<li><p><a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/main/apps/sv/src/main/scala/org/lfdecentralizedtrust/splice/sv/config/SvAppConfig.scala#L199">SV App</a></p></li>
+<li><p><a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/main/apps/scan/src/main/scala/org/lfdecentralizedtrust/splice/scan/config/ScanAppConfig.scala#L28">Scan App</a></p></li>
 </ul>
-<p>Once the validator is up and running, login to the wallet of the validator <code class="docutils literal notranslate"><span class="pre">https://wallet.validator.YOUR_HOSTNAME</span></code> with the validator user account setup in <a class="reference internal" href="../validator_operator/validator_helm.html#helm-validator-auth0"><span class="std std-ref">Configuring an Auth0 Tenant</span></a>.
-Confirm that the wallet balance is as expected. It should be the same as the amount that the original SV owned.</p>
-<p>You can now deploy and onboard a fresh SV node (reusing your SV identity but otherwise starting with a clean slate) by following the steps in <a class="reference internal" href="sv_helm.html#helm-sv-install"><span class="std std-ref">Installing the Software</span></a>.</p>
-<p>Login to the wallet of the new SV node, copy the new party ID.
-Switch to the wallet of the validator, create a new transfer offer sending the amulets to the new SV node with the copied party ID.</p>
-<p>Switch to the wallet of the new SV node, accept the transfer offer from the wallet of the new SV node, and verify that the amulets have arrived as expected.</p>
-</section>
-<section id="disaster-recovery-from-loss-of-cometbft-layer">
-<span id="sv-network-dr"></span><h2>Disaster recovery from loss of CometBFT layer<a class="headerlink" href="#disaster-recovery-from-loss-of-cometbft-layer" title="Link to this heading"></a></h2>
-<p>In case of a complete disaster, where the complete CometBFT layer of the network is lost beyond repair, we will
-follow a process somewhat similar to the migration dumps used for <a class="reference internal" href="sv_major_upgrade.html#sv-upgrades"><span class="std std-ref">Synchronizer Upgrades with Downtime</span></a> to recover the network to
-a consistent state from before the disaster. The main difference from that process is that the downtime is not
-scheduled, and the existing synchronizer is assumed to be unusable for any practical purpose. Morever, the
-timestamp from which the network will be recovering will most probably be earlier than the time of the incident,
-and data loss is expected to occur.</p>
-<p>The steps at the high level are:</p>
-<ol class="arabic simple">
-<li><p>All SVs agree on the timestamp from which they will be recovering.</p></li>
-<li><p>Each SV operator gets a data dump from their SV app for that timestamp.</p></li>
-<li><p>Each SV operator creates a migration dump file, which combines the data dump from their SV app with the identities from their backups.</p></li>
-<li><p>SV operators deploy a new synchronizer.</p></li>
-<li><p>Each SV operator copies the migration dump file to their SV app’s PVC and migrates the data by restarting the app.</p></li>
-</ol>
-<section id="technical-details">
-<h3>Technical Details<a class="headerlink" href="#technical-details" title="Link to this heading"></a></h3>
-<p>We recommend first familiarizing yourself with the <a class="reference internal" href="sv_major_upgrade.html#sv-upgrades"><span class="std std-ref">migration</span></a> process, as the disaster recovery process is similar.</p>
-<section id="finding-a-consistent-timestamp-to-recover-the-synchronizer-from">
-<h4>Finding a Consistent Timestamp to Recover the Synchronizer From<a class="headerlink" href="#finding-a-consistent-timestamp-to-recover-the-synchronizer-from" title="Link to this heading"></a></h4>
-<p>Unlike the <a class="reference internal" href="sv_major_upgrade.html#sv-upgrades"><span class="std std-ref">migration</span></a> process, the synchronizer in case of disaster has not been
-paused in an orderly manner, therefore we cannot assume that all SVs are caught up to the same point.
-The SV operators therefore need to coordinate to agree on a timestamp that many of the SV nodes have
-reached, and from which they will be recovering.</p>
-<p>Currently, the recommended method for doing so is by inspecting the log files of the SV node’s participant,
-specifically searching for log lines from the ACS commitment process. ACS commitment in Canton
-is the periodic process in which pairs of participants confirm to each other that they agree on the
-the relevant subset of the Active Contract Set (ACS) on ledger at that point in time.
-By searching the log files of your participant for “CommitmentPeriod” you can see the periods for which
-your participant has committed to the ACS, and with whom. You should look for “Commitment correct for sender” messages, such as:
-<code class="docutils literal notranslate"><span class="pre">Commitment</span> <span class="pre">correct</span> <span class="pre">for</span> <span class="pre">sender</span> <span class="pre">PAR::Digital-Asset-Eng-4::12205f1149bc...</span> <span class="pre">and</span> <span class="pre">period</span> <span class="pre">CommitmentPeriod(fromExclusive</span> <span class="pre">=</span> <span class="pre">2024-04-21T23:24:00Z,</span> <span class="pre">toInclusive</span> <span class="pre">=</span> <span class="pre">2024-04-21T23:25:00Z)</span></code>,
-indicating that your participant agreed with that of another node, <cite>Digital-Asset-Eng-4</cite> in this example,
-at the <cite>toInclusive</cite> time, <cite>2024-04-21T23:25:00Z</cite> in this example.</p>
-<p>The SVs should find a period for which most of them have mutually committed to. Note that all transactions
-committed after the chosen timestamp will be lost. On the other hand, any SV not committed to the chosen
-timestamp will have to either completely re-onboarded, or copy over a data dump from another SV that is
-caught up to the chosen timestamp. This a tradeoff to be discussed among the SVs at the time of recovery.</p>
-<p>It is beneficial to err on the side of going a bit further back in time than the last agreed upon ACS commitment.
-Going back 15 minutes further is probably a good rule of thumb, as most validators have at least two transactions every round, which means that
-validator participants will have recorded transactions after the selected timestamp, enabling them to get a clean dump with the selected timestamp.</p>
-</section>
-<section id="creating-a-data-dump-from-the-sv-app">
-<h4>Creating a Data Dump from the SV App<a class="headerlink" href="#creating-a-data-dump-from-the-sv-app" title="Link to this heading"></a></h4>
-<p>The migration dump data consist of two parts: private identities, and transaction data.
-The private identities are assumed to have been backed up by the SV operator.
-See the <a class="reference internal" href="sv_backup.html#sv-backups"><span class="std std-ref">Backup of Node Identities</span></a> section.</p>
-<p>The data dump can be fetched from the SV app by running the following command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">data</span><span class="o">=</span><span class="k">$(</span>curl<span class="w"> </span>-sSLf<span class="w"> </span><span class="s2">&quot;https://sv.sv.YOUR_HOSTNAME/api/sv/v0/admin/domain/data-snapshot?timestamp=&lt;timestamp&gt;&quot;</span><span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;authorization: Bearer &lt;token&gt;&quot;</span><span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="k">)</span>
+<p>Furthermore, the participant and other synchronizer components can be configured independently as well. Further info on such configurations can be found in the <a class="reference external" href="https://docs.daml.com/canton/usermanual/static_conf.html">daml docs</a>.</p>
+<section id="helm-charts-support">
+<h3>Helm charts support<a class="headerlink" href="#helm-charts-support" title="Link to this heading"></a></h3>
+<p>The helm charts can be configured through the value <cite>additionalEnvVars</cite>, which passes the values as environment variables to the apps.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">additionalEnvVars</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ADDITIONAL_CONFIG_EXAMPLE</span>
+<span class="w">      </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">canton.example.key=value</span>
 </pre></div>
 </div>
-<p>where <cite>&lt;token&gt;</cite> is an OAuth2 Bearer Token with enough claims to access the SV app, as obtained from your OAuth provider, and <cite>&lt;timestamp&gt;</cite> is the agreed upon timestamp,
-in the format <cite>“2024-04-17T19:12:02Z”</cite>.</p>
-<p>Please note that both the participant and the sequencer components must still be running
-and reachable for this call to succeed.</p>
-<p>If the <cite>curl</cite> command fails with a 400 error, that typically means that your participant has been pruned beyond the chosen timestamp,
-and your node cannot generate the requested dump. Discuss with other SVs whether a later timestamp can be chosen.
-If it fails with a 429, that means the timestamp is too late for your participant to create a
-dump for. Discuss with other SVs whether an earlier timestamp can be chosen.</p>
-<p>Assuming your identities data is in a file <cite>identities.json</cite>, copy it into a bash variable <cite>id</cite>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">id</span><span class="o">=</span><span class="k">$(</span>cat<span class="w"> </span>identities.json<span class="k">)</span>
-</pre></div>
-</div>
-<p>We will now merge the two parts of the data dump into the format expected by the SV app.</p>
-<p>Create the migration dump file by merging the json structures from the identities dump and the data dump.
-You can use the <cite>jq</cite> tool for that as follows:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$id</span><span class="s2">&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$data</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-s<span class="w"> </span>add<span class="w"> </span>&gt;<span class="w"> </span>dump.json
-</pre></div>
-</div>
-<p>This file can now be copied to the SV app’s PVC:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>cp<span class="w"> </span>dump.json<span class="w"> </span>sv/&lt;sv_app_pod_name&gt;:/domain-upgrade-dump/domain_migration_dump.json
-</pre></div>
-</div>
-<p>where <cite>&lt;sv_app_pod_name&gt;</cite> is the full name of the pod running the SV app.</p>
-</section>
-<section id="migrating-the-data">
-<h4>Migrating the Data<a class="headerlink" href="#migrating-the-data" title="Link to this heading"></a></h4>
-<p>Please follow the instructions in the <a class="reference internal" href="sv_major_upgrade.html#sv-upgrades-deploying-apps"><span class="std std-ref">Updating Apps</span></a> section
-to update the configuration of the SV app to consume the migration dump file, and seed the new synchronizer.</p>
-</section>
 </section>
 </section>
 </section>
@@ -876,8 +736,8 @@ to update the configuration of the SV app to consume the migration dump file, an
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="sv_backup.html" class="btn btn-neutral float-left" title="Backups" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="sv_operations.html" class="btn btn-neutral float-right" title="SV Operations" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="observability/metrics_reference.html" class="btn btn-neutral float-left" title="Metrics Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../troubleshooting.html" class="btn btn-neutral float-right" title="Troubleshooting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
