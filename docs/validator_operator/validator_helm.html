@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.11-ci-snapshot.20250207.1.0.v3e49a835
+                0.3.11-ci-snapshot.20250207.1.0.v6edc62e1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -110,6 +110,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#configuring-top-ups">Configuring top-ups</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#configuring-sweeps-and-auto-accepts-of-transfer-offers">Configuring sweeps and auto-accepts of transfer offers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#participant-pruning">Participant Pruning</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="validator_upgrades.html">Upgrades</a><ul>
@@ -607,6 +608,7 @@
 <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#upcoming">Upcoming</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id2">0.3.10</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id3">0.3.9</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id4">0.3.8</a></li>
@@ -734,9 +736,9 @@
 </li>
 <li><p>Your cluster needs a static egress IP. After acquiring that, provide it to your SV sponsor who will propose
 adding it to the IP allowlist to the other SVs.</p></li>
-<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.11-ci-snapshot.20250207.1.0.v3e49a835_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
+<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.11-ci-snapshot.20250207.1.0.v6edc62e1_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
 </ol>
-<pre class="literal-block">tar xzvf 0.3.11-ci-snapshot.20250207.1.0.v3e49a835_splice-node.tar.gz</pre>
+<pre class="literal-block">tar xzvf 0.3.11-ci-snapshot.20250207.1.0.v6edc62e1_splice-node.tar.gz</pre>
 <section id="required-network-parameters">
 <h3>Required Network Parameters<a class="headerlink" href="#required-network-parameters" title="Link to this heading"></a></h3>
 <p>To initialize your validator node, you need the following parameters
@@ -1023,7 +1025,7 @@ kubectl<span class="w"> </span>create<span class="w"> </span>--namespace<span cl
 cluster, you will need to meet a few preconditions. The first is that
 there needs to be an environment variable defined to refer to the
 version of the Helm charts necessary to connect to this environment:</p>
-<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.11-ci-snapshot.20250207.1.0.v3e49a835</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.11-ci-snapshot.20250207.1.0.v6edc62e1</span></code></p>
 <p>Please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/participant-values.yaml</span></code> as follows:</p>
 <ul class="simple">
 <li><p>Replace <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_LEDGER_API_AUDIENCE</span></code> in the <cite>auth.targetAudience</cite> entry with audience for the ledger API. e.g. <code class="docutils literal notranslate"><span class="pre">https://ledger_api.example.com</span></code>. If you are not ready to use a custom audience, you can use the suggested default <code class="docutils literal notranslate"><span class="pre">https://canton.network.global</span></code>.</p></li>
@@ -1308,6 +1310,35 @@ in the <code class="docutils literal notranslate"><span class="pre">validator-va
 <p>Whenever the validator receives a transfer offer from <cite>&lt;senderPartyID&gt;</cite> to <cite>&lt;receiverPartyId&gt;</cite>,
 it will automatically accept it. Similarly to sweeps, party IDs must be known in order to
 apply this configuration.</p>
+</section>
+<section id="participant-pruning">
+<span id="validator-participant-pruning"></span><h2>Participant Pruning<a class="headerlink" href="#participant-pruning" title="Link to this heading"></a></h2>
+<p>By default, participants preserve all history (it is not preserved
+across <a class="reference internal" href="validator_major_upgrades.html#validator-upgrades"><span class="std std-ref">major upgrades</span></a> though). However, this leads to
+gradually growing databases and can slow down certain queries, in
+particular, queries for the active contract set on the ledger API.</p>
+<p>To mitigate that it is possible to disable participant pruning which
+will remove all history beyond a specified retention point and only
+preserve the active contract set.</p>
+<p>Note that this only affects the participant stores. The CN apps
+(Validator, SV and Scan) are unaffected by enabling this, so e.g., the
+history in your wallet will never be pruned.</p>
+<p>Below you can see an example of the pruning config that you need to
+add to <code class="docutils literal notranslate"><span class="pre">validator-values.yaml</span></code> to retain only the history for the
+last 48h.</p>
+<p>Refer to the Canton documentation for more details on participant pruning:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://docs.daml.com/ops/pruning.html">https://docs.daml.com/ops/pruning.html</a></p></li>
+<li><p><a class="reference external" href="https://docs.daml.com/canton/usermanual/pruning.html">https://docs.daml.com/canton/usermanual/pruning.html</a></p></li>
+</ul>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># To configure participant pruning uncomment the following section.</span>
+<span class="c1"># Refer to the documentation for more details.</span>
+<span class="c1"># participantPruningSchedule:</span>
+<span class="c1">#   cron: 0 /10 * * * ? # Run every 10min</span>
+<span class="c1">#   maxDuration: 5m # Run for a max of 5min per iteration</span>
+<span class="c1">#   retention: 48h # Retain history that is newer than 48h.</span>
+</pre></div>
+</div>
 </section>
 </section>
 
