@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.11-ci-snapshot.20250210.1.0.v4cf5630b
+                0.3.11-ci-snapshot.20250210.1.0.v3e2de1e5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -101,14 +101,14 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="validator_helm.html#configuring-the-cluster-ingress">Configuring the Cluster Ingress</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="validator_helm.html#id4">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="validator_helm.html#id5">Requirements</a></li>
 <li class="toctree-l4"><a class="reference internal" href="validator_helm.html#installation-instructions">Installation Instructions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="validator_helm.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#testnet-only-granting-coin-to-the-validator-for-traffic-purchases">(Testnet-only) Granting coin to the validator for traffic purchases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#testnet-only-granting-coin-to-the-validator-for-traffic-purchases">(TestNet-only) Granting coin to the validator for traffic purchases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_helm.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#configuring-top-ups">Configuring top-ups</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#configuring-automatic-traffic-purchases">Configuring automatic traffic purchases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_helm.html#configuring-sweeps-and-auto-accepts-of-transfer-offers">Configuring sweeps and auto-accepts of transfer offers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_helm.html#participant-pruning">Participant Pruning</a></li>
 </ul>
@@ -198,7 +198,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-the-cluster-ingress">Configuring the Cluster Ingress</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#hostnames-and-urls">Hostnames and URLs</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#ingress-configuration">Ingress Configuration</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#id4">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#id5">Requirements</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#installation-instructions">Installation Instructions</a></li>
 </ul>
 </li>
@@ -723,9 +723,9 @@
 <span id="validator-backups"></span><h1>Backups<a class="headerlink" href="#backups" title="Link to this heading"></a></h1>
 <p>While all components in the system are designed to be crash-fault-tolerant,
 there is always a chance of failures from which the system cannot immediately
-recover, e.g. due to misconfiguration or bugs. In such cases, we will need to
-restore a component, a full validator node, or even the whole network, from
-backups or from dumps from components that are still operational.</p>
+recover, e.g. due to misconfiguration or bugs. In such cases, you will need to
+restore a component or the a full validator node from
+backups or from dumps of the components that are still operational.</p>
 <section id="backup-of-node-identities">
 <h2>Backup of Node Identities<a class="headerlink" href="#backup-of-node-identities" title="Link to this heading"></a></h2>
 <p>Once your validator node is up and onboarded, please make sure to backup the node identities of your node. <strong>Note that this information
@@ -741,21 +741,21 @@ access to your Canton Coin holdings), so must be backed up outside of the cluste
 <p>where <cite>&lt;token&gt;</cite> is an OAuth2 Bearer Token with enough claims to access the Validator app,
 as obtained from your OAuth provider. For context, see the Authentication section <a class="reference internal" href="../app_dev/overview/splice_app_apis.html#app-auth"><span class="std std-ref">here</span></a>.</p>
 <p>If you are using a docker-compose deployment, replace <cite>https://wallet.validator.YOUR_HOSTNAME</cite> with <cite>http://wallet.localhost</cite>.
-If you are running the docker-compose deployment with no auth, you can use the utility Python script <cite>get-token.py</cite>
-to generate a token for the <cite>curl</cite> command by running <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">get-token.py</span> <span class="pre">administrator</span></code> (requires <a class="reference external" href="https://pypi.org/project/PyJWT/">pyjwt</a>).</p>
+If you are running the docker-compose deployment with no auth, you can use the utility Python script <code class="docutils literal notranslate"><span class="pre">get-token.py</span></code>
+to generate a token for the <code class="docutils literal notranslate"><span class="pre">curl</span></code> command by running <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">get-token.py</span> <span class="pre">administrator</span></code> (requires <a class="reference external" href="https://pypi.org/project/PyJWT/">pyjwt</a>).</p>
 </section>
 <section id="backups-of-postgres-instances">
 <h2>Backups of postgres instances<a class="headerlink" href="#backups-of-postgres-instances" title="Link to this heading"></a></h2>
-<p>To backup a validator node, please make sure that all Postgres instances are
-backed up at least every 4 hours. Note that there is a strict order requirement
-between the backups: <strong>the backup of the apps postgres instance must be taken at
+<p>To backup a validator node, we recommend to back up all Postgres instances
+at least every 4 hours. Note that there is a strict order requirement
+between the backups: <strong>the backup of the validator app’s postgres instance must be taken at
 a point in time strictly earlier than that of the participant</strong>.
-Please make sure the apps instance backup is completed before starting the participant one.
+Please make sure the app’s instance backup is completed before starting the participant one.
 We will provide guidelines on retention of older backups at a later point in time.</p>
 <p>If you are running your own Postgres instances in the cluster, backups can be
-taken either using tools like pgdump, or through snapshots of the underlying
+taken either using tools like <code class="docutils literal notranslate"><span class="pre">pg_dump</span></code>, or through snapshots of the underlying
 Persistent Volume. Similarly, if you are using Cloud-hosted Postgres, you can
-either use tools like pgdump or backup tools provided by the Cloud provider.</p>
+either use tools like <code class="docutils literal notranslate"><span class="pre">pg_dump</span></code> or backup tools provided by the Cloud provider.</p>
 <p>If you are running a docker-compose deployment, you can run the following commands to backup
 the Postgres databases. This will create two dump files, one for the participant and one for
 the validator app.</p>

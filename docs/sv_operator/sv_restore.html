@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.11-ci-snapshot.20250210.1.0.v4cf5630b
+                0.3.11-ci-snapshot.20250210.1.0.v3e2de1e5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -101,14 +101,14 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-the-cluster-ingress">Configuring the Cluster Ingress</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#id4">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#id5">Requirements</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#installation-instructions">Installation Instructions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#testnet-only-granting-coin-to-the-validator-for-traffic-purchases">(Testnet-only) Granting coin to the validator for traffic purchases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#testnet-only-granting-coin-to-the-validator-for-traffic-purchases">(TestNet-only) Granting coin to the validator for traffic purchases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-top-ups">Configuring top-ups</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-automatic-traffic-purchases">Configuring automatic traffic purchases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-sweeps-and-auto-accepts-of-transfer-offers">Configuring sweeps and auto-accepts of transfer offers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#participant-pruning">Participant Pruning</a></li>
 </ul>
@@ -198,7 +198,7 @@
 <li class="toctree-l3"><a class="reference internal" href="sv_helm.html#configuring-the-cluster-ingress">Configuring the Cluster Ingress</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="sv_helm.html#hostnames-and-urls">Hostnames and URLs</a></li>
 <li class="toctree-l4"><a class="reference internal" href="sv_helm.html#ingress-configuration">Ingress Configuration</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#id4">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#id5">Requirements</a></li>
 <li class="toctree-l4"><a class="reference internal" href="sv_helm.html#installation-instructions">Installation Instructions</a></li>
 </ul>
 </li>
@@ -722,13 +722,15 @@
   <section id="disaster-recovery">
 <span id="sv-restore"></span><h1>Disaster Recovery<a class="headerlink" href="#disaster-recovery" title="Link to this heading"></a></h1>
 <p>There are three ways to recover from disasters:</p>
-<p>In simple cases where only a single node is affected but the overall
+<ol class="arabic simple">
+<li><p>In simple cases where only a single node is affected but the overall
 network is still healthy, a <a class="reference internal" href="#sv-backup-restore"><span class="std std-ref">Restore from backup</span></a> is
-usually sufficient.</p>
-<p>If a full backup is unavailable but an identity backup has been
+usually sufficient.</p></li>
+<li><p>If a full backup is unavailable but an identity backup has been
 created, the balance of the SV can be <a class="reference internal" href="#sv-reonboard"><span class="std std-ref">recovered</span></a> on a dedicated
-validator but the SV must be onboarded as a separate node.</p>
-<p>Lastly, For network-wide failures, a more complex <a class="reference internal" href="#sv-network-dr"><span class="std std-ref">Disaster recovery procedure</span></a> is required.</p>
+validator but the SV must be onboarded as a separate node.</p></li>
+<li><p>Lastly, For network-wide failures, a more complex <a class="reference internal" href="#sv-network-dr"><span class="std std-ref">Disaster recovery procedure</span></a> is required.</p></li>
+</ol>
 <section id="restoring-from-data-corruption">
 <span id="sv-backup-restore"></span><h2>Restoring From Data Corruption<a class="headerlink" href="#restoring-from-data-corruption" title="Link to this heading"></a></h2>
 <p>While all components in the system are designed to be crash-fault-tolerant, there is always

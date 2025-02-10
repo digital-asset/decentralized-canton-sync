@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.11-ci-snapshot.20250210.1.0.v4cf5630b
+                0.3.11-ci-snapshot.20250210.1.0.v3e2de1e5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -101,14 +101,14 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="validator_helm.html#configuring-the-cluster-ingress">Configuring the Cluster Ingress</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="validator_helm.html#id4">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="validator_helm.html#id5">Requirements</a></li>
 <li class="toctree-l4"><a class="reference internal" href="validator_helm.html#installation-instructions">Installation Instructions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="validator_helm.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#testnet-only-granting-coin-to-the-validator-for-traffic-purchases">(Testnet-only) Granting coin to the validator for traffic purchases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#testnet-only-granting-coin-to-the-validator-for-traffic-purchases">(TestNet-only) Granting coin to the validator for traffic purchases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_helm.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#configuring-top-ups">Configuring top-ups</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#configuring-automatic-traffic-purchases">Configuring automatic traffic purchases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_helm.html#configuring-sweeps-and-auto-accepts-of-transfer-offers">Configuring sweeps and auto-accepts of transfer offers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_helm.html#participant-pruning">Participant Pruning</a></li>
 </ul>
@@ -198,7 +198,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-the-cluster-ingress">Configuring the Cluster Ingress</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#hostnames-and-urls">Hostnames and URLs</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#ingress-configuration">Ingress Configuration</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#id4">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#id5">Requirements</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#installation-instructions">Installation Instructions</a></li>
 </ul>
 </li>
@@ -723,30 +723,32 @@
 <span id="id1"></span><h1>Validator Onboarding Process<a class="headerlink" href="#validator-onboarding-process" title="Link to this heading"></a></h1>
 <section id="networks">
 <h2>Networks<a class="headerlink" href="#networks" title="Link to this heading"></a></h2>
-<p>There are three different networks: Dev, Test and MainNet. If you are
+<p>There are three different networks: DevNet, TestNet and MainNet. If you are
 only interested in setting up a validator node, you can set up a node
 on DevNet for practice, then jump to MainNet. If you’d like to build,
 test, or deploy an app, we recommend that you run a node on DevNet,
 TestNet, and MainNet.</p>
 <dl class="simple">
-<dt>DevNet</dt><dd><p>DevNet is open to any node but still requires the validator’s egress IP to be added to the allowlist. It gets reset every 3 months.
-DevNet always gets upgraded to new versions before TestNet and MainNet so it is a good way to test upgrades of your node
-before they reach MainNet.</p>
+<dt>DevNet</dt><dd><p>DevNet is open to any node but still requires the validator’s egress IP to be added to the allowlist maintained by the SV node operators.
+It gets reset every 3 months.
+DevNet always gets upgraded to new versions before TestNet and MainNet, so it is a good way to test upgrades of your node
+and their impact on your apps before they reach MainNet.</p>
 </dd>
 <dt>TestNet</dt><dd><p>Joining TestNet requires that you have been approved to join MainNet by
 the Tokenomics Committee of the Global Synchronizer Foundation.
-You can initiate a request to do so through <a class="reference external" href="https://sync.global/validator-request/">https://sync.global/validator-request/</a>
-Just like DevNet is also still requires your validator’s egress IP to be added to the allowlist
-and it requires an onboarding secret from your SV
-Just like DevNet it gets reset every 3-6 months
+You can initiate a request to do so through <a class="reference external" href="https://sync.global/validator-request/">https://sync.global/validator-request/</a>.
+Just like for DevNet, is also still requires your validator’s egress IP to be added to the allowlist
+and it requires an onboarding secret from your SV.
+Just like DevNet, TestNet gets reset every 3-6 months,
 but the reset schedule is shifted so TestNet never gets reset at the same time as DevNet.
-TestNet upgrades to new versions after DevNet but before MainNet so it provides an additional layer of testing.
-Application providers are encouraged to maintain long-running instances of their app on TestNet which allows
-using TestNet to test composed applications</p>
+TestNet upgrades to new versions after DevNet, but before MainNet so it provides an additional layer of testing.
+Application providers are encouraged to maintain long-running instances of their app on TestNet,
+which allows using TestNet to test composed applications.</p>
 </dd>
-<dt>MainNet</dt><dd><p>MainNet requires everything TestNet requires so approval by the Tokenomics committee,
-an IP on the allowlist and an onboarding secret from your SV sponsor. MainNet never gets reset
-and is therefore the only network where data is always preserved. MainNet gets upgraded to new versions after DevNet and TestNet.</p>
+<dt>MainNet</dt><dd><p>MainNet requires everything TestNet requires, so approval by the Tokenomics committee,
+an IP on the allowlist, and an onboarding secret from your SV sponsor. MainNet never gets reset
+and is therefore the only network where data is always preserved.
+MainNet gets upgraded to new versions after DevNet and TestNet.</p>
 </dd>
 </dl>
 </section>
@@ -759,9 +761,9 @@ this can also be accomplished by connecting your validator through a VPN run by 
 can be useful when trying to run a validator from a local laptop.
 This option may be removed in the future.</p></li>
 <li><p>Wait for super validators to adopt the new IP allowlist. This usually takes between 2-7 days.</p></li>
-<li><p>If you want to access the Canton Coin Scan Web UI you also need to ensure that
+<li><p>If you want to access the Canton Coin Scan Web UI from your laptop, you also need to ensure that
 you can connect to a VPN operated by one of the SVs. This is required as laptops usually
-do not have static IP addresses but the Scan web UI is not fully public. If you can
+do not have static IP addresses and the Scan web UI is not (yet) fully public. If you can
 use your validator egress IP also for browsing the web UI this is not necessary.</p></li>
 <li><p>Request an onboarding secret from your SV sponsor. On DevNet, you
 can do this yourself through an API call
@@ -772,7 +774,7 @@ you need to request a new one.</p></li>
 <li><p>Deploy your node either using docker compose or Kubernetes. Refer
 to the <a class="reference internal" href="index.html#validator-operator"><span class="std std-ref">Deployment Options</span></a> for
 information on how to choose between them and references to each of
-the two approaches. You will need to make sure that all traffic going from your validator to the SVs
+the two approaches. You will need to make sure that all IP traffic going from your validator to the SVs
 uses the egress IP you provided to your SV sponsor and you need to provide the onboarding secret.</p></li>
 </ol>
 </section>
@@ -780,17 +782,19 @@ uses the egress IP you provided to your SV sponsor and you need to provide the o
 <h2>Validating that your IP has been approved<a class="headerlink" href="#validating-that-your-ip-has-been-approved" title="Link to this heading"></a></h2>
 <p>To validate that the SVs have added you to their respective IP
 allowlists, you can query their Scan URLs. Note that this must be run
-from the same egress IP that you want to deploy your validator from,
+from the same egress IP from which you want to deploy your validator,
 e.g., from the VM that you want to run your docker compose setup from
 or from within your Kubernetes cluster.</p>
-<p>Note that this requires installing <a class="reference external" href="https://jqlang.org/">JQ</a>.</p>
-<pre class="literal-block">for url in $(curl -sSL <span class="raw-html">https://scan.sv-1.<span class="splice-url-prefix">unknown_cluster.</span>global.canton.network.sync.global</span>/api/scan/v0/scans | jq -r '.scans | .[].scans | .[] | .publicUrl' ); \
-do \
-echo -n &quot;$url: &quot;; \
-curl -sSL --connect-timeout 5 --fail-with-body $url/api/scan/version | jq -r '.version'; \
-done</pre>
+<p>Note that the following command requires installing <a class="reference external" href="https://jqlang.org/">JQ</a>.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span>url<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="k">$(</span>curl<span class="w"> </span>-sSL<span class="w"> </span><span class="p">|</span>gsf_scan_url<span class="p">|</span>/api/scan/v0/scans<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;.scans | .[].scans | .[] | .publicUrl&#39;</span><span class="w"> </span><span class="k">)</span><span class="p">;</span><span class="w"> </span><span class="se">\\</span>
+<span class="k">do</span><span class="w"> </span><span class="se">\\</span>
+<span class="nb">echo</span><span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$url</span><span class="s2">: &quot;</span><span class="p">;</span><span class="w"> </span><span class="se">\\</span>
+curl<span class="w"> </span>-sSL<span class="w"> </span>--connect-timeout<span class="w"> </span><span class="m">5</span><span class="w"> </span>--fail-with-body<span class="w"> </span><span class="nv">$url</span>/api/scan/version<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;.version&#39;</span><span class="p">;</span><span class="w"> </span><span class="se">\\</span>
+<span class="k">done</span>
+</pre></div>
+</div>
 <p>You should see output in the form shown below, where each line indicates one SV and the version it is on. If you see timeouts that SV has not yet added you to their allowlist,
-if you do not get any errors all SVs have added you. Note that the URLs and versions will vary over time so don’t try to compare exactly.</p>
+if you do not get any errors, then all SVs have added you. Note that the URLs and versions will vary over time so don’t try to compare exactly.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>https://scan.sv-2.test.global.canton.network.digitalasset.com:<span class="w"> </span><span class="m">0</span>.3.6
 https://scan.sv.test.global.canton.network.tradeweb.com:<span class="w"> </span><span class="m">0</span>.3.6
 https://scan.sv-1.test.global.canton.network.cumberland.io:<span class="w"> </span><span class="m">0</span>.3.6
@@ -809,18 +813,18 @@ https://scan.sv-1.test.global.canton.network.digitalasset.com:<span class="w"> <
 <p>To stay connected with other validator operators, there is a shared slack channel and a few mailing lists:</p>
 <section id="slack">
 <h3>Slack<a class="headerlink" href="#slack" title="Link to this heading"></a></h3>
-<p>Join the #validator-operations channel hosted by the Global Synchronizer Foundation using Slack Connect:
+<p>Join the <code class="docutils literal notranslate"><span class="pre">#validator-operations</span></code> channel hosted by the <a class="reference internal" href="../glossary.html#term-Global-Synchronizer-Foundation"><span class="xref std std-term">Global Synchronizer Foundation</span></a> using Slack Connect:
 <a class="reference external" href="https://daholdings.slack.com/archives/C08AP9QR7K4">https://daholdings.slack.com/archives/C08AP9QR7K4</a>. Your Slack workspace may allow you to browse to this channel, or you can ask your SV sponsor to send you an invitation.</p>
 </section>
 <section id="mailing-lists">
 <h3>Mailing Lists<a class="headerlink" href="#mailing-lists" title="Link to this heading"></a></h3>
-<p>You can sign up for various mailing lists provided by the Global Synchronizer Foundation. To do so, first create an account at <a class="reference external" href="https://groups.io/">https://groups.io/</a> and then log in at <a class="reference external" href="https://lists.sync.global/">https://lists.sync.global/</a>.
+<p>You can sign up for various mailing lists provided by the <a class="reference internal" href="../glossary.html#term-Global-Synchronizer-Foundation"><span class="xref std std-term">Global Synchronizer Foundation</span></a>. To do so, first create an account at <a class="reference external" href="https://groups.io/">https://groups.io/</a> and then log in at <a class="reference external" href="https://lists.sync.global/">https://lists.sync.global/</a>.
 We recommend the following lists:</p>
 <ul class="simple">
-<li><p><a class="reference external" href="https://lists.sync.global/g/main/messages">main</a> for overall information about the Canton Network.</p></li>
-<li><p><a class="reference external" href="https://lists.sync.global/g/cip-announce/messages">cip announce</a> for new Canton Improvement Proposals (CIPs)</p></li>
-<li><p><a class="reference external" href="https://lists.sync.global/g/tokenomics-announce/messages">tokenomics-announce</a> for announcements from the Tokenomics commitee. This also includes approval of new validators.</p></li>
-<li><p><a class="reference external" href="https://lists.sync.global/g/validator-announce/messages">validator-announce</a> for other announcements intended for validator operators</p></li>
+<li><p><a class="reference external" href="https://lists.sync.global/g/main/messages">main</a>: for overall information about the Canton Network.</p></li>
+<li><p><a class="reference external" href="https://lists.sync.global/g/cip-announce/messages">cip announce</a>: for new Canton Improvement Proposals (CIPs)</p></li>
+<li><p><a class="reference external" href="https://lists.sync.global/g/tokenomics-announce/messages">tokenomics-announce</a>: for announcements from the Tokenomics commitee. This also includes approval of new validators.</p></li>
+<li><p><a class="reference external" href="https://lists.sync.global/g/validator-announce/messages">validator-announce</a>: for other announcements intended for validator operators</p></li>
 </ul>
 </section>
 </section>

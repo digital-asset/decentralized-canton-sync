@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.11-ci-snapshot.20250210.1.0.v4cf5630b
+                0.3.11-ci-snapshot.20250210.1.0.v3e2de1e5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -101,14 +101,14 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#configuring-the-cluster-ingress">Configuring the Cluster Ingress</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#id4">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id5">Requirements</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#installation-instructions">Installation Instructions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#testnet-only-granting-coin-to-the-validator-for-traffic-purchases">(Testnet-only) Granting coin to the validator for traffic purchases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#testnet-only-granting-coin-to-the-validator-for-traffic-purchases">(TestNet-only) Granting coin to the validator for traffic purchases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#configuring-top-ups">Configuring top-ups</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configuring-automatic-traffic-purchases">Configuring automatic traffic purchases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#configuring-sweeps-and-auto-accepts-of-transfer-offers">Configuring sweeps and auto-accepts of transfer offers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#participant-pruning">Participant Pruning</a></li>
 </ul>
@@ -198,7 +198,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-the-cluster-ingress">Configuring the Cluster Ingress</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#hostnames-and-urls">Hostnames and URLs</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#ingress-configuration">Ingress Configuration</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#id4">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#id5">Requirements</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#installation-instructions">Installation Instructions</a></li>
 </ul>
 </li>
@@ -736,9 +736,9 @@
 </li>
 <li><p>Your cluster needs a static egress IP. After acquiring that, provide it to your SV sponsor who will propose
 adding it to the IP allowlist to the other SVs.</p></li>
-<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.11-ci-snapshot.20250210.1.0.v4cf5630b_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
+<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.11-ci-snapshot.20250210.1.0.v3e2de1e5_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
 </ol>
-<pre class="literal-block">tar xzvf 0.3.11-ci-snapshot.20250210.1.0.v4cf5630b_splice-node.tar.gz</pre>
+<pre class="literal-block">tar xzvf 0.3.11-ci-snapshot.20250210.1.0.v3e2de1e5_splice-node.tar.gz</pre>
 <section id="required-network-parameters">
 <h3>Required Network Parameters<a class="headerlink" href="#required-network-parameters" title="Link to this heading"></a></h3>
 <p>To initialize your validator node, you need the following parameters
@@ -815,7 +815,7 @@ You must:</p>
 <span id="helm-validator-auth-requirements"></span><h3>OIDC Provider Requirements<a class="headerlink" href="#oidc-provider-requirements" title="Link to this heading"></a></h3>
 <p>This section provides pointers for setting up an OIDC provider for use with your Validator node.
 Feel free to skip directly to <a class="reference internal" href="#helm-validator-auth0"><span class="std std-ref">Configuring an Auth0 Tenant</span></a> if you plan to use <a class="reference external" href="https://auth0.com">Auth0</a> for your Validator node’s authentication needs.</p>
-<p>Your OIDC provider must be reachable <a class="footnote-reference brackets" href="#reach" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a> at a well known (HTTPS) URL.
+<p>Your OIDC provider must be reachable <a class="footnote-reference brackets" href="#reach" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a> at a well known (HTTPS) URL.
 In the following, we will refer to this URL as <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_URL</span></code>.
 Both your Validator node and any users that wish to authenticate to a web UI connected to your Validator node must be able to reach the <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_URL</span></code>.
 We require your OIDC provider to provide a <a class="reference external" href="https://openid.net/specs/openid-connect-discovery-1_0.html">discovery document</a> at <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_URL/.well-known/openid-configuration</span></code>.
@@ -823,9 +823,9 @@ We furthermore require that your OIDC provider exposes a <a class="reference ext
 In this documentation, we assume that this document is available at <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_URL/.well-known/jwks.json</span></code>.</p>
 <p>For machine-to-machine (Validator node component to Validator node component) authentication,
 your OIDC provider must support the <a class="reference external" href="https://tools.ietf.org/html/rfc6749#section-4.4">OAuth 2.0 Client Credentials Grant</a> flow.
-This means that you must be able to configure (<cite>CLIENT_ID</cite>, <cite>CLIENT_SECRET</cite>) pairs for all Validator node components that need to authenticate to others.
+This means that you must be able to configure (<cite>CLIENT_ID</cite>, <cite>CLIENT_SECRET</cite>) pairs for all Validator node components that need to authenticate themselves to other components.
 Currently, this is the validator app backend - which needs to authenticate to the Validator node’s Canton participant.
-The <cite>sub</cite> field of JWTs issued through this flow must match the user ID configured as <cite>ledger-api-user</cite> in <a class="reference internal" href="#helm-validator-auth-secrets-config"><span class="std std-ref">Configuring Authentication on your Validator</span></a>.
+The <cite>sub</cite> field of JWTs issued through this flow must match the user ID configured as <code class="docutils literal notranslate"><span class="pre">ledger-api-user</span></code> in <a class="reference internal" href="#helm-validator-auth-secrets-config"><span class="std std-ref">Configuring Authentication on your Validator</span></a>.
 In this documentation, we assume that the <cite>sub</cite> field of these JWTs is formed as <code class="docutils literal notranslate"><span class="pre">CLIENT_ID&#64;clients</span></code>.
 If this is not true for your OIDC provider, pay extra attention when configuring <code class="docutils literal notranslate"><span class="pre">ledger-api-user</span></code> values below.</p>
 <p>For user-facing authentication - allowing users to access the various web UIs hosted on your Validator node,
@@ -857,16 +857,16 @@ make sure that whatever you configure there matches the contents of the <cite>su
 <td><p>The URL of your OIDC provider for obtaining the <code class="docutils literal notranslate"><span class="pre">openid-configuration</span></code> and <code class="docutils literal notranslate"><span class="pre">jwks.json</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p>VALIDATOR_CLIENT_ID</p></td>
-<td><p>The client id of the Auth0 app for the validator app backend</p></td>
+<td><p>The client id of your OIDC provider for the validator app backend</p></td>
 </tr>
 <tr class="row-even"><td><p>VALIDATOR_CLIENT_SECRET</p></td>
-<td><p>The client secret of the Auth0 app for the validator app backend</p></td>
+<td><p>The client secret of your OIDC provider for the validator app backend</p></td>
 </tr>
 <tr class="row-odd"><td><p>WALLET_UI_CLIENT_ID</p></td>
-<td><p>The client id of the Auth0 app for the wallet UI.</p></td>
+<td><p>The client id of your OIDC provider for the wallet UI.</p></td>
 </tr>
 <tr class="row-even"><td><p>CNS_UI_CLIENT_ID</p></td>
-<td><p>The client id of the Auth0 app for the CNS UI.</p></td>
+<td><p>The client id of your OIDC provider for the CNS UI.</p></td>
 </tr>
 </tbody>
 </table>
@@ -874,6 +874,7 @@ make sure that whatever you configure there matches the contents of the <cite>su
 <p>When first starting out, it is suggested to configure both JWT token audiences below to the same value: <code class="docutils literal notranslate"><span class="pre">https://canton.network.global</span></code>.</p>
 <p>Once you can confirm that your setup is working correctly using this (simple) default,
 we recommend that you configure dedicated audience values that match your deployment and URLs.
+This is important for security to avoid tokens for your validators on one network be usable for your validators on another network.
 You can configure audiences of your choice for the participant ledger API and the validator backend API.
 We will refer to these using the following configuration values:</p>
 <table class="docutils align-default">
@@ -893,7 +894,7 @@ We will refer to these using the following configuration values:</p>
 it can be beneficial to skim the instructions in <a class="reference internal" href="#helm-validator-auth0"><span class="std std-ref">Configuring an Auth0 Tenant</span></a> as well, to check for functionality or configuration details that your OIDC provider setup might be missing.</p>
 <aside class="footnote-list brackets">
 <aside class="footnote brackets" id="reach" role="doc-footnote">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">1</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id3">1</a><span class="fn-bracket">]</span></span>
 <p>The URL must be reachable from the Canton participant and validator app running in your cluster, as well as from all web browsers that should be able to interact with the wallet and CNS UIs.</p>
 </aside>
 </aside>
@@ -1025,7 +1026,7 @@ kubectl<span class="w"> </span>create<span class="w"> </span>--namespace<span cl
 cluster, you will need to meet a few preconditions. The first is that
 there needs to be an environment variable defined to refer to the
 version of the Helm charts necessary to connect to this environment:</p>
-<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.11-ci-snapshot.20250210.1.0.v4cf5630b</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.11-ci-snapshot.20250210.1.0.v3e2de1e5</span></code></p>
 <p>Please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/participant-values.yaml</span></code> as follows:</p>
 <ul class="simple">
 <li><p>Replace <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_LEDGER_API_AUDIENCE</span></code> in the <cite>auth.targetAudience</cite> entry with audience for the ledger API. e.g. <code class="docutils literal notranslate"><span class="pre">https://ledger_api.example.com</span></code>. If you are not ready to use a custom audience, you can use the suggested default <code class="docutils literal notranslate"><span class="pre">https://canton.network.global</span></code>.</p></li>
@@ -1159,8 +1160,8 @@ controller.</p>
 <p>Internet ingress configuration is often specific to the network configuration and scenario of the
 cluster being configured. To illustrate the basic requirements of a Validator node ingress, we have
 provided a Helm chart that configures the above cluster according to the routes above, as detailed in the sections below.</p>
-<section id="id4">
-<h3>Requirements<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<section id="id5">
+<h3>Requirements<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
 <p>In order to install the reference charts, the following must be satisfied in your cluster:</p>
 <ul class="simple">
 <li><p><em>cert-manager</em> must be available in the cluster (See <a class="reference external" href="https://cert-manager.io/docs/installation/helm/">cert-manager documentation</a>)</p></li>
@@ -1237,8 +1238,8 @@ Once logged in one should see the transactions page.</p>
 </a>
 </section>
 <section id="testnet-only-granting-coin-to-the-validator-for-traffic-purchases">
-<span id="helm-validator-testnet-cc-grant"></span><h2>(Testnet-only) Granting coin to the validator for traffic purchases<a class="headerlink" href="#testnet-only-granting-coin-to-the-validator-for-traffic-purchases" title="Link to this heading"></a></h2>
-<p>On testnet, your validator party will need an initial coin grant to be able to purchase traffic.
+<span id="helm-validator-testnet-cc-grant"></span><h2>(TestNet-only) Granting coin to the validator for traffic purchases<a class="headerlink" href="#testnet-only-granting-coin-to-the-validator-for-traffic-purchases" title="Link to this heading"></a></h2>
+<p>On TestNet, your validator party will need an initial coin grant to be able to purchase traffic.
 After logging into the wallet UI in the previous section, note that the party ID is displayed in
 the top right of the UI (e.g. <code class="docutils literal notranslate"><span class="pre">validator_validator_service_user::12204f9f94b7369e027544927703efcdf0f03cb15bd26ac53c784c627b63bdf8f041</span></code>).</p>
 <p>An SV (say your sponsor) will need to transfer coin to this party. They can do this through their wallet UI.</p>
@@ -1253,9 +1254,10 @@ Canton Name Service.</p>
 <a class="reference internal image-reference" href="../_images/ans_home1.png"><img alt="After logged in into the CNS UI" src="../_images/ans_home1.png" style="width: 600px;" />
 </a>
 </section>
-<section id="configuring-top-ups">
-<h2>Configuring top-ups<a class="headerlink" href="#configuring-top-ups" title="Link to this heading"></a></h2>
-<p>Optionally you may want to configure a validator’s traffic top-up loop for non-production validators.
+<section id="configuring-automatic-traffic-purchases">
+<h2>Configuring automatic traffic purchases<a class="headerlink" href="#configuring-automatic-traffic-purchases" title="Link to this heading"></a></h2>
+<p>Optionally you may want to configure your validator to automatically purchase traffic
+on a pay-as-you-go basis with rate limiting.
 To do so, uncomment and fill in the following section in the validator-values.yaml file:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Configuring a validator&#39;s traffic top-up loop</span>
 <span class="c1">#</span>

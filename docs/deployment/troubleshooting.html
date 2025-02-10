@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.11-ci-snapshot.20250210.1.0.v4cf5630b
+                0.3.11-ci-snapshot.20250210.1.0.v3e2de1e5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -101,14 +101,14 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-the-cluster-ingress">Configuring the Cluster Ingress</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#id4">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#id5">Requirements</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#installation-instructions">Installation Instructions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#testnet-only-granting-coin-to-the-validator-for-traffic-purchases">(Testnet-only) Granting coin to the validator for traffic purchases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#testnet-only-granting-coin-to-the-validator-for-traffic-purchases">(TestNet-only) Granting coin to the validator for traffic purchases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-top-ups">Configuring top-ups</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-automatic-traffic-purchases">Configuring automatic traffic purchases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-sweeps-and-auto-accepts-of-transfer-offers">Configuring sweeps and auto-accepts of transfer offers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#participant-pruning">Participant Pruning</a></li>
 </ul>
@@ -198,7 +198,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-the-cluster-ingress">Configuring the Cluster Ingress</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#hostnames-and-urls">Hostnames and URLs</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#ingress-configuration">Ingress Configuration</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#id4">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#id5">Requirements</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#installation-instructions">Installation Instructions</a></li>
 </ul>
 </li>
@@ -721,7 +721,7 @@
              
   <section id="troubleshooting">
 <span id="id1"></span><h1>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading"></a></h1>
-<p>This section provides an overview of which information can be collected to debug issues in a Canton Network Node.</p>
+<p>This section provides an overview of which information can be collected to debug issues in a Canton Network node.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="console_access.html">Getting console access to Canton nodes</a><ul>
@@ -793,7 +793,7 @@ the validator top-up config.</p>
 </div>
 </section>
 <section id="insufficient-funds-to-buy-configured-traffic-amount">
-<h3>Insufficient funds to buy configured traffic amount<a class="headerlink" href="#insufficient-funds-to-buy-configured-traffic-amount" title="Link to this heading"></a></h3>
+<span id="error-insufficient-funds"></span><h3>Insufficient funds to buy configured traffic amount<a class="headerlink" href="#insufficient-funds-to-buy-configured-traffic-amount" title="Link to this heading"></a></h3>
 <p>A log of the form shown below indicates that your validator app
 attempted to purchase traffic but does not have enough in the wallet
 of the validator operator party. This is common on TestNet and MainNet

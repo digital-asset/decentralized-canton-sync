@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.11-ci-snapshot.20250210.1.0.v4cf5630b
+                0.3.11-ci-snapshot.20250210.1.0.v3e2de1e5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -101,14 +101,14 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="validator_helm.html#configuring-the-cluster-ingress">Configuring the Cluster Ingress</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="validator_helm.html#id4">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="validator_helm.html#id5">Requirements</a></li>
 <li class="toctree-l4"><a class="reference internal" href="validator_helm.html#installation-instructions">Installation Instructions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="validator_helm.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#testnet-only-granting-coin-to-the-validator-for-traffic-purchases">(Testnet-only) Granting coin to the validator for traffic purchases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#testnet-only-granting-coin-to-the-validator-for-traffic-purchases">(TestNet-only) Granting coin to the validator for traffic purchases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_helm.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#configuring-top-ups">Configuring top-ups</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#configuring-automatic-traffic-purchases">Configuring automatic traffic purchases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_helm.html#configuring-sweeps-and-auto-accepts-of-transfer-offers">Configuring sweeps and auto-accepts of transfer offers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_helm.html#participant-pruning">Participant Pruning</a></li>
 </ul>
@@ -198,7 +198,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-the-cluster-ingress">Configuring the Cluster Ingress</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#hostnames-and-urls">Hostnames and URLs</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#ingress-configuration">Ingress Configuration</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#id4">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#id5">Requirements</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#installation-instructions">Installation Instructions</a></li>
 </ul>
 </li>
@@ -722,19 +722,21 @@
              
   <section id="synchronizer-upgrades-with-downtime">
 <span id="validator-upgrades"></span><h1>Synchronizer Upgrades with Downtime<a class="headerlink" href="#synchronizer-upgrades-with-downtime" title="Link to this heading"></a></h1>
-<p>For supporting non-backwards-compatible major version upgrades of the Canton software the Global Synchronizer will implement a procedure for synchronizer (i.e., domain) upgrades with downtime.</p>
+<p>To consume non-backwards-compatible major version upgrades of the Canton software the Global Synchronizer
+uses, you need to follow the procedure for synchronizer (i.e., domain) upgrades with downtime described below.</p>
 <section id="overview">
 <span id="validator-upgrades-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
 <p>This overview is trimmed to what is most relevant for the operators of regular (non-super) validators.
 For a more comprehensive overview, please refer to the <a class="reference internal" href="../sv_operator/sv_major_upgrade.html#sv-upgrades-overview"><span class="std std-ref">documentation for SV operators</span></a>.</p>
-<ol class="arabic simple">
+<ol class="arabic">
 <li><p>Canton releases containing breaking changes become available and Splice releases compatible with these Canton releases become available.</p></li>
 <li><p>SVs agree and eventually confirm via an on-ledger vote on which specific date and time the network downtime necessary for the upgrade will start. Information about the downtime window is communicated to validators.</p></li>
 <li><p>At the start of the downtime window, the DSO automatically pauses all traffic on the operating version of the global synchronizer.</p></li>
-<li><p>Shortly after traffic on the global synchronizer has been paused (there is a short delay to ensure that all components have synced up to the final state of the existing synchronizer), the validator node software automatically exports so-called migration dumps to attached Kubernetes volumes. See <a class="reference internal" href="#validator-upgrades-dumps"><span class="std std-ref">Migration Dumps</span></a>.</p></li>
+<li><p>Shortly after traffic on the global synchronizer has been paused (there is a short delay to ensure that all components have synced up to the final state of the existing synchronizer), the validator node software automatically exports so-called migration dumps to attached Kubernetes volumes. See <a class="reference internal" href="#validator-upgrades-dumps"><span class="std std-ref">Migration Dumps</span></a>.</p>
+</li>
 <li><p>Validator operators verify that their nodes have caught up to the now-paused global synchronizer. See <a class="reference internal" href="#validator-upgrades-catching-up"><span class="std std-ref">Catching Up Before the Migration</span></a>.</p></li>
 <li><p>All SVs and validators previously using the now-paused global synchronizer create full backups of their nodes. (Both for disaster recovery and for supporting audit requirements). See <a class="reference internal" href="validator_backups.html#validator-backups"><span class="std std-ref">Backups</span></a>.</p></li>
-<li><p>Validator wait until the DSO has signaled that the migration has been successful.</p></li>
+<li><p>Validators wait until the DSO has signaled that the migration has been successful.</p></li>
 <li><p>All validators upgrade theirs deployments. See <a class="reference internal" href="#validator-upgrades-deploying"><span class="std std-ref">Deploying the Validator App and Participant (Kubernetes)</span></a>.</p></li>
 <li><p>Upon (re-)initialization, the validator backend automatically consumes the migration dump and initializes the validator participant based on the contents of this dump. App databases are <a class="reference internal" href="#validator-upgrades-state"><span class="std std-ref">preserved</span></a>.</p></li>
 </ol>
@@ -754,7 +756,7 @@ on the old synchronizer instance.</p>
 </section>
 <section id="technical-details">
 <h2>Technical Details<a class="headerlink" href="#technical-details" title="Link to this heading"></a></h2>
-<p>The following section assumes that the validator node on the original synchronizer has already been deployed.</p>
+<p>The following section assumes that the validator node connected to the original synchronizer has already been deployed.</p>
 <section id="state-and-migration-ids">
 <span id="validator-upgrades-state"></span><h3>State and Migration IDs<a class="headerlink" href="#state-and-migration-ids" title="Link to this heading"></a></h3>
 <p>Synchronizer upgrades with downtime effectively clone the state of the existing synchronizer, with some finer points:</p>
@@ -790,8 +792,8 @@ the validator app will automatically consume the migration dump and initialize t
 <span id="validator-upgrades-catching-up"></span><h3>Catching Up Before the Migration<a class="headerlink" href="#catching-up-before-the-migration" title="Link to this heading"></a></h3>
 <p>In order for the migration to the new synchronizer to be safe and successful, it is important that the validator node is fully caught up on the existing synchronizer before proceeding to <a class="reference internal" href="#validator-upgrades-deploying"><span class="std std-ref">Deploying the Validator App and Participant (Kubernetes)</span></a>.</p>
 <ul class="simple">
-<li><p>For making sure that the validator participant has caught up and the <a class="reference internal" href="#validator-upgrades-dumps"><span class="std std-ref">migration dump</span></a> has been created as expected, operators can check the logs of the <code class="docutils literal notranslate"><span class="pre">validator-app</span></code> pod for <code class="docutils literal notranslate"><span class="pre">Wrote</span> <span class="pre">domain</span> <span class="pre">migration</span> <span class="pre">dump</span></code> messages.</p></li>
-<li><p>For making sure that the validator app has caught up, operators can check the logs of the <code class="docutils literal notranslate"><span class="pre">validator-app</span></code> pod for the message <code class="docutils literal notranslate"><span class="pre">Ingested</span> <span class="pre">transaction</span></code>.
+<li><p>To ensure that the validator participant has caught up and the <a class="reference internal" href="#validator-upgrades-dumps"><span class="std std-ref">migration dump</span></a> has been created as expected, operators can check the logs of the <code class="docutils literal notranslate"><span class="pre">validator-app</span></code> pod for <code class="docutils literal notranslate"><span class="pre">Wrote</span> <span class="pre">domain</span> <span class="pre">migration</span> <span class="pre">dump</span></code> messages.</p></li>
+<li><p>To ensure that the validator app has caught up, operators can check the logs of the <code class="docutils literal notranslate"><span class="pre">validator-app</span></code> pod for the message <code class="docutils literal notranslate"><span class="pre">Ingested</span> <span class="pre">transaction</span></code>.
 If the latest such message is 10 or more minutes old, the validator app has very likely (with a large safety margin) caught up to the state on the participant, and hence to the state of the existing (paused) synchronizer.</p></li>
 </ul>
 </section>
@@ -819,15 +821,15 @@ whereas the validator app will reuse the existing state (see <a class="reference
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>compose<span class="w"> </span>logs<span class="w"> </span>validator<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;Wrote domain migration dump&quot;</span>
 </pre></div>
 </div>
-<p>(For general reading about docker compose log retentaion and rotation, see <a class="reference external" href="https://docs.docker.com/engine/logging/configure/">the docs</a>).</p>
+<p>(For general reading about docker compose log retention and rotation, see these <a class="reference external" href="https://docs.docker.com/engine/logging/configure/">Docker docs</a>).</p>
 <p>If the migration dump has been created, proceed with the following steps:</p>
 <ul class="simple">
 <li><p>Stop the validator, using <code class="docutils literal notranslate"><span class="pre">./stop.sh</span></code>.</p></li>
-<li><p>Restart the validator, while updating the migration ID in the <cite>-m &lt;migration ID&gt;</cite> argument,
-and also including <cite>-M</cite> to instruct the validator to perform the actual migration
-to the new migration ID. Note that <cite>-M</cite> is required only in the first startup after the migration,
+<li><p>Restart the validator, while updating the migration ID in the <code class="docutils literal notranslate"><span class="pre">-m</span> <span class="pre">&lt;migration</span> <span class="pre">ID&gt;</span></code> argument,
+and also including <code class="docutils literal notranslate"><span class="pre">-M</span></code> to instruct the validator to perform the actual migration
+to the new migration ID. Note that <code class="docutils literal notranslate"><span class="pre">-M</span></code> is required only in the first startup after the migration,
 to instruct the validator to perform the actual migration. Followup restarts should keep the
-<cite>-m &lt;migration ID&gt;</cite>, but omit the <cite>-M</cite>.</p></li>
+<code class="docutils literal notranslate"><span class="pre">-m</span> <span class="pre">&lt;migration</span> <span class="pre">ID&gt;</span></code>, but omit the <code class="docutils literal notranslate"><span class="pre">-M</span></code>.</p></li>
 </ul>
 </section>
 </section>

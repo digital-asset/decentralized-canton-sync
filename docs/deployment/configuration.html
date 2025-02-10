@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.11-ci-snapshot.20250210.1.0.v4cf5630b
+                0.3.11-ci-snapshot.20250210.1.0.v3e2de1e5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -101,14 +101,14 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-the-cluster-ingress">Configuring the Cluster Ingress</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#id4">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#id5">Requirements</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_helm.html#installation-instructions">Installation Instructions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#testnet-only-granting-coin-to-the-validator-for-traffic-purchases">(Testnet-only) Granting coin to the validator for traffic purchases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#testnet-only-granting-coin-to-the-validator-for-traffic-purchases">(TestNet-only) Granting coin to the validator for traffic purchases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-top-ups">Configuring top-ups</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-automatic-traffic-purchases">Configuring automatic traffic purchases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-sweeps-and-auto-accepts-of-transfer-offers">Configuring sweeps and auto-accepts of transfer offers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#participant-pruning">Participant Pruning</a></li>
 </ul>
@@ -198,7 +198,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-the-cluster-ingress">Configuring the Cluster Ingress</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#hostnames-and-urls">Hostnames and URLs</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#ingress-configuration">Ingress Configuration</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#id4">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#id5">Requirements</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#installation-instructions">Installation Instructions</a></li>
 </ul>
 </li>
@@ -731,11 +731,12 @@ All the environment variables passed to the apps, that start with <cite>ADDITION
 <p class="admonition-title">Note</p>
 <p>Example env: ADDITIONAL_CONFIG_EXAMPLE=”canton.example.key=value”</p>
 </div>
-<p>The full configuration for each app can be observed in the scala code, with the configuration key being kebab case compared to the camel case in the scala code:</p>
+<p>The full configuration for each app can be observed in the scala code,
+with the configuration key being kebab case compared to the camel case in the scala code:</p>
 <ul class="simple">
-<li><p><a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/main/apps/validator/src/main/scala/org/lfdecentralizedtrust/splice/validator/config/ValidatorAppConfig.scala#L141">Validator App</a></p></li>
-<li><p><a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/main/apps/sv/src/main/scala/org/lfdecentralizedtrust/splice/sv/config/SvAppConfig.scala#L199">SV App</a></p></li>
-<li><p><a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/main/apps/scan/src/main/scala/org/lfdecentralizedtrust/splice/scan/config/ScanAppConfig.scala#L28">Scan App</a></p></li>
+<li><p><a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/main/apps/validator/src/main/scala/org/lfdecentralizedtrust/splice/validator/config/ValidatorAppConfig.scala#L141">ValidatorAppConfig.scala</a></p></li>
+<li><p><a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/main/apps/sv/src/main/scala/org/lfdecentralizedtrust/splice/sv/config/SvAppConfig.scala#L199">SvAppConfig.scala</a></p></li>
+<li><p><a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/main/apps/scan/src/main/scala/org/lfdecentralizedtrust/splice/scan/config/ScanAppConfig.scala#L28">ScanAppConfig.scala</a></p></li>
 </ul>
 <p>Furthermore, the participant and other synchronizer components can be configured independently as well. Further info on such configurations can be found in the <a class="reference external" href="https://docs.daml.com/canton/usermanual/static_conf.html">daml docs</a>.</p>
 <section id="helm-charts-support">
