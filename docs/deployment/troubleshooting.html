@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.11-ci-snapshot.20250211.1.0.v7f138f19
+                0.3.11-ci-snapshot.20250211.1.0.v468940a1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -358,6 +358,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#common-error-messages">Common Error Messages</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#traffic-balance-below-reserved-amount">Traffic balance below reserved amount</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#insufficient-funds-to-buy-configured-traffic-amount">Insufficient funds to buy configured traffic amount</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gave-up-getting-app-version">Gave up getting app version</a></li>
 </ul>
 </li>
 </ul>
@@ -804,6 +805,17 @@ existing node with a CC balance can transfer CC to you to increase your balance.
 <p>If you only want to rely on free traffic and do not want to purchase any extra traffic, remove
 the validator top-up config.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Insufficient<span class="w"> </span>funds<span class="w"> </span>to<span class="w"> </span>buy<span class="w"> </span>configured<span class="w"> </span>traffic<span class="w"> </span>amount.<span class="w"> </span>Please<span class="w"> </span>ensure<span class="w"> </span>that<span class="w"> </span>the<span class="w"> </span>validator’s<span class="w"> </span>wallet<span class="w"> </span>has<span class="w"> </span>enough<span class="w"> </span>amulets<span class="w"> </span>to<span class="w"> </span>purchase<span class="w"> </span><span class="m">1</span>.9998<span class="w"> </span>MB<span class="w"> </span>of<span class="w"> </span>traffic<span class="w"> </span>to<span class="w"> </span><span class="k">continue</span><span class="w"> </span>healthy<span class="w"> </span>operation.
+</pre></div>
+</div>
+</section>
+<section id="gave-up-getting-app-version">
+<h3>Gave up getting app version<a class="headerlink" href="#gave-up-getting-app-version" title="Link to this heading"></a></h3>
+<p>A log of the form below can often indicate that you used a scan URL in
+a place where an SV URL was expected or the other way around. Note the
+mismatch between the prefix <code class="docutils literal notranslate"><span class="pre">https://scan.</span></code> and the path <code class="docutils literal notranslate"><span class="pre">/api/sv</span></code>
+at the end.</p>
+<p>In a docker-compose setup, verify the URL passed to <code class="docutils literal notranslate"><span class="pre">-s</span></code> which should be a SV URL or <code class="docutils literal notranslate"><span class="pre">svSponsorAddress</span></code> for the helm deployment.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="m">2025</span>-02-11T10:16:13.098Z<span class="w"> </span><span class="o">[</span>⋮<span class="o">]</span><span class="w"> </span>ERROR<span class="w"> </span>-<span class="w"> </span>o.l.s.v.ValidatorSvConnection:validator<span class="o">=</span>validator_backend<span class="w"> </span><span class="o">(</span>7427be2620676fce8a464eee769eb1d8-app_version-2d71c55f5ecd731b-793d382fa2d6ce14<span class="o">)</span><span class="w"> </span>-<span class="w"> </span>Gave<span class="w"> </span>up<span class="w"> </span>getting<span class="w"> </span><span class="s1">&#39;app version of https://scan.sv-2.dev.global.canton.network.digitalasset.com/api/sv&#39;</span><span class="w"> </span>org.apache.pekko.http.scaladsl.unmarshalling.Unmarshaller<span class="nv">$UnsupportedContentTypeException</span>:<span class="w"> </span>Unsupported<span class="w"> </span>Content-Type<span class="w"> </span><span class="o">[</span>Some<span class="o">(</span>text/html<span class="o">)]</span>,<span class="w"> </span>supported:<span class="w"> </span>application/json
 </pre></div>
 </div>
 </section>
