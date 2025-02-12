@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.11-ci-snapshot.20250212.1.0.v070bc3dd
+                0.3.11-ci-snapshot.20250212.1.0.vc1c4eeb9
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -385,7 +385,43 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../app_dev/scan_api/index.html">Scan API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../app_dev/scan_api/index.html">Scan API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../app_dev/scan_api/scan_bulk_data_api.html">Scan Bulk Data API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/scan_api/scan_bulk_data_api.html#open-api-specification">Open API Specification</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/scan_api/scan_bulk_data_api.html#updates">Updates</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/scan_api/scan_bulk_data_api.html#post-v1-updates">POST /v1/updates</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="../app_dev/scan_api/scan_bulk_data_api.html#exercised-event">Exercised Event</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../app_dev/scan_api/scan_bulk_data_api.html#created-event">Created Event</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/scan_api/scan_bulk_data_api.html#acs-snapshots">ACS Snapshots</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/scan_api/scan_bulk_data_api.html#get-v0-state-acs-snapshot-timestamp">GET /v0/state/acs/snapshot-timestamp</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/scan_api/scan_bulk_data_api.html#post-v0-state-acs">POST /v0/state/acs</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../app_dev/scan_api/scan_bulk_data_api.html#scan-txlog-script">Scan TxLog Script</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/scan_api/scan_bulk_data_api.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/scan_api/scan_bulk_data_api.html#usage">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../app_dev/scan_api/scan_bulk_data_api.html#key-components">Key Components</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/scan_api/scan_bulk_data_api.html#processing-overview">Processing Overview</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../app_dev/scan_api/scan_global_synchronizer_connectivity_api.html">Scan Global Synchronizer Connectivity API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../app_dev/scan_api/scan_global_synchronizer_operations_api.html">Scan Global Synchronizer Operations API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../app_dev/scan_api/scan_vote_requests_results_api.html">Scan Vote Requests and Results API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../app_dev/scan_api/scan_cc_reference_data_api.html">Scan Canton Coin Reference Data API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../app_dev/scan_api/scan_current_state_api.html">Scan API for Current state of CC, CNS, and Synchronizer Traffic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../app_dev/scan_api/scan_aggregates_api.html">Scan Aggregates API</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../app_dev/validator_api/index.html">Validator API</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../app_dev/validator_api/index.html#user-wallet-api">User wallet API</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../app_dev/validator_api/index.html#transfer-offers">Transfer Offers</a></li>
@@ -786,11 +822,10 @@ allowlists, you can query their Scan URLs. Note that this must be run
 from the same egress IP from which you want to deploy your validator,
 e.g., from the VM that you want to run your docker compose setup from
 or from within your Kubernetes cluster.</p>
-<p>Note that the following command requires installing <a class="reference external" href="https://jqlang.org/">JQ</a>.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span>url<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="k">$(</span>curl<span class="w"> </span>-sSL<span class="w"> </span><span class="p">|</span>gsf_scan_url<span class="p">|</span>/api/scan/v0/scans<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;.scans | .[].scans | .[] | .publicUrl&#39;</span><span class="w"> </span><span class="k">)</span><span class="p">;</span><span class="w"> </span><span class="se">\\</span>
-<span class="k">do</span><span class="w"> </span><span class="se">\\</span>
-<span class="nb">echo</span><span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$url</span><span class="s2">: &quot;</span><span class="p">;</span><span class="w"> </span><span class="se">\\</span>
-curl<span class="w"> </span>-sSL<span class="w"> </span>--connect-timeout<span class="w"> </span><span class="m">5</span><span class="w"> </span>--fail-with-body<span class="w"> </span><span class="nv">$url</span>/api/scan/version<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;.version&#39;</span><span class="p">;</span><span class="w"> </span><span class="se">\\</span>
+<p>Note that the following snippet requires installing <a class="reference external" href="https://jqlang.org/">JQ</a>.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span>url<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="k">$(</span>curl<span class="w"> </span>-sSL<span class="w"> </span><span class="p">|</span>gsf_scan_url<span class="p">|</span>/api/scan/v0/scans<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;.scans | .[].scans | .[] | .publicUrl&#39;</span><span class="w"> </span><span class="k">)</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<span class="w">  </span><span class="nb">echo</span><span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$url</span><span class="s2">: &quot;</span><span class="p">;</span>
+<span class="w">  </span>curl<span class="w"> </span>-sSL<span class="w"> </span>--connect-timeout<span class="w"> </span><span class="m">5</span><span class="w"> </span>--fail-with-body<span class="w"> </span><span class="nv">$url</span>/api/scan/version<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;.version&#39;</span><span class="p">;</span>
 <span class="k">done</span>
 </pre></div>
 </div>
@@ -806,6 +841,50 @@ https://scan.sv-1.test.global.canton.network.mpch.io:<span class="w"> </span><sp
 https://scan.sv-2.test.global.canton.network.cumberland.io:<span class="w"> </span><span class="m">0</span>.3.6
 https://scan.sv-1.test.global.canton.network.c7.digital:<span class="w"> </span><span class="m">0</span>.3.6
 https://scan.sv-1.test.global.canton.network.digitalasset.com:<span class="w"> </span><span class="m">0</span>.3.6
+</pre></div>
+</div>
+<p>Apart from connectivity to Scan, your validator must also be able to connect to the sequencer endpoints of the SVs.
+If you are encountering issues related to connecting to the synchronizer,
+you can use the following snippet to confirm that you’re able to reach those endpoints
+(i.e., that SVs have whitelisted your IP for those endpoints as well).
+Note that the following snippet requires installing <a class="reference external" href="https://jqlang.org/">JQ</a> and <a class="reference external" href="https://github.com/fullstorydev/grpcurl">grpcurl</a>.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span>url<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="k">$(</span>curl<span class="w"> </span>-sSL<span class="w"> </span><span class="p">|</span>gsf_scan_url<span class="p">|</span>/api/scan/v0/dso-sequencers<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;.domainSequencers | .[] | .sequencers.[].url | sub(&quot;https://&quot;; &quot;&quot;)&#39;</span><span class="w"> </span><span class="k">)</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<span class="w">  </span><span class="nb">echo</span><span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$url</span><span class="s2">: &quot;</span><span class="p">;</span>
+<span class="w">  </span>grpcurl<span class="w"> </span>--max-time<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="nv">$url</span>:443<span class="w"> </span>grpc.health.v1.Health/Check<span class="p">;</span>
+<span class="k">done</span>
+</pre></div>
+</div>
+<p>Sequencers that are functional and have whitelisted your IP correctly will return <code class="docutils literal notranslate"><span class="pre">status:</span> <span class="pre">SERVING</span></code> in the <code class="docutils literal notranslate"><span class="pre">grpcurl</span></code> output.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sequencer-1.sv-2.test.global.canton.network.digitalasset.com:<span class="w"> </span><span class="o">{</span>
+<span class="w">  </span><span class="s2">&quot;status&quot;</span>:<span class="w"> </span><span class="s2">&quot;SERVING&quot;</span>
+<span class="o">}</span>
+sequencer-1.sv.test.global.canton.network.tradeweb.com:<span class="w"> </span><span class="o">{</span>
+<span class="w">  </span><span class="s2">&quot;status&quot;</span>:<span class="w"> </span><span class="s2">&quot;SERVING&quot;</span>
+<span class="o">}</span>
+sequencer-1.sv-1.test.global.canton.network.cumberland.io:<span class="w"> </span><span class="o">{</span>
+<span class="w">  </span><span class="s2">&quot;status&quot;</span>:<span class="w"> </span><span class="s2">&quot;SERVING&quot;</span>
+<span class="o">}</span>
+sequencer-1.sv-1.test.global.canton.network.orb1lp.mpch.io:<span class="w"> </span><span class="o">{</span>
+<span class="w">  </span><span class="s2">&quot;status&quot;</span>:<span class="w"> </span><span class="s2">&quot;SERVING&quot;</span>
+<span class="o">}</span>
+sequencer-1.sv-1.test.global.canton.network.sync.global:<span class="w"> </span><span class="o">{</span>
+<span class="w">  </span><span class="s2">&quot;status&quot;</span>:<span class="w"> </span><span class="s2">&quot;SERVING&quot;</span>
+<span class="o">}</span>
+sequencer-1.sv.test.global.canton.network.sv-nodeops.com:<span class="w"> </span><span class="o">{</span>
+<span class="w">  </span><span class="s2">&quot;status&quot;</span>:<span class="w"> </span><span class="s2">&quot;SERVING&quot;</span>
+<span class="o">}</span>
+sequencer-1.sv-1.test.global.canton.network.mpch.io:<span class="w"> </span><span class="o">{</span>
+<span class="w">  </span><span class="s2">&quot;status&quot;</span>:<span class="w"> </span><span class="s2">&quot;SERVING&quot;</span>
+<span class="o">}</span>
+sequencer-1.sv-2.test.global.canton.network.cumberland.io:<span class="w"> </span><span class="o">{</span>
+<span class="w">  </span><span class="s2">&quot;status&quot;</span>:<span class="w"> </span><span class="s2">&quot;SERVING&quot;</span>
+<span class="o">}</span>
+sequencer-1.sv-1.test.global.canton.network.c7.digital:<span class="w"> </span><span class="o">{</span>
+<span class="w">  </span><span class="s2">&quot;status&quot;</span>:<span class="w"> </span><span class="s2">&quot;SERVING&quot;</span>
+<span class="o">}</span>
+sequencer-1.sv-1.test.global.canton.network.digitalasset.com:<span class="w"> </span><span class="o">{</span>
+<span class="w">  </span><span class="s2">&quot;status&quot;</span>:<span class="w"> </span><span class="s2">&quot;SERVING&quot;</span>
+<span class="o">}</span>
 </pre></div>
 </div>
 </section>

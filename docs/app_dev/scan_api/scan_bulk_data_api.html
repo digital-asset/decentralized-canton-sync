@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scan Bulk Data API &mdash; Splice  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="../../_static/copybutton.js?v=06d34380"></script>
+        <script src="../../_static/script.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Scan Global Synchronizer Connectivity API" href="scan_global_synchronizer_connectivity_api.html" />
+    <link rel="prev" title="Scan API" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Splice
+          </a>
+              <div class="version">
+                0.3.11-ci-snapshot.20250212.1.0.vc1c4eeb9
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Deployment and Operations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../deployment.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../validator_operator/index.html">Validators</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../validator_operator/validator_onboarding.html">Validator Onboarding Process</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_onboarding.html#networks">Networks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_onboarding.html#onboarding-process-overview">Onboarding Process Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_onboarding.html#validating-that-your-ip-has-been-approved">Validating that your IP has been approved</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_onboarding.html#stay-connected">Stay Connected</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../validator_operator/validator_onboarding.html#slack">Slack</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../validator_operator/validator_onboarding.html#mailing-lists">Mailing Lists</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../validator_operator/validator_hardware_requirements.html">Validator Hardware Requirements</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_hardware_requirements.html#database-latency">Database Latency</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../validator_operator/validator_compose.html">Docker-Compose Based Deployment of a Validator Node</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_compose.html#requirements">Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_compose.html#required-network-parameters">Required Network Parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_compose.html#preparing-for-validator-onboarding">Preparing for Validator Onboarding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_compose.html#deployment">Deployment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_compose.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_compose.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_compose.html#configuring-authentication">Configuring Authentication</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../validator_operator/validator_helm.html">Kubernetes-Based Deployment of a Validator node</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_helm.html#requirements">Requirements</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../validator_operator/validator_helm.html#required-network-parameters">Required Network Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_helm.html#validator-network-diagram">Validator Network Diagram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_helm.html#preparing-a-cluster-for-installation">Preparing a Cluster for Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_helm.html#configuring-postgresql-authentication">Configuring PostgreSQL authentication</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_helm.html#preparing-for-validator-onboarding">Preparing for Validator Onboarding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_helm.html#configuring-authentication">Configuring Authentication</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../validator_operator/validator_helm.html#oidc-provider-requirements">OIDC Provider Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../validator_operator/validator_helm.html#configuring-an-auth0-tenant">Configuring an Auth0 Tenant</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../validator_operator/validator_helm.html#configuring-authentication-on-your-validator">Configuring Authentication on your Validator</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_helm.html#installing-the-software">Installing the Software</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../validator_operator/validator_helm.html#configuring-the-helm-charts">Configuring the Helm Charts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../validator_operator/validator_helm.html#installing-the-helm-charts">Installing the Helm Charts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_helm.html#configuring-the-cluster-ingress">Configuring the Cluster Ingress</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../validator_operator/validator_helm.html#id5">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../validator_operator/validator_helm.html#installation-instructions">Installation Instructions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_helm.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_helm.html#testnet-only-granting-coin-to-the-validator-for-traffic-purchases">(TestNet-only) Granting coin to the validator for traffic purchases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_helm.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_helm.html#configuring-automatic-traffic-purchases">Configuring automatic traffic purchases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_helm.html#configuring-sweeps-and-auto-accepts-of-transfer-offers">Configuring sweeps and auto-accepts of transfer offers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_helm.html#participant-pruning">Participant Pruning</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../validator_operator/validator_upgrades.html">Upgrades</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_major_upgrades.html">Synchronizer Upgrades with Downtime</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../validator_operator/validator_major_upgrades.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../validator_operator/validator_major_upgrades.html#technical-details">Technical Details</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../validator_operator/validator_major_upgrades.html#state-and-migration-ids">State and Migration IDs</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../validator_operator/validator_major_upgrades.html#migration-dumps">Migration Dumps</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../validator_operator/validator_major_upgrades.html#catching-up-before-the-migration">Catching Up Before the Migration</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../validator_operator/validator_major_upgrades.html#deploying-the-validator-app-and-participant-kubernetes">Deploying the Validator App and Participant (Kubernetes)</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../validator_operator/validator_major_upgrades.html#deploying-the-validator-app-and-participant-docker-compose">Deploying the validator App and Participant (Docker-Compose)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../validator_operator/validator_backups.html">Backups</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_backups.html#backup-of-node-identities">Backup of Node Identities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_backups.html#backups-of-postgres-instances">Backups of postgres instances</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../validator_operator/validator_disaster_recovery.html">Disaster Recovery</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_disaster_recovery.html#restoring-a-validator-from-backups">Restoring a validator from backups</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_disaster_recovery.html#re-onboard-a-validator-and-recover-balances-of-all-users-it-hosts">Re-onboard a validator and recover balances of all users it hosts</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../validator_operator/validator_disaster_recovery.html#docker-compose-deployment">Docker-Compose Deployment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../validator_operator/validator_disaster_recovery.html#kubernetes-deployment">Kubernetes Deployment</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_disaster_recovery.html#disaster-recovery-from-loss-of-the-cometbft-storage-layer-of-the-global-synchronizer">Disaster recovery from loss of the CometBFT storage layer of the global synchronizer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../validator_operator/validator_disaster_recovery.html#technical-details">Technical Details</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../validator_operator/validator_security.html">Security Hardening</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_security.html#using-an-external-kms-for-managing-participant-keys">Using an external KMS for managing participant keys</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../validator_operator/validator_security.html#migrating-an-existing-validator-to-use-an-external-kms">Migrating an existing validator to use an external KMS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../validator_operator/validator_security.html#configuring-a-fresh-validator-to-use-an-external-kms">Configuring a fresh validator to use an external KMS</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../validator_operator/validator_security.html#google-cloud-kms">Google Cloud KMS</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../validator_operator/validator_security.html#amazon-web-services-kms">Amazon Web Services KMS</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../validator_operator/validator_users.html">Users, Parties and Wallets in the Splice Wallet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../validator_operator/validator_networking.html">Validator Ingress &amp; Egress requirements</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_networking.html#ingress">Ingress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_networking.html#egress">Egress</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../sv_operator/index.html">Supervalidators</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../sv_operator/sv_helm.html">Kubernetes-Based Deployment of a Super Validator node</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_helm.html#requirements">Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_helm.html#generating-an-sv-identity">Generating an SV identity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_helm.html#preparing-a-cluster-for-installation">Preparing a Cluster for Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_helm.html#configuring-authentication">Configuring Authentication</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../sv_operator/sv_helm.html#oidc-provider-requirements">OIDC Provider Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../sv_operator/sv_helm.html#configuring-an-auth0-tenant">Configuring an Auth0 Tenant</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../sv_operator/sv_helm.html#configuring-authentication-on-your-sv-node">Configuring Authentication on your SV Node</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_helm.html#configuring-your-cometbft-node">Configuring your CometBft node</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../sv_operator/sv_helm.html#generating-your-cometbft-node-keys">Generating your CometBft node keys</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../sv_operator/sv_helm.html#configuring-your-cometbft-node-keys">Configuring your CometBft node keys</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../sv_operator/sv_helm.html#configuring-cometbft-state-sync">Configuring CometBft state sync</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_helm.html#installing-postgres-instances">Installing Postgres instances</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../sv_operator/sv_helm.html#creating-k8s-secrets-for-postgres-passwords">Creating k8s Secrets for Postgres Passwords</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../sv_operator/sv_helm.html#postgres-in-the-cluster">Postgres in the Cluster</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../sv_operator/sv_helm.html#cloud-hosted-postgres">Cloud-Hosted Postgres</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_helm.html#installing-the-software">Installing the Software</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../sv_operator/sv_helm.html#configuring-the-helm-charts">Configuring the Helm Charts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../sv_operator/sv_helm.html#installing-the-helm-charts">Installing the Helm Charts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_helm.html#sv-network-diagram">SV Network Diagram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_helm.html#configuring-the-cluster-ingress">Configuring the Cluster Ingress</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../sv_operator/sv_helm.html#hostnames-and-urls">Hostnames and URLs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../sv_operator/sv_helm.html#ingress-configuration">Ingress Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../sv_operator/sv_helm.html#id5">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../sv_operator/sv_helm.html#installation-instructions">Installation Instructions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_helm.html#configuring-the-cluster-egress">Configuring the Cluster Egress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_helm.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_helm.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_helm.html#logging-into-the-sv-ui">Logging into the SV UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_helm.html#observing-the-canton-coin-scan-ui">Observing the Canton Coin Scan UI</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../sv_operator/sv_upgrades.html">Upgrades</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_major_upgrade.html">Synchronizer Upgrades with Downtime</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../sv_operator/sv_major_upgrade.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../sv_operator/sv_major_upgrade.html#technical-details">Technical Details</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../sv_operator/sv_major_upgrade.html#state-and-migration-ids">State and Migration IDs</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../sv_operator/sv_major_upgrade.html#migration-dumps">Migration Dumps</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../sv_operator/sv_major_upgrade.html#deploying-new-canton-components-and-cometbft-node">Deploying new Canton Components and CometBFT Node</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../sv_operator/sv_major_upgrade.html#catching-up-before-the-migration">Catching Up Before the Migration</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../sv_operator/sv_major_upgrade.html#updating-apps">Updating Apps</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../sv_operator/sv_major_upgrade.html#recovering-from-a-failed-upgrade">Recovering from a failed upgrade</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../../sv_operator/sv_major_upgrade.html#organizational-details">Organizational Details</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../sv_operator/sv_major_upgrade.html#coordination-calls">Coordination calls</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../../sv_operator/sv_major_upgrade.html#testing">Testing</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../sv_operator/sv_major_upgrade.html#individual-preparation">Individual Preparation</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../sv_operator/sv_major_upgrade.html#coordinated-tests">Coordinated Tests</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../sv_operator/sv_backup.html">Backups</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_backup.html#backup-of-node-identities">Backup of Node Identities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_backup.html#backup-of-postgres-instances">Backup of Postgres Instances</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_backup.html#backup-of-cometbft">Backup of CometBFT</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../sv_operator/sv_restore.html">Disaster Recovery</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_restore.html#restoring-from-data-corruption">Restoring From Data Corruption</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../sv_operator/sv_restore.html#restoring-a-single-component-from-backups">Restoring a single component from backups</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../sv_operator/sv_restore.html#restoring-a-full-sv-node-from-backups">Restoring a full SV node from backups</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_restore.html#re-onboard-an-sv-and-recover-amulets-with-a-validator">Re-onboard an SV and recover Amulets with a validator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_restore.html#disaster-recovery-from-loss-of-cometbft-layer">Disaster recovery from loss of CometBFT layer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../sv_operator/sv_restore.html#technical-details">Technical Details</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../sv_operator/sv_restore.html#finding-a-consistent-timestamp-to-recover-the-synchronizer-from">Finding a Consistent Timestamp to Recover the Synchronizer From</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../sv_operator/sv_restore.html#creating-a-data-dump-from-the-sv-app">Creating a Data Dump from the SV App</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../sv_operator/sv_restore.html#migrating-the-data">Migrating the Data</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../sv_operator/sv_operations.html">SV Operations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_operations.html#security-notice">Security Notice</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_operations.html#generate-a-validator-onboarding-secret">Generate a validator onboarding secret</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_operations.html#sv-identities-overview">Identities used by SV nodes on different layers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../sv_operator/sv_operations.html#sv-identity">SV identity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../sv_operator/sv_operations.html#participant-identities">Participant identities</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../sv_operator/sv_operations.html#cometbft-node-identities">CometBFT node identities</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_operations.html#updating-the-reward-weight-of-an-sv">Updating the reward weight of an SV</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../sv_operator/sv_scratchnet.html">How to Bootstrap a Network</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_scratchnet.html#cometbft-helm-values">cometbft helm values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_scratchnet.html#scan-helm-values">scan helm values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_scratchnet.html#sv-helm-values">sv helm values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_scratchnet.html#other-helm-values-you-may-need-to-consider">other helm values you may need to consider</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_scratchnet.html#infra-level-things-you-might-want-to-consider">Infra-level things you might want to consider</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_scratchnet.html#how-to-run-through-a-hdm">How to run through a HDM</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../deployment/index.html">Operations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../deployment/observability/index.html">Monitoring and Observability</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../deployment/observability/metrics.html">Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../deployment/observability/metrics.html#scraping-the-metrics">Scraping the metrics</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics.html#configuring-a-helm-deployment-to-enable-metrics">Configuring a helm deployment to enable metrics</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics.html#configuring-a-docker-compose-deployment-to-enable-metrics">Configuring a docker compose deployment to enable metrics</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../../deployment/observability/metrics.html#grafana-dashboards">Grafana Dashboards</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../deployment/observability/metrics_reference.html">Metrics Reference</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#common-metrics">Common Metrics</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#splice-domain-params-store-confirmation-requests-max-rate">splice.domain_params_store.confirmation-requests-max-rate</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#splice-store-signal-when-ingested-latency">splice.store.signal-when-ingested-latency</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#splice-store-acs-size">splice.store.acs-size</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#daml-grpc-client">daml.grpc.client</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#daml-grpc-client-messages-sent">daml.grpc.client.messages.sent</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#daml-grpc-client-messages-received">daml.grpc.client.messages.received</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#daml-grpc-client-messages-sent-bytes">daml.grpc.client.messages.sent.bytes</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#daml-grpc-client-messages-received-bytes">daml.grpc.client.messages.received.bytes</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#daml-grpc-client-started">daml.grpc.client.started</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#daml-grpc-client-completed">daml.grpc.client.completed</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#splice-trigger-latency">splice.trigger.latency</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#splice-trigger-iterations">splice.trigger.iterations</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#splice-trigger-completed">splice.trigger.completed</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#validator-metrics">Validator Metrics</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#splice-wallet-unlocked-amulet-balance">splice.wallet.unlocked-amulet-balance</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#splice-wallet-locked-amulet-balance">splice.wallet.locked-amulet-balance</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#sv-metrics">SV Metrics</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#splice-sv-dso-store-latest-open-mining-round">splice.sv_dso_store.latest-open-mining-round</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#splice-sequencer-pruning-latency">splice.sequencer_pruning.latency</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#splice-sequencer-pruning-disabled-members">splice.sequencer_pruning.disabled_members</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#splice-sv-cometbft-earliest-block-height">splice.sv_cometbft.earliest_block_height</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#splice-sv-cometbft-latest-block-height">splice.sv_cometbft.latest_block_height</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#splice-sv-status-report-number">splice.sv_status_report.number</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#splice-sv-status-report-creation-time-us">splice.sv_status_report.creation_time_us</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#splice-sv-status-report-cometbft-height">splice.sv_status_report.cometbft_height</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#splice-sv-status-report-domain-time-us">splice.sv_status_report.domain_time_us</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#id2">splice.sv_status_report.domain_time_us</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#splice-sv-status-report-latest-open-round">splice.sv_status_report.latest_open_round</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#scan-metrics">Scan Metrics</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#splice-scan-store-earliest-aggregated-round">splice.scan_store.earliest-aggregated-round</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../deployment/observability/metrics_reference.html#splice-scan-store-latest-aggregated-round">splice.scan_store.latest-aggregated-round</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../deployment/configuration.html">Configuring deployed apps</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../deployment/configuration.html#adding-ad-hoc-configuration">Adding ad-hoc configuration</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../deployment/configuration.html#helm-charts-support">Helm charts support</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../deployment/troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../deployment/console_access.html">Getting console access to Canton nodes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../deployment/console_access.html#participant-console">Participant console</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../deployment/console_access.html#sequencer-console">Sequencer console</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../deployment/console_access.html#mediator-console">Mediator console</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../deployment/console_access.html#access-in-a-k8s-cluster">Access in a K8s cluster</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../deployment/troubleshooting.html#where-to-find-logs">Where to find logs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../deployment/troubleshooting.html#debugging-issues-in-web-uis">Debugging issues in Web UIs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../deployment/troubleshooting.html#configurations">Configurations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../deployment/troubleshooting.html#common-error-messages">Common Error Messages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../deployment/troubleshooting.html#traffic-balance-below-reserved-amount">Traffic balance below reserved amount</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../deployment/troubleshooting.html#insufficient-funds-to-buy-configured-traffic-amount">Insufficient funds to buy configured traffic amount</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../deployment/troubleshooting.html#gave-up-getting-app-version">Gave up getting app version</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Application Development</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../overview/read-only-apps.html">Read-Only Apps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/daml-apps.html">Daml Apps</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../overview/daml-apps.html#architecture">Architecture</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/daml-apps.html#ledger-ingestion">Ledger Ingestion</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/version_information.html">Version Information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/splice_app_apis.html">Splice App APIs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../overview/splice_app_apis.html#openapi-specifications">OpenAPI Specifications</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/splice_app_apis.html#api-stability">API Stability</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/splice_app_apis.html#contract-payload-encoding">Contract Payload Encoding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../overview/splice_app_apis.html#authentication">Authentication</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Scan API</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Scan Bulk Data API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#open-api-specification">Open API Specification</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#updates">Updates</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#post-v1-updates">POST /v1/updates</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#exercised-event">Exercised Event</a></li>
+<li class="toctree-l6"><a class="reference internal" href="#created-event">Created Event</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#acs-snapshots">ACS Snapshots</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#get-v0-state-acs-snapshot-timestamp">GET /v0/state/acs/snapshot-timestamp</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#post-v0-state-acs">POST /v0/state/acs</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#scan-txlog-script">Scan TxLog Script</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#key-components">Key Components</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#processing-overview">Processing Overview</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html">Scan Global Synchronizer Connectivity API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan_global_synchronizer_operations_api.html">Scan Global Synchronizer Operations API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan_vote_requests_results_api.html">Scan Vote Requests and Results API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan_cc_reference_data_api.html">Scan Canton Coin Reference Data API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan_current_state_api.html">Scan API for Current state of CC, CNS, and Synchronizer Traffic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan_aggregates_api.html">Scan Aggregates API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../validator_api/index.html">Validator API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../validator_api/index.html#user-wallet-api">User wallet API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../validator_api/index.html#transfer-offers">Transfer Offers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../validator_api/index.html#buying-traffic">Buying Traffic</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../validator_api/index.html#internal-user-wallet-api">Internal user wallet API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../validator_api/index.html#external-custody-api">External Custody API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../validator_api/index.html#user-management-api">User management API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../validator_api/index.html#validator-management-api">Validator management API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../validator_api/index.html#ans-api">ANS API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../validator_api/index.html#scan-proxy-api">Scan Proxy API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ledger_api/index.html">Ledger API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../daml_api/index.html">Daml API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/splice-amulet/index.html">splice-amulet docs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-amulet/Splice-Amulet.html">Splice.Amulet</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-Amulet.html#templates">Templates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-Amulet.html#data-types">Data Types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-Amulet.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-amulet/Splice-AmuletConfig.html">Splice.AmuletConfig</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-AmuletConfig.html#data-types">Data Types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-AmuletConfig.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-amulet/Splice-AmuletRules.html">Splice.AmuletRules</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-AmuletRules.html#templates">Templates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-AmuletRules.html#data-types">Data Types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-AmuletRules.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-amulet/Splice-DecentralizedSynchronizer.html">Splice.DecentralizedSynchronizer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-DecentralizedSynchronizer.html#templates">Templates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-DecentralizedSynchronizer.html#data-types">Data Types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-DecentralizedSynchronizer.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-amulet/Splice-Expiry.html">Splice.Expiry</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-Expiry.html#data-types">Data Types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-Expiry.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-amulet/Splice-ExternalPartyAmuletRules.html">Splice.ExternalPartyAmuletRules</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-ExternalPartyAmuletRules.html#templates">Templates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-ExternalPartyAmuletRules.html#data-types">Data Types</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-amulet/Splice-Fees.html">Splice.Fees</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-Fees.html#data-types">Data Types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-Fees.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-amulet/Splice-Issuance.html">Splice.Issuance</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-Issuance.html#data-types">Data Types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-Issuance.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-amulet/Splice-RelRound.html">Splice.RelRound</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-RelRound.html#data-types">Data Types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-RelRound.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-amulet/Splice-Round.html">Splice.Round</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-Round.html#templates">Templates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-Round.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-amulet/Splice-Schedule.html">Splice.Schedule</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-Schedule.html#data-types">Data Types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-Schedule.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-amulet/Splice-Types.html">Splice.Types</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-Types.html#data-types">Data Types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-Types.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-amulet/Splice-ValidatorLicense.html">Splice.ValidatorLicense</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-ValidatorLicense.html#templates">Templates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-ValidatorLicense.html#data-types">Data Types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet/Splice-ValidatorLicense.html#functions">Functions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api/splice-amulet-name-service/index.html">splice-amulet-name-service docs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-amulet-name-service/Splice-Ans.html">Splice.Ans</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet-name-service/Splice-Ans.html#templates">Templates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet-name-service/Splice-Ans.html#data-types">Data Types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-amulet-name-service/Splice-Ans.html#functions">Functions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api/splice-dso-governance/index.html">splice-dso-governance docs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-dso-governance/Splice-CometBft.html">Splice.CometBft</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-dso-governance/Splice-CometBft.html#data-types">Data Types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-dso-governance/Splice-CometBft.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-dso-governance/Splice-DSO-AmuletPrice.html">Splice.DSO.AmuletPrice</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-dso-governance/Splice-DSO-AmuletPrice.html#templates">Templates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-dso-governance/Splice-DSO-AmuletPrice.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-dso-governance/Splice-DSO-DecentralizedSynchronizer.html">Splice.DSO.DecentralizedSynchronizer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-dso-governance/Splice-DSO-DecentralizedSynchronizer.html#data-types">Data Types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-dso-governance/Splice-DSO-DecentralizedSynchronizer.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-dso-governance/Splice-DSO-SvState.html">Splice.DSO.SvState</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-dso-governance/Splice-DSO-SvState.html#templates">Templates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-dso-governance/Splice-DSO-SvState.html#data-types">Data Types</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-dso-governance/Splice-DsoBootstrap.html">Splice.DsoBootstrap</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-dso-governance/Splice-DsoBootstrap.html#templates">Templates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-dso-governance/Splice-DsoBootstrap.html#data-types">Data Types</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-dso-governance/Splice-DsoRules.html">Splice.DsoRules</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-dso-governance/Splice-DsoRules.html#templates">Templates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-dso-governance/Splice-DsoRules.html#orphan-typeclass-instances">Orphan Typeclass Instances</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-dso-governance/Splice-DsoRules.html#data-types">Data Types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-dso-governance/Splice-DsoRules.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-dso-governance/Splice-SvOnboarding.html">Splice.SvOnboarding</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-dso-governance/Splice-SvOnboarding.html#templates">Templates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-dso-governance/Splice-SvOnboarding.html#data-types">Data Types</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api/splice-util/index.html">splice-util docs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-util/Splice-Util.html">Splice.Util</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-util/Splice-Util.html#typeclasses">Typeclasses</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-util/Splice-Util.html#functions">Functions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api/splice-validator-lifecycle/index.html">splice-validator-life-cycle docs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-validator-lifecycle/Splice-ValidatorOnboarding.html">Splice.ValidatorOnboarding</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-validator-lifecycle/Splice-ValidatorOnboarding.html#templates">Templates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-validator-lifecycle/Splice-ValidatorOnboarding.html#data-types">Data Types</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api/splice-wallet/index.html">splice-wallet docs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-wallet/Splice-Wallet-BuyTrafficRequest.html">Splice.Wallet.BuyTrafficRequest</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-wallet/Splice-Wallet-BuyTrafficRequest.html#templates">Templates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-wallet/Splice-Wallet-BuyTrafficRequest.html#data-types">Data Types</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-wallet/Splice-Wallet-Install.html">Splice.Wallet.Install</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-wallet/Splice-Wallet-Install.html#templates">Templates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-wallet/Splice-Wallet-Install.html#data-types">Data Types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-wallet/Splice-Wallet-Install.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-wallet/Splice-Wallet-TopUpState.html">Splice.Wallet.TopUpState</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-wallet/Splice-Wallet-TopUpState.html#templates">Templates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-wallet/Splice-Wallet-TopUpState.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-wallet/Splice-Wallet-TransferOffer.html">Splice.Wallet.TransferOffer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-wallet/Splice-Wallet-TransferOffer.html#templates">Templates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-wallet/Splice-Wallet-TransferOffer.html#data-types">Data Types</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-wallet/Splice-Wallet-TransferPreapproval.html">Splice.Wallet.TransferPreapproval</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-wallet/Splice-Wallet-TransferPreapproval.html#templates">Templates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-wallet/Splice-Wallet-TransferPreapproval.html#data-types">Data Types</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api/splice-wallet-payments/index.html">splice-wallet-payments docs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-wallet-payments/Splice-Wallet-Payment.html">Splice.Wallet.Payment</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-wallet-payments/Splice-Wallet-Payment.html#templates">Templates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-wallet-payments/Splice-Wallet-Payment.html#data-types">Data Types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-wallet-payments/Splice-Wallet-Payment.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api/splice-wallet-payments/Splice-Wallet-Subscriptions.html">Splice.Wallet.Subscriptions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-wallet-payments/Splice-Wallet-Subscriptions.html#templates">Templates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-wallet-payments/Splice-Wallet-Subscriptions.html#data-types">Data Types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/splice-wallet-payments/Splice-Wallet-Subscriptions.html#functions">Functions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../testing/index.html">Testing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../testing/localnet.html">Docker-Compose Based Deployment of a Local Network</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../testing/localnet.html#requirements">Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../testing/localnet.html#depoying-the-nodes">Depoying the nodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../testing/localnet.html#uis">UIs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../testing/networks_and_usecases.html">SV Operated networks and Use-cases</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../testing/networks_and_usecases.html#devnet">DevNet</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../testing/networks_and_usecases.html#testnet">TestNet</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../testing/networks_and_usecases.html#mainnet">MainNet</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../testing/networks_and_usecases.html#testing-guidelines">Testing Guidelines</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Glossary</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../glossary.html">Glossary</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../release_notes.html">Release Notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#upcoming">Upcoming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id2">0.3.10</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id3">0.3.9</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id4">0.3.8</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id5">0.3.7</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id6">0.3.6</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id7">0.3.5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id8">0.3.4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id9">0.3.3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id10">0.3.2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id11">0.3.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id12">0.3.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../release_notes.html#daml-changes-in-0-3-0">Daml Changes in 0.3.0</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id13">0.2.8</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id14">0.2.7</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id15">0.2.6</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id16">0.2.4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id17">0.2.3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id18">0.2.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id19">0.2.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id20">0.1.19</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id21">0.1.18</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id22">0.1.17</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id23">0.1.16</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id24">0.1.15</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id25">0.1.13</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id26">0.1.12</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id27">0.1.10</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id28">0.1.9</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id29">0.1.8</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id30">0.1.7</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id31">0.1.6</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id32">0.1.5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id33">0.1.4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id34">0.1.3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id35">0.1.2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id36">2024-04-01</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id37">2024-03-25</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id38">2024-03-18</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id39">2024-03-11</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id40">2024-03-04</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id41">2024-02-26</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id42">2024-02-19</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id43">2024-02-12</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id44">2024-02-05</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id45">2024-01-29</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id46">2024-01-22</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id47">2024-01-15</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id48">2024-01-08</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id49">2023-12-18</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id50">2023-12-11</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id51">2023-12-04</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id52">2023-11-27</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id53">2023-11-20</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id54">2023-11-13</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id55">2023-11-06</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id56">2023-10-30</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id57">2023-10-23</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id58">2023-10-16</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id59">2023-10-09</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id60">2023-10-02</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id61">2023-09-25</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id62">2023-09-11</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id63">2023-09-04</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id64">2023-08-28</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id65">2023-08-14</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id66">2023-08-07</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id67">2023-07-31</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id68">2023-07-16</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id69">2023-07-02</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id70">2023-06-25</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id71">2023-06-18</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id72">2023-06-11</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id73">2023-06-04</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id74">2023-05-28</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id75">2023-05-21</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id76">2023-05-14</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id77">2023-05-07</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id78">2023-04-30</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id79">2023-04-23</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Splice</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Scan API</a></li>
+      <li class="breadcrumb-item active">Scan Bulk Data API</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/app_dev/scan_api/scan_bulk_data_api.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="scan-bulk-data-api">
+<span id="id1"></span><h1>Scan Bulk Data API<a class="headerlink" href="#scan-bulk-data-api" title="Link to this heading"></a></h1>
+<p>At a high level, participant nodes provide two separate endpoints through a Ledger API:</p>
+<ul class="simple">
+<li><p>An endpoint to submit commands to the ledger that allow an application to submit transactions and change state, by creating, exercising or archiving contracts.</p></li>
+<li><p>An endpoint that provides a stream of transactions and corresponding events
+— which are called <strong>updates</strong> for short — <strong>from</strong> the ledger that indicate all state changes that have taken place on the ledger
+as seen by the parties hosted on the participant node.</p></li>
+</ul>
+<p>The <strong>state</strong> at a given point in time is the set of contracts that were active at that time.
+This ACS (Active Contract Set) can be reconstructed by applying all updates up to the given time.</p>
+<p>The Scan App connects to the Canton Participant of its SV node and makes this data available through the Bulk Data Scan API.
+It provides the following streams of low-level data:</p>
+<ul class="simple">
+<li><p>A stream to the history of <strong>updates</strong></p></li>
+<li><p>A stream of <strong>ACS snapshots</strong> that are periodically taken</p></li>
+</ul>
+<p>The Scan App ingests new updates as they occur on the ledger, and also back-fills updates from other SVs that have occurred before the SV joined the network,
+so it can serve data from the network’s genesis.
+This update history contains data from the beginning of the network, which is distributed amongst SVs in <a class="reference internal" href="../../glossary.html#term-BFT"><span class="xref std std-term">BFT</span></a> fashion by the Scan Apps.
+Once the update history of a Scan App is complete, ACS snapshots are periodically created from the update history.
+The Scan App continues to periodically add new ACS snapshots.
+This makes it possible for every Scan App hosted by every SV to provide all update history and ACS snapshots from the network’s genesis,
+in a decentralized and consistent manner.</p>
+<p>The Bulk Data Scan API provides access to the update history and ACS snapshots as they were recorded.
+Since the API exposes the underlying Daml transactions directly, there are a couple of concerns to keep in mind:</p>
+<ul class="simple">
+<li><p>The API does not hide or abstract any detail in the data, it provides the raw events as they occurred.
+This means that you get direct access to all information in the transactions, and you need to familiarize yourself
+with the Daml code that underlies these events.
+Please see <a class="reference internal" href="#reference-documentation">Reference Documentation</a> for a refresher on how the Ledger changes through actions grouped in transactions,
+and how UTXO contract states are created, spent (exercised) and archived in general. We’ll discuss the specifics of the Daml models in more detail in the <a class="reference internal" href="#scan-txlog-script">Scan TxLog Script</a> section.</p></li>
+<li><p>The events need to be parsed in a flexible manner. Choices and optional fields can be added over time, and new templates and data types can be introduced.
+A parser should be able to ignore these kinds of changes, and not fail when they occur.
+This means that parsing logic should be selective, and not fail when unknown fields or templates are encountered.
+Please see <a class="reference external" href="https://docs.daml.com/upgrade/index.html">Daml upgrades</a> for more information.
+The rules for Daml upgrades align well with a relaxed, intuitive approach to JSON parsing, e.g. not asserting absence of unexpected fields and not assuming key-presence for optional fields.</p></li>
+</ul>
+<div class="admonition note" id="reference-documentation">
+<p class="admonition-title">Note</p>
+<p>Please see <a class="reference external" href="https://docs.daml.com/concepts/ledger-model/ledger-structure.html">Ledger Structure</a> on how actions are executed in transactions to change the ledger, creating contracts and exercising choices,
+which gets described further in <a class="reference external" href="https://docs.daml.com/daml/intro/4_Transformations.html">Transform Data Using Choices</a>.</p>
+</div>
+<section id="open-api-specification">
+<h2>Open API Specification<a class="headerlink" href="#open-api-specification" title="Link to this heading"></a></h2>
+<p>Please see the Scan <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/08fc692cf2952a52cce00473793d1dca08c0fba5/apps/scan/src/main/openapi/scan-internal.yaml">Open API specification</a>.
+Look for APIs starting with <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/7345124f9f05395ab4797c0478c7e1dd37186369/apps/scan/src/main/openapi/scan-internal.yaml#L511">/v1/updates/</a>
+and <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/7345124f9f05395ab4797c0478c7e1dd37186369/apps/scan/src/main/openapi/scan-internal.yaml#L603">/v0/state/</a>, respectively for updates and ACS snapshots.</p>
+<p>Example URLs for accessing the Scan Bulk Data API on Devnet are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">https://|gsf_scan_url|/api/scan/v1/updates</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">https://|gsf_scan_url|/api/scan/v0/state/acs/snapshot-timestamp</span></code></p></li>
+</ul>
+<p>Please note the <cite>api/scan</cite> prefix in the URLs, which is the base path for the Scan API.</p>
+<section id="updates">
+<h3>Updates<a class="headerlink" href="#updates" title="Link to this heading"></a></h3>
+<p>An update can be one of two things:</p>
+<ul class="simple">
+<li><p>A <strong>transaction</strong>, which is a tree of events, where an event either creates a contract or exercises a choice on a contract.
+Exercises can have child events, which results in a tree structure.</p></li>
+<li><p>A <strong>reassignment</strong>, which assigns the processing of an active contract state (UTXOs) to another synchronizer, as part of a Splice network app’s multi-synchronizer workflow or a rolling upgrade.
+They will begin to appear in the update stream as the global synchronizer introduces rolling upgrades later in 2025 or early 2026;
+for this reason we’ll omit further details for now, you can safely ignore reassignments and only handle transactions.</p></li>
+</ul>
+<p><a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/7345124f9f05395ab4797c0478c7e1dd37186369/apps/scan/src/main/openapi/scan-internal.yaml#L511">/v1/updates</a>
+provides a JSON encoded version of the recorded update history. Once you have an <code class="docutils literal notranslate"><span class="pre">update_id</span></code> for a specific update, you can retrieve the details by using
+<a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/7345124f9f05395ab4797c0478c7e1dd37186369/apps/scan/src/main/openapi/scan-internal.yaml#L571">/v1/updates/{update_id}</a>.</p>
+<p>The Open API spec for <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/7345124f9f05395ab4797c0478c7e1dd37186369/apps/scan/src/main/openapi/scan-internal.yaml#L511">/v1/updates</a>
+and <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/7345124f9f05395ab4797c0478c7e1dd37186369/apps/scan/src/main/openapi/scan-internal.yaml#L571">/v1/updates/{update_id}</a>
+describe the APIs in detail.</p>
+<section id="post-v1-updates">
+<h4>POST /v1/updates<a class="headerlink" href="#post-v1-updates" title="Link to this heading"></a></h4>
+<p>Post a paged <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/7345124f9f05395ab4797c0478c7e1dd37186369/apps/scan/src/main/openapi/scan-internal.yaml#L1672">UpdateHistoryRequestV1</a>
+request to get all updates up to <code class="docutils literal notranslate"><span class="pre">page_size</span></code>, optionally specifying an <code class="docutils literal notranslate"><span class="pre">after</span></code> object with <code class="docutils literal notranslate"><span class="pre">after_migration_id</span></code> and <code class="docutils literal notranslate"><span class="pre">after_record_time</span></code> fields.
+(for the beginning of the network you can omit the <code class="docutils literal notranslate"><span class="pre">after</span></code> field).
+An example of a <code class="docutils literal notranslate"><span class="pre">UpdateHistoryRequestV1</span></code> request body is shown below, getting a page of max 10 updates from the beginning of the network:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;page_size&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Another example of a <code class="docutils literal notranslate"><span class="pre">UpdateHistoryRequestV1</span></code> request body is shown below, getting a page of max 10 updates after the specified record time:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;page_size&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;after&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;after_migration_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;after_record_time&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2024-09-20T13:31:28.405180Z&quot;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Take the <code class="docutils literal notranslate"><span class="pre">migration_id</span></code> and the <code class="docutils literal notranslate"><span class="pre">record_time</span></code> from the last update in the response of the previous successful request and use this
+in a subsequent request in the <code class="docutils literal notranslate"><span class="pre">after</span></code> object, to read the next page. Once you receive less updates than the requested <code class="docutils literal notranslate"><span class="pre">page_size</span></code>, you have reached the end of the stream.</p>
+<p>The response returns a list of transactions. Every transaction contains the following fields:</p>
+<ul class="simple">
+<li><p><strong>migration_id</strong> : This ID increments with every hard synchronizer migration. A hard synchronizer migration is performed for every significant Canton version upgrade.
+The current migration ID can be inquired from an SV,
+or by using the <code class="docutils literal notranslate"><span class="pre">/v0/dso-sequencers</span></code> API, for instance on Devnet at <a class="reference external" href="https://|gsf_scan_url|/api/scan/v0/dso-sequencers">/v0/dso-sequencers</a>
+which returns a <code class="docutils literal notranslate"><span class="pre">migrationId</span></code> per sequencer.</p></li>
+<li><p><strong>synchronizer_id</strong>: The instance ID of a Synchronizer (for example the ID of the Global Synchronizer).
+When contract assignments migrate, they become unavailable for processing via the old instance of the synchronizer
+and become available via the new instance of the synchronizer.
+Every contract is associated with a <code class="docutils literal notranslate"><span class="pre">synchronizer_id</span></code>, which represents the (set of) synchronizer(s) it has been sequenced on.</p></li>
+<li><p><strong>update_id</strong>: Uniquely identifies an update (globally unique across networks and synchronizers).</p></li>
+<li><p><strong>record_time</strong>: The time at which the update was sequenced.
+Within a given migration and synchronizer, the record time of updates is strictly monotonically increasing (and thus unique).
+The update history is mainly traversed by <code class="docutils literal notranslate"><span class="pre">migration_id</span></code>, <code class="docutils literal notranslate"><span class="pre">synchronizer_id</span></code>, and <code class="docutils literal notranslate"><span class="pre">record_time</span></code>.</p></li>
+<li><p><strong>root_event_ids</strong>: These represent the top level events of the update tree that are directly caused by commands submitted to the ledger.
+They are the starting points for all actions within the transaction, and need to be read in the order given.
+To traverse the update tree, start with the <code class="docutils literal notranslate"><span class="pre">root_event_ids</span></code> in order, get event by ID from <code class="docutils literal notranslate"><span class="pre">events_by_id</span></code>,
+traverse events in preorder, process <code class="docutils literal notranslate"><span class="pre">child_event_ids</span></code> recursively.
+Note: event ids are stored as a string of the format <code class="docutils literal notranslate"><span class="pre">&lt;update_id&gt;:&lt;event_index&gt;</span></code>.
+The event index is assigned locally by the participant, and different participants might assign different indices to the same event.
+For this reason, the scan app creates common, deterministically computed event indices across all synchronizer nodes when
+returning events through the scan API.</p></li>
+<li><p><strong>events_by_id</strong>: This object contains all events in the transaction update tree, indexed by their event ID.</p></li>
+</ul>
+<p>An example list of transactions response for the beginning of the Devnet network is shown below:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;transactions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;update_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1220e04f50c4b00024dd3a225611ad96441abd854e461c144b872c0eedac1dc784c7&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;migration_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;workflow_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;record_time&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2024-09-20T13:31:28.405180Z&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;synchronizer_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;global-domain::122084177677350389dd0710d6516f700a33fe348c5f2702dffef6d36e1dedcbfc17&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;effective_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2024-09-20T13:31:29.552807Z&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;offset&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;000000000000000001&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;root_event_ids&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="s2">&quot;1220e04f50c4b00024dd3a225611ad96441abd854e461c144b872c0eedac1dc784c7:0&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="s2">&quot;1220e04f50c4b00024dd3a225611ad96441abd854e461c144b872c0eedac1dc784c7:1&quot;</span>
+<span class="w">      </span><span class="p">],</span>
+<span class="w">      </span><span class="nt">&quot;events_by_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;...&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;events omitted for brevity&quot;</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">events_by_id</span></code> object contains created and exercised events.
+We’ll now go through a couple of example events to highlight the most important fields to process.</p>
+<section id="exercised-event">
+<h5>Exercised Event<a class="headerlink" href="#exercised-event" title="Link to this heading"></a></h5>
+<p>An exercised event has the following important fields:</p>
+<ul class="simple">
+<li><p><strong>template_id</strong>: The template ID uniquely identifies the Daml template.</p></li>
+<li><p><strong>contract_id</strong>: The contract ID uniquely identifies the contract.</p></li>
+<li><p><strong>choice</strong>: The name of the choice exercised on the contract</p></li>
+<li><p><strong>choice_argument</strong>: The choice argument, encoded in JSON</p></li>
+<li><p><strong>exercise_result</strong>: The result of the exercise, encoded in JSON</p></li>
+<li><p><strong>child_event_ids</strong>: These represent events that were directly caused by the given exercised event.
+These event IDs have to be read in the order given. Get event by ID from <code class="docutils literal notranslate"><span class="pre">events_by_id</span></code>,
+traverse events in preorder (process them recursively).</p></li>
+<li><p><strong>consuming</strong>: A boolean indicating whether the contract is archived by the exercise. If true, the contract is archived. This is important if you want to track the ACS.</p></li>
+</ul>
+<p>See the <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/7345124f9f05395ab4797c0478c7e1dd37186369/canton/community/ledger-api/src/main/protobuf/com/daml/ledger/api/v2/event.proto#L166">ExercisedEvent</a> protobuf message definition for a complete description of the event.</p>
+<p>An example of an exercised event in the <code class="docutils literal notranslate"><span class="pre">events_by_id</span></code> object is shown below:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">&quot;1220e04f50c4b00024dd3a225611ad96441abd854e461c144b872c0eedac1dc784c7:4&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;event_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;exercised_event&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;event_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1220e04f50c4b00024dd3a225611ad96441abd854e461c144b872c0eedac1dc784c7:4&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;contract_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0036a147673cc66b5e7d27811084897d6eaf1807c2bc024b9c7c9359dbfb25c790ca101220bf3bfb7315fe33fc0bafa88087a8af6794674f2a02a4690ef2897325efd9e973&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;template_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a36ef8888fb44caae13d96341ce1fabd84fc9e2e7b209bbc3caabb48b6be1668:Splice.AmuletRules:AmuletRules&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;package_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;splice-amulet&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;choice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;AmuletRules_Bootstrap_Rounds&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;choice_argument&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;amuletPrice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.0050000000&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;round0Duration&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;microseconds&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;97200000000&quot;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;child_event_ids&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="s2">&quot;1220e04f50c4b00024dd3a225611ad96441abd854e461c144b872c0eedac1dc784c7:5&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;1220e04f50c4b00024dd3a225611ad96441abd854e461c144b872c0eedac1dc784c7:6&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;1220e04f50c4b00024dd3a225611ad96441abd854e461c144b872c0eedac1dc784c7:7&quot;</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;exercise_result&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;openMiningRoundCid&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;004eba336d6bbaed0e866e2dd11351fc989b1043b09c34ce3ac16fe08ff9fc1cfaca101220e8339d816712ba0294cdce13216494bb50dd1070be12ede312133003e0f1252d&quot;</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;consuming&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;acting_parties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="s2">&quot;DSO::122084177677350389dd0710d6516f700a33fe348c5f2702dffef6d36e1dedcbfc17&quot;</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;interface_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
+<span class="p">},</span>
+</pre></div>
+</div>
+<p>This example exercised event shows a choice that is exercised on a contract of the <code class="docutils literal notranslate"><span class="pre">AmuletRules</span></code> template (See <a class="reference external" href="../api/splice-amulet/splice-amuletrules.html">Splice.AmuletRules</a>).
+The choice is <code class="docutils literal notranslate"><span class="pre">AmuletRules_Bootstrap_Rounds</span></code> and the choice argument contains the <code class="docutils literal notranslate"><span class="pre">amuletPrice</span></code> and <code class="docutils literal notranslate"><span class="pre">round0Duration</span></code> fields,
+which are the price and duration of round zero.</p>
+<p>The exercise result contains the <code class="docutils literal notranslate"><span class="pre">openMiningRoundCid</span></code> field, which is the contract ID of the open mining round that is bootstrapped at the beginning of the network.
+The <code class="docutils literal notranslate"><span class="pre">child_event_ids</span></code> shows the events that were directly caused by this exercised event.</p>
+</section>
+<section id="created-event">
+<h5>Created Event<a class="headerlink" href="#created-event" title="Link to this heading"></a></h5>
+<p>Let’s have a look at the last child event ID <code class="docutils literal notranslate"><span class="pre">1220e04f50c4b00024dd3a225611ad96441abd854e461c144b872c0eedac1dc784c7:7</span></code> in the <code class="docutils literal notranslate"><span class="pre">events_by_id</span></code> object from the previous section, which is shown below:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">&quot;1220e04f50c4b00024dd3a225611ad96441abd854e461c144b872c0eedac1dc784c7:7&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;event_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;created_event&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;event_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1220e04f50c4b00024dd3a225611ad96441abd854e461c144b872c0eedac1dc784c7:7&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;contract_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;004eba336d6bbaed0e866e2dd11351fc989b1043b09c34ce3ac16fe08ff9fc1cfaca101220e8339d816712ba0294cdce13216494bb50dd1070be12ede312133003e0f1252d&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;template_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a36ef8888fb44caae13d96341ce1fabd84fc9e2e7b209bbc3caabb48b6be1668:Splice.Round:OpenMiningRound&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;package_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;splice-amulet&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;create_arguments&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;dso&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;DSO::122084177677350389dd0710d6516f700a33fe348c5f2702dffef6d36e1dedcbfc17&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;round&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;number&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;amuletPrice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.0050000000&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;opensAt&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2024-09-21T16:31:29.552807Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;targetClosesAt&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2024-09-21T16:51:29.552807Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;issuingFor&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;microseconds&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1200000000&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;transferConfigUsd&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;createFee&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;fee&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.0300000000&quot;</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;holdingFee&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;rate&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.0000190259&quot;</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;transferFee&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;initialRate&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.0100000000&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;steps&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">          </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;_1&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;100.0000000000&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;_2&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.0010000000&quot;</span>
+<span class="w">          </span><span class="p">},</span>
+<span class="w">          </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;_1&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1000.0000000000&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;_2&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.0001000000&quot;</span>
+<span class="w">          </span><span class="p">},</span>
+<span class="w">          </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;_1&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1000000.0000000000&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;_2&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.0000100000&quot;</span>
+<span class="w">          </span><span class="p">}</span>
+<span class="w">        </span><span class="p">]</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;lockHolderFee&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;fee&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.0050000000&quot;</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;extraFeaturedAppRewardAmount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.0000000000&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;maxNumInputs&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;100&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;maxNumOutputs&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;100&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;maxNumLockHolders&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;50&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;issuanceConfig&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;amuletToIssuePerYear&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;40000000000.0000000000&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;validatorRewardPercentage&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.0500000000&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;appRewardPercentage&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.1500000000&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;validatorRewardCap&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.2000000000&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;featuredAppRewardCap&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;100.0000000000&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;unfeaturedAppRewardCap&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.6000000000&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;optValidatorFaucetCap&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2.8500000000&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;tickDuration&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;microseconds&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;600000000&quot;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;created_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2024-09-20T13:31:29.552807Z&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;signatories&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="s2">&quot;DSO::122084177677350389dd0710d6516f700a33fe348c5f2702dffef6d36e1dedcbfc17&quot;</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;observers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The example child event ID points to a <code class="docutils literal notranslate"><span class="pre">created_event</span></code>, which creates a contract of the <code class="docutils literal notranslate"><span class="pre">OpenMiningRound</span></code> template.
+A created event has the following important fields:</p>
+<ul class="simple">
+<li><p><strong>template_id</strong>: The template ID uniquely identifies the Daml template.</p></li>
+<li><p><strong>contract_id</strong>: The contract ID uniquely identifies the contract.</p></li>
+<li><p><strong>create_arguments</strong>: The arguments used to create the contract, encoded in JSON</p></li>
+</ul>
+<p>See the <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/7345124f9f05395ab4797c0478c7e1dd37186369/canton/community/ledger-api/src/main/protobuf/com/daml/ledger/api/v2/event.proto#L33">CreatedEvent</a> protobuf message definition for a complete description of the event.</p>
+<p>In this case the <code class="docutils literal notranslate"><span class="pre">create_arguments</span></code> contains the fields that are used to create the contract, such as the round number, the price of the Amulet,
+the time the round opens and closes, and the configuration for Amulet transfers and issuance.
+See <a class="reference external" href="../api/splice-amulet/splice-round.html">Splice.Round</a> for more information about the <code class="docutils literal notranslate"><span class="pre">Splice.Round:OpenMiningRound</span></code> template.
+We can also note that in this case the <code class="docutils literal notranslate"><span class="pre">contract_id</span></code> of the <code class="docutils literal notranslate"><span class="pre">created_event</span></code> is the same as the <code class="docutils literal notranslate"><span class="pre">openMiningRoundCid</span></code> in the exercise result of the previous event.</p>
+<p>In general, processing the updates involves the following steps:</p>
+<ul class="simple">
+<li><p>Traverse the update tree, starting with the root event IDs, and then process the child event IDs in preorder,</p></li>
+<li><p>Selectively parse the events as they are encountered, based on template IDs and the structure of the contracts that you can expect,
+which you can map against the template definitions in Daml source code and the <a class="reference external" href="../daml_api/index.html">Daml API</a> documentation of templates, choices and data types.</p></li>
+<li><p>Accumulate state changes, such as:</p>
+<ul>
+<li><p>Keep track of contract ids and their state</p></li>
+<li><p>Keep track of Canton Coin balances and activity records</p></li>
+<li><p>Keep track of mining rounds and their configuration</p></li>
+<li><p>Keep track of governance decisions</p></li>
+</ul>
+</li>
+<li><p>And ensure that parsing does not break when new fields or templates are introduced.</p></li>
+</ul>
+</section>
+</section>
+</section>
+<section id="acs-snapshots">
+<h3>ACS Snapshots<a class="headerlink" href="#acs-snapshots" title="Link to this heading"></a></h3>
+<p>The <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/7345124f9f05395ab4797c0478c7e1dd37186369/apps/scan/src/main/openapi/scan-internal.yaml">Open API spec</a>
+for <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/7345124f9f05395ab4797c0478c7e1dd37186369/apps/scan/src/main/openapi/scan-internal.yaml#L603">/v0/state/acs/snapshot-timestamp</a>
+and <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/7345124f9f05395ab4797c0478c7e1dd37186369/apps/scan/src/main/openapi/scan-internal.yaml#L642">/v0/state/acs</a> describes the APIs in detail.</p>
+<p>The ACS snapshots are periodically taken and stored in the Scan App. This endpoint only provides the snapshots that have been periodically taken.
+You can compute the state at any point in time by starting from a periodic snapshot and
+then stream updates from the timestamp of that snapshot. We’ll discuss this in more detail in the <a class="reference internal" href="#scan-txlog-script">Scan TxLog Script</a> section.</p>
+<section id="get-v0-state-acs-snapshot-timestamp">
+<h4>GET /v0/state/acs/snapshot-timestamp<a class="headerlink" href="#get-v0-state-acs-snapshot-timestamp" title="Link to this heading"></a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">/v0/state/acs/snapshot-timestamp</span></code> endpoint returns the timestamp of the most recent snapshot before the given date,
+for the given <code class="docutils literal notranslate"><span class="pre">migration_id</span></code>. Specify <code class="docutils literal notranslate"><span class="pre">migration_id</span> <span class="pre">=</span> <span class="pre">0</span></code> for the beginning of the network.
+The returned timestamp corresponds to the record time of the last transaction in the snapshot.</p>
+<p>An example request to get the timestamp of the most recent snapshot before a given date is shown below:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>https://<span class="p">|</span>gsf_scan_url<span class="p">|</span>/api/scan/v0/state/acs/snapshot-timestamp<span class="se">\?</span>before<span class="se">\=</span><span class="s2">&quot;2025-02-12T00:00:00.000000Z&quot;</span><span class="se">\&amp;</span>migration_id<span class="se">\=</span><span class="m">4</span>
+</pre></div>
+</div>
+<p>The response returns the timestamp of the most recent snapshot before the given date:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;record_time&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2025-02-11T18:00:00Z&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="post-v0-state-acs">
+<h4>POST /v0/state/acs<a class="headerlink" href="#post-v0-state-acs" title="Link to this heading"></a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">/v0/state/acs</span></code> endpoint returns the ACS in creation date ascending order, paged, for a given migration id and record time.
+Post an <code class="docutils literal notranslate"><span class="pre">AcsRequest</span></code> with a <code class="docutils literal notranslate"><span class="pre">migration_id</span></code>, <code class="docutils literal notranslate"><span class="pre">record_time</span></code> and <code class="docutils literal notranslate"><span class="pre">page_size</span></code> to get a page of contracts.
+An optional <code class="docutils literal notranslate"><span class="pre">templates</span></code> field filters the ACS by a set of <code class="docutils literal notranslate"><span class="pre">template_id</span></code>s.</p>
+<p>An example request body of type <code class="docutils literal notranslate"><span class="pre">AcsRequest</span></code> to get a page of ACS snapshots is shown below:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;migration_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;record_time&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2025-02-11T18:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;page_size&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The response is of type <code class="docutils literal notranslate"><span class="pre">AcsResponse</span></code> which is a list of <code class="docutils literal notranslate"><span class="pre">CreatedEvent</span></code>s along with a <code class="docutils literal notranslate"><span class="pre">next_page_token</span></code> which can be used to request a subsequent page.
+When there are no more pages, the <code class="docutils literal notranslate"><span class="pre">next_page_token</span></code> is empty.</p>
+<p>An example response is shown below:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;record_time&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2025-02-11T18:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;migration_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;created_events&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;event_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;created_event&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;event_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#122098355fd6741a763f23fa0b7758d2a59cfce54aef07808ef42d366bdd6296db2d:0&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;contract_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;001c9216c7194bb6180968abdae59b1718a44857b005613cb47cdbc4a459b3a4caca10122019fd0561c858eac85e7e3374ec8cb27ee6f410f9260d4f89c7a3a398a1d2a37f&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;template_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;053c7f4c2a77312e7d465a4fa7dc8cb298754ad12c0c987a7c401bd724e65efc:Splice.Ans:AnsRules&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;package_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;splice-amulet-name-service&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;create_arguments&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;dso&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;DSO::122084177677350389dd0710d6516f700a33fe348c5f2702dffef6d36e1dedcbfc17&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;config&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">&quot;renewalDuration&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;microseconds&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2592000000000&quot;</span>
+<span class="w">          </span><span class="p">},</span>
+<span class="w">          </span><span class="nt">&quot;entryLifetime&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;microseconds&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;7776000000000&quot;</span>
+<span class="w">          </span><span class="p">},</span>
+<span class="w">          </span><span class="nt">&quot;entryFee&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.0000000000&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;descriptionPrefix&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;CNS entry: &quot;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;created_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2024-09-20T13:31:29.552807Z&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;signatories&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="s2">&quot;DSO::122084177677350389dd0710d6516f700a33fe348c5f2702dffef6d36e1dedcbfc17&quot;</span>
+<span class="w">      </span><span class="p">],</span>
+<span class="w">      </span><span class="nt">&quot;observers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;...&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;more created events, omitted for brevity&quot;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;next_page_token&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">61329223</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">created_events</span></code> object contains the created events in the ACS snapshot.
+A <code class="docutils literal notranslate"><span class="pre">created_event</span></code> is encoded exactly as explained in <a class="reference internal" href="#created-event">Created Event</a>.</p>
+</section>
+</section>
+</section>
+<section id="scan-txlog-script">
+<h2>Scan TxLog Script<a class="headerlink" href="#scan-txlog-script" title="Link to this heading"></a></h2>
+<p>To help with understanding the raw <a class="reference internal" href="../../glossary.html#term-Canton-Network"><span class="xref std std-term">Canton Network</span></a> events, the <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/main/scripts/scan-txlog/scan_txlog.py">scan_txlog.py</a>
+Python script functions as a comprehensive example of how to interact with the Scan API to read and process update history and ACS snapshots.</p>
+<p>Note: The python script is intended as a reference for understanding the transactions and their structure. Production-ready implementations may need to take additional points into consideration like not keeping the full ACS in memory or certain indices to speed up queries.</p>
+<p>The script is centered around <a class="reference internal" href="../../glossary.html#term-Canton-Coin"><span class="xref std std-term">Canton Coin</span></a> balances and tracks all contracts involved in <a class="reference internal" href="../../glossary.html#term-Canton-Coin"><span class="xref std std-term">Canton Coin</span></a> transfers.
+Please also see the <a class="reference external" href="https://www.digitalasset.com/hubfs/Canton%20Network%20Files/Documents%20(whitepapers%2C%20etc...)/Canton%20Coin_%20A%20Canton-Network-native%20payment%20application.pdf">Canton Coin whitepaper</a>
+for more information.</p>
+<p>The next sections describe an overview of its functionality and usage.</p>
+<section id="overview">
+<h3>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h3>
+<p>The script performs the following key tasks:</p>
+<ul class="simple">
+<li><p>Connects to the Scan API to fetch update history and ACS snapshots.</p></li>
+<li><p>Processes transactions to interpret and handle various events such as contract creation, exercise, and archival.</p></li>
+<li><p>Generates reports based on the processed data, which can be output to a CSV file.</p></li>
+<li><p>Maintains state across multiple runs by saving and restoring application state from a cache file.</p></li>
+</ul>
+</section>
+<section id="usage">
+<h3>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h3>
+<p>To use the script, you need to provide the URL of the Scan App and other optional parameters such as log level, cache file path, and report output file.
+The script can be run from the command line with the appropriate arguments.
+Example command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>scan_txlog.py<span class="w"> </span>https://<span class="p">|</span>gsf_scan_url<span class="p">|</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--verbose<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--cache-file-path<span class="w"> </span>cache.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--report-output<span class="w"> </span>report.csv<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--log-file-path<span class="w"> </span>scan_tx.log
+</pre></div>
+</div>
+<p>Execute <code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">scan_txlog.py</span> <span class="pre">--help</span></code> for a list of all available options.
+Let’s have a look at the key components of the script in the next section.</p>
+</section>
+<section id="key-components">
+<h3>Key Components<a class="headerlink" href="#key-components" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>ScanClient</strong>: This class handles the communication with the Scan API. It includes methods to fetch updates and ACS snapshots.</p></li>
+<li><p><strong>State</strong>: This class represents the state of the system at a given point in time. It includes methods to handle transactions and update the state accordingly.</p></li>
+<li><p><strong>TransactionTree</strong>: This class represents a transaction and its associated events. It includes methods to parse and interpret the transaction data.</p></li>
+<li><p><strong>LfValue</strong>: This class provides utility methods to extract specific fields from the transaction data.</p></li>
+</ul>
+<section id="processing-overview">
+<h4>Processing Overview<a class="headerlink" href="#processing-overview" title="Link to this heading"></a></h4>
+<p>The script fetches updates and processes them to maintain an up-to-date view of the state of the Canton Network focused on
+<a class="reference internal" href="../../glossary.html#term-Canton-Coin"><span class="xref std std-term">Canton Coin</span></a> balances and tracks all contracts involved in <a class="reference internal" href="../../glossary.html#term-Canton-Coin"><span class="xref std std-term">Canton Coin</span></a> transfers.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Please see the <a class="reference external" href="../daml_api/index.html">Daml API</a> for the templates, choices and data types that you will need to familiarize yourself
+with for parsing the events returned by the updates and snapshots APIs, especially the modules listed below:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 50.0%" />
+<col style="width: 50.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Module</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference external" href="../api/splice-amulet/splice-amulet.html">Splice.Amulet</a></p></td>
+<td><p>The contracts representing the long-term state of Splice.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="../api/splice-amulet/splice-amuletrules.html">Splice.AmuletRules</a></p></td>
+<td><p>The rules governing how Amulet users can modify the Amulet state.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="../api/splice-amulet/splice-round.html">Splice.Round</a></p></td>
+<td><p>The contracts representing mining rounds.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="../api/splice-dso-governance/splice-dsorules.html">Splice.DsoRules</a></p></td>
+<td><p>DSO governance, including decisions regarding amulet, activity records, and rounds.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<ul class="simple">
+<li><p><strong>Fetching Updates</strong>: The <code class="docutils literal notranslate"><span class="pre">ScanClient</span></code> class’s <code class="docutils literal notranslate"><span class="pre">updates</span></code> method fetches updates from the server.</p></li>
+<li><p><strong>Processing Updates</strong>: The <code class="docutils literal notranslate"><span class="pre">State</span></code> class’s <code class="docutils literal notranslate"><span class="pre">handle_transaction</span></code> method processes each transaction, updating the state and handling various events.</p></li>
+</ul>
+<p>The script filters and parses transaction events for a set of templates specified in the <code class="docutils literal notranslate"><span class="pre">TemplateQualifiedNames</span></code> class,
+which are involved in canton coin transfers.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Another potential useful filter that could be of interest is one that focuses on governance operations, which is left as
+an exercise to the reader after thoroughly analyzing the <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/main/scripts/scan-txlog/scan_txlog.py">scan_txlog.py</a> script.</p>
+</div>
+<p>The script maintains a state that contains the following information:</p>
+<ul class="simple">
+<li><p>The ACS at the most recently processed <code class="docutils literal notranslate"><span class="pre">record_time</span></code>.</p></li>
+<li><p>A CSV report of Canton Coin balances and activity records.</p></li>
+<li><p>Totals of minted and burnt Canton Coins.</p></li>
+</ul>
+<p>It also logs summaries of the processed transactions to a log file.
+Most notably it logs the amulets and activity records per party, keyed by the owner of amulets and activity records.
+Please see the <code class="docutils literal notranslate"><span class="pre">PerPartyState</span></code> class for more details on what is reported per party.
+It also logs the total minted and burnt Canton Coins at the end of each round.</p>
+<p>The script also maintains a cache file to store the state across multiple runs, allowing it to resume processing from the last known state.</p>
+<p>The script can fetch ACS snapshots to compare with the current state or to initialize the state (when the <code class="docutils literal notranslate"><span class="pre">--compare-acs-with-snapshot</span> <span class="pre">&lt;snapshot_time&gt;</span></code> argument is used).</p>
+<ul class="simple">
+<li><p><strong>Fetching ACS Snapshots</strong>: The <code class="docutils literal notranslate"><span class="pre">ScanClient</span></code> class’s <code class="docutils literal notranslate"><span class="pre">get_acs_snapshot_page_at</span></code> method fetches ACS snapshots from the server.</p></li>
+<li><p><strong>Comparing ACS Snapshots</strong>: The script can compare the fetched ACS snapshot with the current state to ensure consistency.</p></li>
+</ul>
+<p>when the <code class="docutils literal notranslate"><span class="pre">--compare-acs-with-snapshot</span> <span class="pre">&lt;snapshot_time&gt;</span></code> argument is used, the script will get the ACS snapshot
+for the given <code class="docutils literal notranslate"><span class="pre">snapshot_time</span></code> and compare it to the state that has been built up in the <code class="docutils literal notranslate"><span class="pre">active_contracts</span></code> dictionary.
+The <code class="docutils literal notranslate"><span class="pre">active_contracts</span></code> dictionary is a mapping of contract IDs to their respective contract data.</p>
+<p>The script processes <code class="docutils literal notranslate"><span class="pre">created_event</span></code>s and <code class="docutils literal notranslate"><span class="pre">exercised_event</span></code>s. A <code class="docutils literal notranslate"><span class="pre">created_event</span></code> is added to the <code class="docutils literal notranslate"><span class="pre">active_contracts</span></code> dictionary
+under its <code class="docutils literal notranslate"><span class="pre">contract_id</span></code> key.
+If the <code class="docutils literal notranslate"><span class="pre">exercised_event</span></code> is consuming, the contract is removed from the <code class="docutils literal notranslate"><span class="pre">active_contracts</span></code> dictionary by <code class="docutils literal notranslate"><span class="pre">contract_id</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>To build up an ACS snapshot for any <code class="docutils literal notranslate"><span class="pre">record_time</span></code>, first
+get a periodic snapshot using the <code class="docutils literal notranslate"><span class="pre">/v0/state/acs</span></code> endpoint, store the ACS in a dictionary keyed by <code class="docutils literal notranslate"><span class="pre">contract_id</span></code>
+and then process the updates from the timestamp of that snapshot via the <code class="docutils literal notranslate"><span class="pre">/v1/updates</span></code>, adding
+<code class="docutils literal notranslate"><span class="pre">created_event</span></code>s to the dictionary under its <code class="docutils literal notranslate"><span class="pre">contract_id</span></code> key and
+remove the contract from the dictionary by <code class="docutils literal notranslate"><span class="pre">contract_id</span></code> if <code class="docutils literal notranslate"><span class="pre">exercised_event</span></code>s are consuming.</p>
+</div>
+</section>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Scan API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="scan_global_synchronizer_connectivity_api.html" class="btn btn-neutral float-right" title="Scan Global Synchronizer Connectivity API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright  2025, Digital Asset.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

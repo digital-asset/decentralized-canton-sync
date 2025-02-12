@@ -25,7 +25,7 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Validator API" href="../validator_api/index.html" />
+    <link rel="next" title="Scan Bulk Data API" href="scan_bulk_data_api.html" />
     <link rel="prev" title="Splice App APIs" href="../overview/splice_app_apis.html" /> 
 </head>
 
@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.11-ci-snapshot.20250212.1.0.v070bc3dd
+                0.3.11-ci-snapshot.20250212.1.0.vc1c4eeb9
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -385,7 +385,43 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Scan API</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Scan API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="scan_bulk_data_api.html">Scan Bulk Data API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scan_bulk_data_api.html#open-api-specification">Open API Specification</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="scan_bulk_data_api.html#updates">Updates</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="scan_bulk_data_api.html#post-v1-updates">POST /v1/updates</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="scan_bulk_data_api.html#exercised-event">Exercised Event</a></li>
+<li class="toctree-l6"><a class="reference internal" href="scan_bulk_data_api.html#created-event">Created Event</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="scan_bulk_data_api.html#acs-snapshots">ACS Snapshots</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="scan_bulk_data_api.html#get-v0-state-acs-snapshot-timestamp">GET /v0/state/acs/snapshot-timestamp</a></li>
+<li class="toctree-l5"><a class="reference internal" href="scan_bulk_data_api.html#post-v0-state-acs">POST /v0/state/acs</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="scan_bulk_data_api.html#scan-txlog-script">Scan TxLog Script</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="scan_bulk_data_api.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="scan_bulk_data_api.html#usage">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="scan_bulk_data_api.html#key-components">Key Components</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="scan_bulk_data_api.html#processing-overview">Processing Overview</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html">Scan Global Synchronizer Connectivity API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan_global_synchronizer_operations_api.html">Scan Global Synchronizer Operations API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan_vote_requests_results_api.html">Scan Vote Requests and Results API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan_cc_reference_data_api.html">Scan Canton Coin Reference Data API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan_current_state_api.html">Scan API for Current state of CC, CNS, and Synchronizer Traffic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan_aggregates_api.html">Scan Aggregates API</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../validator_api/index.html">Validator API</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../validator_api/index.html#user-wallet-api">User wallet API</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../validator_api/index.html#transfer-offers">Transfer Offers</a></li>
@@ -721,6 +757,31 @@
              
   <section id="scan-api">
 <span id="app-dev-scan-api"></span><h1>Scan API<a class="headerlink" href="#scan-api" title="Link to this heading"></a></h1>
+<p>The Scan App is part of a <a class="reference internal" href="../../glossary.html#term-CN-Supervalidator"><span class="xref std std-term">CN Supervalidator</span></a> (SV) node.
+The Scan App is shown in the context of an SV node in the following diagram:</p>
+<img alt="../../_images/sv_scan_app_topology.png" src="../../_images/sv_scan_app_topology.png" />
+<p>The Scan App stores the transaction history, and active contract set as seen by SVs, as well as reference data,
+for instance how to connect to the Global Synchronizer and which packages to use.</p>
+<p>The Scan App ingests updates from the SV Participant node, reconstructs ACS snapshots from the updates and stores this data in
+a schema that is optimized for several querying scenarios. The Scan API provides access to this data.</p>
+<p>The Scan API can be used to integrate third-party apps with the Scan App component of the SV nodes
+constituting the Global Synchronizer.
+Examples of such third-party apps are network analytic apps, block explorer apps, or financial accounting integrations.</p>
+<p>The Scan App subscribes to the SV participant as the DSO (Decentralized Synchronizer Operations) Daml party, so it only observes sub transactions that involve that party.
+This includes CC (Canton Coin) transfers and governance operations but excludes most other things.
+In particular, any custom Daml app that does not interact with CC will be excluded.</p>
+<p>The Scan API is grouped in the following categories:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="scan_bulk_data_api.html#scan-bulk-data-api"><span class="std std-ref">Scan Bulk Data API</span></a>: A comprehensive API that provides access to the exact and full history of updates and ACS snapshots as recorded on the SV participant node.</p></li>
+<li><p><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html#scan-global-synchronizer-connectivity-api"><span class="std std-ref">Scan Global Synchronizer Connectivity API</span></a></p></li>
+<li><p><a class="reference internal" href="scan_global_synchronizer_operations_api.html#scan-global-synchronizer-operations-api"><span class="std std-ref">Scan Global Synchronizer Operations API</span></a></p></li>
+<li><p><a class="reference internal" href="scan_vote_requests_results_api.html#scan-vote-requests-results-api"><span class="std std-ref">Scan Vote Requests and Results API</span></a></p></li>
+<li><p><a class="reference internal" href="scan_cc_reference_data_api.html#scan-cc-reference-data-api"><span class="std std-ref">Scan Canton Coin Reference Data API</span></a></p></li>
+<li><p><a class="reference internal" href="scan_current_state_api.html#scan-current-state-api"><span class="std std-ref">Scan API for Current state of CC, CNS, and Synchronizer Traffic</span></a></p></li>
+<li><p><a class="reference internal" href="scan_aggregates_api.html#scan-aggregates-api"><span class="std std-ref">Scan Aggregates API</span></a></p></li>
+</ul>
+<div class="toctree-wrapper compound">
+</div>
 </section>
 
 
@@ -728,7 +789,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../overview/splice_app_apis.html" class="btn btn-neutral float-left" title="Splice App APIs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../validator_api/index.html" class="btn btn-neutral float-right" title="Validator API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="scan_bulk_data_api.html" class="btn btn-neutral float-right" title="Scan Bulk Data API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
