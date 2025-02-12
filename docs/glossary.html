@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.11-ci-snapshot.20250212.1.0.v7c425697
+                0.3.11-ci-snapshot.20250212.1.0.v13d079e6
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -778,8 +778,9 @@ to other entities on the Canton network.</p>
 <dt id="term-BFT">BFT<a class="headerlink" href="#term-BFT" title="Link to this term"></a></dt><dd><p>Byzantine Fault Tolerance.
 A property of a distributed system that allows it to continue operating correctly
 in the presence of a certain number of faulty nodes.
-Where <code class="docutils literal notranslate"><span class="pre">f</span></code> is the number of failures, A distributed system can tolerate <code class="docutils literal notranslate"><span class="pre">f</span></code> failures and remain available
-if <code class="docutils literal notranslate"><span class="pre">f+1`</span></code> agreeing responses are received from <code class="docutils literal notranslate"><span class="pre">2f+1</span></code> requests.</p>
+Typically <code class="docutils literal notranslate"><span class="pre">f</span></code> denotes the number of faulty nodes that the system can tolerate.
+Across all layers of Splice, <code class="docutils literal notranslate"><span class="pre">f</span></code> corresponds to slighly less than 1/3 of the total number of SVs
+(<code class="docutils literal notranslate"><span class="pre">floor((n-1)/3)</span></code>, to be exact).</p>
 </dd>
 <dt id="term-CN-Global-Domain">CN Global Domain<a class="headerlink" href="#term-CN-Global-Domain" title="Link to this term"></a></dt><dd><ul class="simple">
 <li><p>global synchronization domain</p></li>
