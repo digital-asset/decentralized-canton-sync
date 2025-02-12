@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.11-ci-snapshot.20250212.1.0.vdb17f966
+                0.3.11-ci-snapshot.20250212.1.0.v5893f98f
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -804,7 +804,7 @@ which gets described further in <a class="reference external" href="https://docs
 <p>Please see the Scan <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/08fc692cf2952a52cce00473793d1dca08c0fba5/apps/scan/src/main/openapi/scan-internal.yaml">Open API specification</a>.
 Look for APIs starting with <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/7345124f9f05395ab4797c0478c7e1dd37186369/apps/scan/src/main/openapi/scan-internal.yaml#L511">/v1/updates/</a>
 and <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/7345124f9f05395ab4797c0478c7e1dd37186369/apps/scan/src/main/openapi/scan-internal.yaml#L603">/v0/state/</a>, respectively for updates and ACS snapshots.</p>
-<p>Example URLs for accessing the Scan Bulk Data API on Devnet are:</p>
+<p>Example URLs for accessing the Scan Bulk Data API are:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">https://|gsf_scan_url|/api/scan/v1/updates</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">https://|gsf_scan_url|/api/scan/v0/state/acs/snapshot-timestamp</span></code></p></li>
@@ -853,7 +853,7 @@ in a subsequent request in the <code class="docutils literal notranslate"><span 
 <ul class="simple">
 <li><p><strong>migration_id</strong> : This ID increments with every hard synchronizer migration. A hard synchronizer migration is performed for every significant Canton version upgrade.
 The current migration ID can be inquired from an SV,
-or by using the <code class="docutils literal notranslate"><span class="pre">/v0/dso-sequencers</span></code> API, for instance on Devnet at <a class="reference external" href="https://|gsf_scan_url|/api/scan/v0/dso-sequencers">/v0/dso-sequencers</a>
+or by using the <code class="docutils literal notranslate"><span class="pre">/v0/dso-sequencers</span></code> API at <a class="reference external" href="https://|gsf_scan_url|/api/scan/v0/dso-sequencers">/v0/dso-sequencers</a>
 which returns a <code class="docutils literal notranslate"><span class="pre">migrationId</span></code> per sequencer.</p></li>
 <li><p><strong>synchronizer_id</strong>: The instance ID of a Synchronizer (for example the ID of the Global Synchronizer).
 When contract assignments migrate, they become unavailable for processing via the old instance of the synchronizer
@@ -873,7 +873,7 @@ For this reason, the scan app creates common, deterministically computed event i
 returning events through the scan API.</p></li>
 <li><p><strong>events_by_id</strong>: This object contains all events in the transaction update tree, indexed by their event ID.</p></li>
 </ul>
-<p>An example list of transactions response for the beginning of the Devnet network is shown below:</p>
+<p>An example list of transactions response for the beginning of the network is shown below:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;transactions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">    </span><span class="p">{</span>
