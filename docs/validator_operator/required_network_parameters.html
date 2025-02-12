@@ -39,7 +39,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.11-ci-snapshot.20250211.1.0.vbf660433
+                0.3.11-ci-snapshot.20250212.1.0.v86e03941
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -727,7 +727,7 @@ required for doing so.</p>
 </dd>
 <dt>SPONSOR_SV_URL</dt><dd><p>The URL of the SV app of your SV sponsor. This should be of the form <span class="raw-html">https://sv.sv-1.<span class="splice-url-prefix">unknown_cluster.</span>global.canton.network.YOUR_SV_SPONSOR</span>, e.g., if the Global Synchronizer Foundation is your sponsor use <span class="raw-html">https://sv.sv-1.<span class="splice-url-prefix">unknown_cluster.</span>global.canton.network.sync.global</span>.</p>
 </dd>
-<dt>ONBOARDING_SECRET</dt><dd><p>The onboarding secret provided by your sponsor. If you don’t already have one, ask your sponsor. Note that onboarding secrets are one-time use and expire after 24h.
+<dt>ONBOARDING_SECRET</dt><dd><p>The onboarding secret provided by your sponsor. If you don’t already have one, ask your sponsor. Note that onboarding secrets are one-time use and expire after 48 hours.
 If you don’t join before it expires, you need to request a new secret from your SV sponsor.</p>
 <div class="admonition-devnet-only admonition">
 <p class="admonition-title">DevNet-only</p>
@@ -736,6 +736,7 @@ calling the following endpoint on any SV (replace <code class="docutils literal 
 <div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="n">curl</span><span class="w"> </span><span class="o">-</span><span class="nc">X</span><span class="w"> </span><span class="nc">POST</span><span class="w"> </span><span class="nc">SPONSOR_SV_URL</span><span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="n">sv</span><span class="o">/</span><span class="n">v0</span><span class="o">/</span><span class="n">devnet</span><span class="o">/</span><span class="n">onboard</span><span class="o">/</span><span class="n">validator</span><span class="o">/</span><span class="n">prepare</span>
 </pre></div>
 </div>
+<p>Note that this self-served secret is only valid for 1 hour.</p>
 </div>
 </dd>
 </dl>
