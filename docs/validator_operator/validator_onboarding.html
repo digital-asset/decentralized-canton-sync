@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.11-ci-snapshot.20250212.1.0.vc1c4eeb9
+                0.3.11-ci-snapshot.20250212.1.0.vdb17f966
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -823,12 +823,10 @@ from the same egress IP from which you want to deploy your validator,
 e.g., from the VM that you want to run your docker compose setup from
 or from within your Kubernetes cluster.</p>
 <p>Note that the following snippet requires installing <a class="reference external" href="https://jqlang.org/">JQ</a>.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span>url<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="k">$(</span>curl<span class="w"> </span>-sSL<span class="w"> </span><span class="p">|</span>gsf_scan_url<span class="p">|</span>/api/scan/v0/scans<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;.scans | .[].scans | .[] | .publicUrl&#39;</span><span class="w"> </span><span class="k">)</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
-<span class="w">  </span><span class="nb">echo</span><span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$url</span><span class="s2">: &quot;</span><span class="p">;</span>
-<span class="w">  </span>curl<span class="w"> </span>-sSL<span class="w"> </span>--connect-timeout<span class="w"> </span><span class="m">5</span><span class="w"> </span>--fail-with-body<span class="w"> </span><span class="nv">$url</span>/api/scan/version<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;.version&#39;</span><span class="p">;</span>
-<span class="k">done</span>
-</pre></div>
-</div>
+<pre class="literal-block">for url in $(curl -sSL <span class="raw-html">https://scan.sv-1.<span class="splice-url-prefix">unknown_cluster.</span>global.canton.network.sync.global</span>/api/scan/v0/scans | jq -r '.scans | .[].scans | .[] | .publicUrl' ); do
+  echo -n &quot;$url: &quot;;
+  curl -sSL --connect-timeout 5 --fail-with-body $url/api/scan/version | jq -r '.version';
+done</pre>
 <p>You should see output in the form shown below, where each line indicates one SV and the version it is on. If you see timeouts that SV has not yet added you to their allowlist,
 if you do not get any errors, then all SVs have added you. Note that the URLs and versions will vary over time so don’t try to compare exactly.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>https://scan.sv-2.test.global.canton.network.digitalasset.com:<span class="w"> </span><span class="m">0</span>.3.6
@@ -848,12 +846,10 @@ If you are encountering issues related to connecting to the synchronizer,
 you can use the following snippet to confirm that you’re able to reach those endpoints
 (i.e., that SVs have whitelisted your IP for those endpoints as well).
 Note that the following snippet requires installing <a class="reference external" href="https://jqlang.org/">JQ</a> and <a class="reference external" href="https://github.com/fullstorydev/grpcurl">grpcurl</a>.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span>url<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="k">$(</span>curl<span class="w"> </span>-sSL<span class="w"> </span><span class="p">|</span>gsf_scan_url<span class="p">|</span>/api/scan/v0/dso-sequencers<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;.domainSequencers | .[] | .sequencers.[].url | sub(&quot;https://&quot;; &quot;&quot;)&#39;</span><span class="w"> </span><span class="k">)</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
-<span class="w">  </span><span class="nb">echo</span><span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$url</span><span class="s2">: &quot;</span><span class="p">;</span>
-<span class="w">  </span>grpcurl<span class="w"> </span>--max-time<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="nv">$url</span>:443<span class="w"> </span>grpc.health.v1.Health/Check<span class="p">;</span>
-<span class="k">done</span>
-</pre></div>
-</div>
+<pre class="literal-block">for url in $(curl -sSL <span class="raw-html">https://scan.sv-1.<span class="splice-url-prefix">unknown_cluster.</span>global.canton.network.sync.global</span>/api/scan/v0/dso-sequencers | jq -r '.domainSequencers | .[] | .sequencers.[].url | sub(&quot;<a class="reference external" href="https://">https://</a>&quot;; &quot;&quot;)' ); do
+  echo -n &quot;$url: &quot;;
+  grpcurl --max-time 10 $url:443 grpc.health.v1.Health/Check;
+done</pre>
 <p>Sequencers that are functional and have whitelisted your IP correctly will return <code class="docutils literal notranslate"><span class="pre">status:</span> <span class="pre">SERVING</span></code> in the <code class="docutils literal notranslate"><span class="pre">grpcurl</span></code> output.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sequencer-1.sv-2.test.global.canton.network.digitalasset.com:<span class="w"> </span><span class="o">{</span>
 <span class="w">  </span><span class="s2">&quot;status&quot;</span>:<span class="w"> </span><span class="s2">&quot;SERVING&quot;</span>
