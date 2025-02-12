@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.11-ci-snapshot.20250212.1.0.v78f5fd3f
+                0.3.11-ci-snapshot.20250212.1.0.v79d678a0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -807,8 +807,8 @@ Look for APIs starting with <a class="reference external" href="https://github.c
 and <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/7345124f9f05395ab4797c0478c7e1dd37186369/apps/scan/src/main/openapi/scan-internal.yaml#L603">/v0/state/</a>, respectively for updates and ACS snapshots.</p>
 <p>Example URLs for accessing the Scan Bulk Data API are:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">https://|gsf_scan_url|/api/scan/v1/updates</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">https://|gsf_scan_url|/api/scan/v0/state/acs/snapshot-timestamp</span></code></p></li>
+<li><p><span class="raw-html">https://scan.sv-1.<span class="splice-url-prefix">unknown_cluster.</span>global.canton.network.sync.global</span>/api/scan/v1/updates</p></li>
+<li><p><span class="raw-html">https://scan.sv-1.<span class="splice-url-prefix">unknown_cluster.</span>global.canton.network.sync.global</span>/api/scan/v0/state/acs/snapshot-timestamp</p></li>
 </ul>
 <p>Please note the <cite>api/scan</cite> prefix in the URLs, which is the base path for the Scan API.</p>
 <section id="updates">
@@ -854,7 +854,7 @@ in a subsequent request in the <code class="docutils literal notranslate"><span 
 <ul class="simple">
 <li><p><strong>migration_id</strong> : This ID increments with every hard synchronizer migration. A hard synchronizer migration is performed for every significant Canton version upgrade.
 The current migration ID can be inquired from an SV,
-or by using the <code class="docutils literal notranslate"><span class="pre">/v0/dso-sequencers</span></code> API at <a class="reference external" href="https://|gsf_scan_url|/api/scan/v0/dso-sequencers">/v0/dso-sequencers</a>
+or by using the <code class="docutils literal notranslate"><span class="pre">/v0/dso-sequencers</span></code> API at <span class="raw-html">https://scan.sv-1.<span class="splice-url-prefix">unknown_cluster.</span>global.canton.network.sync.global</span>/api/scan/v0/dso-sequencers,
 which returns a <code class="docutils literal notranslate"><span class="pre">migrationId</span></code> per sequencer.</p></li>
 <li><p><strong>synchronizer_id</strong>: The instance ID of a Synchronizer (for example the ID of the Global Synchronizer).
 When contract assignments migrate, they become unavailable for processing via the old instance of the synchronizer
@@ -1067,9 +1067,7 @@ then stream updates from the timestamp of that snapshot. We’ll discuss this in
 for the given <code class="docutils literal notranslate"><span class="pre">migration_id</span></code>. Specify <code class="docutils literal notranslate"><span class="pre">migration_id</span> <span class="pre">=</span> <span class="pre">0</span></code> for the beginning of the network.
 The returned timestamp corresponds to the record time of the last transaction in the snapshot.</p>
 <p>An example request to get the timestamp of the most recent snapshot before a given date is shown below:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>https://<span class="p">|</span>gsf_scan_url<span class="p">|</span>/api/scan/v0/state/acs/snapshot-timestamp<span class="se">\?</span>before<span class="se">\=</span><span class="s2">&quot;2025-02-12T00:00:00.000000Z&quot;</span><span class="se">\&amp;</span>migration_id<span class="se">\=</span><span class="m">4</span>
-</pre></div>
-</div>
+<pre class="literal-block">curl <span class="raw-html">https://scan.sv-1.<span class="splice-url-prefix">unknown_cluster.</span>global.canton.network.sync.global</span>/api/scan/v0/state/acs/snapshot-timestamp?before=&quot;2025-02-12T00:00:00.000000Z&quot;&amp;migration_id=4</pre>
 <p>The response returns the timestamp of the most recent snapshot before the given date:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;record_time&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2025-02-11T18:00:00Z&quot;</span>
@@ -1159,13 +1157,7 @@ for more information.</p>
 <p>To use the script, you need to provide the URL of the Scan App and other optional parameters such as log level, cache file path, and report output file.
 The script can be run from the command line with the appropriate arguments.
 Example command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>scan_txlog.py<span class="w"> </span>https://<span class="p">|</span>gsf_scan_url<span class="p">|</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--verbose<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--cache-file-path<span class="w"> </span>cache.json<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--report-output<span class="w"> </span>report.csv<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--log-file-path<span class="w"> </span>scan_tx.log
-</pre></div>
-</div>
+<pre class="literal-block">python3 scan_txlog.py <span class="raw-html">https://scan.sv-1.<span class="splice-url-prefix">unknown_cluster.</span>global.canton.network.sync.global</span>   --verbose   --cache-file-path cache.json   --report-output report.csv   --log-file-path scan_tx.log</pre>
 <p>Execute <code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">scan_txlog.py</span> <span class="pre">--help</span></code> for a list of all available options.
 Let’s have a look at the key components of the script in the next section.</p>
 </section>
