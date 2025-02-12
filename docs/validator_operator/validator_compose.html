@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.11-ci-snapshot.20250212.1.0.v5893f98f
+                0.3.11-ci-snapshot.20250212.1.0.v97e9c3d1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -78,6 +78,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#configuring-authentication">Configuring Authentication</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#integration-with-systemd-and-other-init-systems">Integration with systemd and other init systems</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="validator_helm.html">Kubernetes-Based Deployment of a Validator node</a><ul>
@@ -810,9 +811,9 @@ jq-1.7.1
 (contact your sponsor SV to obtain access), or have a static egress IP address.
 In the latter case, please provide that IP address to your sponsor SV to
 add it to the firewall rules.</p></li>
-<li><p>Please download the release artifacts containing the docker-compose files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.11-ci-snapshot.20250212.1.0.v5893f98f_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
+<li><p>Please download the release artifacts containing the docker-compose files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.11-ci-snapshot.20250212.1.0.v97e9c3d1_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
 </ol>
-<pre class="literal-block">tar xzvf 0.3.11-ci-snapshot.20250212.1.0.v5893f98f_splice-node.tar.gz</pre>
+<pre class="literal-block">tar xzvf 0.3.11-ci-snapshot.20250212.1.0.v97e9c3d1_splice-node.tar.gz</pre>
 </section>
 <section id="required-network-parameters">
 <h2>Required Network Parameters<a class="headerlink" href="#required-network-parameters" title="Link to this heading"></a></h2>
@@ -861,7 +862,7 @@ calling the following endpoint on any SV (the GSF URL used here for illustration
 </pre></div>
 </div>
 <ol class="arabic simple" start="2">
-<li><p>Export the current version to an environment variable: <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">IMAGE_TAG=0.3.11-ci-snapshot.20250212.1.0.v5893f98f</span></code></p></li>
+<li><p>Export the current version to an environment variable: <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">IMAGE_TAG=0.3.11-ci-snapshot.20250212.1.0.v97e9c3d1</span></code></p></li>
 <li><p>Run the following command to start the validator node, and wait for it to become ready (could take a few minutes):</p></li>
 </ol>
 <blockquote>
@@ -955,6 +956,20 @@ command, as follows:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./start.sh<span class="w"> </span>-s<span class="w"> </span>&lt;sponsor_sv_address&gt;<span class="w"> </span>-o<span class="w"> </span>&lt;onboarding_secret&gt;<span class="w"> </span>-p<span class="w"> </span>&lt;party_hint&gt;<span class="w"> </span>-m<span class="w"> </span><span class="nv">$MIGRATION_ID</span><span class="w"> </span>-w<span class="w"> </span>-a
 </pre></div>
 </div>
+</section>
+<section id="integration-with-systemd-and-other-init-systems">
+<h2>Integration with systemd and other init systems<a class="headerlink" href="#integration-with-systemd-and-other-init-systems" title="Link to this heading"></a></h2>
+<p>If you want to manage the validator through systemd or a similar init
+system, create a service that calls the <code class="docutils literal notranslate"><span class="pre">start.sh</span></code> script with the
+right arguments. However, note that <code class="docutils literal notranslate"><span class="pre">start.sh</span></code> invokes <code class="docutils literal notranslate"><span class="pre">docker</span>
+<span class="pre">compose</span> <span class="pre">up</span></code> with the <code class="docutils literal notranslate"><span class="pre">-d/--detach</span></code> option so the script exits after
+the containers are up instead of continuing running.</p>
+<p>You need to make sure that your service does not stop docker compose
+at that point. To accomplish this with systemd set
+<code class="docutils literal notranslate"><span class="pre">RemainAfterExit=true</span></code>. Refer to the
+<a class="reference external" href="https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html">systemd documentation</a>
+for more details. If you are using another init system, look for similar options to ensure that docker compose continues running after the script exits.</p>
+<p>Alternatively, you can edit the script to remove the <code class="docutils literal notranslate"><span class="pre">-d</span></code> option so the script continues running.</p>
 </section>
 </section>
 
