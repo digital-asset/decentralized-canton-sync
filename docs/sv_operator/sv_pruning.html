@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SV Operations &mdash; Splice  documentation</title>
+  <title>Pruning &mdash; Splice  documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -25,8 +25,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="How to Bootstrap a Network" href="sv_scratchnet.html" />
-    <link rel="prev" title="Disaster Recovery" href="sv_restore.html" /> 
+    <link rel="next" title="Disaster Recovery" href="sv_restore.html" />
+    <link rel="prev" title="Backups" href="sv_backup.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -251,9 +251,9 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="sv_pruning.html">Pruning</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="sv_pruning.html#sequencer-pruning">Sequencer pruning</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_pruning.html#cometbft-pruning">CometBFT pruning</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Pruning</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#sequencer-pruning">Sequencer pruning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cometbft-pruning">CometBFT pruning</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="sv_restore.html">Disaster Recovery</a><ul>
@@ -274,16 +274,16 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">SV Operations</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#security-notice">Security Notice</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#generate-a-validator-onboarding-secret">Generate a validator onboarding secret</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#sv-identities-overview">Identities used by SV nodes on different layers</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#sv-identity">SV identity</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#participant-identities">Participant identities</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#cometbft-node-identities">CometBFT node identities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sv_operations.html">SV Operations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="sv_operations.html#security-notice">Security Notice</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sv_operations.html#generate-a-validator-onboarding-secret">Generate a validator onboarding secret</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sv_operations.html#sv-identities-overview">Identities used by SV nodes on different layers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="sv_operations.html#sv-identity">SV identity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sv_operations.html#participant-identities">Participant identities</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sv_operations.html#cometbft-node-identities">CometBFT node identities</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#updating-the-reward-weight-of-an-sv">Updating the reward weight of an SV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sv_operations.html#updating-the-reward-weight-of-an-sv">Updating the reward weight of an SV</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="sv_scratchnet.html">How to Bootstrap a Network</a><ul>
@@ -771,9 +771,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="index.html">Supervalidators</a></li>
-      <li class="breadcrumb-item active">SV Operations</li>
+      <li class="breadcrumb-item active">Pruning</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/sv_operator/sv_operations.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/sv_operator/sv_pruning.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -781,106 +781,38 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="sv-operations">
-<span id="id1"></span><h1>SV Operations<a class="headerlink" href="#sv-operations" title="Link to this heading"></a></h1>
-<p>These sections give an overview of some of the functionalities enabled through your SV node
-as well as general information useful to SV node operators.</p>
-<section id="security-notice">
-<span id="sv-security-notice"></span><h2>Security Notice<a class="headerlink" href="#security-notice" title="Link to this heading"></a></h2>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>As an SV operator, you are most welcome to review, install, and use third-party Daml apps provided you
-<strong>install third-party Daml apps on a validator node separate from your SV node</strong>.</p>
-<p>Installing additional Daml apps on an SV node is not supported and may compromise its secure
-operations. In particular, please refrain from manually uploading additional <code class="docutils literal notranslate"><span class="pre">.dar</span></code> files
-to your SV node or manually connecting it to third-party synchronizers.</p>
+  <section id="pruning">
+<span id="sv-pruning"></span><h1>Pruning<a class="headerlink" href="#pruning" title="Link to this heading"></a></h1>
+<p>The sequencer and CometBFT have pruning options that can be used to ensure storage use is kept within reasonable bounds.</p>
+<p>Pruning can also be configured for the participant, but we don’t currently recommend enabling it for the SVs.</p>
+<section id="sequencer-pruning">
+<span id="sv-pruning-sequencer"></span><h2>Sequencer pruning<a class="headerlink" href="#sequencer-pruning" title="Link to this heading"></a></h2>
+<p>Can be enabled in helm through the following config:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">domain</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">sequencerPruningConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Enable or disable sequencer pruning</span>
+<span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="c1"># The pruning interval is the time between two consecutive prunings.</span>
+<span class="w">    </span><span class="nt">pruningInterval</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;1</span><span class="nv"> </span><span class="s">hour&quot;</span>
+<span class="w">    </span><span class="c1"># The retention period is the time for which the sequencer will retain the data.</span>
+<span class="w">    </span><span class="nt">retentionPeriod</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;30</span><span class="nv"> </span><span class="s">days&quot;</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It is recommended that sequencer pruning is enabled and the <code class="docutils literal notranslate"><span class="pre">pruningInterval</span></code> is set to <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">hour</span></code> and the <code class="docutils literal notranslate"><span class="pre">retentionPeriod</span></code> to <code class="docutils literal notranslate"><span class="pre">30</span> <span class="pre">days</span></code>.</p>
 </div>
 </section>
-<section id="generate-a-validator-onboarding-secret">
-<span id="generate-onboarding-secret"></span><h2>Generate a validator onboarding secret<a class="headerlink" href="#generate-a-validator-onboarding-secret" title="Link to this heading"></a></h2>
-<p>If you want to onboard a new validator, you can obtain a one-time use onboarding secret directly from the SV web UI.</p>
-<p>The onboarding secret expires after 48 hours.</p>
-<p>To generate this key you need to <a class="reference internal" href="sv_helm.html#local-sv-web-ui"><span class="std std-ref">login into the SV web UI</span></a> and navigate to the <cite>Validator Onboarding</cite> tab. In that tab, click on the button to create the secret
-and copy the last generated <cite>onboarding secret</cite>.</p>
-<a class="reference internal image-reference" href="../_images/create-onboarding-secret.png"><img alt="Generate an onboarding secret in the SV UI." src="../_images/create-onboarding-secret.png" style="width: 600px;" />
-</a>
-<p>Using the secret, the validator operator can follow <a class="reference internal" href="../validator_operator/validator_helm.html#validator-onboarding"><span class="std std-ref">this instruction to prepare for validator onboarding</span></a>.</p>
-</section>
-<section id="sv-identities-overview">
-<span id="identities-used-by-sv-nodes-on-different-layers"></span><h2>Identities used by SV nodes on different layers<a class="headerlink" href="#sv-identities-overview" title="Link to this heading"></a></h2>
-<p>This section gives a brief overview over some of the most important identities associated with a single SV node,
-and for each type of identity: its role and relevance for quorums (if any), under what circumstance it can be reused,
-and the implications of losing it (e.g., by loss or compromise of relevant cryptographic keys).</p>
-<p>Each identity is relevant on different layers, or within different subsystems, of the Canton &amp; Global Synchronizer software stack.
-We strive to reduce coupling between layers, so that in general it is possible to rotate identities independently of each other.</p>
-<section id="sv-identity">
-<h3>SV identity<a class="headerlink" href="#sv-identity" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>Used for identifying your node <em>before</em> it was onboarded to the system. See <a class="reference internal" href="sv_helm.html#sv-identity"><span class="std std-ref">Generating an SV identity</span></a>.</p></li>
-<li><p>Established SVs will confirm onboarding requests by SVs that can authenticate themselves with regards to an approved SV identity.</p></li>
-<li><p>An SV identity can be reused for multiple onboardings, as long as it’s approved by a quorum of established SVs and,
-for non-DevNet clusters, no SV with the same name is already onboarded.</p></li>
-<li><p>An operator that has lost control over their SV identity will not be able to onboard SVs
-until a quorum of established SV operators have approved a new identity under the control of that operator.</p></li>
-</ul>
-</section>
-<section id="participant-identities">
-<h3>Participant identities<a class="headerlink" href="#participant-identities" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>Used for securing Daml workflows and for determining an SV’s <code class="docutils literal notranslate"><span class="pre">svPartyId</span></code>,
-which is used for various DSO governance flows as well as for receiving SV rewards.
-For general information on Canton and Daml identities see the <a class="reference external" href="https://docs.daml.com/canton/usermanual/identity_management.html">Canton documentation on Identity Management</a>.</p></li>
-<li><p>Participant identities are important for multiple types of quorums</p>
-<ul>
-<li><p>Quorums for confirming Daml transactions as the DSO party (&gt;⅓ of onboarded SVs)</p></li>
-<li><p>Quorums for administering the domain topology on behalf of the DSO party (&gt;⅔ of onboarded SVs once activated)</p></li>
-<li><p>Quorums for confirmation-based DSO Daml workflows (&gt;⅔ of onboarded SVs; on DevNet instead usually &gt;½)</p></li>
-</ul>
-</li>
-<li><p>In general, participant identities <em>can’t</em> be reused on the same global domain,
-i.e., without the network being reset/redeployed.</p></li>
-<li><p>Loss of control over a participant namespace implies loss of control over the coin balances for all parties hosted under that namespace.
-On a network level, loss of a participant namespace constitutes an SV failure and reduces the overall fault tolerance buffer,
-until the respective SV is offboarded from the DSO.</p></li>
-</ul>
-</section>
-<section id="cometbft-node-identities">
-<h3>CometBFT node identities<a class="headerlink" href="#cometbft-node-identities" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>Used within the CometBFT network spanned by SVs for operating the global domain.
-See <a class="reference internal" href="sv_helm.html#cometbft-identity"><span class="std std-ref">Generating your CometBft node keys</span></a>.</p></li>
-<li><p>The CometBFT validator key is used in CometBFT quorums (&gt;⅔ of SVs),
-which are required for advancing the CometBFT blockchain and changing the CometBFT configuration and validator set.</p></li>
-<li><p>Reusing CometBFT node identities can cause (transient) instability in the CometBFT network and is therefore not recommended.</p></li>
-<li><p>Compromise of CometBFT key material constitutes an SV failure and reduces the overall fault tolerance buffer.
-For recovering, it is sufficient for an SV operator to set up a new CometBFT node (with a fresh identity)
-and make sure that it is correctly registered by their SV app backend
-(e.g., by amending the configuration of their SV app backend and restarting it).</p></li>
-</ul>
-</section>
-</section>
-<section id="updating-the-reward-weight-of-an-sv">
-<h2>Updating the reward weight of an SV<a class="headerlink" href="#updating-the-reward-weight-of-an-sv" title="Link to this heading"></a></h2>
-<p>The following steps are required to update the reward weight of an SV:</p>
-<ol class="arabic simple">
-<li><p>Receive from the SV owners an agreed-upon update to the SV weights.</p></li>
-<li><p>If the SV whose weight is being adjusted defined <cite>extraBeneficiaries</cite> (as described in <a class="reference internal" href="sv_helm.html#sv-helm"><span class="std std-ref">Kubernetes-Based Deployment of a Super Validator node</span></a>),
-they will have to update them accordingly. Namely:</p>
-<ul class="simple">
-<li><p>On weight increases they should add a new entry with the extra weight, as otherwise any leftovers will go to the SV party.</p></li>
-<li><p>On weight decreases, the last extra beneficiary will have their weight capped.</p></li>
-</ul>
-</li>
-<li><p>Note that you can and usually should update the extra-beneficiaries config before the weight change takes effect.
-The extra entries at the end will just be ignored.</p></li>
-<li><p>Start a governance vote. To do so, create a new vote request in the SV web UI under the <cite>Governance</cite> tab.
-Select the “Update SV Reward Weight” name, then select the SV member and specify the new reward weight.</p></li>
-<li><p>Wait for the vote request to get approved and executed.
-Once that happens, the DSO info tab will show the updated reward weight,
-and the SV will earn rewards according to the new weight moving forward.</p></li>
-<li><p>Make sure that the changed reward is also reflected on <a class="reference external" href="https://github.com/global-synchronizer-foundation/configs">the configs repository</a>.
-Otherwise, the old value would become effective again in the event of an onboarding and reonboarding.</p></li>
-</ol>
+<section id="cometbft-pruning">
+<span id="sv-pruning-cometbft"></span><h2>CometBFT pruning<a class="headerlink" href="#cometbft-pruning" title="Link to this heading"></a></h2>
+<p>It is enabled by default.
+Pruning is defined as the number of blocks to keep. Older blocks are pruned.</p>
+<p>The number of blocks to keep can be configured under the <cite>node</cite> helm values key.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="c1"># Number of blocks to keep, used for pruning. 0 -&gt; keep all blocks.</span>
+<span class="w">  </span><span class="c1"># Number of blocks to keep for 30 days with an upper bound of 7k blocks/h.</span>
+<span class="w">  </span><span class="nt">retainBlocks</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5040000</span>
+</pre></div>
+</div>
 </section>
 </section>
 
@@ -888,8 +820,8 @@ Otherwise, the old value would become effective again in the event of an onboard
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="sv_restore.html" class="btn btn-neutral float-left" title="Disaster Recovery" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="sv_scratchnet.html" class="btn btn-neutral float-right" title="How to Bootstrap a Network" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="sv_backup.html" class="btn btn-neutral float-left" title="Backups" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="sv_restore.html" class="btn btn-neutral float-right" title="Disaster Recovery" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

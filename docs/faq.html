@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Glossary &mdash; Splice  documentation</title>
+  <title>FAQ &mdash; Splice  documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -25,8 +25,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Release Notes" href="release_notes.html" />
-    <link rel="prev" title="FAQ" href="faq.html" /> 
+    <link rel="next" title="Glossary" href="glossary.html" />
+    <link rel="prev" title="SV Operated networks and Use-cases" href="app_dev/testing/networks_and_usecases.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -655,16 +655,16 @@
 </li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="faq.html#super-validators">Super Validators</a></li>
-<li class="toctree-l2"><a class="reference internal" href="faq.html#validators">Validators</a></li>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">FAQ</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#super-validators">Super Validators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#validators">Validators</a></li>
 </ul>
 </li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Glossary</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Glossary</a></li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
 <ul>
@@ -770,9 +770,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Glossary</li>
+      <li class="breadcrumb-item active">FAQ</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="_sources/glossary.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/faq.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -780,109 +780,32 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="glossary">
-<h1>Glossary<a class="headerlink" href="#glossary" title="Link to this heading"></a></h1>
+  <section id="faq">
+<span id="id1"></span><h1>FAQ<a class="headerlink" href="#faq" title="Link to this heading"></a></h1>
+<section id="super-validators">
+<h2>Super Validators<a class="headerlink" href="#super-validators" title="Link to this heading"></a></h2>
 <dl class="simple glossary">
-<dt id="term-Amulet">Amulet<a class="headerlink" href="#term-Amulet" title="Link to this term"></a></dt><dd><p>The generic name for the code and the logic implementing Canton Coin.</p>
+<dt id="term-Where-do-I-find-all-whitelisted-node-operators">Where do I find all whitelisted node operators?<a class="headerlink" href="#term-Where-do-I-find-all-whitelisted-node-operators" title="Link to this term"></a></dt><dd><p>All whitelisted SVs are listed in the <a class="reference external" href="https://github.com/global-synchronizer-foundation/configs">public global synchronizer configurations repository</a>.</p>
 </dd>
-<dt id="term-Amulet-Name-Service">Amulet Name Service<a class="headerlink" href="#term-Amulet-Name-Service" title="Link to this term"></a></dt><dd><p>The generic name for the code and logic implementing the Canton Name Service.</p>
-</dd>
-<dt id="term-CC">CC<a class="headerlink" href="#term-CC" title="Link to this term"></a></dt><dd><p><a class="reference internal" href="#term-Canton-Coin"><span class="xref std std-term">Canton Coin</span></a></p>
-</dd>
-<dt id="term-CN">CN<a class="headerlink" href="#term-CN" title="Link to this term"></a></dt><dd><p><a class="reference internal" href="#term-Canton-Network"><span class="xref std std-term">Canton Network</span></a></p>
-</dd>
-<dt id="term-Canton-Network">Canton Network<a class="headerlink" href="#term-Canton-Network" title="Link to this term"></a></dt><dd><p>A network of multi-party business processes operated by
-business entities in the form of CN applications.</p>
-</dd>
-<dt id="term-CN-Application">CN Application<a class="headerlink" href="#term-CN-Application" title="Link to this term"></a></dt><dd><p>A set of Canton participant and domain
-nodes and supporting code operated by a single business entity for the
-purpose of providing access to a particular multi-party business process
-to other entities on the Canton network.</p>
-</dd>
-<dt id="term-BFT">BFT<a class="headerlink" href="#term-BFT" title="Link to this term"></a></dt><dd><p>Byzantine Fault Tolerance.
-A property of a distributed system that allows it to continue operating correctly
-in the presence of a certain number of faulty nodes.
-Typically <code class="docutils literal notranslate"><span class="pre">f</span></code> denotes the number of faulty nodes that the system can tolerate.
-Across all layers of Splice, <code class="docutils literal notranslate"><span class="pre">f</span></code> corresponds to slighly less than 1/3 of the total number of SVs
-(<code class="docutils literal notranslate"><span class="pre">floor((n-1)/3)</span></code>, to be exact).</p>
-</dd>
-<dt id="term-CN-Global-Domain">CN Global Domain<a class="headerlink" href="#term-CN-Global-Domain" title="Link to this term"></a></dt><dd><ul class="simple">
-<li><p>global synchronization domain</p></li>
-<li><p>can host small apps directly on domain</p></li>
-<li><p>acts as shared synchronization domain to intermediate between different apps’ domains</p></li>
-<li><p>run by super validator collective with BFT</p></li>
-<li><p>domain usage costs domain fees which are paid in Canton Coin by the
-operator of each validator</p></li>
-</ul>
-</dd>
-<dt id="term-Canton-Coin">Canton Coin<a class="headerlink" href="#term-Canton-Coin" title="Link to this term"></a></dt><dd><ul class="simple">
-<li><p>currency issued by super validator collective</p></li>
-<li><p>used for domain fees</p></li>
-<li><p>fees in USD</p></li>
-<li><p>coins accrue holding fees that pay for the coin’s usage of DSO storage space</p></li>
-<li><p>all cc transactions are public</p></li>
-<li><p>supports locked coins that can be unlocked by lock holder</p></li>
-<li><p>support transfers single sender, multi-receiver transfers</p></li>
-<li><p>transfers cost admin fees and produce app reward for receiver and
-validator reward for validator that hosts sender</p></li>
-<li><p>transfers are associated to mining rounds</p></li>
-<li><p>rewards can be collected in next mining round</p></li>
-</ul>
-</dd>
-<dt id="term-CN-Validator">CN Validator<a class="headerlink" href="#term-CN-Validator" title="Link to this term"></a></dt><dd><ul class="simple">
-<li><p>One node in the CN</p></li>
-<li><p>consists of canton participant, validator app, wallet app</p></li>
-<li><p>validator app for admin operations by the validator operator like
-user/party management</p></li>
-</ul>
-</dd>
-<dt id="term-CN-Supervalidator">CN Supervalidator<a class="headerlink" href="#term-CN-Supervalidator" title="Link to this term"></a></dt><dd><ul class="simple">
-<li><p>One node in the CN</p></li>
-<li><p>In addition to CN Validator components, also consists of canton sequencer, canton mediator, sv app and scan app</p></li>
-<li><p>sv app for admin operations of the <a class="reference internal" href="#term-CN-Global-Domain"><span class="xref std std-term">CN Global Domain</span></a></p></li>
-<li><p>scan app for providing publicly visible data</p></li>
-</ul>
-</dd>
-<dt id="term-CN-Wallet">CN Wallet<a class="headerlink" href="#term-CN-Wallet" title="Link to this term"></a></dt><dd><ul class="simple">
-<li><p>provides payment APIs for other apps to build upon (“pay with CC”) and corresponding UI, e.g., approve payment</p></li>
-<li><p>used by CN users to manage their CC holdings &amp; reward collection</p></li>
-<li><p>provides UI for managing peer-to-peer transfers
-between two users</p></li>
-</ul>
-</dd>
-<dt id="term-Canton-Name-Service-sometimes-also-called-directory-service">Canton Name Service (sometimes also called directory service)<a class="headerlink" href="#term-Canton-Name-Service-sometimes-also-called-directory-service" title="Link to this term"></a></dt><dd><ul class="simple">
-<li><p>allows parties to buy a globally unique, human readable name for a time period mapped to their party (similar to DNS)</p></li>
-<li><p>allows each party to declare one of their entries as the primary
-entry which is used to provide a human readable name to their party
-(similar to reverse DNS)</p></li>
-<li><p>provides APIs for resolution in both directions that can be used by
-other apps (e.g., the wallet) to display and accept CNS names instead of party ids</p></li>
-</ul>
-</dd>
-<dt id="term-Global-Synchronizer-Foundation">Global Synchronizer Foundation<a class="headerlink" href="#term-Global-Synchronizer-Foundation" title="Link to this term"></a></dt><dd><ul class="simple">
-<li><p>Foundation charged with fostering the development and growth of the
-Global Synchronizer in the Canton Network, and facilitate its
-governance, see <a class="reference external" href="https://sync.global/">https://sync.global/</a>.</p></li>
-</ul>
-</dd>
-<dt id="term-GSF">GSF<a class="headerlink" href="#term-GSF" title="Link to this term"></a></dt><dd><ul class="simple">
-<li><p>abbreviation for <a class="reference internal" href="#term-Global-Synchronizer-Foundation"><span class="xref std std-term">Global Synchronizer Foundation</span></a></p></li>
-</ul>
-</dd>
-<dt id="term-Splice">Splice<a class="headerlink" href="#term-Splice" title="Link to this term"></a></dt><dd><ul class="simple">
-<li><p>The name of the HyperLedger lab project that will host the code for Amulet, DSO governance,
-Amulet Name Service, SV nodes, and validator nodes.</p></li>
-</ul>
+<dt id="term-Where-do-I-generate-a-Validator-Onboarding-Token">Where do I generate a Validator Onboarding Token?<a class="headerlink" href="#term-Where-do-I-generate-a-Validator-Onboarding-Token" title="Link to this term"></a></dt><dd><p>SVs <a class="reference internal" href="sv_operator/sv_operations.html#generate-onboarding-secret"><span class="std std-ref">generate a validator onboarding token</span></a> in the SV UI.</p>
 </dd>
 </dl>
+</section>
+<section id="validators">
+<h2>Validators<a class="headerlink" href="#validators" title="Link to this heading"></a></h2>
+<dl class="simple glossary">
+<dt id="term-How-long-is-my-Validator-Onboarding-Token-valid">How long is my Validator Onboarding Token valid?<a class="headerlink" href="#term-How-long-is-my-Validator-Onboarding-Token-valid" title="Link to this term"></a></dt><dd><p>They can be used for 48h for secrets created by SVs and 1h for secrets created through the DevNet self-onboarding endpoint. They are one-time use only.</p>
+</dd>
+</dl>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="faq.html" class="btn btn-neutral float-left" title="FAQ" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="release_notes.html" class="btn btn-neutral float-right" title="Release Notes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="app_dev/testing/networks_and_usecases.html" class="btn btn-neutral float-left" title="SV Operated networks and Use-cases" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="glossary.html" class="btn btn-neutral float-right" title="Glossary" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

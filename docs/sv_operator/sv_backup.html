@@ -25,7 +25,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Disaster Recovery" href="sv_restore.html" />
+    <link rel="next" title="Pruning" href="sv_pruning.html" />
     <link rel="prev" title="Synchronizer Upgrades with Downtime" href="sv_major_upgrade.html" /> 
 </head>
 
@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.12-ci-snapshot.20250214.1.0.v7b2253a2
+                0.3.12-ci-snapshot.20250214.1.0.v06ce35ea
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -131,7 +131,10 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_backups.html">Backups</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_backups.html#backup-of-node-identities">Backup of Node Identities</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_backups.html#backups-of-postgres-instances">Backups of postgres instances</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_backups.html#backups-of-postgres-instances">Backups of postgres instances</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_backups.html#historical-backups">Historical backups</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html">Disaster Recovery</a><ul>
@@ -237,8 +240,20 @@
 </li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Backups</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#backup-of-node-identities">Backup of Node Identities</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#backup-of-postgres-instances">Backup of Postgres Instances</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#backup-of-cometbft">Backup of CometBFT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#backup-of-postgres-instances">Backup of Postgres Instances</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#taking-backups">Taking backups</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#historical-backups">Historical backups</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#backup-of-cometbft">Backup of CometBFT</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id1">Historical backups</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="sv_pruning.html">Pruning</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="sv_pruning.html#sequencer-pruning">Sequencer pruning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sv_pruning.html#cometbft-pruning">CometBFT pruning</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="sv_restore.html">Disaster Recovery</a><ul>
@@ -639,6 +654,14 @@
 </ul>
 </li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../faq.html">FAQ</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../faq.html#super-validators">Super Validators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../faq.html#validators">Validators</a></li>
+</ul>
+</li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Glossary</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
@@ -646,6 +669,7 @@
 <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#upcoming">Upcoming</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id2">0.3.11</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id3">0.3.10</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id4">0.3.9</a></li>
@@ -773,19 +797,39 @@ access to your Canton Coin holdings), so must be backed up outside of the cluste
 </section>
 <section id="backup-of-postgres-instances">
 <h2>Backup of Postgres Instances<a class="headerlink" href="#backup-of-postgres-instances" title="Link to this heading"></a></h2>
-<p>Please make sure your Postgres instances are backed up at least every 4 hours. We will provide guidelines on retention of older backups
-at a later point in time.</p>
+<section id="taking-backups">
+<h3>Taking backups<a class="headerlink" href="#taking-backups" title="Link to this heading"></a></h3>
 <p>While most backups can be taken independently, there is one strict ordering requirement between them:
 The backup of the apps postgres instance must be taken at a point in time strictly earlier than that of the participant.
 Please make sure the apps instance backup is completed before starting the participant one.</p>
 <p>If you are running your own Postgres instances in the cluster, backups can be taken either using tools like <cite>pgdump</cite>, or through snapshots of the underlying Persistent Volume.
 Similarly, if you are using Cloud-hosted Postgres, you can either use tools like <cite>pgdump</cite> or backup tools provided by the Cloud provider.</p>
+<p>Please make sure your Postgres instances are backed up at least every 4 hours.</p>
+</section>
+<section id="historical-backups">
+<h3>Historical backups<a class="headerlink" href="#historical-backups" title="Link to this heading"></a></h3>
+<p>We need historical backups in order to preserve a gap-less history from genesis, which can be uses during audits and more generally prove the correctness of the current synchronizer state to outside observers.</p>
+<p>For the sequencer, when <a class="reference internal" href="sv_pruning.html#sv-pruning-sequencer"><span class="std std-ref">pruning</span></a> is enabled, historical backups must be kept for each pruning window.
+This means that backups must be preserved with a time difference between two historical backups smaller than the <cite>retentionPeriod</cite> set for the sequencer.</p>
+<p>For SVs, by default, the participant, mediator and the splice apps have no pruning enabled.</p>
+<p>Furthermore, backups must be retained for previous <a class="reference internal" href="sv_major_upgrade.html#sv-upgrades"><span class="std std-ref">major upgrades</span></a>. This includes all the historical sequencer backups and the backups of the other apps.</p>
+</section>
 </section>
 <section id="backup-of-cometbft">
 <h2>Backup of CometBFT<a class="headerlink" href="#backup-of-cometbft" title="Link to this heading"></a></h2>
 <p>In addition to the Postgres instances, the storage used by CometBFT should also be backed up every 4 hours.
 CometBFT does not use Postgres.
 We recommend backing up its storage by creating snapshots of the underlying Persistent Volume.</p>
+<section id="id1">
+<h3>Historical backups<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<p>We need historical backups in order to preserve a gap-less history from genesis, which can be uses during audits and more generally prove the correctness of the current synchronizer state to outside observers.</p>
+<p>CometBFT has <a class="reference internal" href="sv_pruning.html#sv-pruning-cometbft"><span class="std std-ref">pruning</span></a> enabled by default. The pruning window is defined by the number of blocks
+to retain.
+We target to set the number of blocks to retain to a value that keeps at least 30 days of data.
+The CometBFT historical backups must be kept in such a way that the difference between the block height when two backups are taken is smaller than the configured number of blocks to retain.
+We recommend that backups are taken and preserved in a more aggressive fashion, every 2 weeks.</p>
+<p>Furthermore, backups must be retained for previous <a class="reference internal" href="sv_major_upgrade.html#sv-upgrades"><span class="std std-ref">major upgrades</span></a>.</p>
+</section>
 </section>
 </section>
 
@@ -794,7 +838,7 @@ We recommend backing up its storage by creating snapshots of the underlying Pers
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="sv_major_upgrade.html" class="btn btn-neutral float-left" title="Synchronizer Upgrades with Downtime" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="sv_restore.html" class="btn btn-neutral float-right" title="Disaster Recovery" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="sv_pruning.html" class="btn btn-neutral float-right" title="Pruning" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

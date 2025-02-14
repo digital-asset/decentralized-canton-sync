@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.12-ci-snapshot.20250214.1.0.v7b2253a2
+                0.3.12-ci-snapshot.20250214.1.0.v06ce35ea
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -131,7 +131,10 @@
 </li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Backups</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#backup-of-node-identities">Backup of Node Identities</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#backups-of-postgres-instances">Backups of postgres instances</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#backups-of-postgres-instances">Backups of postgres instances</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#historical-backups">Historical backups</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="validator_disaster_recovery.html">Disaster Recovery</a><ul>
@@ -237,8 +240,20 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../sv_operator/sv_backup.html">Backups</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_backup.html#backup-of-node-identities">Backup of Node Identities</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_backup.html#backup-of-postgres-instances">Backup of Postgres Instances</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_backup.html#backup-of-cometbft">Backup of CometBFT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_backup.html#backup-of-postgres-instances">Backup of Postgres Instances</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_backup.html#taking-backups">Taking backups</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_backup.html#historical-backups">Historical backups</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_backup.html#backup-of-cometbft">Backup of CometBFT</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_backup.html#id1">Historical backups</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../sv_operator/sv_pruning.html">Pruning</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_pruning.html#sequencer-pruning">Sequencer pruning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_pruning.html#cometbft-pruning">CometBFT pruning</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../sv_operator/sv_restore.html">Disaster Recovery</a><ul>
@@ -639,6 +654,14 @@
 </ul>
 </li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../faq.html">FAQ</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../faq.html#super-validators">Super Validators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../faq.html#validators">Validators</a></li>
+</ul>
+</li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Glossary</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
@@ -646,6 +669,7 @@
 <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#upcoming">Upcoming</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id2">0.3.11</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id3">0.3.10</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id4">0.3.9</a></li>
@@ -788,8 +812,7 @@ to generate a token for the <code class="docutils literal notranslate"><span cla
 at least every 4 hours. Note that there is a strict order requirement
 between the backups: <strong>the backup of the validator app’s postgres instance must be taken at
 a point in time strictly earlier than that of the participant</strong>.
-Please make sure the app’s instance backup is completed before starting the participant one.
-We will provide guidelines on retention of older backups at a later point in time.</p>
+Please make sure the app’s instance backup is completed before starting the participant one.</p>
 <p>If you are running your own Postgres instances in the cluster, backups can be
 taken either using tools like <code class="docutils literal notranslate"><span class="pre">pg_dump</span></code>, or through snapshots of the underlying
 Persistent Volume. Similarly, if you are using Cloud-hosted Postgres, you can
@@ -802,6 +825,12 @@ the validator app.</p>
 docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>compose-postgres-splice-1<span class="w"> </span>pg_dump<span class="w"> </span>-U<span class="w"> </span>cnadmin<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">active_participant_db</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span>&gt;<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">backup_dir</span><span class="si">}</span><span class="s2">&quot;</span>/<span class="s2">&quot;</span><span class="si">${</span><span class="nv">active_participant_db</span><span class="si">}</span><span class="s2">&quot;</span>-<span class="s2">&quot;</span><span class="k">$(</span>date<span class="w"> </span>-u<span class="w"> </span>+<span class="s2">&quot;%Y-%m-%dT%H:%M:%S%:z&quot;</span><span class="k">)</span><span class="s2">&quot;</span>.dump
 </pre></div>
 </div>
+<section id="historical-backups">
+<h3>Historical backups<a class="headerlink" href="#historical-backups" title="Link to this heading"></a></h3>
+<p>If you have enabled participant <a class="reference internal" href="validator_helm.html#validator-participant-pruning"><span class="std std-ref">pruning</span></a>, but wish to preserve participant data for longer, e.g. for future auditability, then you should preserve historical backups such that they are apart by no more than the size of your pruning window</p>
+<p>This means that backups must be preserved with a time difference between two historical backups smaller than the <cite>retention</cite> set for the participant.</p>
+<p>Furthermore, backups should be retained for previous <a class="reference internal" href="validator_major_upgrades.html#validator-upgrades"><span class="std std-ref">major upgrades</span></a>, both the historical backups for the participant and all the backups for the other apps.</p>
+</section>
 </section>
 </section>
 
