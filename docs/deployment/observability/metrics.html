@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.12-ci-snapshot.20250218.1.0.v9e7bb562
+                0.3.12-ci-snapshot.20250218.1.0.v398b31ed
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -302,8 +302,12 @@
 <li class="toctree-l3"><a class="reference internal" href="validator_health.html">Validator Health</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Metrics</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#scraping-the-metrics">Scraping the metrics</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="#configuring-a-helm-deployment-to-enable-metrics">Configuring a helm deployment to enable metrics</a></li>
-<li class="toctree-l5"><a class="reference internal" href="#configuring-a-docker-compose-deployment-to-enable-metrics">Configuring a docker compose deployment to enable metrics</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#histograms">Histograms</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#enabling-metrics">Enabling metrics</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#configuring-a-helm-deployment-to-enable-metrics">Configuring a helm deployment to enable metrics</a></li>
+<li class="toctree-l6"><a class="reference internal" href="#configuring-a-docker-compose-deployment-to-enable-metrics">Configuring a docker compose deployment to enable metrics</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="#grafana-dashboards">Grafana Dashboards</a></li>
@@ -802,15 +806,27 @@
 </ul>
 <section id="scraping-the-metrics">
 <h2>Scraping the metrics<a class="headerlink" href="#scraping-the-metrics" title="Link to this heading"></a></h2>
-<p>The metrics are exposed in the Prometheus format, and can be scraped by a Prometheus server.
+<p>We use OpenTelemetry to build the metrics and they are exposed in the Prometheus format, and can be scraped by a Prometheus server.
 For a reference of the existing metrics please check the <a class="reference internal" href="metrics_reference.html#metrics-reference"><span class="std std-ref">metrics reference</span></a>.</p>
+<section id="histograms">
+<h3>Histograms<a class="headerlink" href="#histograms" title="Link to this heading"></a></h3>
+<p>We expose the histograms as <a class="reference external" href="https://opentelemetry.io/docs/specs/otel/metrics/data-model/#exponentialhistogram">exponential histograms</a> which are converted to <a class="reference external" href="https://prometheus.io/docs/specs/native_histograms/">prometheus native histograms</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Prometheus support must be enabled using the flag <cite>-enable-feature=native-histograms</cite>.</p>
+<p>Native histograms are available only on the protobuf format so Prometheus will switch to the protobuf collection format.</p>
+</div>
+<p>You can switch back to regular histograms node by adding the following environment variable to a node: <cite>ADDITIONAL_CONFIG_DISABLE_NATIVE_HISTOGRAMS=”canton.monitoring.metrics.histograms=[]”</cite></p>
+</section>
+<section id="enabling-metrics">
+<h3>Enabling metrics<a class="headerlink" href="#enabling-metrics" title="Link to this heading"></a></h3>
 <section id="configuring-a-helm-deployment-to-enable-metrics">
-<h3>Configuring a helm deployment to enable metrics<a class="headerlink" href="#configuring-a-helm-deployment-to-enable-metrics" title="Link to this heading"></a></h3>
+<h4>Configuring a helm deployment to enable metrics<a class="headerlink" href="#configuring-a-helm-deployment-to-enable-metrics" title="Link to this heading"></a></h4>
 <p>To enable metrics in a helm deployment, set the <cite>metrics.enabled</cite> value to <cite>true</cite> (default <cite>false</cite>) in the helm values. This will create a <cite>ServiceMonitor</cite> kubernetes custom resource. For this to work it would require that the Prometheus operator is installed in the cluster.</p>
 <p>Alternatively you can add prometheus scrape annotations to the charts that are configured to scrape port 10013.</p>
 </section>
 <section id="configuring-a-docker-compose-deployment-to-enable-metrics">
-<h3>Configuring a docker compose deployment to enable metrics<a class="headerlink" href="#configuring-a-docker-compose-deployment-to-enable-metrics" title="Link to this heading"></a></h3>
+<h4>Configuring a docker compose deployment to enable metrics<a class="headerlink" href="#configuring-a-docker-compose-deployment-to-enable-metrics" title="Link to this heading"></a></h4>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Validator nodes only</p>
@@ -818,11 +834,16 @@ For a reference of the existing metrics please check the <a class="reference int
 <p>When using docker compose for the deployment, the metrics are enabled by default. These can be accessed at <cite>http://validator.localhost/metrics</cite> for the validator app and at <cite>http://participant.localhost/metrics</cite> for the participant.</p>
 </section>
 </section>
+</section>
 <section id="grafana-dashboards">
 <h2>Grafana Dashboards<a class="headerlink" href="#grafana-dashboards" title="Link to this heading"></a></h2>
-<p>The release bundle (<span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.12-ci-snapshot.20250218.1.0.v9e7bb562_splice-node.tar.gz">Download Bundle</a></span>) contains a set of Grafana dashboards that are built based on the metrics above.
+<p>The release bundle (<span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.12-ci-snapshot.20250218.1.0.v398b31ed_splice-node.tar.gz">Download Bundle</a></span>) contains a set of Grafana dashboards that are built based on the metrics above.
 These dashboards can be imported into a Grafana instance. The dashboards are built assuming a K8s deployment, and may need to be modified for other deployment types.
 The dashboards can be found under the <cite>grafana-dashboards</cite> folder in the release bundle.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The dashboards are built using queries specific for Prometheus native histograms.</p>
+</div>
 </section>
 </section>
 
