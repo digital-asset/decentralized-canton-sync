@@ -26,7 +26,7 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Scan API for Current state of CC, CNS, and Synchronizer Traffic" href="scan_current_state_api.html" />
-    <link rel="prev" title="Scan Vote Requests and Results API" href="scan_vote_requests_results_api.html" /> 
+    <link rel="prev" title="Scan Global Synchronizer Operations API" href="scan_global_synchronizer_operations_api.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.12-ci-snapshot.20250218.1.0.v9b919c0e
+                0.3.12-ci-snapshot.20250218.1.0.v18864c45
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -445,12 +445,30 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html">Scan Global Synchronizer Connectivity API</a></li>
-<li class="toctree-l2"><a class="reference internal" href="scan_global_synchronizer_operations_api.html">Scan Global Synchronizer Operations API</a></li>
-<li class="toctree-l2"><a class="reference internal" href="scan_vote_requests_results_api.html">Scan Vote Requests and Results API</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Scan Canton Coin Reference Data API</a></li>
-<li class="toctree-l2"><a class="reference internal" href="scan_current_state_api.html">Scan API for Current state of CC, CNS, and Synchronizer Traffic</a></li>
-<li class="toctree-l2"><a class="reference internal" href="scan_aggregates_api.html">Scan Aggregates API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html">Scan Global Synchronizer Connectivity API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html#listing-all-sv-scans">Listing all SV Scans</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html#listing-all-sv-sequencers">Listing all SV Sequencers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html#listing-all-validators">Listing all Validators</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="scan_global_synchronizer_operations_api.html">Scan Global Synchronizer Operations API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_operations_api.html#dso-info">DSO Info</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Scan Canton Coin Reference Data API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#dso-party-id">DSO party ID</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="scan_current_state_api.html">Scan API for Current state of CC, CNS, and Synchronizer Traffic</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scan_current_state_api.html#closed-mining-rounds">Closed Mining Rounds</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="scan_aggregates_api.html">Scan Aggregates API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scan_aggregates_api.html#amulet-summaries">Amulet Summaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scan_aggregates_api.html#detailed-amulet-holdings">Detailed Amulet Holdings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scan_aggregates_api.html#looking-up-ans-entries">Looking up ANS Entries</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="scan_openapi.html">Scan Open API Reference</a></li>
 </ul>
 </li>
@@ -799,13 +817,31 @@
              
   <section id="scan-canton-coin-reference-data-api">
 <span id="scan-cc-reference-data-api"></span><h1>Scan Canton Coin Reference Data API<a class="headerlink" href="#scan-canton-coin-reference-data-api" title="Link to this heading"></a></h1>
+<p>Alongside ephemeral status such as open rounds in the <a class="reference internal" href="scan_current_state_api.html#scan-current-state-api"><span class="std std-ref">Scan API for Current state of CC, CNS, and Synchronizer Traffic</span></a>, there are more fixed data records for aspects of a Splice network.</p>
+<section id="dso-party-id">
+<h2>DSO party ID<a class="headerlink" href="#dso-party-id" title="Link to this heading"></a></h2>
+<p>The DSO party ID is unique to every Splice network, and is a signatory or observer of most core Splice Daml templates.
+Therefore, you need to know it to correlate a Daml contract with a particular Splice network, or to construct a contract payload from scratch.</p>
+<p>There’s a simple way to retrieve the DSO party ID from Scan, with the <a class="reference external" href="|gsf_scan_url|/api/scan/v0/dso-party-id">/v0/dso-party-id</a> endpoint.
+Here’s an example response:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;dso_party_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;DSO::122084177677350389dd0710d6516f700a33fe3488c5f2702dffef6d36e1dedcbfc17&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you need the DSO party ID for an application, copy-pasting the above example will not work.
+The above has been deliberately altered into an invalid party ID.</p>
+</div>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="scan_vote_requests_results_api.html" class="btn btn-neutral float-left" title="Scan Vote Requests and Results API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="scan_global_synchronizer_operations_api.html" class="btn btn-neutral float-left" title="Scan Global Synchronizer Operations API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="scan_current_state_api.html" class="btn btn-neutral float-right" title="Scan API for Current state of CC, CNS, and Synchronizer Traffic" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

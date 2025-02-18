@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.12-ci-snapshot.20250218.1.0.v9b919c0e
+                0.3.12-ci-snapshot.20250218.1.0.v18864c45
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -445,12 +445,30 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html">Scan Global Synchronizer Connectivity API</a></li>
-<li class="toctree-l2"><a class="reference internal" href="scan_global_synchronizer_operations_api.html">Scan Global Synchronizer Operations API</a></li>
-<li class="toctree-l2"><a class="reference internal" href="scan_vote_requests_results_api.html">Scan Vote Requests and Results API</a></li>
-<li class="toctree-l2"><a class="reference internal" href="scan_cc_reference_data_api.html">Scan Canton Coin Reference Data API</a></li>
-<li class="toctree-l2"><a class="reference internal" href="scan_current_state_api.html">Scan API for Current state of CC, CNS, and Synchronizer Traffic</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Scan Aggregates API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html">Scan Global Synchronizer Connectivity API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html#listing-all-sv-scans">Listing all SV Scans</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html#listing-all-sv-sequencers">Listing all SV Sequencers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html#listing-all-validators">Listing all Validators</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="scan_global_synchronizer_operations_api.html">Scan Global Synchronizer Operations API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_operations_api.html#dso-info">DSO Info</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="scan_cc_reference_data_api.html">Scan Canton Coin Reference Data API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scan_cc_reference_data_api.html#dso-party-id">DSO party ID</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="scan_current_state_api.html">Scan API for Current state of CC, CNS, and Synchronizer Traffic</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scan_current_state_api.html#closed-mining-rounds">Closed Mining Rounds</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Scan Aggregates API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#amulet-summaries">Amulet Summaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#detailed-amulet-holdings">Detailed Amulet Holdings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#looking-up-ans-entries">Looking up ANS Entries</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="scan_openapi.html">Scan Open API Reference</a></li>
 </ul>
 </li>
@@ -799,6 +817,126 @@
              
   <section id="scan-aggregates-api">
 <span id="id1"></span><h1>Scan Aggregates API<a class="headerlink" href="#scan-aggregates-api" title="Link to this heading"></a></h1>
+<p>Scan provides a couple shortcuts for using the <a class="reference internal" href="scan_bulk_data_api.html#scan-bulk-data-api"><span class="std std-ref">Scan Bulk Data API</span></a> to look up Amulet and Amulet Name Service records.</p>
+<section id="amulet-summaries">
+<h2>Amulet Summaries<a class="headerlink" href="#amulet-summaries" title="Link to this heading"></a></h2>
+<p>While it’s possible to figure total Amulet balance from the <a class="reference internal" href="scan_bulk_data_api.html#scan-bulk-data-api"><span class="std std-ref">Scan Bulk Data API</span></a>, figuring the effect of holding fees can be tricky for a new Splice app unfamiliar with the on-ledger data model of Amulet.</p>
+<p>With a valid time from <a class="reference internal" href="scan_bulk_data_api.html#id6"><span class="std std-ref">GET /v0/state/acs/snapshot-timestamp</span></a>, knowing the latest migration ID, and one or more party IDs to look up Amulet holdings for, Scan will gather Amulet statistics for each matching party and yield them.
+Here’s an example payload passed to <a class="reference external" href="|gsf_scan_url|/api/scan/v0/holdings/summary">/v0/holdings/summary</a> on a test network:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;migration_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;record_time&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2025-02-14T15:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;owner_party_ids&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="s2">&quot;digitalasset-testValidator-1::1220e92bbc9d80cb6e283184017b307b9f44f23d32d7d195cdbcac033ae91eac2f28&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;digitalasset-testValidator-1::12201bca369bee8df7a32ee53c6433d437396c9f69c269a1bb51383c0a279ca90626&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;digitalasset-testValidator-1::122079c06f2c4128d44d1ad0b201452c0bb67858bcb9db2cf2d6310cf02960f03eea&quot;</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>which yielded a response:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;record_time&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2025-02-14T15:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;migration_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;computed_as_of_round&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">20203</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;summaries&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;party_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;digitalasset-testValidator-1::122079c06f2c4128d44d1ad0b201452c0bb67858bcb9db2cf2d6310cf02960f03eea&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;total_unlocked_coin&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;23765.0066688730&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;total_locked_coin&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.0000000000&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;total_coin_holdings&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;23765.0066688730&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;accumulated_holding_fees_unlocked&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.4193321400&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;accumulated_holding_fees_locked&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.0000000000&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;accumulated_holding_fees_total&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.4193321400&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;total_available_coin&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;23763.5873367330&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="cm">/* similar records for the other party IDs */</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">total_available_coin</span></code> is the most useful element for most Splice apps, as it represents how much Amulet the party has available for transfers right now, taking fees and locks into account.
+Note that the first summary above isn’t the first of the <code class="docutils literal notranslate"><span class="pre">owner_party_ids</span></code> argument list; you must correlate with the <code class="docutils literal notranslate"><span class="pre">party_id</span></code> response property when you look up Amulet for more than one party ID.</p>
+</section>
+<section id="detailed-amulet-holdings">
+<h2>Detailed Amulet Holdings<a class="headerlink" href="#detailed-amulet-holdings" title="Link to this heading"></a></h2>
+<p>For more information about Amulet on the ledger, use <a class="reference external" href="|gsf_scan_url|/api/scan/v0/holdings/state">/v0/holdings/state</a> instead.
+Repeating the request for <a class="reference internal" href="#amulet-summaries">Amulet Summaries</a> above, but adding in the separately-introduced and required <code class="docutils literal notranslate"><span class="pre">page_size</span></code> parameter as this API is paginated, Scan would yield something like</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;record_time&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2025-02-14T15:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;migration_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;created_events&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;event_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;created_event&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;event_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#1220da14f2feb58bd88ab07d12feb2c483b2eba91e696ddbacf8196288a32cfcc96b:7&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;contract_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0078f4eeb4bc4dd4fe111cc5ed35594db14e70fc9f262158d97df699cb347b3a0eca101220712cd87d67727c259c698cc3ec33eb773cf77bb03a1e4d5ca9b19f7cbf4e250d&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;template_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;979ec710c3ae3a05cb44edf8461a9b4d7dd2053add95664f94fc89e5f18df80f:Splice.Amulet:Amulet&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;package_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;splice-amulet&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;create_arguments&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;dso&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;DSO::122084177677350389dd0710d6516f700a33fe348c5f2702dffef6d36e1dedcbfc17&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;owner&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;digitalasset-testValidator-1::122079c06f2c4128d44d1ad0b201452c0bb67858bcb9db2cf2d6310cf02960f03eea&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;amount&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">&quot;initialAmount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;23765.0066688730&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;createdAt&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;number&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;19830&quot;</span>
+<span class="w">          </span><span class="p">},</span>
+<span class="w">          </span><span class="nt">&quot;ratePerRound&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;rate&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.0038051800&quot;</span>
+<span class="w">          </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;created_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2025-02-12T00:42:56.627908Z&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;signatories&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="s2">&quot;DSO::122084177677350389dd0710d6516f700a33fe348c5f2702dffef6d36e1dedcbfc17&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="s2">&quot;digitalasset-testValidator-1::122079c06f2c4128d44d1ad0b201452c0bb67858bcb9db2cf2d6310cf02960f03eea&quot;</span>
+<span class="w">      </span><span class="p">],</span>
+<span class="w">      </span><span class="nt">&quot;observers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="cm">/* similar records for other parties */</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;next_page_token&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>This response is in the same format as <a class="reference internal" href="scan_bulk_data_api.html#id7"><span class="std std-ref">POST /v0/state/acs</span></a> but is restricted to contracts of Daml templates <code class="docutils literal notranslate"><span class="pre">Amulet</span></code> and <code class="docutils literal notranslate"><span class="pre">LockedAmulet</span></code>.</p>
+</section>
+<section id="looking-up-ans-entries">
+<h2>Looking up ANS Entries<a class="headerlink" href="#looking-up-ans-entries" title="Link to this heading"></a></h2>
+<p><a class="reference external" href="|gsf_scan_url|/api/scan/v0/ans-entries/by-party">/v0/ans-entries/by-party</a> and <a class="reference external" href="|gsf_scan_url|/api/scan/v0/ans-entries/by-name">/v0/ans-entries/by-name</a> are quick ways to look up ANS entries, by owner party ID and entry name, respectively, without searching the ACS.
+They share a response format in common with <a class="reference external" href="|gsf_scan_url|/api/scan/v0/ans-entries">/v0/ans-entries</a>, which searches by name <em>prefix</em> rather than exact name.</p>
+<p>For example, with a test of <a class="reference external" href="|gsf_scan_url|/api/scan/v0/ans-entries?name_prefix=dso&amp;page_size=5">/v0/ans-entries?name_prefix=dso&amp;page_size=5</a>, Scan responds with something like</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;entries&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;contract_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;user&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;DSO::122084177677350389dd0710d6516f700a33fe348c5f2702dffef6d36e1dedcbfc17&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;dso.cns&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;expires_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>As contract ID is <code class="docutils literal notranslate"><span class="pre">null</span></code>, this is an ANS entry provided by the DSO; in fact, this is the DSO’s own special entry.
+(Note that there is also no expiry.)
+Here’s a more ordinary response yielded by changing the prefix to <code class="docutils literal notranslate"><span class="pre">alice_2e5</span></code>:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;entries&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;contract_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;00ab54b0bfc5a70f1fa421b4fd76cd6860d061e0fff2a0ef79d87521ab60215e2fca10122056e3bf53375a1323f296d8348057a0e1a063884e6330fd0b5476acf8811bc193&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;user&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;auth0_007c675a429eaf831f0991308d85::12201abe669faf7e657735cdcc96a1b0a98f3ba6ddca688739bcb90933b693c65a8c&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;alice_2e5bbb1c.unverified.cns&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;expires_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2025-03-12T01:56:28.974046Z&quot;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
 </section>
 
 

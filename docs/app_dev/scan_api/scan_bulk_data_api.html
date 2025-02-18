@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.12-ci-snapshot.20250218.1.0.v9b919c0e
+                0.3.12-ci-snapshot.20250218.1.0.v18864c45
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -445,12 +445,30 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html">Scan Global Synchronizer Connectivity API</a></li>
-<li class="toctree-l2"><a class="reference internal" href="scan_global_synchronizer_operations_api.html">Scan Global Synchronizer Operations API</a></li>
-<li class="toctree-l2"><a class="reference internal" href="scan_vote_requests_results_api.html">Scan Vote Requests and Results API</a></li>
-<li class="toctree-l2"><a class="reference internal" href="scan_cc_reference_data_api.html">Scan Canton Coin Reference Data API</a></li>
-<li class="toctree-l2"><a class="reference internal" href="scan_current_state_api.html">Scan API for Current state of CC, CNS, and Synchronizer Traffic</a></li>
-<li class="toctree-l2"><a class="reference internal" href="scan_aggregates_api.html">Scan Aggregates API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html">Scan Global Synchronizer Connectivity API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html#listing-all-sv-scans">Listing all SV Scans</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html#listing-all-sv-sequencers">Listing all SV Sequencers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html#listing-all-validators">Listing all Validators</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="scan_global_synchronizer_operations_api.html">Scan Global Synchronizer Operations API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_operations_api.html#dso-info">DSO Info</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="scan_cc_reference_data_api.html">Scan Canton Coin Reference Data API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scan_cc_reference_data_api.html#dso-party-id">DSO party ID</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="scan_current_state_api.html">Scan API for Current state of CC, CNS, and Synchronizer Traffic</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scan_current_state_api.html#closed-mining-rounds">Closed Mining Rounds</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="scan_aggregates_api.html">Scan Aggregates API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scan_aggregates_api.html#amulet-summaries">Amulet Summaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scan_aggregates_api.html#detailed-amulet-holdings">Detailed Amulet Holdings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scan_aggregates_api.html#looking-up-ans-entries">Looking up ANS Entries</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="scan_openapi.html">Scan Open API Reference</a></li>
 </ul>
 </li>
@@ -1103,7 +1121,7 @@ and <a class="reference external" href="https://github.com/hyperledger-labs/spli
 You can compute the state at any point in time by starting from a periodic snapshot and
 then stream updates from the timestamp of that snapshot. We’ll discuss this in more detail in the <a class="reference internal" href="#scan-txlog-script">Scan TxLog Script</a> section.</p>
 <section id="get-v0-state-acs-snapshot-timestamp">
-<h4>GET /v0/state/acs/snapshot-timestamp<a class="headerlink" href="#get-v0-state-acs-snapshot-timestamp" title="Link to this heading"></a></h4>
+<span id="id6"></span><h4>GET /v0/state/acs/snapshot-timestamp<a class="headerlink" href="#get-v0-state-acs-snapshot-timestamp" title="Link to this heading"></a></h4>
 <p>The <code class="docutils literal notranslate"><span class="pre">/v0/state/acs/snapshot-timestamp</span></code> endpoint returns the timestamp of the most recent snapshot before the given date,
 for the given <code class="docutils literal notranslate"><span class="pre">migration_id</span></code>. Specify <code class="docutils literal notranslate"><span class="pre">migration_id</span> <span class="pre">=</span> <span class="pre">0</span></code> for the beginning of the network.
 The returned timestamp corresponds to the record time of the last transaction in the snapshot.</p>
@@ -1117,7 +1135,7 @@ The returned timestamp corresponds to the record time of the last transaction in
 </div>
 </section>
 <section id="post-v0-state-acs">
-<h4>POST /v0/state/acs<a class="headerlink" href="#post-v0-state-acs" title="Link to this heading"></a></h4>
+<span id="id7"></span><h4>POST /v0/state/acs<a class="headerlink" href="#post-v0-state-acs" title="Link to this heading"></a></h4>
 <p>The <code class="docutils literal notranslate"><span class="pre">/v0/state/acs</span></code> endpoint returns the ACS in creation date ascending order, paged, for a given migration id and record time.
 Post an <code class="docutils literal notranslate"><span class="pre">AcsRequest</span></code> with a <code class="docutils literal notranslate"><span class="pre">migration_id</span></code>, <code class="docutils literal notranslate"><span class="pre">record_time</span></code> and <code class="docutils literal notranslate"><span class="pre">page_size</span></code> to get a page of contracts.
 An optional <code class="docutils literal notranslate"><span class="pre">templates</span></code> field filters the ACS by a set of <code class="docutils literal notranslate"><span class="pre">template_id</span></code>s.</p>

@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.12-ci-snapshot.20250218.1.0.v9b919c0e
+                0.3.12-ci-snapshot.20250218.1.0.v18864c45
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -445,12 +445,30 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html">Scan Global Synchronizer Connectivity API</a></li>
-<li class="toctree-l2"><a class="reference internal" href="scan_global_synchronizer_operations_api.html">Scan Global Synchronizer Operations API</a></li>
-<li class="toctree-l2"><a class="reference internal" href="scan_vote_requests_results_api.html">Scan Vote Requests and Results API</a></li>
-<li class="toctree-l2"><a class="reference internal" href="scan_cc_reference_data_api.html">Scan Canton Coin Reference Data API</a></li>
-<li class="toctree-l2"><a class="reference internal" href="scan_current_state_api.html">Scan API for Current state of CC, CNS, and Synchronizer Traffic</a></li>
-<li class="toctree-l2"><a class="reference internal" href="scan_aggregates_api.html">Scan Aggregates API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html">Scan Global Synchronizer Connectivity API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html#listing-all-sv-scans">Listing all SV Scans</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html#listing-all-sv-sequencers">Listing all SV Sequencers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html#listing-all-validators">Listing all Validators</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="scan_global_synchronizer_operations_api.html">Scan Global Synchronizer Operations API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_operations_api.html#dso-info">DSO Info</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="scan_cc_reference_data_api.html">Scan Canton Coin Reference Data API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scan_cc_reference_data_api.html#dso-party-id">DSO party ID</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="scan_current_state_api.html">Scan API for Current state of CC, CNS, and Synchronizer Traffic</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scan_current_state_api.html#closed-mining-rounds">Closed Mining Rounds</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="scan_aggregates_api.html">Scan Aggregates API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scan_aggregates_api.html#amulet-summaries">Amulet Summaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scan_aggregates_api.html#detailed-amulet-holdings">Detailed Amulet Holdings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scan_aggregates_api.html#looking-up-ans-entries">Looking up ANS Entries</a></li>
+</ul>
+</li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Scan Open API Reference</a></li>
 </ul>
 </li>
@@ -948,8 +966,8 @@ not matching onboarded validators will be ignored
 <dl class="http get">
 <dt class="sig sig-object http" id="get--v0-closed-rounds">
 <span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/v0/closed-rounds</span></span><a class="headerlink" href="#get--v0-closed-rounds" title="Link to this definition"></a></dt>
-<dd><p>Every closed mining round on the ledger for the connected Splice network,
-in round number order, earliest-first.</p>
+<dd><p>Every closed mining round on the ledger still in post-close process for
+the connected Splice network, in round number order, earliest-first.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Status Codes<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1777,7 +1795,7 @@ sorted newest-first.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Query Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>after</strong> (<em>integer</em>) – How many records at the start to skip, 0 by default.</p></li>
+<li><p><strong>after</strong> (<em>integer</em>) – A <cite>next_page_token</cite> from a prior response; if absent, return the first page.</p></li>
 <li><p><strong>limit</strong> (<em>integer</em>) – Maximum number of elements to return, 1000 by default.</p></li>
 </ul>
 </dd>
