@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.12-ci-snapshot.20250218.1.0.v5b29998c
+                0.3.12-ci-snapshot.20250218.1.0.v0fa803c0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -73,7 +73,6 @@
 <li class="toctree-l2"><a class="reference internal" href="../../validator_operator/validator_compose.html">Docker-Compose Based Deployment of a Validator Node</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_compose.html#requirements">Requirements</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_compose.html#required-network-parameters">Required Network Parameters</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_compose.html#preparing-for-validator-onboarding">Preparing for Validator Onboarding</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_compose.html#deployment">Deployment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_compose.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_compose.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
@@ -107,10 +106,10 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_helm.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_helm.html#testnet-only-granting-coin-to-the-validator-for-traffic-purchases">(TestNet-only) Granting coin to the validator for traffic purchases</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_helm.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_helm.html#granting-coin-to-the-validator-for-traffic-purchases">Granting coin to the validator for traffic purchases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_helm.html#configuring-automatic-traffic-purchases">Configuring automatic traffic purchases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_helm.html#configuring-sweeps-and-auto-accepts-of-transfer-offers">Configuring sweeps and auto-accepts of transfer offers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_helm.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_helm.html#participant-pruning">Participant Pruning</a></li>
 </ul>
 </li>
@@ -121,8 +120,11 @@
 <li class="toctree-l5"><a class="reference internal" href="../../validator_operator/validator_major_upgrades.html#state-and-migration-ids">State and Migration IDs</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../validator_operator/validator_major_upgrades.html#migration-dumps">Migration Dumps</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../validator_operator/validator_major_upgrades.html#catching-up-before-the-migration">Catching Up Before the Migration</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../../validator_operator/validator_major_upgrades.html#deploying-the-validator-app-and-participant-kubernetes">Deploying the Validator App and Participant (Kubernetes)</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../../validator_operator/validator_major_upgrades.html#deploying-the-validator-app-and-participant-docker-compose">Deploying the validator App and Participant (Docker-Compose)</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../validator_operator/validator_major_upgrades.html#deploying-the-validator-app-and-participant">Deploying the Validator App and Participant</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="../../validator_operator/validator_major_upgrades.html#deploying-the-validator-app-and-participant-kubernetes">Deploying the Validator App and Participant (Kubernetes)</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../validator_operator/validator_major_upgrades.html#deploying-the-validator-app-and-participant-docker-compose">Deploying the validator App and Participant (Docker-Compose)</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -140,12 +142,19 @@
 <li class="toctree-l2"><a class="reference internal" href="../../validator_operator/validator_disaster_recovery.html">Disaster Recovery</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_disaster_recovery.html#restoring-a-validator-from-backups">Restoring a validator from backups</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_disaster_recovery.html#re-onboard-a-validator-and-recover-balances-of-all-users-it-hosts">Re-onboard a validator and recover balances of all users it hosts</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../validator_operator/validator_disaster_recovery.html#docker-compose-deployment">Docker-Compose Deployment</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../validator_operator/validator_disaster_recovery.html#kubernetes-deployment">Kubernetes Deployment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../validator_operator/validator_disaster_recovery.html#docker-compose-deployment">Docker-Compose Deployment</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../validator_operator/validator_disaster_recovery.html#disaster-recovery-from-loss-of-the-cometbft-storage-layer-of-the-global-synchronizer">Disaster recovery from loss of the CometBFT storage layer of the global synchronizer</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../validator_operator/validator_disaster_recovery.html#technical-details">Technical Details</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../validator_operator/validator_disaster_recovery.html#technical-details-kubernetes">Technical Details (Kubernetes)</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../validator_operator/validator_disaster_recovery.html#migrating-the-data">Migrating the Data</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../../validator_operator/validator_disaster_recovery.html#technical-details-docker-compose">Technical Details (Docker-Compose)</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../validator_operator/validator_disaster_recovery.html#id2">Migrating the Data</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -802,7 +811,7 @@ The details of what each node deploys can be seen in the <cite>docker-compose.ya
 <h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading"></a></h2>
 <ol class="arabic simple">
 <li><p>A working docker and docker-compose installation</p></li>
-<li><p>The release artifacts that can be downloaded from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.12-ci-snapshot.20250218.1.0.v5b29998c_splice-node.tar.gz">Download Bundle</a></span>. Extract the bundle once complete.</p></li>
+<li><p>The release artifacts that can be downloaded from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.12-ci-snapshot.20250218.1.0.v0fa803c0_splice-node.tar.gz">Download Bundle</a></span>. Extract the bundle once complete.</p></li>
 </ol>
 </section>
 <section id="depoying-the-nodes">

@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.12-ci-snapshot.20250218.1.0.v5b29998c
+                0.3.12-ci-snapshot.20250218.1.0.v0fa803c0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -73,7 +73,6 @@
 <li class="toctree-l2"><a class="reference internal" href="validator_compose.html">Docker-Compose Based Deployment of a Validator Node</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="validator_compose.html#requirements">Requirements</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_compose.html#required-network-parameters">Required Network Parameters</a></li>
-<li class="toctree-l3"><a class="reference internal" href="validator_compose.html#preparing-for-validator-onboarding">Preparing for Validator Onboarding</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_compose.html#deployment">Deployment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_compose.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_compose.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
@@ -107,10 +106,10 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="validator_helm.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#testnet-only-granting-coin-to-the-validator-for-traffic-purchases">(TestNet-only) Granting coin to the validator for traffic purchases</a></li>
-<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#granting-coin-to-the-validator-for-traffic-purchases">Granting coin to the validator for traffic purchases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_helm.html#configuring-automatic-traffic-purchases">Configuring automatic traffic purchases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_helm.html#configuring-sweeps-and-auto-accepts-of-transfer-offers">Configuring sweeps and auto-accepts of transfer offers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_helm.html#participant-pruning">Participant Pruning</a></li>
 </ul>
 </li>
@@ -121,8 +120,11 @@
 <li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#state-and-migration-ids">State and Migration IDs</a></li>
 <li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#migration-dumps">Migration Dumps</a></li>
 <li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#catching-up-before-the-migration">Catching Up Before the Migration</a></li>
-<li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#deploying-the-validator-app-and-participant-kubernetes">Deploying the Validator App and Participant (Kubernetes)</a></li>
-<li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#deploying-the-validator-app-and-participant-docker-compose">Deploying the validator App and Participant (Docker-Compose)</a></li>
+<li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#deploying-the-validator-app-and-participant">Deploying the Validator App and Participant</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="validator_major_upgrades.html#deploying-the-validator-app-and-participant-kubernetes">Deploying the Validator App and Participant (Kubernetes)</a></li>
+<li class="toctree-l6"><a class="reference internal" href="validator_major_upgrades.html#deploying-the-validator-app-and-participant-docker-compose">Deploying the validator App and Participant (Docker-Compose)</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -140,12 +142,19 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Disaster Recovery</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#restoring-a-validator-from-backups">Restoring a validator from backups</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#re-onboard-a-validator-and-recover-balances-of-all-users-it-hosts">Re-onboard a validator and recover balances of all users it hosts</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#docker-compose-deployment">Docker-Compose Deployment</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#kubernetes-deployment">Kubernetes Deployment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#docker-compose-deployment">Docker-Compose Deployment</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#disaster-recovery-from-loss-of-the-cometbft-storage-layer-of-the-global-synchronizer">Disaster recovery from loss of the CometBFT storage layer of the global synchronizer</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#technical-details">Technical Details</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#technical-details-kubernetes">Technical Details (Kubernetes)</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#migrating-the-data">Migrating the Data</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#technical-details-docker-compose">Technical Details (Docker-Compose)</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#id2">Migrating the Data</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -840,26 +849,13 @@ depending on which setup you chose.</p>
 <p>Once the new validator is up and running, you should be able to login as the administrator
 and see its balance. Other users hosted on the validator would need to re-onboard, but their
 coin balance and CNS entries should be recovered.</p>
-<section id="docker-compose-deployment">
-<h3>Docker-Compose Deployment<a class="headerlink" href="#docker-compose-deployment" title="Link to this heading"></a></h3>
-<p>To re-onboard a validator and recover the balances of all users it hosts, type:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./start.sh<span class="w"> </span>-s<span class="w"> </span>&lt;sponsor_sv_address&gt;<span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;&quot;</span><span class="w"> </span>-p<span class="w"> </span>&lt;party_hint&gt;<span class="w"> </span>-m<span class="w"> </span><span class="nv">$MIGRATION_ID</span><span class="w"> </span>-i<span class="w"> </span>&lt;node_identities_dump_file&gt;<span class="w"> </span>-P<span class="w"> </span>&lt;new_participant_id&gt;<span class="w"> </span>-w
-</pre></div>
-</div>
-<p>where <code class="docutils literal notranslate"><span class="pre">&lt;node_identities_dump_file&gt;</span></code> is the path to the file containing the node identities dump, and
-<code class="docutils literal notranslate"><span class="pre">&lt;new_participant_id&gt;</span></code> is a new identifier to be used for the new participant. It must be one never used before.
-Note that in subsequent restarts of the validator, you should keep providing <code class="docutils literal notranslate"><span class="pre">-P</span></code> with the same <code class="docutils literal notranslate"><span class="pre">&lt;new_participant_id&gt;</span></code>.</p>
-</section>
 <section id="kubernetes-deployment">
 <h3>Kubernetes Deployment<a class="headerlink" href="#kubernetes-deployment" title="Link to this heading"></a></h3>
-<p>In the case of a catastrophic failure of the validator node, some data owned by the validator and users it hosts can be recovered from the SVs. This data includes Canton Coin balance and CNS entries. This is achieved by deploying another validator node with control over the validator’s participant keys.</p>
-<p>In order to be able to recover the data, you must have a backup of the identities of the
-validator, as created in the <a class="reference internal" href="validator_backups.html#validator-backups"><span class="std std-ref">Backup of Node Identities</span></a> section.</p>
-<p>You can deploy a new validator node to which the data will be recovered by
-repeating the steps described in <a class="reference internal" href="validator_helm.html#helm-validator-install"><span class="std std-ref">Installing the Software</span></a> for installing the validator app and participant.</p>
-<p>While doing so, please note the following:</p>
+<p>To re-onboard a validator in a Docker-compose deployment and recover the balances of all users it hosts,
+repeat the steps described in <a class="reference internal" href="validator_helm.html#helm-validator-install"><span class="std std-ref">Installing the Software</span></a> for installing the validator app and participant.
+While doing so, please note the following:</p>
 <ul class="simple">
-<li><p>Create a Kubernetes secret with the content of that dump file.
+<li><p>Create a Kubernetes secret with the content of the identities dump file.
 Assuming you set the environment variable <code class="docutils literal notranslate"><span class="pre">PARTICIPANT_BOOTSTRAP_DUMP_FILE</span></code> to a dump file path, you can create the secret with the following command:</p></li>
 </ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>create<span class="w"> </span>secret<span class="w"> </span>generic<span class="w"> </span>participant-bootstrap-dump<span class="w"> </span><span class="se">\</span>
@@ -880,6 +876,16 @@ Make sure to also adjust <code class="docutils literal notranslate"><span class=
 </pre></div>
 </div>
 </section>
+<section id="docker-compose-deployment">
+<h3>Docker-Compose Deployment<a class="headerlink" href="#docker-compose-deployment" title="Link to this heading"></a></h3>
+<p>To re-onboard a validator in a Docker-compose deployment and recover the balances of all users it hosts, type:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./start.sh<span class="w"> </span>-s<span class="w"> </span><span class="s2">&quot;&lt;SPONSOR_SV_URL&gt;&quot;</span><span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;&quot;</span><span class="w"> </span>-p<span class="w"> </span>&lt;party_hint&gt;<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;&lt;MIGRATION_ID&gt;&quot;</span><span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;&lt;node_identities_dump_file&gt;&quot;</span><span class="w"> </span>-P<span class="w"> </span><span class="s2">&quot;&lt;new_participant_id&gt;&quot;</span><span class="w"> </span>-w
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">&lt;node_identities_dump_file&gt;</span></code> is the path to the file containing the node identities dump, and
+<code class="docutils literal notranslate"><span class="pre">&lt;new_participant_id&gt;</span></code> is a new identifier to be used for the new participant. It must be one never used before.
+Note that in subsequent restarts of the validator, you should keep providing <code class="docutils literal notranslate"><span class="pre">-P</span></code> with the same <code class="docutils literal notranslate"><span class="pre">&lt;new_participant_id&gt;</span></code>.</p>
+</section>
 </section>
 <section id="disaster-recovery-from-loss-of-the-cometbft-storage-layer-of-the-global-synchronizer">
 <span id="validator-network-dr"></span><h2>Disaster recovery from loss of the CometBFT storage layer of the global synchronizer<a class="headerlink" href="#disaster-recovery-from-loss-of-the-cometbft-storage-layer-of-the-global-synchronizer" title="Link to this heading"></a></h2>
@@ -896,17 +902,17 @@ and data loss is expected to occur.</p>
 <li><p>All SVs agree on the timestamp from which they will be recovering, and follow the disaster recovery process for SVs.</p></li>
 <li><p>Validator operators wait until the SVs have signaled that the restore procedure has been successful, and to which timestamp they have restored.</p></li>
 <li><p>Validator operators create a dump file through their validator app.</p></li>
-<li><p>Validator operators copy the dump file to their validator app’s PVC and restart the app to restore the data.</p></li>
+<li><p>Validator operators copy the dump file to their validator app’s migration dump volume and restart the app to restore the data.</p></li>
 </ol>
-<section id="technical-details">
-<h3>Technical Details<a class="headerlink" href="#technical-details" title="Link to this heading"></a></h3>
 <p>We recommend first familiarizing yourself with the <a class="reference internal" href="validator_major_upgrades.html#validator-upgrades"><span class="std std-ref">migration</span></a> process, as the disaster recovery process is similar.
 In case of disaster, the SVs will inform you of the need to recover, and indicate the timestamp from which the network will be recovering.</p>
 <p>The following steps will produce a data dump through the validator app, consisting of your node’s private identities as well as the
-Active Contract Set (ACS) as of the required timestamp. That data dump will then be stored on the validator app’s PVC,
+Active Contract Set (ACS) as of the required timestamp. That data dump will then be stored on the validator app’s volume,
 and the validator app and participant will be configured to consume it and restore the data from it.</p>
-<p>Please make sure before you fetch a data dump from the validator app that your participant was healthy around the timestamp that the SVs have provided.
-The data dump can be fetched from the validator app by running the following command:</p>
+<p>Please make sure before you fetch a data dump from the validator app that your participant was healthy around the timestamp that the SVs have provided.</p>
+<section id="technical-details-kubernetes">
+<h3>Technical Details (Kubernetes)<a class="headerlink" href="#technical-details-kubernetes" title="Link to this heading"></a></h3>
+<p>The data dump can be fetched from the validator app by running the following command:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-sSLf<span class="w"> </span><span class="s2">&quot;https://wallet.validator.YOUR_HOSTNAME/api/validator/v0/admin/domain/data-snapshot?timestamp=&lt;timestamp&gt;&amp;force=true&quot;</span><span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;authorization: Bearer &lt;token&gt;&quot;</span><span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span>&gt;<span class="w"> </span>dump_response.json
 cat<span class="w"> </span>dump_response.json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.data_snapshot&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>dump.json
 </pre></div>
@@ -917,26 +923,45 @@ in the format <cite>“2024-04-17T19:12:02Z”</cite>.</p>
 and your node cannot generate the requested dump.
 If it fails with a 429, that means the timestamp is too late for your participant to create a
 dump for, i.e. your participant has not caught up to a late enough point before the disaster.
-Either way, you will need to go through a process of recreating your validator and recovering your balance,
-which will be documented soon.</p>
+Either way, you will need to go through a process of recreating your validator and recovering your balance.
+See <a class="reference internal" href="#validator-reonboard"><span class="std std-ref">Re-onboard a validator and recover balances of all users it hosts</span></a> for more information.</p>
 <p>This file can now be copied to the Validator app’s PVC:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>cp<span class="w"> </span>dump.json<span class="w"> </span>validator/&lt;validator_pod_name&gt;:/domain-upgrade-dump/domain_migration_dump.json
 </pre></div>
 </div>
 <p>where <cite>&lt;validator_pod_name&gt;</cite> is the full name of the pod running the validator app.</p>
-<p>Migrating the Data:</p>
+<section id="migrating-the-data">
+<h4>Migrating the Data<a class="headerlink" href="#migrating-the-data" title="Link to this heading"></a></h4>
 <p>Please follow the instructions in the <a class="reference internal" href="validator_major_upgrades.html#validator-upgrades-deploying"><span class="std std-ref">Deploying the Validator App and Participant</span></a> section
 to update the configuration of the validator app and participant to consume the migration dump file.</p>
-<p>For docker-compose validator deployments, the process is similar with the following modifications:</p>
-<ol class="arabic simple">
-<li><p>For the endpoint for fetching the data dump, replace <cite>https://wallet.validator.YOUR_HOSTNAME</cite> with <cite>http://wallet.localhost</cite>.</p></li>
-<li><p>If you are running your validator without auth, you can use the utility Python script <cite>get-token.py</cite>
-to generate a token for the <cite>curl</cite> command by running <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">get-token.py</span> <span class="pre">administrator</span></code> (requires <a class="reference external" href="https://pypi.org/project/PyJWT/">pyjwt</a>).</p></li>
-<li><p>Copy the dump file to the validator’s docker volume using:</p></li>
-</ol>
+</section>
+</section>
+<section id="technical-details-docker-compose">
+<h3>Technical Details (Docker-Compose)<a class="headerlink" href="#technical-details-docker-compose" title="Link to this heading"></a></h3>
+<p>The data dump can be fetched from the validator app by running the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-sSLf<span class="w"> </span><span class="s2">&quot;https://wallet.localhost/api/validator/v0/admin/domain/data-snapshot?timestamp=&lt;timestamp&gt;&amp;force=true&quot;</span><span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;authorization: Bearer &lt;token&gt;&quot;</span><span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span>&gt;<span class="w"> </span>dump_response.json
+cat<span class="w"> </span>dump_response.json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.data_snapshot&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>dump.json
+</pre></div>
+</div>
+<p>where <cite>&lt;token&gt;</cite> is an OAuth2 Bearer Token with enough claims to access the Validator app, as obtained from your OAuth provider, and <cite>&lt;timestamp&gt;</cite> is the timestamp provided by the SVs,
+in the format <cite>“2024-04-17T19:12:02Z”</cite>.
+If you are running your validator without auth, you can use the utility Python script <cite>get-token.py</cite>
+to generate a token for the <cite>curl</cite> command by running <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">get-token.py</span> <span class="pre">administrator</span></code> (requires <a class="reference external" href="https://pypi.org/project/PyJWT/">pyjwt</a>).</p>
+<p>If the <cite>curl</cite> command fails with a 400 error, that typically means that your participant has been pruned beyond the chosen timestamp,
+and your node cannot generate the requested dump.
+If it fails with a 429, that means the timestamp is too late for your participant to create a
+dump for, i.e. your participant has not caught up to a late enough point before the disaster.
+Either way, you will need to go through a process of recreating your validator and recovering your balance.
+See <a class="reference internal" href="#validator-reonboard"><span class="std std-ref">Re-onboard a validator and recover balances of all users it hosts</span></a> for more information.</p>
+<p>This file can now be copied to the Validator app’s Docker volume using the following command:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;domain-upgrade-dump:/volume&quot;</span><span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">:/backup&quot;</span><span class="w"> </span>alpine<span class="w"> </span>sh<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;cp /backup/dump.json /volume/domain_migration_dump.json&quot;</span>
 </pre></div>
 </div>
+<section id="id2">
+<h4>Migrating the Data<a class="headerlink" href="#id2" title="Link to this heading"></a></h4>
+<p>Please follow the instructions in the <a class="reference internal" href="validator_major_upgrades.html#validator-upgrades-deploying"><span class="std std-ref">Deploying the Validator App and Participant</span></a> section
+to update the configuration of the validator app and participant to consume the migration dump file.</p>
+</section>
 </section>
 </section>
 </section>

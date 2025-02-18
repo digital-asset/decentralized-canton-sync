@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.12-ci-snapshot.20250218.1.0.v5b29998c
+                0.3.12-ci-snapshot.20250218.1.0.v0fa803c0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -73,7 +73,6 @@
 <li class="toctree-l2"><a class="reference internal" href="validator_compose.html">Docker-Compose Based Deployment of a Validator Node</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="validator_compose.html#requirements">Requirements</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_compose.html#required-network-parameters">Required Network Parameters</a></li>
-<li class="toctree-l3"><a class="reference internal" href="validator_compose.html#preparing-for-validator-onboarding">Preparing for Validator Onboarding</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_compose.html#deployment">Deployment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_compose.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_compose.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
@@ -107,10 +106,10 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="validator_helm.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#testnet-only-granting-coin-to-the-validator-for-traffic-purchases">(TestNet-only) Granting coin to the validator for traffic purchases</a></li>
-<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#granting-coin-to-the-validator-for-traffic-purchases">Granting coin to the validator for traffic purchases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_helm.html#configuring-automatic-traffic-purchases">Configuring automatic traffic purchases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_helm.html#configuring-sweeps-and-auto-accepts-of-transfer-offers">Configuring sweeps and auto-accepts of transfer offers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validator_helm.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_helm.html#participant-pruning">Participant Pruning</a></li>
 </ul>
 </li>
@@ -121,8 +120,11 @@
 <li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#state-and-migration-ids">State and Migration IDs</a></li>
 <li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#migration-dumps">Migration Dumps</a></li>
 <li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#catching-up-before-the-migration">Catching Up Before the Migration</a></li>
-<li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#deploying-the-validator-app-and-participant-kubernetes">Deploying the Validator App and Participant (Kubernetes)</a></li>
-<li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#deploying-the-validator-app-and-participant-docker-compose">Deploying the validator App and Participant (Docker-Compose)</a></li>
+<li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#deploying-the-validator-app-and-participant">Deploying the Validator App and Participant</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="validator_major_upgrades.html#deploying-the-validator-app-and-participant-kubernetes">Deploying the Validator App and Participant (Kubernetes)</a></li>
+<li class="toctree-l6"><a class="reference internal" href="validator_major_upgrades.html#deploying-the-validator-app-and-participant-docker-compose">Deploying the validator App and Participant (Docker-Compose)</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -140,12 +142,19 @@
 <li class="toctree-l2"><a class="reference internal" href="validator_disaster_recovery.html">Disaster Recovery</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="validator_disaster_recovery.html#restoring-a-validator-from-backups">Restoring a validator from backups</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_disaster_recovery.html#re-onboard-a-validator-and-recover-balances-of-all-users-it-hosts">Re-onboard a validator and recover balances of all users it hosts</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="validator_disaster_recovery.html#docker-compose-deployment">Docker-Compose Deployment</a></li>
 <li class="toctree-l4"><a class="reference internal" href="validator_disaster_recovery.html#kubernetes-deployment">Kubernetes Deployment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="validator_disaster_recovery.html#docker-compose-deployment">Docker-Compose Deployment</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="validator_disaster_recovery.html#disaster-recovery-from-loss-of-the-cometbft-storage-layer-of-the-global-synchronizer">Disaster recovery from loss of the CometBFT storage layer of the global synchronizer</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="validator_disaster_recovery.html#technical-details">Technical Details</a></li>
+<li class="toctree-l4"><a class="reference internal" href="validator_disaster_recovery.html#technical-details-kubernetes">Technical Details (Kubernetes)</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="validator_disaster_recovery.html#migrating-the-data">Migrating the Data</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="validator_disaster_recovery.html#technical-details-docker-compose">Technical Details (Docker-Compose)</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="validator_disaster_recovery.html#id2">Migrating the Data</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -807,7 +816,7 @@ and their impact on your apps before they reach MainNet.</p>
 the Tokenomics Committee of the Global Synchronizer Foundation.
 You can initiate a request to do so through <a class="reference external" href="https://sync.global/validator-request/">https://sync.global/validator-request/</a>.
 Just like for DevNet, is also still requires your validator’s egress IP to be added to the allowlist
-and it requires an onboarding secret from your SV.
+and it requires an onboarding secret from your SV sponsor.
 Just like DevNet, TestNet gets reset every 3-6 months,
 but the reset schedule is shifted so TestNet never gets reset at the same time as DevNet.
 TestNet upgrades to new versions after DevNet, but before MainNet so it provides an additional layer of testing.
@@ -852,9 +861,9 @@ uses the egress IP you provided to your SV sponsor and you need to provide the o
 <p>To validate that the SVs have added you to their respective IP
 allowlists, you can query their Scan URLs. Note that this must be run
 from the same egress IP from which you want to deploy your validator,
-e.g., from the VM that you want to run your docker compose setup from
+e.g., from the VM that you want to run your docker compose setup on,
 or from within your Kubernetes cluster.</p>
-<p>Note that the following snippet requires installing <a class="reference external" href="https://jqlang.org/">JQ</a>.</p>
+<p>Note that the following snippet requires installing <a class="reference external" href="https://jqlang.org/">jq</a>.</p>
 <pre class="literal-block">for url in $(curl -sSL <span class="raw-html">https://scan.sv-1.<span class="splice-url-prefix">unknown_cluster.</span>global.canton.network.sync.global</span>/api/scan/v0/scans | jq -r '.scans | .[].scans | .[] | .publicUrl' ); do
   echo -n &quot;$url: &quot;;
   curl -sSL --connect-timeout 5 --fail-with-body $url/api/scan/version | jq -r '.version';
@@ -875,9 +884,9 @@ https://scan.sv-1.test.global.canton.network.digitalasset.com:<span class="w"> <
 </div>
 <p>Apart from connectivity to Scan, your validator must also be able to connect to the sequencer endpoints of the SVs.
 If you are encountering issues related to connecting to the synchronizer,
-you can use the following snippet to confirm that you’re able to reach those endpoints
+you can use the following snippet to confirm that you are able to reach those endpoints
 (i.e., that SVs have whitelisted your IP for those endpoints as well).
-Note that the following snippet requires installing <a class="reference external" href="https://jqlang.org/">JQ</a> and <a class="reference external" href="https://github.com/fullstorydev/grpcurl">grpcurl</a>.</p>
+Note that the following snippet requires installing <a class="reference external" href="https://jqlang.org/">jq</a> and <a class="reference external" href="https://github.com/fullstorydev/grpcurl">grpcurl</a>.</p>
 <pre class="literal-block">for url in $(curl -sSL <span class="raw-html">https://scan.sv-1.<span class="splice-url-prefix">unknown_cluster.</span>global.canton.network.sync.global</span>/api/scan/v0/dso-sequencers | jq -r '.domainSequencers | .[] | .sequencers.[].url | sub(&quot;<a class="reference external" href="https://">https://</a>&quot;; &quot;&quot;)' ); do
   echo -n &quot;$url: &quot;;
   grpcurl --max-time 10 $url:443 grpc.health.v1.Health/Check;
@@ -930,9 +939,9 @@ sequencer-1.sv-1.test.global.canton.network.digitalasset.com:<span class="w"> </
 We recommend the following lists:</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://lists.sync.global/g/main/messages">main</a>: for overall information about the Canton Network.</p></li>
-<li><p><a class="reference external" href="https://lists.sync.global/g/cip-announce/messages">cip announce</a>: for new Canton Improvement Proposals (CIPs)</p></li>
+<li><p><a class="reference external" href="https://lists.sync.global/g/cip-announce/messages">cip announce</a>: for new Canton Improvement Proposals (CIPs).</p></li>
 <li><p><a class="reference external" href="https://lists.sync.global/g/tokenomics-announce/messages">tokenomics-announce</a>: for announcements from the Tokenomics commitee. This also includes approval of new validators.</p></li>
-<li><p><a class="reference external" href="https://lists.sync.global/g/validator-announce/messages">validator-announce</a>: for other announcements intended for validator operators</p></li>
+<li><p><a class="reference external" href="https://lists.sync.global/g/validator-announce/messages">validator-announce</a>: for other announcements intended for validator operators.</p></li>
 </ul>
 </section>
 </section>

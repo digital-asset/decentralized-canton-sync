@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.12-ci-snapshot.20250218.1.0.v5b29998c
+                0.3.12-ci-snapshot.20250218.1.0.v0fa803c0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -73,7 +73,6 @@
 <li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_compose.html">Docker-Compose Based Deployment of a Validator Node</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_compose.html#requirements">Requirements</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_compose.html#required-network-parameters">Required Network Parameters</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_compose.html#preparing-for-validator-onboarding">Preparing for Validator Onboarding</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_compose.html#deployment">Deployment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_compose.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_compose.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
@@ -107,10 +106,10 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#testnet-only-granting-coin-to-the-validator-for-traffic-purchases">(TestNet-only) Granting coin to the validator for traffic purchases</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#granting-coin-to-the-validator-for-traffic-purchases">Granting coin to the validator for traffic purchases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-automatic-traffic-purchases">Configuring automatic traffic purchases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#configuring-sweeps-and-auto-accepts-of-transfer-offers">Configuring sweeps and auto-accepts of transfer offers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_helm.html#participant-pruning">Participant Pruning</a></li>
 </ul>
 </li>
@@ -121,8 +120,11 @@
 <li class="toctree-l5"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html#state-and-migration-ids">State and Migration IDs</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html#migration-dumps">Migration Dumps</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html#catching-up-before-the-migration">Catching Up Before the Migration</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html#deploying-the-validator-app-and-participant-kubernetes">Deploying the Validator App and Participant (Kubernetes)</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html#deploying-the-validator-app-and-participant-docker-compose">Deploying the validator App and Participant (Docker-Compose)</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html#deploying-the-validator-app-and-participant">Deploying the Validator App and Participant</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html#deploying-the-validator-app-and-participant-kubernetes">Deploying the Validator App and Participant (Kubernetes)</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../validator_operator/validator_major_upgrades.html#deploying-the-validator-app-and-participant-docker-compose">Deploying the validator App and Participant (Docker-Compose)</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -140,12 +142,19 @@
 <li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html">Disaster Recovery</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#restoring-a-validator-from-backups">Restoring a validator from backups</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#re-onboard-a-validator-and-recover-balances-of-all-users-it-hosts">Re-onboard a validator and recover balances of all users it hosts</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#docker-compose-deployment">Docker-Compose Deployment</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#kubernetes-deployment">Kubernetes Deployment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#docker-compose-deployment">Docker-Compose Deployment</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#disaster-recovery-from-loss-of-the-cometbft-storage-layer-of-the-global-synchronizer">Disaster recovery from loss of the CometBFT storage layer of the global synchronizer</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#technical-details">Technical Details</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#technical-details-kubernetes">Technical Details (Kubernetes)</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#migrating-the-data">Migrating the Data</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#technical-details-docker-compose">Technical Details (Docker-Compose)</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../validator_operator/validator_disaster_recovery.html#id2">Migrating the Data</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -806,9 +815,9 @@ target cluster.</p>
 </div></blockquote>
 </li>
 <li><p>Your cluster needs a static egress IP. After acquiring that, propose to the other SVs to add it to the IP allowlist.</p></li>
-<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.12-ci-snapshot.20250218.1.0.v5b29998c_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
+<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.12-ci-snapshot.20250218.1.0.v0fa803c0_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
 </ol>
-<pre class="literal-block">tar xzvf 0.3.12-ci-snapshot.20250218.1.0.v5b29998c_splice-node.tar.gz</pre>
+<pre class="literal-block">tar xzvf 0.3.12-ci-snapshot.20250218.1.0.v0fa803c0_splice-node.tar.gz</pre>
 <ol class="arabic simple" start="5">
 <li><p>Please inquire if the global synchronizer (domain) on your target network has previously undergone a <a class="reference internal" href="sv_major_upgrade.html#sv-upgrades"><span class="std std-ref">synchronizer migration</span></a>.
 If it has, please record the current migration ID of the synchronizer.
@@ -1135,9 +1144,9 @@ To do that, you first must generate the keys that will identify the node.</p>
 mkdir cometbft
 cd cometbft
 # Init the node
-docker run --rm -v &quot;$(pwd):/init&quot; ghcr.io/digital-asset/decentralized-canton-sync/docker/cometbft:0.3.12-ci-snapshot.20250218.1.0.v5b29998c init --home /init
+docker run --rm -v &quot;$(pwd):/init&quot; ghcr.io/digital-asset/decentralized-canton-sync/docker/cometbft:0.3.12-ci-snapshot.20250218.1.0.v0fa803c0 init --home /init
 # Read the node id and keep a note of it for the deployment
-docker run --rm -v &quot;$(pwd):/init&quot; ghcr.io/digital-asset/decentralized-canton-sync/docker/cometbft:0.3.12-ci-snapshot.20250218.1.0.v5b29998c show-node-id --home /init</pre>
+docker run --rm -v &quot;$(pwd):/init&quot; ghcr.io/digital-asset/decentralized-canton-sync/docker/cometbft:0.3.12-ci-snapshot.20250218.1.0.v0fa803c0 show-node-id --home /init</pre>
 <p>Please keep a note of the node ID printed out above.</p>
 <p>In addition, please retain some of the configuration files generated, as follows (you might need to change the permissions/ownership for them as they are accessible only by the root user):</p>
 <div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="n">cometbft</span><span class="o">/</span><span class="n">config</span><span class="o">/</span><span class="n">node_key</span><span class="p">.</span><span class="n">json</span>
@@ -1239,7 +1248,7 @@ you will also need to ensure that <cite>persistence.databaseName</cite> is uniqu
 cluster, you will need to meet a few preconditions. The first is that
 there needs to be an environment variable defined to refer to the
 version of the Helm charts necessary to connect to this environment:</p>
-<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.12-ci-snapshot.20250218.1.0.v5b29998c</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.12-ci-snapshot.20250218.1.0.v0fa803c0</span></code></p>
 <p>An SV node includes a CometBft node so you also need to configure
 that. Please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/cometbft-values.yaml</span></code> as follows:</p>
 <ul class="simple">

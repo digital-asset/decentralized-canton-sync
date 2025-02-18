@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.12-ci-snapshot.20250218.1.0.v5b29998c
+                0.3.12-ci-snapshot.20250218.1.0.v0fa803c0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -73,7 +73,6 @@
 <li class="toctree-l2"><a class="reference internal" href="validator_compose.html">Docker-Compose Based Deployment of a Validator Node</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="validator_compose.html#requirements">Requirements</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_compose.html#required-network-parameters">Required Network Parameters</a></li>
-<li class="toctree-l3"><a class="reference internal" href="validator_compose.html#preparing-for-validator-onboarding">Preparing for Validator Onboarding</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_compose.html#deployment">Deployment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_compose.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_compose.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
@@ -107,10 +106,10 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#testnet-only-granting-coin-to-the-validator-for-traffic-purchases">(TestNet-only) Granting coin to the validator for traffic purchases</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#granting-coin-to-the-validator-for-traffic-purchases">Granting coin to the validator for traffic purchases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#configuring-automatic-traffic-purchases">Configuring automatic traffic purchases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#configuring-sweeps-and-auto-accepts-of-transfer-offers">Configuring sweeps and auto-accepts of transfer offers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#participant-pruning">Participant Pruning</a></li>
 </ul>
 </li>
@@ -121,8 +120,11 @@
 <li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#state-and-migration-ids">State and Migration IDs</a></li>
 <li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#migration-dumps">Migration Dumps</a></li>
 <li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#catching-up-before-the-migration">Catching Up Before the Migration</a></li>
-<li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#deploying-the-validator-app-and-participant-kubernetes">Deploying the Validator App and Participant (Kubernetes)</a></li>
-<li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#deploying-the-validator-app-and-participant-docker-compose">Deploying the validator App and Participant (Docker-Compose)</a></li>
+<li class="toctree-l5"><a class="reference internal" href="validator_major_upgrades.html#deploying-the-validator-app-and-participant">Deploying the Validator App and Participant</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="validator_major_upgrades.html#deploying-the-validator-app-and-participant-kubernetes">Deploying the Validator App and Participant (Kubernetes)</a></li>
+<li class="toctree-l6"><a class="reference internal" href="validator_major_upgrades.html#deploying-the-validator-app-and-participant-docker-compose">Deploying the validator App and Participant (Docker-Compose)</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -140,12 +142,19 @@
 <li class="toctree-l2"><a class="reference internal" href="validator_disaster_recovery.html">Disaster Recovery</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="validator_disaster_recovery.html#restoring-a-validator-from-backups">Restoring a validator from backups</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_disaster_recovery.html#re-onboard-a-validator-and-recover-balances-of-all-users-it-hosts">Re-onboard a validator and recover balances of all users it hosts</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="validator_disaster_recovery.html#docker-compose-deployment">Docker-Compose Deployment</a></li>
 <li class="toctree-l4"><a class="reference internal" href="validator_disaster_recovery.html#kubernetes-deployment">Kubernetes Deployment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="validator_disaster_recovery.html#docker-compose-deployment">Docker-Compose Deployment</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="validator_disaster_recovery.html#disaster-recovery-from-loss-of-the-cometbft-storage-layer-of-the-global-synchronizer">Disaster recovery from loss of the CometBFT storage layer of the global synchronizer</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="validator_disaster_recovery.html#technical-details">Technical Details</a></li>
+<li class="toctree-l4"><a class="reference internal" href="validator_disaster_recovery.html#technical-details-kubernetes">Technical Details (Kubernetes)</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="validator_disaster_recovery.html#migrating-the-data">Migrating the Data</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="validator_disaster_recovery.html#technical-details-docker-compose">Technical Details (Docker-Compose)</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="validator_disaster_recovery.html#id2">Migrating the Data</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -790,7 +799,7 @@
              
   <section id="kubernetes-based-deployment-of-a-validator-node">
 <span id="k8s-validator"></span><h1>Kubernetes-Based Deployment of a Validator node<a class="headerlink" href="#kubernetes-based-deployment-of-a-validator-node" title="Link to this heading"></a></h1>
-<p>This section describes how to deploy a standalone validator node in Kubernetes using Helm charts. The Helm charts deploy a validator node along with associated wallet and CNS UIs, and connect it to a target cluster.</p>
+<p>This section describes how to deploy a standalone validator node in Kubernetes using Helm charts. The Helm charts deploy a validator node along with associated wallet and CNS UIs, and connect it to a global synchronizer.</p>
 <section id="requirements">
 <span id="validator-prerequisites"></span><h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading"></a></h2>
 <ol class="arabic">
@@ -805,9 +814,9 @@
 </li>
 <li><p>Your cluster needs a static egress IP. After acquiring that, provide it to your SV sponsor who will propose
 adding it to the IP allowlist to the other SVs.</p></li>
-<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.12-ci-snapshot.20250218.1.0.v5b29998c_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
+<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.12-ci-snapshot.20250218.1.0.v0fa803c0_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
 </ol>
-<pre class="literal-block">tar xzvf 0.3.12-ci-snapshot.20250218.1.0.v5b29998c_splice-node.tar.gz</pre>
+<pre class="literal-block">tar xzvf 0.3.12-ci-snapshot.20250218.1.0.v0fa803c0_splice-node.tar.gz</pre>
 <section id="required-network-parameters">
 <h3>Required Network Parameters<a class="headerlink" href="#required-network-parameters" title="Link to this heading"></a></h3>
 <p>To initialize your validator node, you need the following parameters
@@ -866,7 +875,7 @@ The password can be setup with the following command, assuming you set the envir
 <span id="validator-onboarding"></span><h2>Preparing for Validator Onboarding<a class="headerlink" href="#preparing-for-validator-onboarding" title="Link to this heading"></a></h2>
 <p>Ensure that your validator onboarding secret <code class="docutils literal notranslate"><span class="pre">ONBOARDING_SECRET</span></code> is set in the namespace you created earlier.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>create<span class="w"> </span>secret<span class="w"> </span>generic<span class="w"> </span>splice-app-validator-onboarding-validator<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span><span class="s2">&quot;--from-literal=secret=</span><span class="si">${</span><span class="nv">VALIDATOR_SECRET</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">&quot;--from-literal=secret=</span><span class="si">${</span><span class="nv">ONBOARDING_SECRET</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>-n<span class="w"> </span>validator
 </pre></div>
 </div>
@@ -927,10 +936,10 @@ make sure that whatever you configure there matches the contents of the <cite>su
 <td><p>The URL of your OIDC provider for obtaining the <code class="docutils literal notranslate"><span class="pre">openid-configuration</span></code> and <code class="docutils literal notranslate"><span class="pre">jwks.json</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p>VALIDATOR_CLIENT_ID</p></td>
-<td><p>The client id of your OIDC provider for the validator app backend</p></td>
+<td><p>The client id of your OIDC provider for the validator app backend.</p></td>
 </tr>
 <tr class="row-even"><td><p>VALIDATOR_CLIENT_SECRET</p></td>
-<td><p>The client secret of your OIDC provider for the validator app backend</p></td>
+<td><p>The client secret of your OIDC provider for the validator app backend.</p></td>
 </tr>
 <tr class="row-odd"><td><p>WALLET_UI_CLIENT_ID</p></td>
 <td><p>The client id of your OIDC provider for the wallet UI.</p></td>
@@ -1053,10 +1062,10 @@ It can be found in the Auth0 interface under User Management -&gt; Users -&gt; y
 <td><p>The client secret of the Auth0 app for the validator app backend</p></td>
 </tr>
 <tr class="row-even"><td><p>WALLET_UI_CLIENT_ID</p></td>
-<td><p>The client id of the Auth0 app for the wallet UI.</p></td>
+<td><p>The client id of the Auth0 app for the wallet UI</p></td>
 </tr>
 <tr class="row-odd"><td><p>CNS_UI_CLIENT_ID</p></td>
-<td><p>The client id of the Auth0 app for the CNS UI.</p></td>
+<td><p>The client id of the Auth0 app for the CNS UI</p></td>
 </tr>
 </tbody>
 </table>
@@ -1065,8 +1074,8 @@ You can obtain the client ID and secret of each Auth0 app from the settings page
 </section>
 <section id="configuring-authentication-on-your-validator">
 <span id="helm-validator-auth-secrets-config"></span><h3>Configuring Authentication on your Validator<a class="headerlink" href="#configuring-authentication-on-your-validator" title="Link to this heading"></a></h3>
-<p>We are now going to configure your Validator node software based on the OIDC provider configuration values your exported to environment variables at the end of either <a class="reference internal" href="#helm-validator-auth-requirements"><span class="std std-ref">OIDC Provider Requirements</span></a> or <a class="reference internal" href="#helm-validator-auth0"><span class="std std-ref">Configuring an Auth0 Tenant</span></a>.
-(Note that some authentication-related configuration steps are also included in <a class="reference internal" href="#helm-validator-install"><span class="std std-ref">Installing the Software</span></a>.)</p>
+<p>We are now going to configure your Validator node software based on the OIDC provider configuration values you exported to environment variables at the end of either <a class="reference internal" href="#helm-validator-auth-requirements"><span class="std std-ref">OIDC Provider Requirements</span></a> or <a class="reference internal" href="#helm-validator-auth0"><span class="std std-ref">Configuring an Auth0 Tenant</span></a>.
+(Note that some authentication-related configuration steps are also included in <a class="reference internal" href="#helm-validator-install"><span class="std std-ref">Installing the Software</span></a>)</p>
 <p>The validator app backend requires the following secret.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>create<span class="w"> </span>--namespace<span class="w"> </span>validator<span class="w"> </span>secret<span class="w"> </span>generic<span class="w"> </span>splice-app-validator-ledger-api-auth<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span><span class="s2">&quot;--from-literal=ledger-api-user=</span><span class="si">${</span><span class="nv">VALIDATOR_CLIENT_ID</span><span class="si">}</span><span class="s2">@clients&quot;</span><span class="w"> </span><span class="se">\</span>
@@ -1096,7 +1105,7 @@ kubectl<span class="w"> </span>create<span class="w"> </span>--namespace<span cl
 cluster, you will need to meet a few preconditions. The first is that
 there needs to be an environment variable defined to refer to the
 version of the Helm charts necessary to connect to this environment:</p>
-<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.12-ci-snapshot.20250218.1.0.v5b29998c</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.12-ci-snapshot.20250218.1.0.v0fa803c0</span></code></p>
 <p>Please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/participant-values.yaml</span></code> as follows:</p>
 <ul class="simple">
 <li><p>Replace <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_LEDGER_API_AUDIENCE</span></code> in the <cite>auth.targetAudience</cite> entry with audience for the ledger API. e.g. <code class="docutils literal notranslate"><span class="pre">https://ledger_api.example.com</span></code>. If you are not ready to use a custom audience, you can use the suggested default <code class="docutils literal notranslate"><span class="pre">https://canton.network.global</span></code>.</p></li>
@@ -1109,11 +1118,11 @@ version of the Helm charts necessary to connect to this environment:</p>
 </ul>
 <p>Additionally, please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/standalone-participant-values.yaml</span></code> as follows:</p>
 <ul class="simple">
-<li><p>Replace <code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code> with the migration ID of the global synchronizer on your target cluster.</p></li>
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code> with the migration ID of the global synchronizer on the network you are connecting to (devnet/testnet/mainnet).</p></li>
 </ul>
 <p>To configure the validator app, please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/validator-values.yaml</span></code> as follows:</p>
 <ul class="simple">
-<li><p>Replace <code class="docutils literal notranslate"><span class="pre">TRUSTED_SCAN_URL</span></code> with a URL of a Scan you host or trust that is reachable by your Validator. For example, the GSF scan URL, e.g., <code class="docutils literal notranslate"><span class="pre">https://scan.sv-1.TARGET_CLUSTER.global.canton.network.sync.global</span></code>
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">TRUSTED_SCAN_URL</span></code> with a URL of a Scan you host or trust that is reachable by your Validator. For example, the GSF scan URL, <span class="raw-html">https://scan.sv-1.<span class="splice-url-prefix">unknown_cluster.</span>global.canton.network.sync.global</span>
 (This Scan instance will be used for obtaining additional Scan URLs for BFT Scan reads.)</p></li>
 <li><p>If you want to configure the audience for the Validator app backend API, replace <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_VALIDATOR_AUDIENCE</span></code> in the <cite>auth.audience</cite> entry with audience for the Validator app backend API. e.g. <code class="docutils literal notranslate"><span class="pre">https://validator.example.com/api</span></code>.</p></li>
 <li><p>If you want to configure the audience for the Ledger API, set the <code class="docutils literal notranslate"><span class="pre">audience</span></code> field in the <cite>splice-app-validator-ledger-api-auth</cite> k8s secret with the audience for the Ledger API. e.g. <code class="docutils literal notranslate"><span class="pre">https://ledger_api.example.com</span></code>.</p></li>
@@ -1121,7 +1130,7 @@ version of the Helm charts necessary to connect to this environment:</p>
 <li><p>Replace <code class="docutils literal notranslate"><span class="pre">YOUR_CONTACT_POINT</span></code> by a slack user name or email address that can be used by node operators to contact you in case there are issues with your node. Note that this contact information will be publicly visible. If you do not want to share contact information, you can put an empty string.</p></li>
 <li><p>Update the <cite>auth.jwksUrl</cite> entry to point to your auth provider’s JWK set document by replacing <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_URL</span></code> with your auth provider’s OIDC URL, as explained above.</p></li>
 </ul>
-<p>If you want to configure to only connect to a single trusted scan at <code class="docutils literal notranslate"><span class="pre">TRUSTED_SCAN_URL</span></code> but not obtaining additional Scan URLs for BFT Scan reads,
+<p>If you want to only connect to a single trusted scan at <code class="docutils literal notranslate"><span class="pre">TRUSTED_SCAN_URL</span></code> but not obtain additional Scan URLs for BFT Scan reads,
 you can uncomment the following and set <code class="docutils literal notranslate"><span class="pre">nonSvValidatorTrustSingleScan</span></code> to <code class="docutils literal notranslate"><span class="pre">true</span></code>.
 This does mean that you depend on that single SV and if it is broken or malicious you will be unable to use the network so usually you want to default to not enabling this.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># If you want to configure validator to use a single trusted scan, set ``nonSvValidatorTrustSingleScan`` to true.</span>
@@ -1129,9 +1138,9 @@ This does mean that you depend on that single SV and if it is broken or maliciou
 <span class="c1"># nonSvValidatorTrustSingleScan: true</span>
 </pre></div>
 </div>
-<p>If you want to configure to connect to the decentralized synchronizer via only a single trusted sequencer,
+<p>If you want to connect to the decentralized synchronizer via only a single trusted sequencer,
 you can uncomment the following and set <code class="docutils literal notranslate"><span class="pre">useSequencerConnectionsFromScan</span></code> to <code class="docutils literal notranslate"><span class="pre">false</span></code>. Also replace <code class="docutils literal notranslate"><span class="pre">TRUSTED_SYNCHRONIZER_SEQUENCER_URL</span></code> with the publicly accessible URL of the trusted sequencer,
-e.g., <code class="docutils literal notranslate"><span class="pre">https://sequencer-MIGRATION_ID.sv-1.TARGET_CLUSTER.global.canton.network.sync.global</span></code>.
+e.g., <span class="raw-html">https://sequencer-MIGRATION_ID.sv-1.<span class="splice-url-prefix">unknown_cluster.</span>global.canton.network.sync.global</span> for the sequencer operated by the GSF.
 This does mean that you depend on that single SV and if it is broken or malicious you will be unable to use the network so usually you want to default to not enabling this.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># If you want to configure validator to connect to a single trusted sequencer, set ``useSequencerConnectionsFromScan`` to false.</span>
 <span class="c1"># and replace ``TRUSTED_SYNCHRONIZER_SEQUENCER_URL`` with the publicly accessible URL of the trusted sequencer.</span>
@@ -1142,7 +1151,7 @@ This does mean that you depend on that single SV and if it is broken or maliciou
 </div>
 <p>Additionally, please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/standalone-validator-values.yaml</span></code> as follows:</p>
 <ul class="simple">
-<li><p>Replace <code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code> with the migration ID of the global synchronizer on your target cluster.</p></li>
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code> with the migration ID of the global synchronizer on the network you are connecting to.</p></li>
 <li><p>Replace <code class="docutils literal notranslate"><span class="pre">SPONSOR_SV_URL</span></code> with the URL of the SV that provided you your secret.</p></li>
 <li><p>Replace <code class="docutils literal notranslate"><span class="pre">YOUR_VALIDATOR_PARTY_HINT</span></code> with the desired name for your
 validator operator party. It must be of the format
@@ -1229,7 +1238,7 @@ controller.</p>
 </ul>
 <p>Internet ingress configuration is often specific to the network configuration and scenario of the
 cluster being configured. To illustrate the basic requirements of a Validator node ingress, we have
-provided a Helm chart that configures the above cluster according to the routes above, as detailed in the sections below.</p>
+provided a Helm chart that configures ingress according to the routes above using Istio, as detailed in the sections below.</p>
 <section id="id5">
 <h3>Requirements<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
 <p>In order to install the reference charts, the following must be satisfied in your cluster:</p>
@@ -1307,22 +1316,13 @@ Once logged in one should see the transactions page.</p>
 <a class="reference internal image-reference" href="../_images/wallet_home1.png"><img alt="After logged in into the wallet UI" src="../_images/wallet_home1.png" style="width: 600px;" />
 </a>
 </section>
-<section id="testnet-only-granting-coin-to-the-validator-for-traffic-purchases">
-<span id="helm-validator-testnet-cc-grant"></span><h2>(TestNet-only) Granting coin to the validator for traffic purchases<a class="headerlink" href="#testnet-only-granting-coin-to-the-validator-for-traffic-purchases" title="Link to this heading"></a></h2>
-<p>On TestNet, your validator party will need an initial coin grant to be able to purchase traffic.
+<section id="granting-coin-to-the-validator-for-traffic-purchases">
+<span id="helm-validator-testnet-cc-grant"></span><h2>Granting coin to the validator for traffic purchases<a class="headerlink" href="#granting-coin-to-the-validator-for-traffic-purchases" title="Link to this heading"></a></h2>
+<p>On DevNet, your validator will automatically tap enough coin to purchase traffic.
+However, on TestNet and MainNet, your validator party will need an initial coin grant to be able to purchase traffic.
 After logging into the wallet UI in the previous section, note that the party ID is displayed in
 the top right of the UI (e.g. <code class="docutils literal notranslate"><span class="pre">validator_validator_service_user::12204f9f94b7369e027544927703efcdf0f03cb15bd26ac53c784c627b63bdf8f041</span></code>).</p>
 <p>An SV (say your sponsor) will need to transfer coin to this party. They can do this through their wallet UI.</p>
-</section>
-<section id="logging-into-the-cns-ui">
-<span id="helm-validator-ans-web-ui"></span><h2>Logging into the CNS UI<a class="headerlink" href="#logging-into-the-cns-ui" title="Link to this heading"></a></h2>
-<p>You can open your browser at
-<a class="reference external" href="https://cns.validator.YOUR_HOSTNAME">https://cns.validator.YOUR_HOSTNAME</a> and login using the
-credentials for the user that you configured as
-<code class="docutils literal notranslate"><span class="pre">validatorWalletUser</span></code> earlier. You will be able to register a name on the
-Canton Name Service.</p>
-<a class="reference internal image-reference" href="../_images/ans_home1.png"><img alt="After logged in into the CNS UI" src="../_images/ans_home1.png" style="width: 600px;" />
-</a>
 </section>
 <section id="configuring-automatic-traffic-purchases">
 <h2>Configuring automatic traffic purchases<a class="headerlink" href="#configuring-automatic-traffic-purchases" title="Link to this heading"></a></h2>
@@ -1383,13 +1383,23 @@ in the <code class="docutils literal notranslate"><span class="pre">validator-va
 it will automatically accept it. Similarly to sweeps, party IDs must be known in order to
 apply this configuration.</p>
 </section>
+<section id="logging-into-the-cns-ui">
+<span id="helm-validator-ans-web-ui"></span><h2>Logging into the CNS UI<a class="headerlink" href="#logging-into-the-cns-ui" title="Link to this heading"></a></h2>
+<p>You can open your browser at
+<a class="reference external" href="https://cns.validator.YOUR_HOSTNAME">https://cns.validator.YOUR_HOSTNAME</a> and login using the
+credentials for the user that you configured as
+<code class="docutils literal notranslate"><span class="pre">validatorWalletUser</span></code> earlier. You will be able to register a name on the
+Canton Name Service.</p>
+<a class="reference internal image-reference" href="../_images/ans_home1.png"><img alt="After logged in into the CNS UI" src="../_images/ans_home1.png" style="width: 600px;" />
+</a>
+</section>
 <section id="participant-pruning">
 <span id="validator-participant-pruning"></span><h2>Participant Pruning<a class="headerlink" href="#participant-pruning" title="Link to this heading"></a></h2>
 <p>By default, participants preserve all history (it is not preserved
 across <a class="reference internal" href="validator_major_upgrades.html#validator-upgrades"><span class="std std-ref">major upgrades</span></a> though). However, this leads to
 gradually growing databases and can slow down certain queries, in
 particular, queries for the active contract set on the ledger API.</p>
-<p>To mitigate that it is possible to disable participant pruning which
+<p>To mitigate that, it is possible to enable participant pruning which
 will remove all history beyond a specified retention point and only
 preserve the active contract set.</p>
 <p>Note that this only affects the participant stores. The CN apps
@@ -1398,6 +1408,15 @@ history in your wallet will never be pruned.</p>
 <p>Below you can see an example of the pruning config that you need to
 add to <code class="docutils literal notranslate"><span class="pre">validator-values.yaml</span></code> to retain only the history for the
 last 48h.</p>
+<p>Note that if your node is down for longer than the pruning
+window (48 hours in the example above), your node will most probably get corrupted,
+as the apps race catching up with the participant’s attempts to keep pruning.
+It is therefore advisable to set the pruning window to a value that you are
+comfortable with in terms of guaranteeing uptime of your node. Setting it to
+30 days is in general a reasonable choice, as the sequencers currently are also
+pruned after 30 days, so you will not be able to catch up with the network after
+a longer downtime anyway (see <a class="reference internal" href="validator_disaster_recovery.html#validator-dr"><span class="std std-ref">Disaster Recovery</span></a> for disaster
+recovery guidelines).</p>
 <p>Refer to the Canton documentation for more details on participant pruning:</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://docs.daml.com/ops/pruning.html">https://docs.daml.com/ops/pruning.html</a></p></li>
