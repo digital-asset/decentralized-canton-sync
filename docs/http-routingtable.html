@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Overview &mdash; Splice  documentation</title>
+  <title>HTTP Routing Table &mdash; Splice  documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -25,8 +24,13 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Validators" href="validator_operator/index.html" />
-    <link rel="prev" title="Global Synchronizer for the Canton Network" href="index.html" /> 
+ 
+
+    <script>
+      DOCUMENTATION_OPTIONS.COLLAPSE_INDEX = true;
+    </script>
+
+
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -52,8 +56,8 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Deployment and Operations</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Overview</a></li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="validator_operator/index.html">Validators</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="validator_operator/validator_onboarding.html">Validator Onboarding Process</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="validator_operator/validator_onboarding.html#networks">Networks</a></li>
@@ -777,9 +781,8 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Overview</li>
+      <li class="breadcrumb-item active">HTTP Routing Table</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="_sources/deployment.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -787,17 +790,338 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="overview">
-<h1>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h1>
-</section>
+
+   <h1>HTTP Routing Table</h1>
+
+   <div class="modindex-jumpbox">
+   <a href="#cap-/livez"><strong>/livez</strong></a> | 
+   <a href="#cap-/readyz"><strong>/readyz</strong></a> | 
+   <a href="#cap-/status"><strong>/status</strong></a> | 
+   <a href="#cap-/v0"><strong>/v0</strong></a> | 
+   <a href="#cap-/v1"><strong>/v1</strong></a> | 
+   <a href="#cap-/version"><strong>/version</strong></a>
+   </div>
+
+   <table class="indextable modindextable">
+     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
+     <tr class="cap" id="cap-/livez"><td></td><td>
+       <strong>/livez</strong></td><td></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--livez"><code class="xref">GET /livez</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
+     <tr class="cap" id="cap-/readyz"><td></td><td>
+       <strong>/readyz</strong></td><td></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--readyz"><code class="xref">GET /readyz</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
+     <tr class="cap" id="cap-/status"><td></td><td>
+       <strong>/status</strong></td><td></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--status"><code class="xref">GET /status</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
+     <tr class="cap" id="cap-/v0"><td></td><td>
+       <strong>/v0</strong></td><td></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-acs-party"><code class="xref">GET /v0/acs/{party}</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-admin-sv-voterequests"><code class="xref">GET /v0/admin/sv/voterequests</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-admin-validator-licenses"><code class="xref">GET /v0/admin/validator/licenses</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-aggregated-rounds"><code class="xref">GET /v0/aggregated-rounds</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-amulet-config-for-round"><code class="xref">GET /v0/amulet-config-for-round</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-ans-entries"><code class="xref">GET /v0/ans-entries</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-ans-entries-by-name-name"><code class="xref">GET /v0/ans-entries/by-name/{name}</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-ans-entries-by-party-party"><code class="xref">GET /v0/ans-entries/by-party/{party}</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-closed-rounds"><code class="xref">GET /v0/closed-rounds</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-domains-domain_id-members-member_id-traffic-status"><code class="xref">GET /v0/domains/{domain_id}/members/{member_id}/traffic-status</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-domains-domain_id-parties-party_id-participant-id"><code class="xref">GET /v0/domains/{domain_id}/parties/{party_id}/participant-id</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-dso"><code class="xref">GET /v0/dso</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-dso-party-id"><code class="xref">GET /v0/dso-party-id</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-dso-sequencers"><code class="xref">GET /v0/dso-sequencers</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-featured-apps"><code class="xref">GET /v0/featured-apps</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-featured-apps-provider_party_id"><code class="xref">GET /v0/featured-apps/{provider_party_id}</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-migrations-schedule"><code class="xref">GET /v0/migrations/schedule</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-rewards-collected"><code class="xref">GET /v0/rewards-collected</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-round-of-latest-data"><code class="xref">GET /v0/round-of-latest-data</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-scans"><code class="xref">GET /v0/scans</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-splice-instance-names"><code class="xref">GET /v0/splice-instance-names</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-state-acs-snapshot-timestamp"><code class="xref">GET /v0/state/acs/snapshot-timestamp</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-synchronizer-bootstrapping-transactions-domain_id_prefix"><code class="xref">GET /v0/synchronizer-bootstrapping-transactions/{domain_id_prefix}</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-synchronizer-identities-domain_id_prefix"><code class="xref">GET /v0/synchronizer-identities/{domain_id_prefix}</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-top-providers-by-app-rewards"><code class="xref">GET /v0/top-providers-by-app-rewards</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-top-validators-by-purchased-traffic"><code class="xref">GET /v0/top-validators-by-purchased-traffic</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-top-validators-by-validator-faucets"><code class="xref">GET /v0/top-validators-by-validator-faucets</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-top-validators-by-validator-rewards"><code class="xref">GET /v0/top-validators-by-validator-rewards</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-total-amulet-balance"><code class="xref">GET /v0/total-amulet-balance</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-transfer-command-counter-party"><code class="xref">GET /v0/transfer-command-counter/{party}</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-transfer-command-status"><code class="xref">GET /v0/transfer-command/status</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-transfer-preapprovals-by-party-party"><code class="xref">GET /v0/transfer-preapprovals/by-party/{party}</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-updates-update_id"><code class="xref">GET /v0/updates/{update_id}</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-validators-validator-faucets"><code class="xref">GET /v0/validators/validator-faucets</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-voterequests-vote_request_contract_id"><code class="xref">GET /v0/voterequests/{vote_request_contract_id}</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v0-wallet-balance"><code class="xref">GET /v0/wallet-balance</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#post--v0-activities"><code class="xref">POST /v0/activities</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#post--v0-admin-sv-voteresults"><code class="xref">POST /v0/admin/sv/voteresults</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#post--v0-amulet-rules"><code class="xref">POST /v0/amulet-rules</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#post--v0-ans-rules"><code class="xref">POST /v0/ans-rules</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#post--v0-backfilling-migration-info"><code class="xref">POST /v0/backfilling/migration-info</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#post--v0-backfilling-updates-before"><code class="xref">POST /v0/backfilling/updates-before</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#post--v0-external-party-amulet-rules"><code class="xref">POST /v0/external-party-amulet-rules</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#post--v0-holdings-state"><code class="xref">POST /v0/holdings/state</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#post--v0-holdings-summary"><code class="xref">POST /v0/holdings/summary</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#post--v0-open-and-issuing-mining-rounds"><code class="xref">POST /v0/open-and-issuing-mining-rounds</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#post--v0-round-party-totals"><code class="xref">POST /v0/round-party-totals</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#post--v0-round-totals"><code class="xref">POST /v0/round-totals</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#post--v0-state-acs"><code class="xref">POST /v0/state/acs</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#post--v0-state-acs-force"><code class="xref">POST /v0/state/acs/force</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#post--v0-transactions"><code class="xref">POST /v0/transactions</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#post--v0-updates"><code class="xref">POST /v0/updates</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#post--v0-voterequest"><code class="xref">POST /v0/voterequest</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
+     <tr class="cap" id="cap-/v1"><td></td><td>
+       <strong>/v1</strong></td><td></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--v1-updates-update_id"><code class="xref">GET /v1/updates/{update_id}</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#post--v1-updates"><code class="xref">POST /v1/updates</code></a></td><td>
+       <em>null</em></td></tr>
+     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
+     <tr class="cap" id="cap-/version"><td></td><td>
+       <strong>/version</strong></td><td></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="app_dev/scan_api/scan_openapi.html#get--version"><code class="xref">GET /version</code></a></td><td>
+       <em>null</em></td></tr>
+   </table>
 
 
            </div>
           </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="index.html" class="btn btn-neutral float-left" title="Global Synchronizer for the Canton Network" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="validator_operator/index.html" class="btn btn-neutral float-right" title="Validators" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-    </div>
+          <footer>
 
   <hr/>
 
