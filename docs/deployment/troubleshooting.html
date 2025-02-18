@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.12-ci-snapshot.20250218.1.0.v14e2261a
+                0.3.12-ci-snapshot.20250218.1.0.v66fea819
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -380,6 +380,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#traffic-balance-below-reserved-amount">Traffic balance below reserved amount</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#insufficient-funds-to-buy-configured-traffic-amount">Insufficient funds to buy configured traffic amount</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#gave-up-getting-app-version">Gave up getting app version</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#unauthenticated-errors-in-validator-sv-and-scan-app">UNAUTHENTICATED errors in validator, sv and scan app</a></li>
 </ul>
 </li>
 </ul>
@@ -882,6 +883,16 @@ mismatch between the prefix <code class="docutils literal notranslate"><span cla
 at the end.</p>
 <p>In a docker-compose setup, verify the URL passed to <code class="docutils literal notranslate"><span class="pre">-s</span></code> which should be a SV URL or <code class="docutils literal notranslate"><span class="pre">svSponsorAddress</span></code> for the helm deployment.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="m">2025</span>-02-11T10:16:13.098Z<span class="w"> </span><span class="o">[</span>⋮<span class="o">]</span><span class="w"> </span>ERROR<span class="w"> </span>-<span class="w"> </span>o.l.s.v.ValidatorSvConnection:validator<span class="o">=</span>validator_backend<span class="w"> </span><span class="o">(</span>7427be2620676fce8a464eee769eb1d8-app_version-2d71c55f5ecd731b-793d382fa2d6ce14<span class="o">)</span><span class="w"> </span>-<span class="w"> </span>Gave<span class="w"> </span>up<span class="w"> </span>getting<span class="w"> </span><span class="s1">&#39;app version of https://scan.sv-2.dev.global.canton.network.digitalasset.com/api/sv&#39;</span><span class="w"> </span>org.apache.pekko.http.scaladsl.unmarshalling.Unmarshaller<span class="nv">$UnsupportedContentTypeException</span>:<span class="w"> </span>Unsupported<span class="w"> </span>Content-Type<span class="w"> </span><span class="o">[</span>Some<span class="o">(</span>text/html<span class="o">)]</span>,<span class="w"> </span>supported:<span class="w"> </span>application/json
+</pre></div>
+</div>
+</section>
+<section id="unauthenticated-errors-in-validator-sv-and-scan-app">
+<h3>UNAUTHENTICATED errors in validator, sv and scan app<a class="headerlink" href="#unauthenticated-errors-in-validator-sv-and-scan-app" title="Link to this heading"></a></h3>
+<p>A log of the form below in the SV, scan or validator app logs
+indicates an authenitcation error on the connection to the
+participant. Check the participant logs which will contain more
+details on why the request got rejected.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="m">2025</span>-02-14T11:32:00.304Z<span class="w"> </span><span class="o">[</span>⋮<span class="o">]</span><span class="w"> </span>INFO<span class="w"> </span>-<span class="w"> </span>o.l.s.v.ValidatorApp:validator<span class="o">=</span>validator_backend<span class="w"> </span><span class="o">(</span>50836441bf579035d64a56f776566cbf<span class="o">)</span><span class="w"> </span>-<span class="w"> </span>The<span class="w"> </span>operation<span class="w"> </span><span class="s1">&#39;Get user 7D95xiEUxju4IUXFQgyUrwHMMuZO0g2F@clients&#39;</span><span class="w"> </span>failed<span class="w"> </span>with<span class="w"> </span>a<span class="w"> </span>retryable<span class="w"> </span>error<span class="w"> </span><span class="o">(</span>full<span class="w"> </span>stack<span class="w"> </span>trace<span class="w"> </span>omitted<span class="o">)</span>:<span class="w"> </span>UNAUTHENTICATED:<span class="w"> </span>An<span class="w"> </span>error<span class="w"> </span>occurred.<span class="w"> </span>Please<span class="w"> </span>contact<span class="w"> </span>the<span class="w"> </span>operator<span class="w"> </span>and<span class="w"> </span>inquire<span class="w"> </span>about<span class="w"> </span>the<span class="w"> </span>request<span class="w"> </span>efd009557dec03da74dd29b723949cd6<span class="w"> </span>with<span class="w"> </span>tid<span class="w"> </span>efd009557dec03da74dd29b723949cd6
 </pre></div>
 </div>
 </section>
