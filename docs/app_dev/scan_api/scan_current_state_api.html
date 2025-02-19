@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Scan API for Current state of CC, CNS, and Synchronizer Traffic &mdash; Splice  documentation</title>
+  <title>Scan API for Current state of CC and Synchronizer Traffic &mdash; Splice  documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.12-ci-snapshot.20250218.1.0.v18864c45
+                0.3.12-ci-snapshot.20250218.1.0.v49937100
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -430,6 +430,7 @@
 <li class="toctree-l4"><a class="reference internal" href="scan_bulk_data_api.html#acs-snapshots">ACS Snapshots</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="scan_bulk_data_api.html#get-v0-state-acs-snapshot-timestamp">GET /v0/state/acs/snapshot-timestamp</a></li>
 <li class="toctree-l5"><a class="reference internal" href="scan_bulk_data_api.html#post-v0-state-acs">POST /v0/state/acs</a></li>
+<li class="toctree-l5"><a class="reference internal" href="scan_bulk_data_api.html#post-v0-state-acs-force">POST /v0/state/acs/force</a></li>
 </ul>
 </li>
 </ul>
@@ -449,9 +450,11 @@
 <li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html#listing-all-sv-scans">Listing all SV Scans</a></li>
 <li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html#listing-all-sv-sequencers">Listing all SV Sequencers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html#listing-all-validators">Listing all Validators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html#parties-hosting-participants">Parties’ Hosting Participants</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="scan_global_synchronizer_operations_api.html">Scan Global Synchronizer Operations API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_operations_api.html#validator-liveness">Validator Liveness</a></li>
 <li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_operations_api.html#dso-info">DSO Info</a></li>
 </ul>
 </li>
@@ -459,7 +462,9 @@
 <li class="toctree-l3"><a class="reference internal" href="scan_cc_reference_data_api.html#dso-party-id">DSO party ID</a></li>
 </ul>
 </li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Scan API for Current state of CC, CNS, and Synchronizer Traffic</a><ul>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Scan API for Current state of CC and Synchronizer Traffic</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#validator-traffic-credits-and-purchases">Validator Traffic Credits and Purchases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#open-mining-rounds">Open Mining Rounds</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#closed-mining-rounds">Closed Mining Rounds</a></li>
 </ul>
 </li>
@@ -805,7 +810,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="index.html">Scan API</a></li>
-      <li class="breadcrumb-item active">Scan API for Current state of CC, CNS, and Synchronizer Traffic</li>
+      <li class="breadcrumb-item active">Scan API for Current state of CC and Synchronizer Traffic</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/app_dev/scan_api/scan_current_state_api.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -815,10 +820,112 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="scan-api-for-current-state-of-cc-cns-and-synchronizer-traffic">
-<span id="scan-current-state-api"></span><h1>Scan API for Current state of CC, CNS, and Synchronizer Traffic<a class="headerlink" href="#scan-api-for-current-state-of-cc-cns-and-synchronizer-traffic" title="Link to this heading"></a></h1>
+  <section id="scan-api-for-current-state-of-cc-and-synchronizer-traffic">
+<span id="scan-current-state-api"></span><h1>Scan API for Current state of CC and Synchronizer Traffic<a class="headerlink" href="#scan-api-for-current-state-of-cc-and-synchronizer-traffic" title="Link to this heading"></a></h1>
+<p>Alongside information about the <a class="reference internal" href="scan_global_synchronizer_operations_api.html#scan-global-synchronizer-operations-api"><span class="std std-ref">overall Splice network operations</span></a>, Scan provides some more specific details about current Amulet-related network state.</p>
+<section id="validator-traffic-credits-and-purchases">
+<h2>Validator Traffic Credits and Purchases<a class="headerlink" href="#validator-traffic-credits-and-purchases" title="Link to this heading"></a></h2>
+<p>Confirming Daml transactions on the distributed synchronizer costs Amulet, as a rule.
+<a class="reference external" href="scan_openapi.html#get--v0-domains-domain_id-members-member_id-traffic-status">/v0/domains/{domain_id}/members/{member_id}/traffic-status</a> can be used to query the purchased and spent traffic credit.</p>
+<p>Here’s an example response from querying for a member participant.</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;traffic_status&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;actual&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;total_consumed&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;total_limit&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">6000000</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;target&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;total_purchased&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">6000000</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">total_limit</span></code> is the most important statistic; <code class="docutils literal notranslate"><span class="pre">total_purchased</span></code> is usually the same, but may be higher if a purchase is still in process.</p>
+</section>
+<section id="open-mining-rounds">
+<h2>Open Mining Rounds<a class="headerlink" href="#open-mining-rounds" title="Link to this heading"></a></h2>
+<p>Amulet activity and traffic are associated with rounds, which determine how rewards are allocated.
+To check on the current rounds available for traffic or with rewards currently in process, check <a class="reference external" href="|gsf_scan_url|/api/scan/v0/open-and-issuing-mining-rounds">/v0/open-and-issuing-mining-rounds</a></p>
+<p>This endpoint features a parameter for more efficient polling; see the <code class="docutils literal notranslate"><span class="pre">MaybeCachedContractWithStateMap</span></code> OpenAPI specification for more details.
+The initial request is always empty:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;cached_open_mining_round_contract_ids&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
+<span class="w">  </span><span class="nt">&quot;cached_issuing_round_contract_ids&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>This might respond with something like</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;time_to_live_in_microseconds&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">600000000</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;open_mining_rounds&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;00dea42d6e8aa5cdd8110564774b740943c2f0d57ecef624f2f9ab881a847f3ebfca1012200109878982101a4f2b8106091bdde79793daf8548662f9962b371adc8c3aa294&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;contract&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;template_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;979ec710c3ae3a05cb44edf8461a9b4d7dd2053add95664f94fc89e5f18df80f:Splice.Round:OpenMiningRound&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;contract_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;00dea42d6e8aa5cdd8110564774b740943c2f0d57ecef624f2f9ab881a847f3ebfca1012200109878982101a4f2b8106091bdde79793daf8548662f9962b371adc8c3aa294&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;payload&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">&quot;dso&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;DSO::122084177677350389dd0710d6516f700a33fe348c5f2702dffef6d36e1dedcbfc17&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;tickDuration&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;microseconds&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;600000000&quot;</span>
+<span class="w">          </span><span class="p">},</span>
+<span class="w">          </span><span class="nt">&quot;issuingFor&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;microseconds&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;12474000000000&quot;</span>
+<span class="w">          </span><span class="p">},</span>
+<span class="w">          </span><span class="nt">&quot;amuletPrice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.005&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;issuanceConfig&quot;</span><span class="p">:</span><span class="w"> </span><span class="cm">/* ... */</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;opensAt&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2025-02-18T22:18:42.495769Z&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;transferConfigUsd&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;holdingFee&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">              </span><span class="nt">&quot;rate&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.0000190259&quot;</span>
+<span class="w">            </span><span class="p">},</span>
+<span class="w">            </span><span class="cm">/* other configuration */</span>
+<span class="w">          </span><span class="p">},</span>
+<span class="w">          </span><span class="nt">&quot;targetClosesAt&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2025-02-18T22:38:42.495769Z&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;round&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;number&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;20790&quot;</span>
+<span class="w">          </span><span class="p">}</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="cm">/* other contract metadata */</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;domain_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;global-domain::122084177677350389dd0710d6516f700a33fe348c5f2702dffef6d36e1dedcbfc17&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="cm">/* other open rounds; there are usually 3 */</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;issuing_mining_rounds&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;00f15ce85311175cc62acab235d768f5c8b1e02247a1d0e4c54635fc2b43726262ca101220cc210224ad72ee4a71ae887732898f0f1db81e530b3817e75500ebe5a8a4f7a6&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;contract&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;template_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;979ec710c3ae3a05cb44edf8461a9b4d7dd2053add95664f94fc89e5f18df80f:Splice.Round:IssuingMiningRound&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;contract_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;00f15ce85311175cc62acab235d768f5c8b1e02247a1d0e4c54635fc2b43726262ca101220cc210224ad72ee4a71ae887732898f0f1db81e530b3817e75500ebe5a8a4f7a6&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;payload&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">&quot;dso&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;DSO::122084177677350389dd0710d6516f700a33fe348c5f2702dffef6d36e1dedcbfc17&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;optIssuancePerValidatorFaucetCoupon&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;324.0134341208&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;issuancePerFeaturedAppRewardCoupon&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;100.0&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;opensAt&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2025-02-18T22:29:35.850299Z&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;issuancePerSvRewardCoupon&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.4058853374&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;targetClosesAt&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2025-02-18T22:49:35.850299Z&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;issuancePerUnfeaturedAppRewardCoupon&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.6&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;round&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;number&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;20788&quot;</span>
+<span class="w">          </span><span class="p">},</span>
+<span class="w">          </span><span class="nt">&quot;issuancePerValidatorRewardCoupon&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.2&quot;</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="cm">/* other contract metadata */</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;domain_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;global-domain::122084177677350389dd0710d6516f700a33fe348c5f2702dffef6d36e1dedcbfc17&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="cm">/* any other issuing rounds */</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Key fields are <code class="docutils literal notranslate"><span class="pre">round</span></code>, <code class="docutils literal notranslate"><span class="pre">opensAt</span></code>, and <code class="docutils literal notranslate"><span class="pre">targetClosesAt</span></code>, which gives you an idea of the open window for this round.
+Open rounds also include many fields explaining the assigned fees for that round; see the Daml template <code class="docutils literal notranslate"><span class="pre">OpenMiningRound</span></code> for more details.</p>
+<p>For followup polling requests, you’ll want to pass the keys from the previously-returned maps so Scan responds more efficiently.</p>
+</section>
 <section id="closed-mining-rounds">
 <h2>Closed Mining Rounds<a class="headerlink" href="#closed-mining-rounds" title="Link to this heading"></a></h2>
+<p><a class="reference external" href="|gsf_scan_url|/api/scan/v0/closed-rounds">/v0/closed-rounds</a> is more niche than <a class="reference internal" href="#open-mining-rounds">Open Mining Rounds</a>; it usually yields an empty response.
+However, it can yield some <code class="docutils literal notranslate"><span class="pre">ClosedMiningRound</span></code> Daml contracts if there are unclaimed rewards for that round, or a final confirmation for the round closure hasn’t been created yet; as validators operate asynchronously around the Daml ledger to complete these operations, this can be briefly true, but ideally for as short a time as possible.</p>
 </section>
 </section>
 

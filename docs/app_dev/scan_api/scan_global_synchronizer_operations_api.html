@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.12-ci-snapshot.20250218.1.0.v18864c45
+                0.3.12-ci-snapshot.20250218.1.0.v49937100
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -430,6 +430,7 @@
 <li class="toctree-l4"><a class="reference internal" href="scan_bulk_data_api.html#acs-snapshots">ACS Snapshots</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="scan_bulk_data_api.html#get-v0-state-acs-snapshot-timestamp">GET /v0/state/acs/snapshot-timestamp</a></li>
 <li class="toctree-l5"><a class="reference internal" href="scan_bulk_data_api.html#post-v0-state-acs">POST /v0/state/acs</a></li>
+<li class="toctree-l5"><a class="reference internal" href="scan_bulk_data_api.html#post-v0-state-acs-force">POST /v0/state/acs/force</a></li>
 </ul>
 </li>
 </ul>
@@ -449,9 +450,11 @@
 <li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html#listing-all-sv-scans">Listing all SV Scans</a></li>
 <li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html#listing-all-sv-sequencers">Listing all SV Sequencers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html#listing-all-validators">Listing all Validators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html#parties-hosting-participants">Parties’ Hosting Participants</a></li>
 </ul>
 </li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Scan Global Synchronizer Operations API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#validator-liveness">Validator Liveness</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#dso-info">DSO Info</a></li>
 </ul>
 </li>
@@ -459,7 +462,9 @@
 <li class="toctree-l3"><a class="reference internal" href="scan_cc_reference_data_api.html#dso-party-id">DSO party ID</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="scan_current_state_api.html">Scan API for Current state of CC, CNS, and Synchronizer Traffic</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="scan_current_state_api.html">Scan API for Current state of CC and Synchronizer Traffic</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scan_current_state_api.html#validator-traffic-credits-and-purchases">Validator Traffic Credits and Purchases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scan_current_state_api.html#open-mining-rounds">Open Mining Rounds</a></li>
 <li class="toctree-l3"><a class="reference internal" href="scan_current_state_api.html#closed-mining-rounds">Closed Mining Rounds</a></li>
 </ul>
 </li>
@@ -817,8 +822,50 @@
              
   <section id="scan-global-synchronizer-operations-api">
 <span id="id1"></span><h1>Scan Global Synchronizer Operations API<a class="headerlink" href="#scan-global-synchronizer-operations-api" title="Link to this heading"></a></h1>
+<p>Scan provides endpoints to query about the ongoing operations of the Global Synchronizer, based on information recorded on-ledger.</p>
+<section id="validator-liveness">
+<h2>Validator Liveness<a class="headerlink" href="#validator-liveness" title="Link to this heading"></a></h2>
+<p>Rather than <a class="reference internal" href="scan_global_synchronizer_connectivity_api.html#listing-all-validators"><span class="std std-ref">Listing all Validators</span></a>, which can yield a large number of irrelevant records, <a class="reference external" href="|gsf_scan_url|/api/scan/v0/validators/validator-faucets?validator_ids=...">/v0/validators/validator-faucets?validator_ids=…</a> yields only liveness information about the specified validators.</p>
+<p>For example, querying for a few validators might yield</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;validatorsReceivedFaucets&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;validator&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;digitalasset-testValidator-1::12201bca369bee8df7a32ee53c6433d437396c9f69c269a1bb51383c0a279ca90626&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;numRoundsCollected&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">36</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;numRoundsMissed&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;firstCollectedInRound&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">19830</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;lastCollectedInRound&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">19865</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="cm">/* similar structures for the other two validators */</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The key properties are <code class="docutils literal notranslate"><span class="pre">numRoundsCollected</span></code>, indicating how many rounds the validator was active for, and <code class="docutils literal notranslate"><span class="pre">lastCollectedInRound</span></code>, which is a close approximation for how recently the validator was in operation.</p>
+<p>The output order does not necessarily match the input order; use the <code class="docutils literal notranslate"><span class="pre">validator</span></code> property to correlate multiple-validator requests.</p>
+</section>
 <section id="dso-info">
 <h2>DSO Info<a class="headerlink" href="#dso-info" title="Link to this heading"></a></h2>
+<p>The DSO coordinates its operations around a set of on-ledger contracts.
+These contracts change over time, so retrieving the latest copies of the contracts is the only effective way to check the current rules for interacting with the DSO-controlled aspects of a Splice network.
+Fetching the <a class="reference external" href="scan_openapi.html#get--v0-dso">/v0/dso</a> endpoint simply returns all of this information, mostly in Daml contract JSON format.</p>
+<p>Here’s an example:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;sv_user&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;bUfFRpl2tEfZBB7wzIo9iRNGTj8wMeIn@clients&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;sv_party_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;DA-Helm-Test-Node::12201094994818f3b4a165f4b391736a9c2f7c5f4ee926b5a3179cc224fe47cc92f3&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;dso_party_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;DSO::122084177677350389dd0710d6516f700a33fe348c5f2702dffef6d36e1dedcbfc17&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;voting_threshold&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;latest_mining_round&quot;</span><span class="p">:</span><span class="w"> </span><span class="cm">/* OpenMiningRound Daml contract */</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;amulet_rules&quot;</span><span class="p">:</span><span class="w"> </span><span class="cm">/* AmuletRules Daml contract */</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;dso_rules&quot;</span><span class="p">:</span><span class="w"> </span><span class="cm">/* DsoRules Daml contract */</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;sv_node_states&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="cm">/* several SvNodeState contracts, one for each SV */</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In most use cases, the <code class="docutils literal notranslate"><span class="pre">amulet_rules</span></code>, <code class="docutils literal notranslate"><span class="pre">latest_mining_round</span></code>, and <code class="docutils literal notranslate"><span class="pre">dso_rules</span></code> will be the most interesting properties; the former two for interacting with Amulet, and the latter for checking scheduled network rule changes.
+Consult their respective Daml templates for details on included data.</p>
 </section>
 </section>
 

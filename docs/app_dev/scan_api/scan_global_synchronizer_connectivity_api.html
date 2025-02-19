@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.12-ci-snapshot.20250218.1.0.v18864c45
+                0.3.12-ci-snapshot.20250218.1.0.v49937100
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -430,6 +430,7 @@
 <li class="toctree-l4"><a class="reference internal" href="scan_bulk_data_api.html#acs-snapshots">ACS Snapshots</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="scan_bulk_data_api.html#get-v0-state-acs-snapshot-timestamp">GET /v0/state/acs/snapshot-timestamp</a></li>
 <li class="toctree-l5"><a class="reference internal" href="scan_bulk_data_api.html#post-v0-state-acs">POST /v0/state/acs</a></li>
+<li class="toctree-l5"><a class="reference internal" href="scan_bulk_data_api.html#post-v0-state-acs-force">POST /v0/state/acs/force</a></li>
 </ul>
 </li>
 </ul>
@@ -449,9 +450,11 @@
 <li class="toctree-l3"><a class="reference internal" href="#listing-all-sv-scans">Listing all SV Scans</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#listing-all-sv-sequencers">Listing all SV Sequencers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#listing-all-validators">Listing all Validators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#parties-hosting-participants">Parties’ Hosting Participants</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="scan_global_synchronizer_operations_api.html">Scan Global Synchronizer Operations API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_operations_api.html#validator-liveness">Validator Liveness</a></li>
 <li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_operations_api.html#dso-info">DSO Info</a></li>
 </ul>
 </li>
@@ -459,7 +462,9 @@
 <li class="toctree-l3"><a class="reference internal" href="scan_cc_reference_data_api.html#dso-party-id">DSO party ID</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="scan_current_state_api.html">Scan API for Current state of CC, CNS, and Synchronizer Traffic</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="scan_current_state_api.html">Scan API for Current state of CC and Synchronizer Traffic</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scan_current_state_api.html#validator-traffic-credits-and-purchases">Validator Traffic Credits and Purchases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scan_current_state_api.html#open-mining-rounds">Open Mining Rounds</a></li>
 <li class="toctree-l3"><a class="reference internal" href="scan_current_state_api.html#closed-mining-rounds">Closed Mining Rounds</a></li>
 </ul>
 </li>
@@ -881,11 +886,11 @@ For example, query from <a class="reference external" href="|gsf_scan_url|/api/s
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>As <code class="docutils literal notranslate"><span class="pre">svName</span></code> is the same as the <code class="docutils literal notranslate"><span class="pre">svName</span></code> in <code class="docutils literal notranslate"><span class="pre">/v0/scans</span></code>, it can be used to join the results of these endpoints, if necessary.
+<p>As <code class="docutils literal notranslate"><span class="pre">svName</span></code> is the same as the <code class="docutils literal notranslate"><span class="pre">svName</span></code> in <a class="reference internal" href="#listing-all-sv-scans">Listing all SV Scans</a>, it can be used to join the results of these endpoints, if necessary.
 <code class="docutils literal notranslate"><span class="pre">url</span></code> is the base URL of that SV’s sequencer.</p>
 </section>
 <section id="listing-all-validators">
-<h2>Listing all Validators<a class="headerlink" href="#listing-all-validators" title="Link to this heading"></a></h2>
+<span id="id2"></span><h2>Listing all Validators<a class="headerlink" href="#listing-all-validators" title="Link to this heading"></a></h2>
 <p>Every validator approved on the network has a “license” on the ledger.
 The <a class="reference external" href="|gsf_scan_url|/api/scan/v0/admin/validator/licenses">/v0/admin/validator/licenses</a> endpoint lists all of these in the form of <code class="docutils literal notranslate"><span class="pre">Splice.ValidatorLicense:ValidatorLicense</span></code> Daml contracts.
 These include:</p>
@@ -939,6 +944,17 @@ the sequence of pages terminates with an absent or null token as follows:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;validator_licenses&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
 <span class="w">  </span><span class="nt">&quot;next_page_token&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="parties-hosting-participants">
+<h2>Parties’ Hosting Participants<a class="headerlink" href="#parties-hosting-participants" title="Link to this heading"></a></h2>
+<p>In any Canton deployment, <a class="reference external" href="https://docs.daml.com/canton/architecture/overview.html#synchronization-domain-entities">each party is hosted on a participant</a>.
+This can be accessed through Scan with <a class="reference external" href="scan_openapi.html#get--v0-domains-domain_id-parties-party_id-participant-id">/v0/domains/{domain_id}/parties/{party_id}/participant-id</a>.</p>
+<p>For example, looking up <a class="reference external" href="|gsf_scan_url|/api/scan/v0/domains/global-domain::122084177677350389dd0710d6516f700a33fe348c5f2702dffef6d36e1dedcbfc17/parties/digitalasset-testValidator-1::1220e92bbc9d80cb6e283184017b307b9f44f23d32d7d195cdbcac033ae91eac2f28/participant-id">/v0/domains/global-domain::122084177677350389dd0710d6516f700a33fe348c5f2702dffef6d36e1dedcbfc17/parties/digitalasset-testValidator-1::1220e92bbc9d80cb6e283184017b307b9f44f23d32d7d195cdbcac033ae91eac2f28/participant-id</a> on a test network yields</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;participant_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;PAR::validator-runbook::1220e92bbc9d80cb6e283184017b307b9f44f23d32d7d195cdbcac033ae91eac2f28&quot;</span>
 <span class="p">}</span>
 </pre></div>
 </div>

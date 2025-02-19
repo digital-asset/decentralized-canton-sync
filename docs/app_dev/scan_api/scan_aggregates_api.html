@@ -26,7 +26,7 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Scan Open API Reference" href="scan_openapi.html" />
-    <link rel="prev" title="Scan API for Current state of CC, CNS, and Synchronizer Traffic" href="scan_current_state_api.html" /> 
+    <link rel="prev" title="Scan API for Current state of CC and Synchronizer Traffic" href="scan_current_state_api.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.12-ci-snapshot.20250218.1.0.v18864c45
+                0.3.12-ci-snapshot.20250218.1.0.v49937100
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -430,6 +430,7 @@
 <li class="toctree-l4"><a class="reference internal" href="scan_bulk_data_api.html#acs-snapshots">ACS Snapshots</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="scan_bulk_data_api.html#get-v0-state-acs-snapshot-timestamp">GET /v0/state/acs/snapshot-timestamp</a></li>
 <li class="toctree-l5"><a class="reference internal" href="scan_bulk_data_api.html#post-v0-state-acs">POST /v0/state/acs</a></li>
+<li class="toctree-l5"><a class="reference internal" href="scan_bulk_data_api.html#post-v0-state-acs-force">POST /v0/state/acs/force</a></li>
 </ul>
 </li>
 </ul>
@@ -449,9 +450,11 @@
 <li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html#listing-all-sv-scans">Listing all SV Scans</a></li>
 <li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html#listing-all-sv-sequencers">Listing all SV Sequencers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html#listing-all-validators">Listing all Validators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_connectivity_api.html#parties-hosting-participants">Parties’ Hosting Participants</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="scan_global_synchronizer_operations_api.html">Scan Global Synchronizer Operations API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_operations_api.html#validator-liveness">Validator Liveness</a></li>
 <li class="toctree-l3"><a class="reference internal" href="scan_global_synchronizer_operations_api.html#dso-info">DSO Info</a></li>
 </ul>
 </li>
@@ -459,7 +462,9 @@
 <li class="toctree-l3"><a class="reference internal" href="scan_cc_reference_data_api.html#dso-party-id">DSO party ID</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="scan_current_state_api.html">Scan API for Current state of CC, CNS, and Synchronizer Traffic</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="scan_current_state_api.html">Scan API for Current state of CC and Synchronizer Traffic</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scan_current_state_api.html#validator-traffic-credits-and-purchases">Validator Traffic Credits and Purchases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scan_current_state_api.html#open-mining-rounds">Open Mining Rounds</a></li>
 <li class="toctree-l3"><a class="reference internal" href="scan_current_state_api.html#closed-mining-rounds">Closed Mining Rounds</a></li>
 </ul>
 </li>
@@ -821,7 +826,7 @@
 <section id="amulet-summaries">
 <h2>Amulet Summaries<a class="headerlink" href="#amulet-summaries" title="Link to this heading"></a></h2>
 <p>While it’s possible to figure total Amulet balance from the <a class="reference internal" href="scan_bulk_data_api.html#scan-bulk-data-api"><span class="std std-ref">Scan Bulk Data API</span></a>, figuring the effect of holding fees can be tricky for a new Splice app unfamiliar with the on-ledger data model of Amulet.</p>
-<p>With a valid time from <a class="reference internal" href="scan_bulk_data_api.html#id6"><span class="std std-ref">GET /v0/state/acs/snapshot-timestamp</span></a>, knowing the latest migration ID, and one or more party IDs to look up Amulet holdings for, Scan will gather Amulet statistics for each matching party and yield them.
+<p>With a valid time from <a class="reference internal" href="scan_bulk_data_api.html#id7"><span class="std std-ref">GET /v0/state/acs/snapshot-timestamp</span></a>, knowing the latest migration ID, and one or more party IDs to look up Amulet holdings for, Scan will gather Amulet statistics for each matching party and yield them.
 Here’s an example payload passed to <a class="reference external" href="|gsf_scan_url|/api/scan/v0/holdings/summary">/v0/holdings/summary</a> on a test network:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;migration_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span>
@@ -898,7 +903,7 @@ Repeating the request for <a class="reference internal" href="#amulet-summaries"
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>This response is in the same format as <a class="reference internal" href="scan_bulk_data_api.html#id7"><span class="std std-ref">POST /v0/state/acs</span></a> but is restricted to contracts of Daml templates <code class="docutils literal notranslate"><span class="pre">Amulet</span></code> and <code class="docutils literal notranslate"><span class="pre">LockedAmulet</span></code>.</p>
+<p>This response is in the same format as <a class="reference internal" href="scan_bulk_data_api.html#id8"><span class="std std-ref">POST /v0/state/acs</span></a> but is restricted to contracts of Daml templates <code class="docutils literal notranslate"><span class="pre">Amulet</span></code> and <code class="docutils literal notranslate"><span class="pre">LockedAmulet</span></code>.</p>
 </section>
 <section id="looking-up-ans-entries">
 <h2>Looking up ANS Entries<a class="headerlink" href="#looking-up-ans-entries" title="Link to this heading"></a></h2>
@@ -943,7 +948,7 @@ Here’s a more ordinary response yielded by changing the prefix to <code class=
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="scan_current_state_api.html" class="btn btn-neutral float-left" title="Scan API for Current state of CC, CNS, and Synchronizer Traffic" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="scan_current_state_api.html" class="btn btn-neutral float-left" title="Scan API for Current state of CC and Synchronizer Traffic" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="scan_openapi.html" class="btn btn-neutral float-right" title="Scan Open API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
