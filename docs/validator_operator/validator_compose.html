@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.12-ci-snapshot.20250219.1.0.v6d386d99
+                0.3.12-ci-snapshot.20250219.1.0.ve3a50dd1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -420,7 +420,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../app_dev/scan_api/scan_bulk_data_api.html">Scan Bulk Data API</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../app_dev/scan_api/scan_bulk_data_api.html#open-api-specification">Open API Specification</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../app_dev/scan_api/scan_bulk_data_api.html#updates">Updates</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="../app_dev/scan_api/scan_bulk_data_api.html#post-v1-updates">POST /v1/updates</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/scan_api/scan_bulk_data_api.html#id2">POST /v1/updates</a><ul>
 <li class="toctree-l6"><a class="reference internal" href="../app_dev/scan_api/scan_bulk_data_api.html#exercised-event">Exercised Event</a></li>
 <li class="toctree-l6"><a class="reference internal" href="../app_dev/scan_api/scan_bulk_data_api.html#created-event">Created Event</a></li>
 </ul>
@@ -428,8 +428,8 @@
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="../app_dev/scan_api/scan_bulk_data_api.html#acs-snapshots">ACS Snapshots</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="../app_dev/scan_api/scan_bulk_data_api.html#get-v0-state-acs-snapshot-timestamp">GET /v0/state/acs/snapshot-timestamp</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../app_dev/scan_api/scan_bulk_data_api.html#post-v0-state-acs">POST /v0/state/acs</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/scan_api/scan_bulk_data_api.html#v0-state-acs-snapshot-timestamp">GET /v0/state/acs/snapshot-timestamp</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../app_dev/scan_api/scan_bulk_data_api.html#v0-state-acs">POST /v0/state/acs</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../app_dev/scan_api/scan_bulk_data_api.html#post-v0-state-acs-force">POST /v0/state/acs/force</a></li>
 </ul>
 </li>
@@ -874,9 +874,9 @@ jq-1.7.1
 (contact your sponsor SV to obtain access), or have a static egress IP address.
 In the latter case, please provide that IP address to your sponsor SV to
 add it to the firewall rules.</p></li>
-<li><p>Please download the release artifacts containing the docker-compose files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.12-ci-snapshot.20250219.1.0.v6d386d99_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
+<li><p>Please download the release artifacts containing the docker-compose files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.12-ci-snapshot.20250219.1.0.ve3a50dd1_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
 </ol>
-<pre class="literal-block">tar xzvf 0.3.12-ci-snapshot.20250219.1.0.v6d386d99_splice-node.tar.gz</pre>
+<pre class="literal-block">tar xzvf 0.3.12-ci-snapshot.20250219.1.0.ve3a50dd1_splice-node.tar.gz</pre>
 </section>
 <section id="required-network-parameters">
 <h2>Required Network Parameters<a class="headerlink" href="#required-network-parameters" title="Link to this heading"></a></h2>
@@ -912,7 +912,7 @@ calling the following endpoint on any SV (replace <code class="docutils literal 
 </pre></div>
 </div>
 <ol class="arabic simple" start="2">
-<li><p>Export the current version to an environment variable: <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">IMAGE_TAG=0.3.12-ci-snapshot.20250219.1.0.v6d386d99</span></code></p></li>
+<li><p>Export the current version to an environment variable: <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">IMAGE_TAG=0.3.12-ci-snapshot.20250219.1.0.ve3a50dd1</span></code></p></li>
 <li><p>Run the following command to start the validator node, and wait for it to become ready (could take a few minutes):</p></li>
 </ol>
 <blockquote>

@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.12-ci-snapshot.20250219.1.0.v6d386d99
+                0.3.12-ci-snapshot.20250219.1.0.ve3a50dd1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -420,7 +420,7 @@
 <li class="toctree-l2"><a class="reference internal" href="scan_bulk_data_api.html">Scan Bulk Data API</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="scan_bulk_data_api.html#open-api-specification">Open API Specification</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="scan_bulk_data_api.html#updates">Updates</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="scan_bulk_data_api.html#post-v1-updates">POST /v1/updates</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="scan_bulk_data_api.html#id2">POST /v1/updates</a><ul>
 <li class="toctree-l6"><a class="reference internal" href="scan_bulk_data_api.html#exercised-event">Exercised Event</a></li>
 <li class="toctree-l6"><a class="reference internal" href="scan_bulk_data_api.html#created-event">Created Event</a></li>
 </ul>
@@ -428,8 +428,8 @@
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="scan_bulk_data_api.html#acs-snapshots">ACS Snapshots</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="scan_bulk_data_api.html#get-v0-state-acs-snapshot-timestamp">GET /v0/state/acs/snapshot-timestamp</a></li>
-<li class="toctree-l5"><a class="reference internal" href="scan_bulk_data_api.html#post-v0-state-acs">POST /v0/state/acs</a></li>
+<li class="toctree-l5"><a class="reference internal" href="scan_bulk_data_api.html#v0-state-acs-snapshot-timestamp">GET /v0/state/acs/snapshot-timestamp</a></li>
+<li class="toctree-l5"><a class="reference internal" href="scan_bulk_data_api.html#v0-state-acs">POST /v0/state/acs</a></li>
 <li class="toctree-l5"><a class="reference internal" href="scan_bulk_data_api.html#post-v0-state-acs-force">POST /v0/state/acs/force</a></li>
 </ul>
 </li>
@@ -834,6 +834,9 @@ Examples of such third-party apps are network analytic apps, block explorer apps
 <p>The Scan App subscribes to the SV participant as the DSO (Decentralized Synchronizer Operations) Daml party, so it only observes sub transactions that involve that party.
 This includes CC (Canton Coin) transfers and governance operations but excludes most other things.
 In particular, any custom Daml app that does not interact with CC will be excluded.</p>
+<p>You can directly connect to a Scan API hosted by a single SV, or you can read from multiple Scan APIs and compare the results.</p>
+<p>The validator node contains a <a class="reference internal" href="../validator_api/index.html#validator-api-scan-proxy"><span class="std std-ref">Scan Proxy API</span></a> that
+provides <a class="reference internal" href="../../glossary.html#term-BFT"><span class="xref std std-term">BFT</span></a> reads to Scan APIs hosted by Super Validators.</p>
 <p>The Scan API is grouped in the following categories:</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="scan_bulk_data_api.html#scan-bulk-data-api"><span class="std std-ref">Scan Bulk Data API</span></a>: A comprehensive API that provides access to the exact and full history of updates and ACS snapshots as recorded on the SV participant node.</p></li>

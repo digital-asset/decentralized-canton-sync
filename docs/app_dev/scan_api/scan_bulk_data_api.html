@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.12-ci-snapshot.20250219.1.0.v6d386d99
+                0.3.12-ci-snapshot.20250219.1.0.ve3a50dd1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -420,7 +420,7 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Scan Bulk Data API</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#open-api-specification">Open API Specification</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#updates">Updates</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="#post-v1-updates">POST /v1/updates</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#id2">POST /v1/updates</a><ul>
 <li class="toctree-l6"><a class="reference internal" href="#exercised-event">Exercised Event</a></li>
 <li class="toctree-l6"><a class="reference internal" href="#created-event">Created Event</a></li>
 </ul>
@@ -428,8 +428,8 @@
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="#acs-snapshots">ACS Snapshots</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="#get-v0-state-acs-snapshot-timestamp">GET /v0/state/acs/snapshot-timestamp</a></li>
-<li class="toctree-l5"><a class="reference internal" href="#post-v0-state-acs">POST /v0/state/acs</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#v0-state-acs-snapshot-timestamp">GET /v0/state/acs/snapshot-timestamp</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#v0-state-acs">POST /v0/state/acs</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#post-v0-state-acs-force">POST /v0/state/acs/force</a></li>
 </ul>
 </li>
@@ -865,9 +865,35 @@ which gets described further in <a class="reference external" href="https://docs
 </div>
 <section id="open-api-specification">
 <h2>Open API Specification<a class="headerlink" href="#open-api-specification" title="Link to this heading"></a></h2>
-<p>Please see the Scan <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/08fc692cf2952a52cce00473793d1dca08c0fba5/apps/scan/src/main/openapi/scan-internal.yaml">Open API specification</a>.
-Look for APIs starting with <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/7345124f9f05395ab4797c0478c7e1dd37186369/apps/scan/src/main/openapi/scan-internal.yaml#L511">/v1/updates/</a>
-and <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/7345124f9f05395ab4797c0478c7e1dd37186369/apps/scan/src/main/openapi/scan-internal.yaml#L603">/v0/state/</a>, respectively for updates and ACS snapshots.</p>
+<p>The <a class="reference internal" href="scan_openapi.html#scan-openapi"><span class="std std-ref">Scan Open API Reference</span></a> describes the Scan API in detail.
+The below table provides a quick overview of the endpoints that the Scan Bulk Data API consists of:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 75.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Endpoint</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference external" href="scan_openapi.html#post--v1-updates">POST /v1/updates</a></p></td>
+<td><p>Returns the update history</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="scan_openapi.html#get--v0-updates-update_id">GET /v0/updates/{update_id}</a></p></td>
+<td><p>Returns the update with the given update_id</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="scan_openapi.html#get--v0-state-acs-snapshot-timestamp">GET /v0/state/acs/snapshot-timestamp</a></p></td>
+<td><p>Returns the timestamp of the most recent snapshot</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="scan_openapi.html#post--v0-state-acs">POST /v0/state/acs</a></p></td>
+<td><p>Returns the ACS Snapshot for a given record time</p></td>
+</tr>
+</tbody>
+</table>
+<p>If you would rather read the yaml Open API specification file directly, this can be found in the Splice repository at
+<a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/08fc692cf2952a52cce00473793d1dca08c0fba5/apps/scan/src/main/openapi/scan-internal.yaml">scan-internal.yaml</a>.</p>
 <p>Example URLs for accessing the Scan Bulk Data API are:</p>
 <ul class="simple">
 <li><p><span class="raw-html">https://scan.sv-1.<span class="splice-url-prefix">unknown_cluster.</span>global.canton.network.sync.global</span>/api/scan/v1/updates</p></li>
@@ -884,14 +910,11 @@ Exercises can have child events, which results in a tree structure.</p></li>
 They will begin to appear in the update stream as the global synchronizer introduces rolling upgrades later in 2025 or early 2026;
 for this reason we’ll omit further details for now, you can safely ignore reassignments and only handle transactions.</p></li>
 </ul>
-<p><a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/7345124f9f05395ab4797c0478c7e1dd37186369/apps/scan/src/main/openapi/scan-internal.yaml#L511">/v1/updates</a>
+<p><a class="reference external" href="scan_openapi.html#post--v1-updates">/v1/updates</a>
 provides a JSON encoded version of the recorded update history. Once you have an <code class="docutils literal notranslate"><span class="pre">update_id</span></code> for a specific update, you can retrieve the details by using
-<a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/7345124f9f05395ab4797c0478c7e1dd37186369/apps/scan/src/main/openapi/scan-internal.yaml#L571">/v1/updates/{update_id}</a>.</p>
-<p>The Open API spec for <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/7345124f9f05395ab4797c0478c7e1dd37186369/apps/scan/src/main/openapi/scan-internal.yaml#L511">/v1/updates</a>
-and <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/7345124f9f05395ab4797c0478c7e1dd37186369/apps/scan/src/main/openapi/scan-internal.yaml#L571">/v1/updates/{update_id}</a>
-describe the APIs in detail.</p>
-<section id="post-v1-updates">
-<span id="id6"></span><h4>POST /v1/updates<a class="headerlink" href="#post-v1-updates" title="Link to this heading"></a></h4>
+<a class="reference external" href="scan_openapi.html#get--v0-updates-update_id">/v0/updates/{update_id}</a>.</p>
+<section id="id2">
+<span id="id3"></span><h4>POST /v1/updates<a class="headerlink" href="#id2" title="Link to this heading"></a></h4>
 <p>Post a paged <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/7345124f9f05395ab4797c0478c7e1dd37186369/apps/scan/src/main/openapi/scan-internal.yaml#L1672">UpdateHistoryRequestV1</a>
 request to get all updates up to <code class="docutils literal notranslate"><span class="pre">page_size</span></code>, optionally specifying an <code class="docutils literal notranslate"><span class="pre">after</span></code> object with <code class="docutils literal notranslate"><span class="pre">after_migration_id</span></code> and <code class="docutils literal notranslate"><span class="pre">after_record_time</span></code> fields.
 (for the beginning of the network you can omit the <code class="docutils literal notranslate"><span class="pre">after</span></code> field).
@@ -1119,15 +1142,32 @@ which you can map against the template definitions in Daml source code and the <
 </section>
 <section id="acs-snapshots">
 <h3>ACS Snapshots<a class="headerlink" href="#acs-snapshots" title="Link to this heading"></a></h3>
-<p>The <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/7345124f9f05395ab4797c0478c7e1dd37186369/apps/scan/src/main/openapi/scan-internal.yaml">Open API spec</a>
-for <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/7345124f9f05395ab4797c0478c7e1dd37186369/apps/scan/src/main/openapi/scan-internal.yaml#L603">/v0/state/acs/snapshot-timestamp</a>
-and <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/7345124f9f05395ab4797c0478c7e1dd37186369/apps/scan/src/main/openapi/scan-internal.yaml#L642">/v0/state/acs</a> describes the APIs in detail.</p>
+<p>The <a class="reference internal" href="scan_openapi.html#scan-openapi"><span class="std std-ref">Scan Open API Reference</span></a> describes the relevant APIs for ACS Snapshots in detail, which are shown in the table below:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 75.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Endpoint</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference external" href="scan_openapi.html#get--v0-state-acs-snapshot-timestamp">GET /v0/state/acs/snapshot-timestamp</a></p></td>
+<td><p>Returns the timestamp of the most recent snapshot</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="scan_openapi.html#post--v0-state-acs">POST /v0/state/acs</a></p></td>
+<td><p>Returns the ACS Snapshot for a given record time</p></td>
+</tr>
+</tbody>
+</table>
 <p>The ACS snapshots are periodically taken and stored in the Scan App. This endpoint only provides the snapshots that have been periodically taken.
 You can compute the state at any point in time by starting from a periodic snapshot and
 then stream updates from the timestamp of that snapshot. We’ll discuss this in more detail in the <a class="reference internal" href="#scan-txlog-script">Scan TxLog Script</a> section.</p>
-<section id="get-v0-state-acs-snapshot-timestamp">
-<span id="id7"></span><h4>GET /v0/state/acs/snapshot-timestamp<a class="headerlink" href="#get-v0-state-acs-snapshot-timestamp" title="Link to this heading"></a></h4>
-<p>The <code class="docutils literal notranslate"><span class="pre">/v0/state/acs/snapshot-timestamp</span></code> endpoint returns the timestamp of the most recent snapshot before the given date,
+<section id="v0-state-acs-snapshot-timestamp">
+<span id="id6"></span><h4>GET /v0/state/acs/snapshot-timestamp<a class="headerlink" href="#v0-state-acs-snapshot-timestamp" title="Link to this heading"></a></h4>
+<p>The <a class="reference external" href="scan_openapi.html#get--v0-state-acs-snapshot-timestamp">/v0/state/acs/snapshot-timestamp</a> endpoint returns the timestamp of the most recent snapshot before the given date,
 for the given <code class="docutils literal notranslate"><span class="pre">migration_id</span></code>. Specify <code class="docutils literal notranslate"><span class="pre">migration_id</span> <span class="pre">=</span> <span class="pre">0</span></code> for the beginning of the network.
 The returned timestamp corresponds to the record time of the last transaction in the snapshot.</p>
 <p>An example request to get the timestamp of the most recent snapshot before a given date is shown below:</p>
@@ -1139,9 +1179,9 @@ The returned timestamp corresponds to the record time of the last transaction in
 </pre></div>
 </div>
 </section>
-<section id="post-v0-state-acs">
-<span id="id8"></span><h4>POST /v0/state/acs<a class="headerlink" href="#post-v0-state-acs" title="Link to this heading"></a></h4>
-<p>The <code class="docutils literal notranslate"><span class="pre">/v0/state/acs</span></code> endpoint returns the ACS in creation date ascending order, paged, for a given migration id and record time.
+<section id="v0-state-acs">
+<span id="id8"></span><h4>POST /v0/state/acs<a class="headerlink" href="#v0-state-acs" title="Link to this heading"></a></h4>
+<p>The <a class="reference external" href="scan_openapi.html#post--v0-state-acs">/v0/state/acs</a> endpoint returns the ACS in creation date ascending order, paged, for a given migration id and record time.
 Post an <code class="docutils literal notranslate"><span class="pre">AcsRequest</span></code> with a <code class="docutils literal notranslate"><span class="pre">migration_id</span></code>, <code class="docutils literal notranslate"><span class="pre">record_time</span></code> and <code class="docutils literal notranslate"><span class="pre">page_size</span></code> to get a page of contracts.
 An optional <code class="docutils literal notranslate"><span class="pre">templates</span></code> field filters the ACS by a set of <code class="docutils literal notranslate"><span class="pre">template_id</span></code>s.</p>
 <p>An example request body of type <code class="docutils literal notranslate"><span class="pre">AcsRequest</span></code> to get a page of ACS snapshots is shown below:</p>
@@ -1201,8 +1241,8 @@ A <code class="docutils literal notranslate"><span class="pre">created_event</sp
 <p class="admonition-title">Note</p>
 <p>This is a <strong>development environment only</strong> endpoint, and is unavailable in production environments.</p>
 </div>
-<p>During testing, the <a class="reference internal" href="#id7"><span class="std std-ref">last snapshot timestamp</span></a> can be inconveniently old.
-A production app must be able to deal with this by using <a class="reference internal" href="#id6"><span class="std std-ref">POST /v1/updates</span></a>, but an app’s ability to deal with data in the snapshot is important too.
+<p>During testing, the <a class="reference internal" href="#v0-state-acs-snapshot-timestamp"><span class="std std-ref">last snapshot timestamp</span></a> can be inconveniently old.
+A production app must be able to deal with this by using <a class="reference internal" href="#id2"><span class="std std-ref">POST /v1/updates</span></a>, but an app’s ability to deal with data in the snapshot is important too.
 Therefore, on properly-configured testing Scans, <a class="reference external" href="scan_openapi.html#post--v0-state-acs-force">/v0/state/acs/force</a> will cause Scan to immediately snapshot the ACS, returning the new snapshot time in the <code class="docutils literal notranslate"><span class="pre">record_time</span></code> property.
 But most environments will return an error, as this endpoint is disabled.</p>
 </section>
@@ -1314,7 +1354,7 @@ If the <code class="docutils literal notranslate"><span class="pre">exercised_ev
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>To build up an ACS snapshot for any <code class="docutils literal notranslate"><span class="pre">record_time</span></code>, first
-get a periodic snapshot using the <code class="docutils literal notranslate"><span class="pre">/v0/state/acs</span></code> endpoint, store the ACS in a dictionary keyed by <code class="docutils literal notranslate"><span class="pre">contract_id</span></code>
+get a periodic snapshot using the <a class="reference external" href="scan_openapi.html#post--v0-state-acs">/v0/state/acs</a> endpoint, store the ACS in a dictionary keyed by <code class="docutils literal notranslate"><span class="pre">contract_id</span></code>
 and then process the updates from the timestamp of that snapshot via the <code class="docutils literal notranslate"><span class="pre">/v1/updates</span></code>, adding
 <code class="docutils literal notranslate"><span class="pre">created_event</span></code>s to the dictionary under its <code class="docutils literal notranslate"><span class="pre">contract_id</span></code> key and
 remove the contract from the dictionary by <code class="docutils literal notranslate"><span class="pre">contract_id</span></code> if <code class="docutils literal notranslate"><span class="pre">exercised_event</span></code>s are consuming.</p>
