@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.13-ci-snapshot.20250220.1.0.vca5f5011
+                0.3.13-ci-snapshot.20250220.1.0.vc55451d7
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -390,6 +390,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#insufficient-funds-to-buy-configured-traffic-amount">Insufficient funds to buy configured traffic amount</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#gave-up-getting-app-version">Gave up getting app version</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#unauthenticated-errors-in-validator-sv-and-scan-app">UNAUTHENTICATED errors in validator, sv and scan app</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#node-has-identity-x-but-identifier-y-was-expected">Node has identity X, but identifier Y was expected</a></li>
 </ul>
 </li>
 </ul>
@@ -926,6 +927,30 @@ indicates an authenitcation error on the connection to the
 participant. Check the participant logs which will contain more
 details on why the request got rejected.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="m">2025</span>-02-14T11:32:00.304Z<span class="w"> </span><span class="o">[</span>⋮<span class="o">]</span><span class="w"> </span>INFO<span class="w"> </span>-<span class="w"> </span>o.l.s.v.ValidatorApp:validator<span class="o">=</span>validator_backend<span class="w"> </span><span class="o">(</span>50836441bf579035d64a56f776566cbf<span class="o">)</span><span class="w"> </span>-<span class="w"> </span>The<span class="w"> </span>operation<span class="w"> </span><span class="s1">&#39;Get user 7D95xiEUxju4IUXFQgyUrwHMMuZO0g2F@clients&#39;</span><span class="w"> </span>failed<span class="w"> </span>with<span class="w"> </span>a<span class="w"> </span>retryable<span class="w"> </span>error<span class="w"> </span><span class="o">(</span>full<span class="w"> </span>stack<span class="w"> </span>trace<span class="w"> </span>omitted<span class="o">)</span>:<span class="w"> </span>UNAUTHENTICATED:<span class="w"> </span>An<span class="w"> </span>error<span class="w"> </span>occurred.<span class="w"> </span>Please<span class="w"> </span>contact<span class="w"> </span>the<span class="w"> </span>operator<span class="w"> </span>and<span class="w"> </span>inquire<span class="w"> </span>about<span class="w"> </span>the<span class="w"> </span>request<span class="w"> </span>efd009557dec03da74dd29b723949cd6<span class="w"> </span>with<span class="w"> </span>tid<span class="w"> </span>efd009557dec03da74dd29b723949cd6
+</pre></div>
+</div>
+</section>
+<section id="node-has-identity-x-but-identifier-y-was-expected">
+<h3>Node has identity X, but identifier Y was expected<a class="headerlink" href="#node-has-identity-x-but-identifier-y-was-expected" title="Link to this heading"></a></h3>
+<p>A log of the form below in the validator or SV app indicates that you
+tried to change the identifier used for your participant (or for SVs
+sequencer, mediator) after it was already initialized.  Note that for
+validators the node identifier defaults to your <code class="docutils literal notranslate"><span class="pre">validatorPartyHint</span></code>
+so changing that also produces this error. For SVs it defaults to the
+SV name.  If this is a new node, the easiest option is to reset your
+node by dropping the respective databases of the participant and
+validator or for SVs sequencer, participant, mediator, validator, sv
+and scan app. After you dropped the databases bring up your node
+again.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This deletes all data on your node and you cannot
+recover it. Only run this on fresh nodes that never
+successfully initialized.</p>
+</div>
+<p>If this is not a new node, change
+the values back to what you had before.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>│Caused<span class="w"> </span>by:<span class="w"> </span>io.grpc.StatusRuntimeException:<span class="w"> </span>INTERNAL:<span class="w"> </span>Node<span class="w"> </span>has<span class="w"> </span>identity<span class="w"> </span>a-b-c-1::122098ffcd99...,<span class="w"> </span>but<span class="w"> </span>identifier<span class="w"> </span>a-b-1<span class="w"> </span>was<span class="w"> </span>expected.<span class="w">                </span>│
 </pre></div>
 </div>
 </section>
