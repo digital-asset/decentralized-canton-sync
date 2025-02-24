@@ -25,7 +25,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Monitoring and Observability" href="observability/index.html" />
+    <link rel="next" title="Synchronizer Traffic Fees" href="traffic.html" />
     <link rel="prev" title="How to Bootstrap a Network" href="../sv_operator/sv_scratchnet.html" /> 
 </head>
 
@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.13-ci-snapshot.20250224.1.0.v47070364
+                0.3.13-ci-snapshot.20250224.1.0.vfd348818
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -293,6 +293,15 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_operations.html#updating-the-reward-weight-of-an-sv">Updating the reward weight of an SV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_operations.html#determining-good-synchronizer-traffic-parameters">Determining good synchronizer traffic parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_operations.html#determining-the-cost-of-a-single-cc-transfer">Determining the cost of a single CC transfer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_operations.html#considerations-around-the-read-scaling-factor">Considerations around the read scaling factor</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_operations.html#lower-bound">Lower bound</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_operations.html#upper-bound">Upper bound</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../sv_operator/sv_scratchnet.html">How to Bootstrap a Network</a><ul>
@@ -307,6 +316,12 @@
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Operations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="traffic.html">Synchronizer Traffic Fees</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="traffic.html#traffic-accounting-what-counts-as-traffic">Traffic accounting; what counts as traffic?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="traffic.html#traffic-parameters">Traffic parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="traffic.html#traffic-top-ups-how-does-one-buy-traffic">Traffic top-ups; how does one “buy” traffic?</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="observability/index.html">Monitoring and Observability</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="observability/validator_health.html">Validator Health</a></li>
 <li class="toctree-l3"><a class="reference internal" href="observability/metrics.html">Metrics</a><ul>
@@ -709,6 +724,7 @@
 <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#upcoming">Upcoming</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id2">0.3.12</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id3">0.3.11</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id4">0.3.10</a></li>
@@ -824,6 +840,12 @@
 <h1>Operations<a class="headerlink" href="#operations" title="Link to this heading"></a></h1>
 <div class="toctree-wrapper compound">
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="traffic.html">Synchronizer Traffic Fees</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="traffic.html#traffic-accounting-what-counts-as-traffic">Traffic accounting; what counts as traffic?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic.html#traffic-parameters">Traffic parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traffic.html#traffic-top-ups-how-does-one-buy-traffic">Traffic top-ups; how does one “buy” traffic?</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="observability/index.html">Monitoring and Observability</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="observability/validator_health.html">Validator Health</a></li>
 <li class="toctree-l2"><a class="reference internal" href="observability/metrics.html">Metrics</a><ul>
@@ -921,7 +943,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../sv_operator/sv_scratchnet.html" class="btn btn-neutral float-left" title="How to Bootstrap a Network" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="observability/index.html" class="btn btn-neutral float-right" title="Monitoring and Observability" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="traffic.html" class="btn btn-neutral float-right" title="Synchronizer Traffic Fees" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

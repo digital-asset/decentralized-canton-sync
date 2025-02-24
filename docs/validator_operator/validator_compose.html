@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.13-ci-snapshot.20250224.1.0.v47070364
+                0.3.13-ci-snapshot.20250224.1.0.vfd348818
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -293,6 +293,15 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_operations.html#updating-the-reward-weight-of-an-sv">Updating the reward weight of an SV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_operations.html#determining-good-synchronizer-traffic-parameters">Determining good synchronizer traffic parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_operations.html#determining-the-cost-of-a-single-cc-transfer">Determining the cost of a single CC transfer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_operations.html#considerations-around-the-read-scaling-factor">Considerations around the read scaling factor</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_operations.html#lower-bound">Lower bound</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_operations.html#upper-bound">Upper bound</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../sv_operator/sv_scratchnet.html">How to Bootstrap a Network</a><ul>
@@ -307,6 +316,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment/index.html">Operations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../deployment/traffic.html">Synchronizer Traffic Fees</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../deployment/traffic.html#traffic-accounting-what-counts-as-traffic">Traffic accounting; what counts as traffic?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../deployment/traffic.html#traffic-parameters">Traffic parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../deployment/traffic.html#traffic-top-ups-how-does-one-buy-traffic">Traffic top-ups; how does one “buy” traffic?</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="../deployment/observability/index.html">Monitoring and Observability</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../deployment/observability/validator_health.html">Validator Health</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../deployment/observability/metrics.html">Metrics</a><ul>
@@ -709,6 +724,7 @@
 <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#upcoming">Upcoming</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id2">0.3.12</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id3">0.3.11</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id4">0.3.10</a></li>
@@ -875,9 +891,9 @@ jq-1.7.1
 (contact your sponsor SV to obtain access), or have a static egress IP address.
 In the latter case, please provide that IP address to your sponsor SV to
 add it to the firewall rules.</p></li>
-<li><p>Please download the release artifacts containing the docker-compose files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.13-ci-snapshot.20250224.1.0.v47070364_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
+<li><p>Please download the release artifacts containing the docker-compose files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.13-ci-snapshot.20250224.1.0.vfd348818_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
 </ol>
-<pre class="literal-block">tar xzvf 0.3.13-ci-snapshot.20250224.1.0.v47070364_splice-node.tar.gz</pre>
+<pre class="literal-block">tar xzvf 0.3.13-ci-snapshot.20250224.1.0.vfd348818_splice-node.tar.gz</pre>
 </section>
 <section id="required-network-parameters">
 <h2>Required Network Parameters<a class="headerlink" href="#required-network-parameters" title="Link to this heading"></a></h2>
@@ -913,7 +929,7 @@ calling the following endpoint on any SV (replace <code class="docutils literal 
 </pre></div>
 </div>
 <ol class="arabic simple" start="2">
-<li><p>Export the current version to an environment variable: <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">IMAGE_TAG=0.3.13-ci-snapshot.20250224.1.0.v47070364</span></code></p></li>
+<li><p>Export the current version to an environment variable: <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">IMAGE_TAG=0.3.13-ci-snapshot.20250224.1.0.vfd348818</span></code></p></li>
 <li><p>Run the following command to start the validator node, and wait for it to become ready (could take a few minutes):</p></li>
 </ol>
 <blockquote>

@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.13-ci-snapshot.20250224.1.0.v47070364
+                0.3.13-ci-snapshot.20250224.1.0.vfd348818
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -293,6 +293,15 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#updating-the-reward-weight-of-an-sv">Updating the reward weight of an SV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#determining-good-synchronizer-traffic-parameters">Determining good synchronizer traffic parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#determining-the-cost-of-a-single-cc-transfer">Determining the cost of a single CC transfer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#considerations-around-the-read-scaling-factor">Considerations around the read scaling factor</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#lower-bound">Lower bound</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#upper-bound">Upper bound</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="sv_scratchnet.html">How to Bootstrap a Network</a><ul>
@@ -307,6 +316,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment/index.html">Operations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../deployment/traffic.html">Synchronizer Traffic Fees</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../deployment/traffic.html#traffic-accounting-what-counts-as-traffic">Traffic accounting; what counts as traffic?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../deployment/traffic.html#traffic-parameters">Traffic parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../deployment/traffic.html#traffic-top-ups-how-does-one-buy-traffic">Traffic top-ups; how does one “buy” traffic?</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="../deployment/observability/index.html">Monitoring and Observability</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../deployment/observability/validator_health.html">Validator Health</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../deployment/observability/metrics.html">Metrics</a><ul>
@@ -709,6 +724,7 @@
 <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#upcoming">Upcoming</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id2">0.3.12</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id3">0.3.11</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id4">0.3.10</a></li>
@@ -877,7 +893,7 @@ For general information on Canton and Daml identities see the <a class="referenc
 <li><p>Quorums for confirmation-based DSO Daml workflows (&gt;⅔ of onboarded SVs; on DevNet instead usually &gt;½)</p></li>
 </ul>
 </li>
-<li><p>In general, participant identities <em>can’t</em> be reused on the same global domain,
+<li><p>In general, participant identities <em>can’t</em> be reused on the same global synchronizer,
 i.e., without the network being reset/redeployed.</p></li>
 <li><p>Loss of control over a participant namespace implies loss of control over the coin balances for all parties hosted under that namespace.
 On a network level, loss of a participant namespace constitutes an SV failure and reduces the overall fault tolerance buffer,
@@ -887,7 +903,7 @@ until the respective SV is offboarded from the DSO.</p></li>
 <section id="cometbft-node-identities">
 <h3>CometBFT node identities<a class="headerlink" href="#cometbft-node-identities" title="Link to this heading"></a></h3>
 <ul class="simple">
-<li><p>Used within the CometBFT network spanned by SVs for operating the global domain.
+<li><p>Used within the CometBFT network spanned by SVs for operating the global synchronizer.
 See <a class="reference internal" href="sv_helm.html#cometbft-identity"><span class="std std-ref">Generating your CometBft node keys</span></a>.</p></li>
 <li><p>The CometBFT validator key is used in CometBFT quorums (&gt;⅔ of SVs),
 which are required for advancing the CometBFT blockchain and changing the CometBFT configuration and validator set.</p></li>
@@ -921,6 +937,124 @@ and the SV will earn rewards according to the new weight moving forward.</p></li
 <li><p>Make sure that the changed reward is also reflected on <a class="reference external" href="https://github.com/global-synchronizer-foundation/configs">the configs repository</a>.
 Otherwise, the old value would become effective again in the event of an onboarding and reonboarding.</p></li>
 </ol>
+</section>
+<section id="determining-good-synchronizer-traffic-parameters">
+<span id="sv-determining-traffic-parameters"></span><h2>Determining good synchronizer traffic parameters<a class="headerlink" href="#determining-good-synchronizer-traffic-parameters" title="Link to this heading"></a></h2>
+<p>SVs are responsible for deciding on suitable <a class="reference internal" href="../deployment/traffic.html#traffic-parameters"><span class="std std-ref">synchronizer traffic parameters</span></a>.
+In the following we describe ways for determining good values for some of these parameters.</p>
+<section id="determining-the-cost-of-a-single-cc-transfer">
+<h3>Determining the cost of a single CC transfer<a class="headerlink" href="#determining-the-cost-of-a-single-cc-transfer" title="Link to this heading"></a></h3>
+<p>As per Canton Improvement Proposal <a class="reference external" href="https://github.com/global-synchronizer-foundation/cips">cip-0042</a>,
+the <code class="docutils literal notranslate"><span class="pre">extraTrafficPrice</span></code> should be set so that the cost of a standard CC transfer is 1 USD.
+Actual traffic costs change depending on factors such as the size of the DSO (number of SVs) and the Canton protocol version
+(so can change also on major upgrades).
+It is therefore recommended for SVs to measure current costs periodically and adjust traffic parameters accordingly.</p>
+<p>One way to determine the current <a class="reference internal" href="../deployment/traffic.html#traffic-accounting"><span class="std std-ref">traffic consumption</span></a> (in bytes)
+of a CC transfer is to initiate a CC transfer and observe sequencer logs corresponding to it.
+Based on the assumption that TestNet has the same configuration and DSO size as MainNet,
+it is sufficient to conduct this measurement on TestNet.
+The suggested specific steps are as follows:</p>
+<ol class="arabic">
+<li><p>Pick two non-SV validators that you control - one will host the sending party the other the receiving party.
+They must be different to not skew the measurement results.
+Control of the recipient is required only to accept the transfer.</p></li>
+<li><p>Initiate a CC transfer from a party hosted on the chosen sender validator to
+a single receiver party hosted on the chosen receiver validator.
+Accept the transfer on the receiver side.</p></li>
+<li><p>Inspect your <cite>validator-app</cite> logs on the <cite>sender</cite> side to confirm that the final transaction of the transfer was
+(a) not batched together with another coin operation and
+(b) had a single coin input.
+You can confirm both of these conditions by looking at the matching log entry of the form:</p>
+<div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="n">executing</span><span class="w"> </span><span class="n">batch</span><span class="w"> </span><span class="nc">AmuletOperationBatch</span><span class="p">(</span>
+<span class="w">  </span><span class="n">nonMergeOperations</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">AmuletOperation</span><span class="p">(</span>
+<span class="w">    </span><span class="n">from</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tid</span><span class="p">:</span><span class="mi">80</span><span class="n">afc8ae63defcb7a636d2cd23e38c0d</span><span class="p">,</span>
+<span class="w">    </span><span class="n">op</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">CO_CompleteAcceptedTransfer</span><span class="p">(</span><span class="nc">ContractId</span><span class="p">(</span><span class="mi">00</span><span class="n">ebc78671f4b5f688d8245a1e0c6c72f378c0c90c7ca574a3c3a615489f3ca15dca1012208d8f9eb3ffe0d0a05b207e2bc3fb3f3e7d31c0b594eaefcfd486411386de775c</span><span class="p">)),</span>
+<span class="w">    </span><span class="n">priority</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Low</span>
+<span class="w">  </span><span class="p">),</span>
+<span class="w">  </span><span class="n">priority</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Low</span>
+<span class="p">)</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">inputs</span><span class="w"> </span><span class="nc">Vector</span><span class="p">(</span><span class="nc">InputAmulet</span><span class="p">(</span><span class="nc">ContractId</span><span class="p">(</span><span class="mi">002</span><span class="n">ace5687dc7f82cb0ca80d2b349a39b1127ffd01db2cd7172053fef88308e6faca1012202646cd3cbb31c78314c3ef22657d4ba6f7f096e90167dcd0d71eba565fa35844</span><span class="p">)))</span>
+</pre></div>
+</div>
+<p>Use  the <code class="docutils literal notranslate"><span class="pre">trace-id</span></code> from this log enty’s metadata
+(<strong>not</strong> the <code class="docutils literal notranslate"><span class="pre">tid</span></code> in view here but from the dedicated <code class="docutils literal notranslate"><span class="pre">trace-id</span></code> field on the log entry JSON)
+to confirm that this log entry matches your transfer
+(by searching your logs by the <code class="docutils literal notranslate"><span class="pre">trace-id</span></code> to find for entries that contain the full <code class="docutils literal notranslate"><span class="pre">AcceptedTransferOffer</span></code>, for example).
+Note in this example that (a) there is a single operation in the executed bach and (b) the operation has a single input.
+If this is not true for the transfer you initiated, go back to step 2 and initiate a new transfer,
+as batching or multi-input transfers will skew the measurement results.</p>
+</li>
+<li><p>Search your <cite>validator-app</cite> logs on the <cite>sender</cite> for the <code class="docutils literal notranslate"><span class="pre">trace-id</span></code> visible in the previous step.
+The goal is to tie the action here to a <code class="docutils literal notranslate"><span class="pre">trace-id</span></code> on the Canton side.
+Search for a log entry of the following form:</p>
+<div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="nc">Request</span><span class="w"> </span><span class="p">(</span><span class="n">tid</span><span class="p">:</span><span class="mf">43f</span><span class="n">d8ad332ca637b0c7c1509b2bdf715</span><span class="p">)</span><span class="w"> </span><span class="n">com</span><span class="p">.</span><span class="n">daml</span><span class="p">.</span><span class="n">ledger</span><span class="p">.</span><span class="n">api</span><span class="p">.</span><span class="n">v2</span><span class="p">.</span><span class="nc">CommandService</span><span class="o">/</span><span class="nc">SubmitAndWaitForTransactionTree</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">participant</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span><span class="mi">5001</span><span class="p">:</span><span class="w"> </span><span class="n">sending</span><span class="w"> </span><span class="n">request</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">tid</span></code> in this log entry is the <code class="docutils literal notranslate"><span class="pre">trace-id</span></code> that you’re looking for.
+It will be different from the <code class="docutils literal notranslate"><span class="pre">trace-id</span></code> in the log entry metadata
+(that you used to link this log entry to the transfer operation visible above).</p>
+</li>
+<li><p>Search your SV’s <cite>sequencer</cite> logs for the <code class="docutils literal notranslate"><span class="pre">trace-id</span></code> from the previous step.
+You want to use a log filter along the lines of (all rules here should be concatenated with logical “AND”s):</p>
+<div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="n">resource</span><span class="p">.</span><span class="n">labels</span><span class="p">.</span><span class="n">container_name</span><span class="o">=</span><span class="s">&quot;sequencer&quot;</span>
+<span class="n">jsonPayload</span><span class="p">.</span><span class="n">logger_name</span><span class="o">=</span><span class="s">&quot;c.d.c.s.t.TrafficConsumedManager:sequencer=sequencer&quot;</span>
+<span class="n">jsonPayload</span><span class="p">.</span><span class="s">&quot;trace-id&quot;</span><span class="o">=</span><span class="s">&quot;43fd8ad332ca637b0c7c1509b2bdf715&quot;</span>
+</pre></div>
+</div>
+</li>
+<li><p>The resulting log lines contain traffic consumption information about the sender and receiver participants,
+but also about all SV participants.
+(SV participants are stakeholders to all CC transfers.)
+To determine only the traffic consumption of the sender and receiver participants,
+you must filter for the participant IDs of the sender and receiver.
+A simple approach to achieve the correct filtering is to
+filter for parts of the party suffixes of the sender and receiver parties,
+as the suffix (namespace) of a party will typically be identical to that of the participants hosting the party.
+Filtering the resulting log lines for the participant IDs corresponding to the sender and receiver,
+you should get log lines similar to the following:</p>
+<div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="nc">Consumed</span><span class="w"> </span><span class="mi">16147</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">PAR</span><span class="n">::sender::</span><span class="p">...</span>
+<span class="nc">Consumed</span><span class="w"> </span><span class="mi">711</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">PAR</span><span class="n">::receiver::</span><span class="p">...</span>
+<span class="nc">Consumed</span><span class="w"> </span><span class="mi">1450</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">PAR</span><span class="n">::sender::</span><span class="p">...</span>
+</pre></div>
+</div>
+</li>
+<li><p>Sum up the numbers in the log lines to get the total traffic consumed for the last leg of a CC transfer.
+In this example, the total traffic consumed would be 17597 bytes for the sender and 711 bytes for the receiver.</p></li>
+<li><p>Divide 1 MB by the total traffic consumed for the sender to get the fee that this CC transfer should have incurred in USD
+as per cip-0042.
+In the example given here the cost should have been configured at <code class="docutils literal notranslate"><span class="pre">1,000,000</span> <span class="pre">/</span> <span class="pre">6344</span> <span class="pre">=</span> <span class="pre">56.83</span></code> USD / MB,
+i.e., <code class="docutils literal notranslate"><span class="pre">extraTrafficPrice</span> <span class="pre">=</span> <span class="pre">56.83</span></code>.</p></li>
+</ol>
+</section>
+<section id="considerations-around-the-read-scaling-factor">
+<h3>Considerations around the read scaling factor<a class="headerlink" href="#considerations-around-the-read-scaling-factor" title="Link to this heading"></a></h3>
+<p>For determining a good value for the <code class="docutils literal notranslate"><span class="pre">readVsWriteScalingFactor</span></code>, consider the following constraints:</p>
+<section id="lower-bound">
+<h4>Lower bound<a class="headerlink" href="#lower-bound" title="Link to this heading"></a></h4>
+<p>The price charged for read traffic should cover the cost for Internet egress and compute incurred for the delivery of messages.
+Consider the following example calculation:</p>
+<ul class="simple">
+<li><p>Based on a review of egress cost across major cloud providers, let’s assume an average cost of 0.10 USD / GB.</p></li>
+<li><p>Let’s assume that compute costs will be covered by 10x the egress costs, so 1 USD / GB for compute and 1.1 USD / GB in total.</p></li>
+<li><p>Validators read from sequencers in a <a class="reference internal" href="../glossary.html#term-BFT"><span class="xref std std-term">BFT</span></a> manner, so that, with <code class="docutils literal notranslate"><span class="pre">n</span></code> SVs and under normal conditions,
+<code class="docutils literal notranslate"><span class="pre">2f+1</span> <span class="pre">=</span> <span class="pre">2</span> <span class="pre">*</span> <span class="pre">floor((n-1)/3)</span> <span class="pre">+</span> <span class="pre">1</span></code> sequencers will deliver the same message to the same (validator) recipient.
+Let the synchronizer size be <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">16</span></code> SVs; then the read amplification factor is 11
+and the cost of message delivery to a single recipient 12.1 USD / GB.</p></li>
+<li><p>Let the current <code class="docutils literal notranslate"><span class="pre">extraTrafficPrice</span></code> be 60.0 USD / MB, i.e., 60,000 USD / GB.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">readVsWriteScalingFactor</span></code> should be set to a factor of at least <code class="docutils literal notranslate"><span class="pre">12.1</span> <span class="pre">/</span> <span class="pre">60,000</span></code> to cover the cost,
+which is around 2 basis points; i.e., <code class="docutils literal notranslate"><span class="pre">readVsWriteScalingFactor</span> <span class="pre">&gt;=</span> <span class="pre">2</span></code>.</p></li>
+</ul>
+<p>Note that for simplicity we assumed here that all recipients are validator participants that use sequencers in the default BFT manner.
+This calculation furthermore assumes that messages must be delivered to recipients only once -
+an assumption that holds as long as validators and SVs are non-faulty and recipients are not currently recovering from a backup
+(which necessitates a replay of some messages).</p>
+</section>
+<section id="upper-bound">
+<h4>Upper bound<a class="headerlink" href="#upper-bound" title="Link to this heading"></a></h4>
+<p>The delivery of messages is clearly less expensive than their ordering and persistence,
+so the <code class="docutils literal notranslate"><span class="pre">readVsWriteScalingFactor</span></code> should be clearly below 100%.
+That said: There is no good reason to significantly overcharge for message delivery.</p>
+</section>
+</section>
 </section>
 </section>
 

@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.13-ci-snapshot.20250224.1.0.v47070364
+                0.3.13-ci-snapshot.20250224.1.0.vfd348818
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -293,6 +293,15 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_operations.html#updating-the-reward-weight-of-an-sv">Updating the reward weight of an SV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_operations.html#determining-good-synchronizer-traffic-parameters">Determining good synchronizer traffic parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_operations.html#determining-the-cost-of-a-single-cc-transfer">Determining the cost of a single CC transfer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_operations.html#considerations-around-the-read-scaling-factor">Considerations around the read scaling factor</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_operations.html#lower-bound">Lower bound</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_operations.html#upper-bound">Upper bound</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../sv_operator/sv_scratchnet.html">How to Bootstrap a Network</a><ul>
@@ -307,6 +316,12 @@
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Operations</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="traffic.html">Synchronizer Traffic Fees</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="traffic.html#traffic-accounting-what-counts-as-traffic">Traffic accounting; what counts as traffic?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="traffic.html#traffic-parameters">Traffic parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="traffic.html#traffic-top-ups-how-does-one-buy-traffic">Traffic top-ups; how does one “buy” traffic?</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="observability/index.html">Monitoring and Observability</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="observability/validator_health.html">Validator Health</a></li>
 <li class="toctree-l3"><a class="reference internal" href="observability/metrics.html">Metrics</a><ul>
@@ -709,6 +724,7 @@
 <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#upcoming">Upcoming</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id2">0.3.12</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id3">0.3.11</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id4">0.3.10</a></li>
@@ -880,9 +896,9 @@ Canton logs into <code class="docutils literal notranslate"><span class="pre">ca
 <section id="common-error-messages">
 <h2>Common Error Messages<a class="headerlink" href="#common-error-messages" title="Link to this heading"></a></h2>
 <section id="traffic-balance-below-reserved-amount">
-<h3>Traffic balance below reserved amount<a class="headerlink" href="#traffic-balance-below-reserved-amount" title="Link to this heading"></a></h3>
+<span id="error-below-reserved-traffic-amount"></span><h3>Traffic balance below reserved amount<a class="headerlink" href="#traffic-balance-below-reserved-amount" title="Link to this heading"></a></h3>
 <p>A log of the form shown below indicates that your validator app
-has not been able to purchase any traffic. The validator blocks
+has not been able to <a class="reference internal" href="traffic.html#traffic-topup"><span class="std std-ref">purchase any traffic</span></a>. The validator blocks
 transactions not required to purchase more traffic once the purchased
 traffic balance falls below a given number to
 avoid issues where the validator locks itself out by not having enough
@@ -897,7 +913,7 @@ the validator top-up config.</p>
 <section id="insufficient-funds-to-buy-configured-traffic-amount">
 <span id="error-insufficient-funds"></span><h3>Insufficient funds to buy configured traffic amount<a class="headerlink" href="#insufficient-funds-to-buy-configured-traffic-amount" title="Link to this heading"></a></h3>
 <p>A log of the form shown below indicates that your validator app
-attempted to purchase traffic but does not have enough in the wallet
+attempted to <a class="reference internal" href="traffic.html#traffic-topup"><span class="std std-ref">purchase traffic</span></a> but does not have enough in the wallet
 of the validator operator party. This is common on TestNet and MainNet
 for new nodes as they start out with a balance of 0 and only slowly
 accrue CC through validator liveness rewards. So often this just

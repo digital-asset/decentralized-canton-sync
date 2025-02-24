@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.13-ci-snapshot.20250224.1.0.v47070364
+                0.3.13-ci-snapshot.20250224.1.0.vfd348818
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -293,6 +293,15 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_operations.html#updating-the-reward-weight-of-an-sv">Updating the reward weight of an SV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../sv_operator/sv_operations.html#determining-good-synchronizer-traffic-parameters">Determining good synchronizer traffic parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../sv_operator/sv_operations.html#determining-the-cost-of-a-single-cc-transfer">Determining the cost of a single CC transfer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../sv_operator/sv_operations.html#considerations-around-the-read-scaling-factor">Considerations around the read scaling factor</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../sv_operator/sv_operations.html#lower-bound">Lower bound</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../sv_operator/sv_operations.html#upper-bound">Upper bound</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../sv_operator/sv_scratchnet.html">How to Bootstrap a Network</a><ul>
@@ -307,6 +316,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../deployment/index.html">Operations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../deployment/traffic.html">Synchronizer Traffic Fees</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../deployment/traffic.html#traffic-accounting-what-counts-as-traffic">Traffic accounting; what counts as traffic?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../deployment/traffic.html#traffic-parameters">Traffic parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../deployment/traffic.html#traffic-top-ups-how-does-one-buy-traffic">Traffic top-ups; how does one “buy” traffic?</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="../../deployment/observability/index.html">Monitoring and Observability</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../deployment/observability/validator_health.html">Validator Health</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../deployment/observability/metrics.html">Metrics</a><ul>
@@ -709,6 +724,7 @@
 <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../release_notes.html">Release Notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#upcoming">Upcoming</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id2">0.3.12</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id3">0.3.11</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../release_notes.html#id4">0.3.10</a></li>
@@ -826,7 +842,9 @@
 <p>Alongside information about the <a class="reference internal" href="scan_global_synchronizer_operations_api.html#scan-global-synchronizer-operations-api"><span class="std std-ref">overall Splice network operations</span></a>, Scan provides some more specific details about current Amulet-related network state.</p>
 <section id="validator-traffic-credits-and-purchases">
 <h2>Validator Traffic Credits and Purchases<a class="headerlink" href="#validator-traffic-credits-and-purchases" title="Link to this heading"></a></h2>
-<p>Confirming Daml transactions on the distributed synchronizer costs Amulet, as a rule.
+<p>Sequencing messages on the global synchronizer,
+which is an integral part of the Canton commit protocol for Daml transactions and validator operations more generally,
+costs <a class="reference internal" href="../../deployment/traffic.html#traffic"><span class="std std-ref">traffic fees</span></a> purchased in Amulet.
 <a class="reference external" href="scan_openapi.html#get--v0-domains-domain_id-members-member_id-traffic-status">/v0/domains/{domain_id}/members/{member_id}/traffic-status</a> can be used to query the purchased and spent traffic credit.</p>
 <p>Here’s an example response from querying for a member participant.</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>

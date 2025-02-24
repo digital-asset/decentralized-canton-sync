@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.13-ci-snapshot.20250224.1.0.v47070364
+                0.3.13-ci-snapshot.20250224.1.0.vfd348818
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -293,6 +293,15 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_operations.html#updating-the-reward-weight-of-an-sv">Updating the reward weight of an SV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_operations.html#determining-good-synchronizer-traffic-parameters">Determining good synchronizer traffic parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_operations.html#determining-the-cost-of-a-single-cc-transfer">Determining the cost of a single CC transfer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_operations.html#considerations-around-the-read-scaling-factor">Considerations around the read scaling factor</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_operations.html#lower-bound">Lower bound</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_operations.html#upper-bound">Upper bound</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../sv_operator/sv_scratchnet.html">How to Bootstrap a Network</a><ul>
@@ -307,6 +316,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment/index.html">Operations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../deployment/traffic.html">Synchronizer Traffic Fees</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../deployment/traffic.html#traffic-accounting-what-counts-as-traffic">Traffic accounting; what counts as traffic?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../deployment/traffic.html#traffic-parameters">Traffic parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../deployment/traffic.html#traffic-top-ups-how-does-one-buy-traffic">Traffic top-ups; how does one “buy” traffic?</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="../deployment/observability/index.html">Monitoring and Observability</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../deployment/observability/validator_health.html">Validator Health</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../deployment/observability/metrics.html">Metrics</a><ul>
@@ -709,6 +724,7 @@
 <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#upcoming">Upcoming</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id2">0.3.12</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id3">0.3.11</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id4">0.3.10</a></li>
@@ -838,9 +854,9 @@
 </li>
 <li><p>Your cluster needs a static egress IP. After acquiring that, provide it to your SV sponsor who will propose
 adding it to the IP allowlist to the other SVs.</p></li>
-<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.13-ci-snapshot.20250224.1.0.v47070364_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
+<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.13-ci-snapshot.20250224.1.0.vfd348818_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
 </ol>
-<pre class="literal-block">tar xzvf 0.3.13-ci-snapshot.20250224.1.0.v47070364_splice-node.tar.gz</pre>
+<pre class="literal-block">tar xzvf 0.3.13-ci-snapshot.20250224.1.0.vfd348818_splice-node.tar.gz</pre>
 <section id="required-network-parameters">
 <h3>Required Network Parameters<a class="headerlink" href="#required-network-parameters" title="Link to this heading"></a></h3>
 <p>To initialize your validator node, you need the following parameters
@@ -1129,7 +1145,7 @@ kubectl<span class="w"> </span>create<span class="w"> </span>--namespace<span cl
 cluster, you will need to meet a few preconditions. The first is that
 there needs to be an environment variable defined to refer to the
 version of the Helm charts necessary to connect to this environment:</p>
-<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.13-ci-snapshot.20250224.1.0.v47070364</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.13-ci-snapshot.20250224.1.0.vfd348818</span></code></p>
 <p>Please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/participant-values.yaml</span></code> as follows:</p>
 <ul class="simple">
 <li><p>Replace <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_LEDGER_API_AUDIENCE</span></code> in the <cite>auth.targetAudience</cite> entry with audience for the ledger API. e.g. <code class="docutils literal notranslate"><span class="pre">https://ledger_api.example.com</span></code>. If you are not ready to use a custom audience, you can use the suggested default <code class="docutils literal notranslate"><span class="pre">https://canton.network.global</span></code>.</p></li>
@@ -1342,34 +1358,43 @@ Once logged in one should see the transactions page.</p>
 </section>
 <section id="granting-coin-to-the-validator-for-traffic-purchases">
 <span id="helm-validator-testnet-cc-grant"></span><h2>Granting coin to the validator for traffic purchases<a class="headerlink" href="#granting-coin-to-the-validator-for-traffic-purchases" title="Link to this heading"></a></h2>
-<p>On DevNet, your validator will automatically tap enough coin to purchase traffic.
+<p>On DevNet, your validator will automatically tap enough coin to purchase <a class="reference internal" href="../deployment/traffic.html#traffic"><span class="std std-ref">traffic</span></a>.
 However, on TestNet and MainNet, your validator party will need an initial coin grant to be able to purchase traffic.
 After logging into the wallet UI in the previous section, note that the party ID is displayed in
 the top right of the UI (e.g. <code class="docutils literal notranslate"><span class="pre">validator_validator_service_user::12204f9f94b7369e027544927703efcdf0f03cb15bd26ac53c784c627b63bdf8f041</span></code>).</p>
 <p>An SV (say your sponsor) will need to transfer coin to this party. They can do this through their wallet UI.</p>
 </section>
 <section id="configuring-automatic-traffic-purchases">
-<h2>Configuring automatic traffic purchases<a class="headerlink" href="#configuring-automatic-traffic-purchases" title="Link to this heading"></a></h2>
-<p>Optionally you may want to configure your validator to automatically purchase traffic
+<span id="helm-validator-topup"></span><h2>Configuring automatic traffic purchases<a class="headerlink" href="#configuring-automatic-traffic-purchases" title="Link to this heading"></a></h2>
+<p>Optionally you may want to configure your validator to <a class="reference internal" href="../deployment/traffic.html#traffic-topup"><span class="std std-ref">automatically purchase traffic</span></a>
 on a pay-as-you-go basis with rate limiting.
-To do so, uncomment and fill in the following section in the validator-values.yaml file:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Configuring a validator&#39;s traffic top-up loop</span>
-<span class="c1">#</span>
-<span class="c1"># enabled - set to false in order to disable automatic traffic top-ups.</span>
-<span class="c1"># targetThroughput - target throughput in bytes / second of sequenced traffic. targetThroughput=0 &lt;=&gt; enabled=false</span>
-<span class="c1"># minTopupInterval - minimum time interval that must elapse before the next top-up.</span>
-<span class="c1">#</span>
-<span class="c1"># On each successful top-up, an amount of traffic roughly equivalent to `targetThroughput * minTopupInterval`</span>
-<span class="c1"># (possibly with some rounding-up), referred to as the top-up amount, is purchased. The `minTopupInterval` allows</span>
-<span class="c1"># validator operators to control the frequency at which automated top-ups happen. Note that the actual top-up amount</span>
-<span class="c1"># and top-up interval might be larger due to the DSO requiring a minimal top-up amount larger than `targetThroughput * minTopupInterval`.</span>
-<span class="c1">#</span>
-<span class="c1"># The next top-up gets triggered when:</span>
-<span class="c1"># - the available traffic amount drops below the configured top-up amount</span>
-<span class="c1"># - at least minTopupInterval has elapsed since the last one</span>
-<span class="c1"># - the validator has sufficient CC in its wallet to buy this much traffic (except on DevNet)</span>
+This is currently enabled by default!
+To disable or tune to your needs, edit the following section in the validator-values.yaml file:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Configuring a validator&#39;s traffic top-up loop;</span>
+<span class="c1"># see documentation for more detailed information.</span>
+<span class="nt">topup</span><span class="p">:</span>
+<span class="w">  </span><span class="c1"># set to false in order to disable automatic traffic top-ups</span>
+<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># target throughput in bytes / second of sequenced traffic; targetThroughput=0 &lt;=&gt; enabled=false</span>
+<span class="w">  </span><span class="nt">targetThroughput</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20000</span>
+<span class="w">  </span><span class="c1"># minTopupInterval - minimum time interval that must elapse before the next top-up</span>
+<span class="w">  </span><span class="nt">minTopupInterval</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;1m&quot;</span>
 </pre></div>
 </div>
+<p>On each successful top-up, the validator app purchases a <cite>top-up amount</cite> of roughly <code class="docutils literal notranslate"><span class="pre">targetThroughput</span> <span class="pre">*</span> <span class="pre">minTopupInterval</span></code> bytes of traffic
+(specific amount can vary due to rounding-up).
+The <code class="docutils literal notranslate"><span class="pre">minTopupInterval</span></code> allows validator operators to control the upper-bound frequency at which automated top-ups happen.
+If the top-up amount is below the synchronizer-wide <code class="docutils literal notranslate"><span class="pre">minTopupAmount</span></code> (see <a class="reference internal" href="../deployment/traffic.html#traffic-parameters"><span class="std std-ref">Traffic parameters</span></a>),
+<code class="docutils literal notranslate"><span class="pre">minTopupInterval</span></code> is automatically stretched so that at least <code class="docutils literal notranslate"><span class="pre">minTopupAmount</span></code> bytes of traffic are
+purchased while respecting the configured <code class="docutils literal notranslate"><span class="pre">targetThroughput</span></code>.</p>
+<p>The next top-up gets triggered when all of the following conditions are met:</p>
+<ul class="simple">
+<li><p>The available <a class="reference internal" href="../deployment/traffic.html#traffic-accounting"><span class="std std-ref">extra traffic balance</span></a> drops below the configured top-up amount
+(i.e., below <code class="docutils literal notranslate"><span class="pre">targetThroughput</span> <span class="pre">*</span> <span class="pre">minTopupInterval</span></code>).</p></li>
+<li><p>At least <code class="docutils literal notranslate"><span class="pre">minTopupInterval</span></code> has elapsed since the last top-up.</p></li>
+<li><p>The validator has sufficient CC in its wallet to buy the top-up amount worth on traffic
+(except on DevNet, where the validator app will automatically tap enough coin to purchase traffic).</p></li>
+</ul>
 </section>
 <section id="configuring-sweeps-and-auto-accepts-of-transfer-offers">
 <h2>Configuring sweeps and auto-accepts of transfer offers<a class="headerlink" href="#configuring-sweeps-and-auto-accepts-of-transfer-offers" title="Link to this heading"></a></h2>

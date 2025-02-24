@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.13-ci-snapshot.20250224.1.0.v47070364
+                0.3.13-ci-snapshot.20250224.1.0.vfd348818
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -293,6 +293,15 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="sv_operator/sv_operations.html#updating-the-reward-weight-of-an-sv">Updating the reward weight of an SV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sv_operator/sv_operations.html#determining-good-synchronizer-traffic-parameters">Determining good synchronizer traffic parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="sv_operator/sv_operations.html#determining-the-cost-of-a-single-cc-transfer">Determining the cost of a single CC transfer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sv_operator/sv_operations.html#considerations-around-the-read-scaling-factor">Considerations around the read scaling factor</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="sv_operator/sv_operations.html#lower-bound">Lower bound</a></li>
+<li class="toctree-l5"><a class="reference internal" href="sv_operator/sv_operations.html#upper-bound">Upper bound</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="sv_operator/sv_scratchnet.html">How to Bootstrap a Network</a><ul>
@@ -307,6 +316,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="deployment/index.html">Operations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="deployment/traffic.html">Synchronizer Traffic Fees</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="deployment/traffic.html#traffic-accounting-what-counts-as-traffic">Traffic accounting; what counts as traffic?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="deployment/traffic.html#traffic-parameters">Traffic parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="deployment/traffic.html#traffic-top-ups-how-does-one-buy-traffic">Traffic top-ups; how does one “buy” traffic?</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="deployment/observability/index.html">Monitoring and Observability</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="deployment/observability/validator_health.html">Validator Health</a></li>
 <li class="toctree-l3"><a class="reference internal" href="deployment/observability/metrics.html">Metrics</a><ul>
@@ -709,6 +724,7 @@
 <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="release_notes.html">Release Notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="release_notes.html#upcoming">Upcoming</a></li>
 <li class="toctree-l2"><a class="reference internal" href="release_notes.html#id2">0.3.12</a></li>
 <li class="toctree-l2"><a class="reference internal" href="release_notes.html#id3">0.3.11</a></li>
 <li class="toctree-l2"><a class="reference internal" href="release_notes.html#id4">0.3.10</a></li>
@@ -823,6 +839,10 @@
   <section id="glossary">
 <h1>Glossary<a class="headerlink" href="#glossary" title="Link to this heading"></a></h1>
 <dl class="simple glossary">
+<dt id="term-ACS">ACS<a class="headerlink" href="#term-ACS" title="Link to this term"></a></dt><dd><p><a class="reference internal" href="#term-Active-Contract-Set"><span class="xref std std-term">Active Contract Set</span></a></p>
+</dd>
+<dt id="term-Active-Contract-Set">Active Contract Set<a class="headerlink" href="#term-Active-Contract-Set" title="Link to this term"></a></dt><dd><p>The set of contracts that are currently active on the ledger as per the view of a given participant.</p>
+</dd>
 <dt id="term-Amulet">Amulet<a class="headerlink" href="#term-Amulet" title="Link to this term"></a></dt><dd><p>The generic name for the code and the logic implementing Canton Coin.</p>
 </dd>
 <dt id="term-Amulet-Name-Service">Amulet Name Service<a class="headerlink" href="#term-Amulet-Name-Service" title="Link to this term"></a></dt><dd><p>The generic name for the code and logic implementing the Canton Name Service.</p>
@@ -846,21 +866,20 @@ Typically <code class="docutils literal notranslate"><span class="pre">f</span><
 Across all layers of Splice, <code class="docutils literal notranslate"><span class="pre">f</span></code> corresponds to slighly less than 1/3 of the total number of SVs
 (<code class="docutils literal notranslate"><span class="pre">floor((n-1)/3)</span></code>, to be exact).</p>
 </dd>
-<dt id="term-CN-Global-Domain">CN Global Domain<a class="headerlink" href="#term-CN-Global-Domain" title="Link to this term"></a></dt><dd><ul class="simple">
+<dt id="term-CN-Global-Synchronizer">CN Global Synchronizer<a class="headerlink" href="#term-CN-Global-Synchronizer" title="Link to this term"></a></dt><dd><ul class="simple">
 <li><p>global synchronization domain</p></li>
 <li><p>can host small apps directly on domain</p></li>
 <li><p>acts as shared synchronization domain to intermediate between different apps’ domains</p></li>
 <li><p>run by super validator collective with BFT</p></li>
-<li><p>domain usage costs domain fees which are paid in Canton Coin by the
+<li><p>domain usage costs <a class="reference internal" href="#term-Synchronizer-fees"><span class="xref std std-term">synchronizer fees</span></a> which are paid in Canton Coin by the
 operator of each validator</p></li>
 </ul>
 </dd>
 <dt id="term-Canton-Coin">Canton Coin<a class="headerlink" href="#term-Canton-Coin" title="Link to this term"></a></dt><dd><ul class="simple">
 <li><p>currency issued by super validator collective</p></li>
-<li><p>used for domain fees</p></li>
-<li><p>fees in USD</p></li>
+<li><p>used for <a class="reference internal" href="#term-Synchronizer-fees"><span class="xref std std-term">synchronizer fees</span></a></p></li>
 <li><p>coins accrue holding fees that pay for the coin’s usage of DSO storage space</p></li>
-<li><p>all cc transactions are public</p></li>
+<li><p>all CC transactions are public</p></li>
 <li><p>supports locked coins that can be unlocked by lock holder</p></li>
 <li><p>support transfers single sender, multi-receiver transfers</p></li>
 <li><p>transfers cost admin fees and produce app reward for receiver and
@@ -879,7 +898,7 @@ user/party management</p></li>
 <dt id="term-CN-Supervalidator">CN Supervalidator<a class="headerlink" href="#term-CN-Supervalidator" title="Link to this term"></a></dt><dd><ul class="simple">
 <li><p>One node in the CN</p></li>
 <li><p>In addition to CN Validator components, also consists of canton sequencer, canton mediator, sv app and scan app</p></li>
-<li><p>sv app for admin operations of the <a class="reference internal" href="#term-CN-Global-Domain"><span class="xref std std-term">CN Global Domain</span></a></p></li>
+<li><p>sv app for admin operations of the <a class="reference internal" href="#term-CN-Global-Synchronizer"><span class="xref std std-term">CN Global Synchronizer</span></a></p></li>
 <li><p>scan app for providing publicly visible data</p></li>
 </ul>
 </dd>
@@ -913,6 +932,8 @@ governance, see <a class="reference external" href="https://sync.global/">https:
 <li><p>The name of the HyperLedger lab project that will host the code for Amulet, DSO governance,
 Amulet Name Service, SV nodes, and validator nodes.</p></li>
 </ul>
+</dd>
+<dt id="term-Synchronizer-fees">Synchronizer fees<a class="headerlink" href="#term-Synchronizer-fees" title="Link to this term"></a></dt><dd><p><a class="reference internal" href="deployment/traffic.html#traffic"><span class="std std-ref">Synchronizer Traffic Fees</span></a></p>
 </dd>
 </dl>
 </section>
