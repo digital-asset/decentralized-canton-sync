@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.13-ci-snapshot.20250225.1.0.vd4715e3d
+                0.3.13-ci-snapshot.20250225.1.0.v625725e0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -846,7 +846,7 @@ Additionally, you can query for all network-approved validators and get their de
 <section id="listing-all-sv-scans">
 <h2>Listing all SV Scans<a class="headerlink" href="#listing-all-sv-scans" title="Link to this heading"></a></h2>
 <p>Every Scan can list all approved SV scans connected to the network.
-For example, query from <a class="reference external" href="|gsf_scan_url|/api/scan/v0/scans">/v0/scans</a> on <span class="raw-html">https://scan.sv-1.<span class="splice-url-prefix">unknown_cluster.</span>global.canton.network.sync.global</span>, and the response will be something like</p>
+For example, query from <a class="reference external" href="scan_openapi.html#get--v0-scans">/v0/scans</a> from <span class="raw-html">https://scan.sv-1.<span class="splice-url-prefix">unknown_cluster.</span>global.canton.network.sync.global</span>, and the response will be something like</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;scans&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">    </span><span class="p">{</span>
@@ -873,9 +873,9 @@ In this case, <code class="docutils literal notranslate"><span class="pre">Globa
 Take any of these <code class="docutils literal notranslate"><span class="pre">publicUrl</span></code>s and query <code class="docutils literal notranslate"><span class="pre">/api/scan/v0/scans</span></code>, and the same set will be returned.</p>
 </section>
 <section id="listing-all-sv-sequencers">
-<h2>Listing all SV Sequencers<a class="headerlink" href="#listing-all-sv-sequencers" title="Link to this heading"></a></h2>
+<span id="id2"></span><h2>Listing all SV Sequencers<a class="headerlink" href="#listing-all-sv-sequencers" title="Link to this heading"></a></h2>
 <p>Likewise, Canton sequencers for all approved SVs are published by every Scan.
-For example, query from <a class="reference external" href="|gsf_scan_url|/api/scan/v0/dso-sequencers">/v0/dso-sequencers</a> on <span class="raw-html">https://scan.sv-1.<span class="splice-url-prefix">unknown_cluster.</span>global.canton.network.sync.global</span>, and the result will be something like</p>
+For example, query from <a class="reference external" href="scan_openapi.html#get--v0-dso-sequencers">/v0/dso-sequencers</a>, and the result will be something like</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;domainSequencers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">    </span><span class="p">{</span>
@@ -907,9 +907,9 @@ For example, query from <a class="reference external" href="|gsf_scan_url|/api/s
 <code class="docutils literal notranslate"><span class="pre">url</span></code> is the base URL of that SV’s sequencer.</p>
 </section>
 <section id="listing-all-validators">
-<span id="id2"></span><h2>Listing all Validators<a class="headerlink" href="#listing-all-validators" title="Link to this heading"></a></h2>
+<span id="id3"></span><h2>Listing all Validators<a class="headerlink" href="#listing-all-validators" title="Link to this heading"></a></h2>
 <p>Every validator approved on the network has a “license” on the ledger.
-The <a class="reference external" href="|gsf_scan_url|/api/scan/v0/admin/validator/licenses">/v0/admin/validator/licenses</a> endpoint lists all of these in the form of <code class="docutils literal notranslate"><span class="pre">Splice.ValidatorLicense:ValidatorLicense</span></code> Daml contracts.
+The <a class="reference external" href="scan_openapi.html#get--v0-admin-validator-licenses">/v0/admin/validator/licenses</a> endpoint lists all of these in the form of <code class="docutils literal notranslate"><span class="pre">Splice.ValidatorLicense:ValidatorLicense</span></code> Daml contracts.
 These include:</p>
 <ul class="simple">
 <li><p>onboarding identification, in the form of <code class="docutils literal notranslate"><span class="pre">validator</span></code>, <code class="docutils literal notranslate"><span class="pre">sponsor</span></code>, and <code class="docutils literal notranslate"><span class="pre">dso</span></code>,</p></li>
@@ -969,7 +969,7 @@ the sequence of pages terminates with an absent or null token as follows:</p>
 <h2>Parties’ Hosting Participants<a class="headerlink" href="#parties-hosting-participants" title="Link to this heading"></a></h2>
 <p>In any Canton deployment, <a class="reference external" href="https://docs.daml.com/canton/architecture/overview.html#synchronization-domain-entities">each party is hosted on a participant</a>.
 This can be accessed through Scan with <a class="reference external" href="scan_openapi.html#get--v0-domains-domain_id-parties-party_id-participant-id">/v0/domains/{domain_id}/parties/{party_id}/participant-id</a>.</p>
-<p>For example, looking up <a class="reference external" href="|gsf_scan_url|/api/scan/v0/domains/global-domain::122084177677350389dd0710d6516f700a33fe348c5f2702dffef6d36e1dedcbfc17/parties/digitalasset-testValidator-1::1220e92bbc9d80cb6e283184017b307b9f44f23d32d7d195cdbcac033ae91eac2f28/participant-id">/v0/domains/global-domain::122084177677350389dd0710d6516f700a33fe348c5f2702dffef6d36e1dedcbfc17/parties/digitalasset-testValidator-1::1220e92bbc9d80cb6e283184017b307b9f44f23d32d7d195cdbcac033ae91eac2f28/participant-id</a> on a test network yields</p>
+<p>For example, looking up <code class="docutils literal notranslate"><span class="pre">/v0/domains/global-domain::122084177677350389dd0710d6516f700a33fe348c5f2702dffef6d36e1dedcbfc17/parties/digitalasset-testValidator-1::1220e92bbc9d80cb6e283184017b307b9f44f23d32d7d195cdbcac033ae91eac2f28/participant-id</span></code> on a test network yields</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;participant_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;PAR::validator-runbook::1220e92bbc9d80cb6e283184017b307b9f44f23d32d7d195cdbcac033ae91eac2f28&quot;</span>
 <span class="p">}</span>

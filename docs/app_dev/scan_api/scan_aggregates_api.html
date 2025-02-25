@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.13-ci-snapshot.20250225.1.0.vd4715e3d
+                0.3.13-ci-snapshot.20250225.1.0.v625725e0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -844,7 +844,7 @@
 <h2>Amulet Summaries<a class="headerlink" href="#amulet-summaries" title="Link to this heading"></a></h2>
 <p>While it’s possible to figure total Amulet balance from the <a class="reference internal" href="scan_bulk_data_api.html#scan-bulk-data-api"><span class="std std-ref">Scan Bulk Data API</span></a>, figuring the effect of holding fees can be tricky for a new Splice app unfamiliar with the on-ledger data model of Amulet.</p>
 <p>With a valid time from <a class="reference internal" href="scan_bulk_data_api.html#v0-state-acs-snapshot-timestamp"><span class="std std-ref">GET /v0/state/acs/snapshot-timestamp</span></a>, knowing the latest migration ID, and one or more party IDs to look up Amulet holdings for, Scan will gather Amulet statistics for each matching party and yield them.
-Here’s an example payload passed to <a class="reference external" href="|gsf_scan_url|/api/scan/v0/holdings/summary">/v0/holdings/summary</a> on a test network:</p>
+Here’s an example payload passed to <a class="reference external" href="scan_openapi.html#post--v0-holdings-summary">/v0/holdings/summary</a> on a test network:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;migration_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;record_time&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2025-02-14T15:00:00Z&quot;</span><span class="p">,</span>
@@ -882,7 +882,7 @@ Note that the first summary above isn’t the first of the <code class="docutils
 </section>
 <section id="detailed-amulet-holdings">
 <h2>Detailed Amulet Holdings<a class="headerlink" href="#detailed-amulet-holdings" title="Link to this heading"></a></h2>
-<p>For more information about Amulet on the ledger, use <a class="reference external" href="|gsf_scan_url|/api/scan/v0/holdings/state">/v0/holdings/state</a> instead.
+<p>For more information about Amulet on the ledger, use <a class="reference external" href="scan_openapi.html#post--v0-holdings-state">/v0/holdings/state</a> instead.
 Repeating the request for <a class="reference internal" href="#amulet-summaries">Amulet Summaries</a> above, but adding in the separately-introduced and required <code class="docutils literal notranslate"><span class="pre">page_size</span></code> parameter as this API is paginated, Scan would yield something like</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;record_time&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2025-02-14T15:00:00Z&quot;</span><span class="p">,</span>
@@ -924,9 +924,9 @@ Repeating the request for <a class="reference internal" href="#amulet-summaries"
 </section>
 <section id="looking-up-ans-entries">
 <h2>Looking up ANS Entries<a class="headerlink" href="#looking-up-ans-entries" title="Link to this heading"></a></h2>
-<p><a class="reference external" href="|gsf_scan_url|/api/scan/v0/ans-entries/by-party">/v0/ans-entries/by-party</a> and <a class="reference external" href="|gsf_scan_url|/api/scan/v0/ans-entries/by-name">/v0/ans-entries/by-name</a> are quick ways to look up ANS entries, by owner party ID and entry name, respectively, without searching the ACS.
-They share a response format in common with <a class="reference external" href="|gsf_scan_url|/api/scan/v0/ans-entries">/v0/ans-entries</a>, which searches by name <em>prefix</em> rather than exact name.</p>
-<p>For example, with a test of <a class="reference external" href="|gsf_scan_url|/api/scan/v0/ans-entries?name_prefix=dso&amp;page_size=5">/v0/ans-entries?name_prefix=dso&amp;page_size=5</a>, Scan responds with something like</p>
+<p><a class="reference external" href="scan_openapi.html#get--v0-ans-entries-by-party-party">/v0/ans-entries/by-party</a> and <a class="reference external" href="scan_openapi.html#get--v0-ans-entries-by-name-name">/v0/ans-entries/by-name</a> are quick ways to look up ANS entries, by owner party ID and entry name, respectively, without searching the ACS.
+They share a response format in common with <a class="reference external" href="scan_openapi.html#get--v0-ans-entries">/v0/ans-entries</a>, which searches by name <em>prefix</em> rather than exact name.</p>
+<p>For example, with a test of <code class="docutils literal notranslate"><span class="pre">/v0/ans-entries?name_prefix=dso&amp;page_size=5</span></code>, Scan responds with something like</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;entries&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">    </span><span class="p">{</span>

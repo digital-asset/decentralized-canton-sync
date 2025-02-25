@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.13-ci-snapshot.20250225.1.0.vd4715e3d
+                0.3.13-ci-snapshot.20250225.1.0.v625725e0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -865,7 +865,7 @@ costs <a class="reference internal" href="../../deployment/traffic.html#traffic"
 <section id="open-mining-rounds">
 <h2>Open Mining Rounds<a class="headerlink" href="#open-mining-rounds" title="Link to this heading"></a></h2>
 <p>Amulet activity and traffic are associated with rounds, which determine how rewards are allocated.
-To check on the current rounds available for traffic or with rewards currently in process, check <a class="reference external" href="|gsf_scan_url|/api/scan/v0/open-and-issuing-mining-rounds">/v0/open-and-issuing-mining-rounds</a></p>
+To check on the current rounds available for traffic or with rewards currently in process, check <a class="reference external" href="scan_openapi.html#post--v0-open-and-issuing-mining-rounds">/v0/open-and-issuing-mining-rounds</a>.</p>
 <p>This endpoint features a parameter for more efficient polling; see the <code class="docutils literal notranslate"><span class="pre">MaybeCachedContractWithStateMap</span></code> OpenAPI specification for more details.
 The initial request is always empty:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
@@ -943,7 +943,7 @@ Open rounds also include many fields explaining the assigned fees for that round
 </section>
 <section id="closed-mining-rounds">
 <h2>Closed Mining Rounds<a class="headerlink" href="#closed-mining-rounds" title="Link to this heading"></a></h2>
-<p><a class="reference external" href="|gsf_scan_url|/api/scan/v0/closed-rounds">/v0/closed-rounds</a> is more niche than <a class="reference internal" href="#open-mining-rounds">Open Mining Rounds</a>; it usually yields an empty response.
+<p><a class="reference external" href="scan_openapi.html#get--v0-closed-rounds">/v0/closed-rounds</a> is more niche than <a class="reference internal" href="#open-mining-rounds">Open Mining Rounds</a>; it usually yields an empty response.
 However, it can yield some <code class="docutils literal notranslate"><span class="pre">ClosedMiningRound</span></code> Daml contracts if there are unclaimed rewards for that round, or a final confirmation for the round closure hasn’t been created yet; as validators operate asynchronously around the Daml ledger to complete these operations, this can be briefly true, but ideally for as short a time as possible.</p>
 </section>
 </section>

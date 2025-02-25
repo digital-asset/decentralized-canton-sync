@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.13-ci-snapshot.20250225.1.0.vd4715e3d
+                0.3.13-ci-snapshot.20250225.1.0.v625725e0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -957,8 +957,7 @@ in a subsequent request in the <code class="docutils literal notranslate"><span 
 <ul class="simple">
 <li><p><strong>migration_id</strong> : This ID increments with every hard synchronizer migration. A hard synchronizer migration is performed for every significant Canton version upgrade.
 The current migration ID can be inquired from an SV,
-or by using the <code class="docutils literal notranslate"><span class="pre">/v0/dso-sequencers</span></code> API at <span class="raw-html">https://scan.sv-1.<span class="splice-url-prefix">unknown_cluster.</span>global.canton.network.sync.global</span>/api/scan/v0/dso-sequencers,
-which returns a <code class="docutils literal notranslate"><span class="pre">migrationId</span></code> per sequencer.</p></li>
+or by <a class="reference internal" href="scan_global_synchronizer_connectivity_api.html#listing-all-sv-sequencers"><span class="std std-ref">Listing all SV Sequencers</span></a>, which returns a <code class="docutils literal notranslate"><span class="pre">migrationId</span></code> per sequencer.</p></li>
 <li><p><strong>synchronizer_id</strong>: The instance ID of a Synchronizer (for example the ID of the Global Synchronizer).
 When contracts get reassigned, they become unavailable for processing via the old instance of the synchronizer
 and become available via the new instance of the synchronizer.
