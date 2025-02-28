@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.14-ci-snapshot.20250228.1.0.v9142ffea
+                0.3.14-ci-snapshot.20250228.1.0.v78a5080c
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -127,6 +127,7 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l4"><a class="reference internal" href="../../validator_operator/validator_major_upgrades.html#cleanup-in-the-event-of-failure">Cleanup in the event of failure</a></li>
 </ul>
 </li>
 </ul>
@@ -243,6 +244,7 @@
 <li class="toctree-l5"><a class="reference internal" href="../../sv_operator/sv_major_upgrade.html#coordinated-tests">Coordinated Tests</a></li>
 </ul>
 </li>
+<li class="toctree-l4"><a class="reference internal" href="../../sv_operator/sv_major_upgrade.html#cleanup-in-the-event-of-failure">Cleanup in the event of failure</a></li>
 </ul>
 </li>
 </ul>
@@ -458,6 +460,14 @@
 <li class="toctree-l5"><a class="reference internal" href="#processing-overview">Processing Overview</a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#computing-total-burnt-canton-coin">Computing Total Burnt Canton Coin</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coin-burnt-for-purchasing-traffic-on-the-synchronizer">Coin Burnt for Purchasing Traffic on the Synchronizer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coin-burnt-in-canton-coin-transfers">Coin Burnt in Canton Coin Transfers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#purchasing-cns-entries">Purchasing CNS Entries</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fees-paid-for-creating-cc-transfer-pre-approvals">Fees Paid for Creating CC Transfer Pre-Approvals</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#note-about-daml-versions">Note About Daml Versions</a></li>
 </ul>
 </li>
 </ul>
@@ -1377,6 +1387,359 @@ and then process the updates from the timestamp of that snapshot via the <code c
 remove the contract from the dictionary by <code class="docutils literal notranslate"><span class="pre">contract_id</span></code> if <code class="docutils literal notranslate"><span class="pre">exercised_event</span></code>s are consuming.</p>
 </div>
 </section>
+</section>
+</section>
+<section id="computing-total-burnt-canton-coin">
+<span id="total-burn"></span><h2>Computing Total Burnt Canton Coin<a class="headerlink" href="#computing-total-burnt-canton-coin" title="Link to this heading"></a></h2>
+<p>At a high level, there are several types of transactions in the network in which Canton Coin is burnt:
+- Coin being burnt for purchasing traffic on the synchronizer, and other fees collected as part of that transaction
+- Coin being burnt to account for accrued fees, charged as part of a Canton Coin transfer
+- Purchasing and renewing CNS entries
+- Fees paid for creating and renewing CC transfer pre-approvals</p>
+<p>Below we provide further technical details about the relevant transactions, and how to
+correctly account for the burnt Canton Coin in the network by parsing them.</p>
+<p>For sanity check of your computation, it is strongly advised that you assert that
+on any transaction for which you compute the burnt coin, the difference between the
+sum of coin (or coin equivalent, e.g. various rewards used directly as input to the transaction
+instead of coin contracts) in the input contracts and that of the output contracts is equal to the
+sum of the burnt coin computed from the fees. The Daml models governing the transaction may
+evolve over time, and such an assertion would help you catch cases where the model has
+changed and your computation is no longer precise.</p>
+<section id="coin-burnt-for-purchasing-traffic-on-the-synchronizer">
+<h3>Coin Burnt for Purchasing Traffic on the Synchronizer<a class="headerlink" href="#coin-burnt-for-purchasing-traffic-on-the-synchronizer" title="Link to this heading"></a></h3>
+<p>Traffic on the synchronizer is purchased by executing the <code class="docutils literal notranslate"><span class="pre">AmuletRules_BuyMemberTraffic</span></code>
+choice on the <code class="docutils literal notranslate"><span class="pre">Splice.AmuletRules:AmuletRules</span></code> template. Coin is burnt in that transaction
+both for purchase of the traffic, as well as for other fees collected as part of that same transaction.</p>
+<p>Below is an example of an exercised event for purchasing traffic (with some irrelevant fields omitted):</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">&quot;1220299075b2251a542c4ff0a6aec03dbd3e69041da7d85cd62be9d665f3a959cd25:1&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;event_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;exercised_event&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;event_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1220299075b2251a542c4ff0a6aec03dbd3e69041da7d85cd62be9d665f3a959cd25:1&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;contract_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;00aec43c48f896adb70550e22a5bd44f290534058aa9fa1ba939aa17f622639d31ca101220b56087539ec11e1b7803b726e1d833ef9685dfdffb7570644b44d1074882e0fd&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;template_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;979ec710c3ae3a05cb44edf8461a9b4d7dd2053add95664f94fc89e5f18df80f:Splice.AmuletRules:AmuletRules&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;package_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;splice-amulet&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;choice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;AmuletRules_BuyMemberTraffic&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;choice_argument&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;inputs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;tag&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;InputAmulet&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0019bc6f3f9b53f1e4e3af43e47a35f3fe43507e861490c0b58656fc08a1408c32ca101220ed59a33d6a79962a0924a1ecae3f539c4003d808a0a564dada0437018adb8c6d&quot;</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;tag&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;InputAmulet&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;00b0acb28b679855d0cab28c662663ccfbb22e78873424ec49eddc18e81a4f5fe9ca10122053517786a087da1055ab0f2adf0d20b6d02238c13fee8d2a773e2dc0514976a9&quot;</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;context&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;provider&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;memberId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;synchronizerId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;global-domain::1220e1e594cdb287aeac3e1e6d62e7d2db46b756a5d01656c26f1f1a151345bf2e53&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;migrationId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;trafficAmount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1999800&quot;</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;child_event_ids&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;exercise_result&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;round&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;number&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;10470&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;summary&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;inputAppRewardAmount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0E-10&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;inputValidatorRewardAmount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0E-10&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;inputSvRewardAmount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0E-10&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;inputAmuletAmount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;224019632.4829619323&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;balanceChanges&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;holdingFees&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.0076103600&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;outputFees&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="s2">&quot;209.9976000000&quot;</span>
+<span class="w">      </span><span class="p">],</span>
+<span class="w">      </span><span class="nt">&quot;senderChangeFee&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;6.0000000000&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;senderChangeAmount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;223995628.8753515723&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;amuletPrice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.0050000000&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;inputValidatorFaucetAmount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0E-10&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;amuletPaid&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;23997.6000000000&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;purchasedTraffic&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;00f040b550e04734b36ca89f3d89f77192566bd3b41ead2435b94f9ab32d9eb013ca101220147966510802349805e611d2b88a289decd32ff9dc80268e0e8de5e84661e4f1&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;senderChangeAmulet&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;004997a51da7d833e7122ddd0a10800857c0370a4cc28bcb5f4bc554ec79fb42ccca1012209b58a59bb36a8ad1667a23809bebbc090b9cd5a97612a59a0ad05f2edb129c63&quot;</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;consuming&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;acting_parties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="s2">&quot;Cumberland-GasStation-1::12203f6faf84f106d90b87775def701c39734fe26ce5fb01892c73f45ce8fecc8e86&quot;</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;interface_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
+<span class="p">},</span>
+</pre></div>
+</div>
+<p>To compute all the burnt Canton Coin in this transaction, you should sum up the following fields
+from the <code class="docutils literal notranslate"><span class="pre">summary</span></code> field in the <code class="docutils literal notranslate"><span class="pre">exercise_result</span></code>:</p>
+<ul class="simple">
+<li><p><cite>holdingFees</cite>: Holding fees accrued on the input coin contracts (and charged as part of this transaction), if they were held for longer than a mining round.</p></li>
+<li><p><cite>senderChangeFee</cite>: Fees charged for creation of the coin contract holding the change to the sender.</p></li>
+<li><p><cite>amuletPaid</cite>: The amount of Canton Coin paid for purchasing the traffic credit.</p></li>
+</ul>
+</section>
+<section id="coin-burnt-in-canton-coin-transfers">
+<h3>Coin Burnt in Canton Coin Transfers<a class="headerlink" href="#coin-burnt-in-canton-coin-transfers" title="Link to this heading"></a></h3>
+<p>Similarly to traffic purchases, also as part of Canton Coin transfer transactions, various
+fees are charged. Below is an example of an exercised event for a Canton Coin transfer (with some irrelevant fields omitted):</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">&quot;1220f207fb8c58969e51c99af570f99302ad4f5adf513de0b70dc93e358371f25bc2:2&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;event_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;exercised_event&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;event_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1220f207fb8c58969e51c99af570f99302ad4f5adf513de0b70dc93e358371f25bc2:2&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;contract_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;00aec43c48f896adb70550e22a5bd44f290534058aa9fa1ba939aa17f622639d31ca101220b56087539ec11e1b7803b726e1d833ef9685dfdffb7570644b44d1074882e0fd&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;template_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;979ec710c3ae3a05cb44edf8461a9b4d7dd2053add95664f94fc89e5f18df80f:Splice.AmuletRules:AmuletRules&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;package_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;splice-amulet&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;choice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;AmuletRules_Transfer&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;choice_argument&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;transfer&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;sender&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;provider&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;inputs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">&quot;tag&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;InputAmulet&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0020459e63b92ded757b2d271ae527285d97a28edacd15e2ce9d4b9f209167190cca1012203226f23d0e205f4aa9ffbc9445b39c7a3a2d1ea5b94326adbcd94d7f2862a802&quot;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">],</span>
+<span class="w">      </span><span class="nt">&quot;outputs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">&quot;receiver&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;receiverFeeRatio&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0E-10&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;amount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;9600.2116486069&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;lock&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;context&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;child_event_ids&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;exercise_result&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;round&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;number&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;10468&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;summary&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;inputAppRewardAmount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0E-10&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;inputValidatorRewardAmount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0E-10&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;inputSvRewardAmount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0E-10&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;inputAmuletAmount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;223970271.6123234793&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;balanceChanges&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;holdingFees&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0E-10&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;outputFees&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="s2">&quot;102.0021164861&quot;</span>
+<span class="w">      </span><span class="p">],</span>
+<span class="w">      </span><span class="nt">&quot;senderChangeFee&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;6.0000000000&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;senderChangeAmount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;223960563.3985583863&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;amuletPrice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.0050000000&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;inputValidatorFaucetAmount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0E-10&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;createdAmulets&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;tag&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TransferResultAmulet&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0062dfd0dd4e814762c67c4f8264d9f752f1e3291535546bc33a7d1a5d748c9a6cca1012204a3e156db434b9b56af11b7d9b4dca8ba182baf6d161c2c35dac328e58bebe5a&quot;</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;senderChangeAmulet&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0085965dcb855eb24cc28bdf455aa77c4a60d9ffbbc35d9ac43c64f6bf6667448aca10122018a84ec51c73894877b3897cb415b4569520a6ca32eb992fbf98e72155d62cf9&quot;</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;consuming&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;acting_parties&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;interface_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
+<span class="p">},</span>
+</pre></div>
+</div>
+<p>Similarly to the case of traffic purchases above, to compute all the burnt Canton Coin in this
+transaction, you should sum up the following fields from the <code class="docutils literal notranslate"><span class="pre">summary</span></code> field in the <code class="docutils literal notranslate"><span class="pre">exercise_result</span></code>:</p>
+<ul class="simple">
+<li><p><cite>holdingFees</cite>: Holding fees accrued on the input coin contracts (and charged as part of this transaction), if they were held for longer than a mining round.</p></li>
+<li><p><cite>outputFees</cite>: Fees charged per output coin contract in the transaction.</p></li>
+<li><p><cite>senderChangeFee</cite>: Fees charged for creation of the coin contract holding the change to the sender.</p></li>
+</ul>
+</section>
+<section id="purchasing-cns-entries">
+<h3>Purchasing CNS Entries<a class="headerlink" href="#purchasing-cns-entries" title="Link to this heading"></a></h3>
+<p>Canton Name Service (CNS) entries may be purchased on the network, and paid for by burning Canton Coin.
+Like other transactions, other fees are also charged as part of the transaction.</p>
+<p>Below is an example of the sub-transactions of the <code class="docutils literal notranslate"><span class="pre">AnsEntryContext_CollectInitialEntryPayment</span></code>
+transactions, with some irrelevant fields omitted. Note that there is a similar transaction,
+<code class="docutils literal notranslate"><span class="pre">AnsEntryContext_CollectRenewalEntryPayment</span></code>, for renewing existing CNS entries.</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="nt">&quot;1220088866741e05b6ee333fad8fb505856ad78e836aa812afb1ca4a00deae5d50b3:7&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;event_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;exercised_event&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;event_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1220088866741e05b6ee333fad8fb505856ad78e836aa812afb1ca4a00deae5d50b3:7&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;contract_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;00ec1e0685d269b19064c9ca45294f4d03024988d3d9e3e86e9fd9d4b8b35db8a3ca1012205aa122cbfb63e63310fcfd024daabea1c379d942261033ab34dd1bfc5405e6af&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;template_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;4e3e0d9cdadf80f4bf8f3cd3660d5287c084c9a29f23c901aabce597d72fd467:Splice.Wallet.Subscriptions:SubscriptionInitialPayment&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;package_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;splice-wallet-payments&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;choice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;SubscriptionInitialPayment_Collect&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;choice_argument&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;transferContext&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;child_event_ids&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;exercise_result&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;subscription&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;subscriptionState&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;amulet&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0064d6918d973d69c626a6d9020c625e30199309bcf36460a8e3a4cc0775b44738ca10122090b18bbdc6ac5da9338e547c3f1c310de27184877cb6c4b1daf91c77cfb3356b&quot;</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;consuming&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;acting_parties&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;interface_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
+<span class="p">},</span>
+<span class="nt">&quot;1220088866741e05b6ee333fad8fb505856ad78e836aa812afb1ca4a00deae5d50b3:17&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;event_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;created_event&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;event_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1220088866741e05b6ee333fad8fb505856ad78e836aa812afb1ca4a00deae5d50b3:17&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;contract_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0064d6918d973d69c626a6d9020c625e30199309bcf36460a8e3a4cc0775b44738ca10122090b18bbdc6ac5da9338e547c3f1c310de27184877cb6c4b1daf91c77cfb3356b&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;template_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;4646d50cbdec6f088c98ae543da5c973d2d1be3363b9f32eb097d8fdc063ade7:Splice.Amulet:Amulet&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;package_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;splice-amulet&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;create_arguments&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;dso&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;DSO::122062ff91be08e836bfdc34e0c76ecc786e0f7c0fe40528a220c5dc2ac5a5337961&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;owner&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;amount&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;initialAmount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;200.0000000000&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;createdAt&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;ratePerRound&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;created_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2025-02-27T18:35:36.389123Z&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;signatories&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;observers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span>
+<span class="p">},</span>
+<span class="nt">&quot;1220088866741e05b6ee333fad8fb505856ad78e836aa812afb1ca4a00deae5d50b3:13&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;event_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;exercised_event&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;event_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1220088866741e05b6ee333fad8fb505856ad78e836aa812afb1ca4a00deae5d50b3:13&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;contract_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0062bacc032e3f6191070940cddec7b0d34fdf0f4d8ff49a2e28bbc51462ef9c35ca1012205bb34d8c4609b3172094908c35107e3d774517054efae35b8c6847f4487e95a7&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;template_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;4646d50cbdec6f088c98ae543da5c973d2d1be3363b9f32eb097d8fdc063ade7:Splice.AmuletRules:AmuletRules&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;package_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;splice-amulet&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;choice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;AmuletRules_Transfer&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;choice_argument&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;transfer&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;sender&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;provider&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;inputs&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;outputs&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;context&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;child_event_ids&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;exercise_result&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;round&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;number&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;28&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;summary&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;inputAppRewardAmount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0E-10&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;inputValidatorRewardAmount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0E-10&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;inputSvRewardAmount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0E-10&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;inputAmuletAmount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;208.0000000000&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;balanceChanges&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;holdingFees&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0E-10&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;outputFees&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="s2">&quot;8.0000000000&quot;</span>
+<span class="w">      </span><span class="p">],</span>
+<span class="w">      </span><span class="nt">&quot;senderChangeFee&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0E-10&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;senderChangeAmount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0E-10&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;amuletPrice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.0050000000&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;inputValidatorFaucetAmount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0E-10&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;createdAmulets&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;senderChangeAmulet&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;consuming&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;acting_parties&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;interface_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
+<span class="p">},</span>
+</pre></div>
+</div>
+<p>The two sources of coin burn in this transaction are:</p>
+<ul class="simple">
+<li><p>A temporary coin contract is created and immediately burnt as part of this transaction,
+for the payment for the CNS itself. To find the amount burnt, look at the Amulet contract ID
+in the <code class="docutils literal notranslate"><span class="pre">exercise_result</span></code> field of the <code class="docutils literal notranslate"><span class="pre">SubscriptionInitialPayment_Collect</span></code> choice
+(the first sub-transaction in the example above), then find the corresponding <code class="docutils literal notranslate"><span class="pre">create</span></code> event
+with the same contract ID (the second sub-transaction in the example above). The amount
+in this coin contract is the amount burnt for the CNS entry (you should find a corresponding <code class="docutils literal notranslate"><span class="pre">archive</span></code>
+of the same contract ID in the transaction).</p></li>
+<li><p>Fees collected as part of the <code class="docutils literal notranslate"><span class="pre">transfer</span></code> sub-transaction (the third sub-transaction in the example above),
+similar to transfers explained in the “Coin Burnt in Canton Coin Transfers” above section.</p></li>
+</ul>
+<p>Note that in a separate, earlier, transaction, a coin was locked for this CNS entry, and further fees were charged then.
+However, that locking step is implemented as a <code class="docutils literal notranslate"><span class="pre">transfer</span></code> transaction, thus will be accounted for in the same way as
+other transfers.</p>
+</section>
+<section id="fees-paid-for-creating-cc-transfer-pre-approvals">
+<h3>Fees Paid for Creating CC Transfer Pre-Approvals<a class="headerlink" href="#fees-paid-for-creating-cc-transfer-pre-approvals" title="Link to this heading"></a></h3>
+<p>When creating, or renewing a pre-approval for receiving Canton Coin transfers, fees are charged as part of the transaction.
+Note that pre-approval payments may exist in executions of the <code class="docutils literal notranslate"><span class="pre">AmuletRules_CreateTransferPreapproval</span></code>,
+<code class="docutils literal notranslate"><span class="pre">AmuletRules_CreateExternalPartySetupProposal</span></code> and <code class="docutils literal notranslate"><span class="pre">TransferPreapproval_Renew</span></code> choices.</p>
+<p>Below is an example of an exercised event for creating a pre-approval (with some irrelevant fields omitted):</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">&quot;1220986fb3a857bc92ca570bc11d7b3b8579cb4afe0e0c2ac3ac920057f2d968b99f:0&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;event_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;exercised_event&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;event_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1220986fb3a857bc92ca570bc11d7b3b8579cb4afe0e0c2ac3ac920057f2d968b99f:0&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;contract_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0062bacc032e3f6191070940cddec7b0d34fdf0f4d8ff49a2e28bbc51462ef9c35ca1012205bb34d8c4609b3172094908c35107e3d774517054efae35b8c6847f4487e95a7&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;template_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;4646d50cbdec6f088c98ae543da5c973d2d1be3363b9f32eb097d8fdc063ade7:Splice.AmuletRules:AmuletRules&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;package_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;splice-amulet&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;choice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;AmuletRules_CreateTransferPreapproval&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;choice_argument&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;context&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;amuletRules&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0062bacc032e3f6191070940cddec7b0d34fdf0f4d8ff49a2e28bbc51462ef9c35ca1012205bb34d8c4609b3172094908c35107e3d774517054efae35b8c6847f4487e95a7&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;context&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;inputs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;tag&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;InputAmulet&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;005b5fb07cdf97f2cc32190d0a5cc80176bb20161e581987848ac93c31a07d9932ca101220e3a7885db04643c34edb10fe11a0418810ba881d072c9b40a24a4106aa875a7d&quot;</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;receiver&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;provider&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;expiresAt&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2025-05-28T19:19:09.285322Z&quot;</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;child_event_ids&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;exercise_result&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;transferPreapprovalCid&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;00361db2d2b07253f64deaa7c8db4319625227c27b97143c1b279cdc6294d5cb97ca101220d1c8f06741b5b99477861410e4d4bc460a207af3ea7fa179e903c78846b227e2&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;transferResult&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;round&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;number&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;32&quot;</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;summary&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;inputAppRewardAmount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0E-10&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;inputValidatorRewardAmount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0E-10&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;inputSvRewardAmount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0E-10&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;inputAmuletAmount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;253917.5244126799&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;balanceChanges&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">          </span><span class="p">[</span>
+<span class="w">            </span><span class="s2">&quot;digitalasset-validator1-1::1220e6ee4d3f5387c9210ce50a46b3c4906335bae0083bb1dcc2819d4b52e178ec7e&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">              </span><span class="nt">&quot;changeToInitialAmountAsOfRoundZero&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;-61.3199997000&quot;</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">&quot;changeToHoldingFeesRate&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0E-10&quot;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">          </span><span class="p">]</span>
+<span class="w">        </span><span class="p">],</span>
+<span class="w">        </span><span class="nt">&quot;holdingFees&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0E-10&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;outputFees&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">          </span><span class="s2">&quot;6.0000000000&quot;</span>
+<span class="w">        </span><span class="p">],</span>
+<span class="w">        </span><span class="nt">&quot;senderChangeFee&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;6.0000000000&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;senderChangeAmount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;253856.2044129799&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;amuletPrice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.0050000000&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;inputValidatorFaucetAmount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0E-10&quot;</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;createdAmulets&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;senderChangeAmulet&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;00fe4c85fc36780c61281ffa37679a4580fe33df727e5614185e8aacde1bcd491eca101220b7e8a17df7ec6598d5b5d5b240513805cdbc31404b0fcef2309763237e7245d9&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;amuletPaid&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;49.3199997000&quot;</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;consuming&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;acting_parties&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;...&gt;&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;interface_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
+<span class="p">},</span>
+</pre></div>
+</div>
+<p>You can notice a similar structure to the previous cases, where certain fees are charged, plus
+an “amuletPaid” field that indicates the amount of Canton Coin burnt for creating the pre-approval.
+Accounting for the burnt coin in this transaction is therefore also similar to the previous cases.</p>
+<p>Note, however a subtle difference: In these transactions, as opposed to traffic purchases above,
+the <cite>outputFee</cite> is not included in <cite>amuletPaid</cite>, therefore needs to be added separately to the total burn.</p>
+</section>
+<section id="note-about-daml-versions">
+<h3>Note About Daml Versions<a class="headerlink" href="#note-about-daml-versions" title="Link to this heading"></a></h3>
+<p>Daml models evolve over time. The examples and text here are correct for the models in use on the network
+at the time of writing (February 2025), and were also correct since network genesis. However, as the models
+evolve, the structure of the transactions may change, and future transactions may need to be processed
+differently than described here. Specifically, at the time of writing, there is already a planned change
+where traffic purchases do not go through an intermediate <code class="docutils literal notranslate"><span class="pre">transfer</span></code> transaction, but are directly
+burning coin.</p>
 </section>
 </section>
 </section>
