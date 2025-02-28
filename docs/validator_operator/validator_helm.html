@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.14-ci-snapshot.20250228.1.0.v1ddeb60b
+                0.3.14-ci-snapshot.20250228.1.0.v9142ffea
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -838,7 +838,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="kubernetes-based-deployment-of-a-validator-node">
+<section id="kubernetes-based-deployment-of-a-validator-node">
 <span id="k8s-validator"></span><h1>Kubernetes-Based Deployment of a Validator node<a class="headerlink" href="#kubernetes-based-deployment-of-a-validator-node" title="Link to this heading"></a></h1>
 <p>This section describes how to deploy a standalone validator node in Kubernetes using Helm charts. The Helm charts deploy a validator node along with associated wallet and CNS UIs, and connect it to a global synchronizer.</p>
 <section id="requirements">
@@ -855,9 +855,9 @@
 </li>
 <li><p>Your cluster needs a static egress IP. After acquiring that, provide it to your SV sponsor who will propose
 adding it to the IP allowlist to the other SVs.</p></li>
-<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.14-ci-snapshot.20250228.1.0.v1ddeb60b_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
+<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.14-ci-snapshot.20250228.1.0.v9142ffea_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
 </ol>
-<pre class="literal-block">tar xzvf 0.3.14-ci-snapshot.20250228.1.0.v1ddeb60b_splice-node.tar.gz</pre>
+<pre class="literal-block">tar xzvf 0.3.14-ci-snapshot.20250228.1.0.v9142ffea_splice-node.tar.gz</pre>
 <section id="required-network-parameters">
 <h3>Required Network Parameters<a class="headerlink" href="#required-network-parameters" title="Link to this heading"></a></h3>
 <p>To initialize your validator node, you need the following parameters
@@ -1146,7 +1146,7 @@ kubectl<span class="w"> </span>create<span class="w"> </span>--namespace<span cl
 cluster, you will need to meet a few preconditions. The first is that
 there needs to be an environment variable defined to refer to the
 version of the Helm charts necessary to connect to this environment:</p>
-<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.14-ci-snapshot.20250228.1.0.v1ddeb60b</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.14-ci-snapshot.20250228.1.0.v9142ffea</span></code></p>
 <p>Please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/participant-values.yaml</span></code> as follows:</p>
 <ul class="simple">
 <li><p>Replace <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_LEDGER_API_AUDIENCE</span></code> in the <cite>auth.targetAudience</cite> entry with audience for the ledger API. e.g. <code class="docutils literal notranslate"><span class="pre">https://ledger_api.example.com</span></code>. If you are not ready to use a custom audience, you can use the suggested default <code class="docutils literal notranslate"><span class="pre">https://canton.network.global</span></code>.</p></li>
@@ -1483,6 +1483,24 @@ recovery guidelines).</p>
 </section>
 </section>
 
+<div class="section ablog__comments">
+  <h2>Comments</h2>
+  <script src="https://giscus.app/client.js"
+    data-repo="global-synchronizer-foundation/docs"
+    data-repo-id="R_kgDONbkPcQ"
+    data-category="comments-for-docs"
+    data-category-id="DIC_kwDONbkPcc4Cnaia"
+    data-mapping="pathname"
+    data-strict="1"
+    data-reactions-enabled="0"
+    data-emit-metadata="0"
+    data-input-position="bottom"
+    data-theme="light"
+    data-lang="en"
+    crossorigin="anonymous"
+    async>
+  </script>
+</div>
 
            </div>
           </div>
