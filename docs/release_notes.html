@@ -40,7 +40,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.14-ci-snapshot.20250303.1.0.v2d59ab4b
+                0.3.14-ci-snapshot.20250303.1.0.vff57362c
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -850,6 +850,16 @@
 <span id="id1"></span><h1>Release Notes<a class="headerlink" href="#release-notes" title="Link to this heading"></a></h1>
 <section id="upcoming">
 <h2>Upcoming<a class="headerlink" href="#upcoming" title="Link to this heading"></a></h2>
+<ul>
+<li><p>Deployment</p>
+<ul>
+<li><p>Change the port used by nginx in the UI docker images from 80 to 8080.</p>
+<p>The services defined by the helm charts still expose port 80 by default, but now all of them are configurable through the helm values, eg: the validator helm chart has new values configured through <cite>service.wallet.port</cite> &amp; <cite>service.ans.port</cite>.</p>
+<p>The compose deployments contain an updated nginx.conf that now uses the new 8080 ports.</p>
+</li>
+</ul>
+</li>
+</ul>
 </section>
 <section id="id2">
 <h2>0.3.13<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
