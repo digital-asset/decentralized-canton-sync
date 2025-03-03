@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.14-ci-snapshot.20250303.1.0.v01403ee8
+                0.3.14-ci-snapshot.20250303.1.0.vc1e2f28f
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -439,6 +439,9 @@
 <li class="toctree-l3"><a class="reference internal" href="#open-api-specification">Open API Specification</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#updates">Updates</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#id2">POST /v1/updates</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#requesting-all-updates">Requesting all updates</a></li>
+<li class="toctree-l6"><a class="reference internal" href="#requesting-updates-from-an-arbitrary-record-time">Requesting updates from an arbitrary record time</a></li>
+<li class="toctree-l6"><a class="reference internal" href="#reading-the-response">Reading the response</a></li>
 <li class="toctree-l6"><a class="reference internal" href="#exercised-event">Exercised Event</a></li>
 <li class="toctree-l6"><a class="reference internal" href="#created-event">Created Event</a></li>
 </ul>
@@ -944,15 +947,20 @@ provides a JSON encoded version of the recorded update history. Once you have an
 <section id="id2">
 <span id="id3"></span><h4>POST /v1/updates<a class="headerlink" href="#id2" title="Link to this heading"></a></h4>
 <p>Post a paged <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/7345124f9f05395ab4797c0478c7e1dd37186369/apps/scan/src/main/openapi/scan-internal.yaml#L1672">UpdateHistoryRequestV1</a>
-request to get all updates up to <code class="docutils literal notranslate"><span class="pre">page_size</span></code>, optionally specifying an <code class="docutils literal notranslate"><span class="pre">after</span></code> object with <code class="docutils literal notranslate"><span class="pre">after_migration_id</span></code> and <code class="docutils literal notranslate"><span class="pre">after_record_time</span></code> fields.
-(for the beginning of the network you can omit the <code class="docutils literal notranslate"><span class="pre">after</span></code> field).
-An example of a <code class="docutils literal notranslate"><span class="pre">UpdateHistoryRequestV1</span></code> request body is shown below, getting a page of max 10 updates from the beginning of the network:</p>
+request to get all updates up to <code class="docutils literal notranslate"><span class="pre">page_size</span></code>.</p>
+<section id="requesting-all-updates">
+<h5>Requesting all updates<a class="headerlink" href="#requesting-all-updates" title="Link to this heading"></a></h5>
+<p>To get the first page of updates from the beginning of the network, omit the <code class="docutils literal notranslate"><span class="pre">after</span></code> field in the request body.</p>
+<p>An example of a <code class="docutils literal notranslate"><span class="pre">UpdateHistoryRequestV1</span></code> request body is shown below, getting a page of max 10 updates from the beginning of the network:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;page_size&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>Another example of a <code class="docutils literal notranslate"><span class="pre">UpdateHistoryRequestV1</span></code> request body is shown below, getting a page of max 10 updates after the specified record time:</p>
+<p>To get the next page of updates, take the <code class="docutils literal notranslate"><span class="pre">migration_id</span></code> and the <code class="docutils literal notranslate"><span class="pre">record_time</span></code> from the last update in the response of the previous successful request and use this
+in a subsequent request in the <code class="docutils literal notranslate"><span class="pre">after</span></code> object, to read the next page.
+Once you receive less updates than the requested <code class="docutils literal notranslate"><span class="pre">page_size</span></code>, you have reached the end of the stream.</p>
+<p>An example of a <code class="docutils literal notranslate"><span class="pre">UpdateHistoryRequestV1</span></code> request body is shown below, getting a page of max 10 updates after the specified record time:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;page_size&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;after&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
@@ -962,8 +970,23 @@ An example of a <code class="docutils literal notranslate"><span class="pre">Upd
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>Take the <code class="docutils literal notranslate"><span class="pre">migration_id</span></code> and the <code class="docutils literal notranslate"><span class="pre">record_time</span></code> from the last update in the response of the previous successful request and use this
-in a subsequent request in the <code class="docutils literal notranslate"><span class="pre">after</span></code> object, to read the next page. Once you receive less updates than the requested <code class="docutils literal notranslate"><span class="pre">page_size</span></code>, you have reached the end of the stream.</p>
+</section>
+<section id="requesting-updates-from-an-arbitrary-record-time">
+<h5>Requesting updates from an arbitrary record time<a class="headerlink" href="#requesting-updates-from-an-arbitrary-record-time" title="Link to this heading"></a></h5>
+<p>To get updates starting from an arbitrary record time, specify the <code class="docutils literal notranslate"><span class="pre">after</span></code> field in the request body,
+where <code class="docutils literal notranslate"><span class="pre">after_record_time</span></code> is the time at which you want to start fetching updates (exclusive),
+and <code class="docutils literal notranslate"><span class="pre">after_migration_id</span></code> is the migration ID that was active at that time.</p>
+<p>Note that the record time ranges of different migrations may overlap,
+i.e., the record time can go back after a hard domain migration.
+Read the <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/893346e70b1220be999d89853a0f9ecae5083b08/apps/scan/src/main/openapi/scan-internal.yaml#L1737">OpenAPI documentation</a>
+to understand how the <code class="docutils literal notranslate"><span class="pre">after_migration_id</span></code> field affects the response.</p>
+<p>If you don’t know what migration ID was active at the chose time,
+start with migration ID 0 and keep incrementing it by one
+until you find the lowest migration id that includes a higher record time than the one you specified in <cite>after_record_time</cite>.</p>
+<p>After getting the first page of updates, use the <code class="docutils literal notranslate"><span class="pre">after</span></code> field as described in the above section to fetch subsequent pages.</p>
+</section>
+<section id="reading-the-response">
+<h5>Reading the response<a class="headerlink" href="#reading-the-response" title="Link to this heading"></a></h5>
 <p>The response returns a list of transactions. Every transaction contains the following fields:</p>
 <ul class="simple">
 <li><p><strong>migration_id</strong> : This ID increments with every hard synchronizer migration. A hard synchronizer migration is performed for every significant Canton version upgrade.
@@ -1013,6 +1036,7 @@ as those can differ between different participants for the same event.</p></li>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">events_by_id</span></code> object contains created and exercised events.
 We’ll now go through a couple of example events to highlight the most important fields to process.</p>
+</section>
 <section id="exercised-event">
 <h5>Exercised Event<a class="headerlink" href="#exercised-event" title="Link to this heading"></a></h5>
 <p>An exercised event has the following important fields:</p>
