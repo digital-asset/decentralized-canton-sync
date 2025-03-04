@@ -40,7 +40,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.14-ci-snapshot.20250304.1.0.v7f66c7ea
+                0.3.14-ci-snapshot.20250304.1.0.v324a565f
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -863,6 +863,9 @@
 <li><p>Move <code class="docutils literal notranslate"><span class="pre">topup</span></code> section from the <code class="docutils literal notranslate"><span class="pre">validator-values.yaml</span></code> example file to the <code class="docutils literal notranslate"><span class="pre">standalone-validator.yaml</span></code> example file
 to make it more clear that configuring topups is a reasonable option only for non-SV validators.
 See <a class="reference external" href="https://github.com/hyperledger-labs/splice/pull/255">hyperledger-labs/splice#255</a></p></li>
+<li><p>Added the <code class="docutils literal notranslate"><span class="pre">initialAmuletPrice</span></code> helm option to set the initial amulet price vote (i.e., the price for which your SV node will vote when onboarded).
+See the <a class="reference internal" href="sv_operator/sv_helm.html#helm-configure-global-domain"><span class="std std-ref">configuration instructions</span></a>.
+Note that this only takes effect for new nodes. For already existing nodes, change the price vote through the SV UI.</p></li>
 </ul>
 </li>
 </ul>

@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.14-ci-snapshot.20250304.1.0.v7f66c7ea
+                0.3.14-ci-snapshot.20250304.1.0.v324a565f
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -869,9 +869,9 @@ target cluster.</p>
 </div></blockquote>
 </li>
 <li><p>Your cluster needs a static egress IP. After acquiring that, propose to the other SVs to add it to the IP allowlist.</p></li>
-<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.14-ci-snapshot.20250304.1.0.v7f66c7ea_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
+<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.14-ci-snapshot.20250304.1.0.v324a565f_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
 </ol>
-<pre class="literal-block">tar xzvf 0.3.14-ci-snapshot.20250304.1.0.v7f66c7ea_splice-node.tar.gz</pre>
+<pre class="literal-block">tar xzvf 0.3.14-ci-snapshot.20250304.1.0.v324a565f_splice-node.tar.gz</pre>
 <ol class="arabic simple" start="5">
 <li><p>Please inquire if the global synchronizer (domain) on your target network has previously undergone a <a class="reference internal" href="sv_major_upgrade.html#sv-upgrades"><span class="std std-ref">synchronizer migration</span></a>.
 If it has, please record the current migration ID of the synchronizer.
@@ -1198,9 +1198,9 @@ To do that, you first must generate the keys that will identify the node.</p>
 mkdir cometbft
 cd cometbft
 # Init the node
-docker run --rm -v &quot;$(pwd):/init&quot; ghcr.io/digital-asset/decentralized-canton-sync/docker/cometbft:0.3.14-ci-snapshot.20250304.1.0.v7f66c7ea init --home /init
+docker run --rm -v &quot;$(pwd):/init&quot; ghcr.io/digital-asset/decentralized-canton-sync/docker/cometbft:0.3.14-ci-snapshot.20250304.1.0.v324a565f init --home /init
 # Read the node id and keep a note of it for the deployment
-docker run --rm -v &quot;$(pwd):/init&quot; ghcr.io/digital-asset/decentralized-canton-sync/docker/cometbft:0.3.14-ci-snapshot.20250304.1.0.v7f66c7ea show-node-id --home /init</pre>
+docker run --rm -v &quot;$(pwd):/init&quot; ghcr.io/digital-asset/decentralized-canton-sync/docker/cometbft:0.3.14-ci-snapshot.20250304.1.0.v324a565f show-node-id --home /init</pre>
 <p>Please keep a note of the node ID printed out above.</p>
 <p>In addition, please retain some of the configuration files generated, as follows (you might need to change the permissions/ownership for them as they are accessible only by the root user):</p>
 <div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="n">cometbft</span><span class="o">/</span><span class="n">config</span><span class="o">/</span><span class="n">node_key</span><span class="p">.</span><span class="n">json</span>
@@ -1302,7 +1302,7 @@ you will also need to ensure that <cite>persistence.databaseName</cite> is uniqu
 cluster, you will need to meet a few preconditions. The first is that
 there needs to be an environment variable defined to refer to the
 version of the Helm charts necessary to connect to this environment:</p>
-<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.14-ci-snapshot.20250304.1.0.v7f66c7ea</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.14-ci-snapshot.20250304.1.0.v324a565f</span></code></p>
 <p>An SV node includes a CometBft node so you also need to configure
 that. Please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/cometbft-values.yaml</span></code> as follows:</p>
 <ul class="simple">
@@ -1367,19 +1367,22 @@ identity.</p>
 <ul class="simple">
 <li><p>Replace all instances of <code class="docutils literal notranslate"><span class="pre">TARGET_HOSTNAME</span></code> with <span class="raw-html"><span class="splice-url-prefix">unknown_cluster.</span>global.canton.network.digitalasset.com</span>, per the cluster to which you are connecting.</p></li>
 <li><p>Replace all instances of <code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code> with the migration ID of the global synchronizer on your target cluster.</p></li>
-<li><p>If you want to configure the audience for the SV app backend API, replace <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_SV_AUDIENCE</span></code> in the <cite>auth.audience</cite> entry with audience for the SV app backend API. e.g. <code class="docutils literal notranslate"><span class="pre">https://sv.example.com/api</span></code>.</p></li>
+<li><p>If you want to configure the audience for the SV app backend API, replace <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_SV_AUDIENCE</span></code> in the <code class="docutils literal notranslate"><span class="pre">auth.audience</span></code> entry with audience for the SV app backend API. e.g. <code class="docutils literal notranslate"><span class="pre">https://sv.example.com/api</span></code>.</p></li>
 <li><p>Replace <code class="docutils literal notranslate"><span class="pre">YOUR_SV_NAME</span></code> with the name you chose when creating the SV identity (this must be an exact match of the string for your SV to be approved to onboard)</p></li>
 <li><p>Update the <code class="docutils literal notranslate"><span class="pre">auth.jwksUrl</span></code> entry to point to your auth provider’s JWK set document by replacing <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_URL</span></code> with your auth provider’s OIDC URL, as explained above.</p></li>
-<li><p>Please set <cite>domain.sequencerPublicUrl</cite> to the URL to your sequencer service in the SV configuration. If you are using the ingress configuration of this runbook, you can just replace <code class="docutils literal notranslate"><span class="pre">YOUR_HOSTNAME</span></code> with your host name.</p></li>
-<li><p>Please set <cite>scan.publicUrl</cite> to the URL to your Scan app in the SV configuration. If you are using the ingress configuration of this runbook, you can just replace <code class="docutils literal notranslate"><span class="pre">YOUR_HOSTNAME</span></code> with your host name.</p></li>
+<li><p>Please set <code class="docutils literal notranslate"><span class="pre">domain.sequencerPublicUrl</span></code> to the URL to your sequencer service in the SV configuration. If you are using the ingress configuration of this runbook, you can just replace <code class="docutils literal notranslate"><span class="pre">YOUR_HOSTNAME</span></code> with your host name.</p></li>
+<li><p>Please set <code class="docutils literal notranslate"><span class="pre">scan.publicUrl</span></code> to the URL to your Scan app in the SV configuration. If you are using the ingress configuration of this runbook, you can just replace <code class="docutils literal notranslate"><span class="pre">YOUR_HOSTNAME</span></code> with your host name.</p></li>
 <li><p>It is recommended to <a class="reference internal" href="sv_pruning.html#sv-pruning"><span class="std std-ref">configure pruning</span></a> .</p></li>
 <li><p>Replace <code class="docutils literal notranslate"><span class="pre">YOUR_CONTACT_POINT</span></code> by a slack user name or email address that can be used by node operators to contact you in case there are issues with your node. If you do not want to share
 this, set it to an empty string.</p></li>
-<li><p>If you would like to redistribute all or part of the SV rewards with other parties, you can fill up the <cite>extraBeneficiaries</cite> section with the desired parties and the percentage of the reward that corresponds to them.
+<li><p>If you would like to redistribute all or part of the SV rewards with other parties, you can fill up the <code class="docutils literal notranslate"><span class="pre">extraBeneficiaries</span></code> section with the desired parties and the percentage of the reward that corresponds to them.
 Note that the party you register must be known on the network for the reward coupon issuance to succeed.
 Furthermore, that party must be hosted on a validator node for its wallet to collect the SV reward coupons. That collection will happen automatically if the wallet is running.
 If it is not running during the time that the reward coupon can be collected, the corresponding reward is marked as unclaimed, and stored in an DSO-wide unclaimed reward pool.
-The <cite>extraBeneficiaries</cite> can be changed with just a restart of the SV app.</p></li>
+The <code class="docutils literal notranslate"><span class="pre">extraBeneficiaries</span></code> can be changed with just a restart of the SV app.</p></li>
+<li><p>Optionally, uncomment the line for <code class="docutils literal notranslate"><span class="pre">initialAmuletPrice</span></code> and set it to your desired amulet price.
+This will create an amulet price vote from your SV with the configured price when onboarded.
+If not set, no vote will be cast. This can always be done later manually from the SV app UI.</p></li>
 </ul>
 <p>If you are redeploying the SV app as part of a <a class="reference internal" href="sv_major_upgrade.html#sv-upgrades"><span class="std std-ref">synchronizer migration</span></a>, in your <code class="docutils literal notranslate"><span class="pre">sv-values.yaml</span></code>:</p>
 <ul class="simple">
