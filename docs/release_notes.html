@@ -40,7 +40,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.14-ci-snapshot.20250304.1.0.veb6f28b7
+                0.3.14-ci-snapshot.20250304.1.0.v4e2121ea
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -860,6 +860,9 @@
 <p>The services defined by the helm charts still expose port 80 by default, but now all of them are configurable through the helm values, eg: the validator helm chart has new values configured through <cite>service.wallet.port</cite> &amp; <cite>service.ans.port</cite>.</p>
 <p>The compose deployments contain an updated nginx.conf that now uses the new 8080 ports.</p>
 </li>
+<li><p>Move <code class="docutils literal notranslate"><span class="pre">topup</span></code> section from the <code class="docutils literal notranslate"><span class="pre">validator-values.yaml</span></code> example file to the <code class="docutils literal notranslate"><span class="pre">standalone-validator.yaml</span></code> example file
+to make it more clear that configuring topups is a reasonable option only for non-SV validators.
+See <a class="reference external" href="https://github.com/hyperledger-labs/splice/pull/255">hyperledger-labs/splice#255</a></p></li>
 </ul>
 </li>
 </ul>
