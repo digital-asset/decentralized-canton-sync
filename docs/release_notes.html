@@ -40,7 +40,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.14-ci-snapshot.20250305.1.0.v40236a4b
+                0.3.14-ci-snapshot.20250305.1.0.ve06fd6ad
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -131,6 +131,7 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="validator_operator/validator_network_resets.html">Network Resets of DevNet and Testnet</a></li>
 <li class="toctree-l2"><a class="reference internal" href="validator_operator/validator_backups.html">Backups</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="validator_operator/validator_backups.html#backup-of-node-identities">Backup of Node Identities</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_operator/validator_backups.html#backups-of-postgres-instances">Backups of postgres instances</a><ul>
@@ -248,6 +249,7 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="sv_operator/sv_network_resets.html">Network Resets of DevNet and Testnet</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sv_operator/sv_backup.html">Backups</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="sv_operator/sv_backup.html#backup-of-node-identities">Backup of Node Identities</a></li>
 <li class="toctree-l3"><a class="reference internal" href="sv_operator/sv_backup.html#backup-of-postgres-instances">Backup of Postgres Instances</a><ul>
@@ -869,8 +871,15 @@ Note that this only takes effect for new nodes. For already existing nodes, chan
 </ul>
 </li>
 <li><p>Validator</p>
-<p>Adde the option to specify multiple <code class="docutils literal notranslate"><span class="pre">validatorWalletUsers</span></code> in the validator helm charts. The existing <code class="docutils literal notranslate"><span class="pre">validatorWalletUser</span></code> option is
-still supported.</p>
+<ul class="simple">
+<li><p>Added the option to specify multiple <code class="docutils literal notranslate"><span class="pre">validatorWalletUsers</span></code> in the validator helm charts. The existing <code class="docutils literal notranslate"><span class="pre">validatorWalletUser</span></code> option is
+still supported.</p></li>
+</ul>
+</li>
+<li><p>Docs</p>
+<ul class="simple">
+<li><p>Added documentation for managing network resets for validators and super validators.</p></li>
+</ul>
 </li>
 </ul>
 </section>
