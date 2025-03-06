@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.14-ci-snapshot.20250306.1.0.vc2f286b1
+                0.3.14-ci-snapshot.20250306.1.0.v1e757e26
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -495,7 +495,10 @@
 </li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Scan API for Current state of CC and Synchronizer Traffic</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#validator-traffic-credits-and-purchases">Validator Traffic Credits and Purchases</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#open-mining-rounds">Open Mining Rounds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#open-mining-rounds">Open Mining Rounds</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#conversion-rate">Conversion rate</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#closed-mining-rounds">Closed Mining Rounds</a></li>
 </ul>
 </li>
@@ -953,9 +956,14 @@ The initial request is always empty:</p>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>Key fields are <code class="docutils literal notranslate"><span class="pre">round</span></code>, <code class="docutils literal notranslate"><span class="pre">opensAt</span></code>, and <code class="docutils literal notranslate"><span class="pre">targetClosesAt</span></code>, which gives you an idea of the open window for this round.
-Open rounds also include many fields explaining the assigned fees for that round; see the Daml template <code class="docutils literal notranslate"><span class="pre">OpenMiningRound</span></code> for more details.</p>
-<p>For followup polling requests, you’ll want to pass the keys from the previously-returned maps so Scan responds more efficiently.</p>
+<p>Key fields in the <code class="docutils literal notranslate"><span class="pre">contract.payload</span></code> of open and issuing mining rounds are <code class="docutils literal notranslate"><span class="pre">round</span></code>, <code class="docutils literal notranslate"><span class="pre">opensAt</span></code>, and <code class="docutils literal notranslate"><span class="pre">targetClosesAt</span></code>, which gives you an idea of the open window for the round.
+Open rounds also include many fields explaining the assigned fees for that round; see the Daml template <code class="docutils literal notranslate"><span class="pre">OpenMiningRound</span></code> for more details.
+For followup polling requests, you’ll want to pass the keys from the previously-returned maps so Scan responds more efficiently.</p>
+<section id="conversion-rate">
+<h3>Conversion rate<a class="headerlink" href="#conversion-rate" title="Link to this heading"></a></h3>
+<p>The conversion rate for Amulet to USD is set for an open round.
+The conversion rate is found in the <code class="docutils literal notranslate"><span class="pre">amuletPrice</span></code> field in the <code class="docutils literal notranslate"><span class="pre">contract.payload</span></code> of an open round. In the example above, the conversion rate is 0.005 USD per Amulet.</p>
+</section>
 </section>
 <section id="closed-mining-rounds">
 <h2>Closed Mining Rounds<a class="headerlink" href="#closed-mining-rounds" title="Link to this heading"></a></h2>
