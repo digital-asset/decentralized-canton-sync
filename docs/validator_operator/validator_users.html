@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.16-ci-snapshot.20250311.1.0.vf043a184
+                0.3.16-ci-snapshot.20250311.1.0.vb6827f19
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -173,7 +173,10 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Users, Parties and Wallets in the Splice Wallet</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Users, Parties and Wallets in the Splice Wallet</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#disable-wallet-and-wallet-automation">Disable wallet and wallet automation</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="validator_networking.html">Validator Ingress &amp; Egress requirements</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="validator_networking.html#ingress">Ingress</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_networking.html#egress">Egress</a></li>
@@ -897,6 +900,14 @@ Note that the user should not be greeted with the “Onboard yourself” button,
 onboarded through the API call above. If you do see the button, it means that something has gone wrong
 in the process above (do not click the button!).</p></li>
 </ol>
+<section id="disable-wallet-and-wallet-automation">
+<h2>Disable wallet and wallet automation<a class="headerlink" href="#disable-wallet-and-wallet-automation" title="Link to this heading"></a></h2>
+<p>To disable the wallet HTTP server and the wallet automation, update the <code class="docutils literal notranslate"><span class="pre">validator-values.yaml</span></code> file with <code class="docutils literal notranslate"><span class="pre">enableWallet:</span> <span class="pre">false</span></code></p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># This will disable the wallet HTTP server and wallet automations when set to false</span>
+<span class="nt">enableWallet</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</pre></div>
+</div>
+</section>
 </section>
 
 <div class="section ablog__comments">
