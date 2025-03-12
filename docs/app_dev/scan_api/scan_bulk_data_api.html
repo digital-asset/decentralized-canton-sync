@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.16-ci-snapshot.20250312.1.0.va6f1e3ff
+                0.3.16-ci-snapshot.20250312.1.0.vfdd59d86
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -511,7 +511,14 @@
 <li class="toctree-l3"><a class="reference internal" href="scan_aggregates_api.html#looking-up-ans-entries">Looking up ANS Entries</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="scan_openapi.html">Scan Open API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan_openapi.html">Scan Open API Reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scan_openapi.html#external">external</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scan_openapi.html#internal">internal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scan_openapi.html#deprecated">deprecated</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scan_openapi.html#scan">scan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scan_openapi.html#common">common</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../validator_api/index.html">Validator API</a><ul>
@@ -933,7 +940,7 @@ The below table provides a quick overview of the endpoints that the Scan Bulk Da
 </tbody>
 </table>
 <p>If you would rather read the yaml Open API specification file directly, this can be found in the Splice repository at
-<a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/08fc692cf2952a52cce00473793d1dca08c0fba5/apps/scan/src/main/openapi/scan-internal.yaml">scan-internal.yaml</a>.</p>
+<a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/08fc692cf2952a52cce00473793d1dca08c0fba5/apps/scan/src/main/openapi/scan.yaml">scan.yaml</a>.</p>
 <p>Example URLs for accessing the Scan Bulk Data API are:</p>
 <ul class="simple">
 <li><p><span class="raw-html">https://scan.sv-1.<span class="splice-url-prefix">unknown_cluster.</span>global.canton.network.sync.global</span>/api/scan/v1/updates</p></li>
@@ -955,7 +962,7 @@ provides a JSON encoded version of the recorded update history. Once you have an
 <a class="reference external" href="scan_openapi.html#get--v0-updates-update_id">/v0/updates/{update_id}</a>.</p>
 <section id="id2">
 <span id="id3"></span><h4>POST /v1/updates<a class="headerlink" href="#id2" title="Link to this heading"></a></h4>
-<p>Post a paged <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/7345124f9f05395ab4797c0478c7e1dd37186369/apps/scan/src/main/openapi/scan-internal.yaml#L1672">UpdateHistoryRequestV1</a>
+<p>Post a paged <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/7345124f9f05395ab4797c0478c7e1dd37186369/apps/scan/src/main/openapi/scan.yaml#L1672">UpdateHistoryRequestV1</a>
 request to get all updates up to <code class="docutils literal notranslate"><span class="pre">page_size</span></code>.</p>
 <section id="requesting-all-updates">
 <h5>Requesting all updates<a class="headerlink" href="#requesting-all-updates" title="Link to this heading"></a></h5>
@@ -987,7 +994,7 @@ where <code class="docutils literal notranslate"><span class="pre">after_record_
 and <code class="docutils literal notranslate"><span class="pre">after_migration_id</span></code> is the migration ID that was active at that time.</p>
 <p>Note that the record time ranges of different migrations may overlap,
 i.e., the record time can go back after a hard domain migration.
-Read the <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/893346e70b1220be999d89853a0f9ecae5083b08/apps/scan/src/main/openapi/scan-internal.yaml#L1737">OpenAPI documentation</a>
+Read the <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/893346e70b1220be999d89853a0f9ecae5083b08/apps/scan/src/main/openapi/scan.yaml#L1737">OpenAPI documentation</a>
 to understand how the <code class="docutils literal notranslate"><span class="pre">after_migration_id</span></code> field affects the response.</p>
 <p>If you don’t know what migration ID was active at the chose time,
 start with migration ID 0 and keep incrementing it by one

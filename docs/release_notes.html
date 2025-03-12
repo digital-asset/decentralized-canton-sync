@@ -40,7 +40,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.16-ci-snapshot.20250312.1.0.va6f1e3ff
+                0.3.16-ci-snapshot.20250312.1.0.vfdd59d86
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -510,7 +510,14 @@
 <li class="toctree-l3"><a class="reference internal" href="app_dev/scan_api/scan_aggregates_api.html#looking-up-ans-entries">Looking up ANS Entries</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="app_dev/scan_api/scan_openapi.html">Scan Open API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="app_dev/scan_api/scan_openapi.html">Scan Open API Reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="app_dev/scan_api/scan_openapi.html#external">external</a></li>
+<li class="toctree-l3"><a class="reference internal" href="app_dev/scan_api/scan_openapi.html#internal">internal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="app_dev/scan_api/scan_openapi.html#deprecated">deprecated</a></li>
+<li class="toctree-l3"><a class="reference internal" href="app_dev/scan_api/scan_openapi.html#scan">scan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="app_dev/scan_api/scan_openapi.html#common">common</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="app_dev/validator_api/index.html">Validator API</a><ul>
@@ -867,6 +874,11 @@
 <ul>
 <li><p>The SV and validator apps now preserve participant-local user state across synchronizer upgrades with downtime.
 More specifically, SVs and validators now preserve identity provider configs and users with all state attached to them (including, for example, rights and metadata annotations).</p></li>
+</ul>
+</li>
+<li><p>Scan</p>
+<ul>
+<li><p>the Scan API in scan-internal.yaml and scan-external.yaml have been merged into one scan.yaml file. Deprecated endpoints are marked with <code class="docutils literal notranslate"><span class="pre">deprecated:</span> <span class="pre">true</span></code>.</p></li>
 </ul>
 </li>
 </ul>
