@@ -157,6 +157,7 @@ generateUnclaimedReward app provider1 = do
   submitMulti [app.dso, provider1.primaryParty] [] $ createCmd AppRewardCoupon with
     dso = app.dso
     provider = provider1.primaryParty
+    beneficiary = None
     amount = 5.7
     round = Round 0
     featured = True

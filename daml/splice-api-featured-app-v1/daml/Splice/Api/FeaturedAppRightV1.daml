@@ -1,20 +1,33 @@
 -- | The API for featured apps to record their activity.
 module Splice.Api.FeaturedAppRightV1 where
 
--- | A contract granting an application provider the right to record their featured activity,
--- which can be used under some circumstances to mint rewards.
+data FeaturedAppBeneficiary = FeaturedAppBeneficiary
+  with
+    beneficiary : Party
+    weight : Decimal
+  deriving (Show, Eq)
+
+-- | An interface for contracts allowing application providers to record their featured activity.
+-- Note that most instances of amulet will likely define some fair usage constraints.
 interface FeaturedAppRight where
   viewtype FeaturedAppRightView
 
-  featuredAppRight_CreateActivityMarkerImpl : Update FeaturedAppRight_CreateActivityMarkerResult
+  featuredAppRight_CreateActivityMarkerImpl : FeaturedAppRight_CreateActivityMarker -> Update FeaturedAppRight_CreateActivityMarkerResult
 
   nonconsuming choice FeaturedAppRight_CreateActivityMarker : FeaturedAppRight_CreateActivityMarkerResult
+    with
+      beneficiaries : [FeaturedAppBeneficiary]
+        -- ^ The set of beneficiaries and weights that define how the rewards should be split up
+        -- between the beneficiary parties.
+        --
+        -- Implementations SHOULD check that the weights are positive and add up to 1.0.
+        -- Implementations MAY also require weights to be larger than a minimum value.
     controller (view this).provider
-    do featuredAppRight_CreateActivityMarkerImpl this
+    do featuredAppRight_CreateActivityMarkerImpl this arg
 
 data FeaturedAppRight_CreateActivityMarkerResult = FeaturedAppRight_CreateActivityMarkerResult
   with
-    activityMarkerContractId : ContractId FeaturedAppActivityMarker
+    activityMarkerCids : [ContractId FeaturedAppActivityMarker]
 
 data FeaturedAppRightView = FeaturedAppRightView
   with
@@ -23,10 +36,7 @@ data FeaturedAppRightView = FeaturedAppRightView
   deriving (Show, Eq)
 
 -- | A marker created by a featured application for activity generated from that app. This is used
--- to record activity other than amulet transfers where regular AppRewardCoupons are not created directly.
---
--- This is expected to be converted to an `AppRewardCoupon` through automation run by the SVs and can then be
--- minted as part of the normal minting process.
+-- to record activity other than amulet transfers, which have built-in support for recording featured app activity.
 interface FeaturedAppActivityMarker where
   viewtype FeaturedAppActivityMarkerView
 
@@ -34,4 +44,6 @@ data FeaturedAppActivityMarkerView = FeaturedAppActivityMarkerView
   with
     dso : Party
     provider : Party
+    beneficiary : Party
+    weight : Decimal
   deriving (Show, Eq)

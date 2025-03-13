@@ -582,19 +582,20 @@ template AmuletRules
       controller dso
       do now <- getTime
          markers <- mapA (fetchAndArchive (ForDso dso)) markerCids
-         let groupedMarkers = Map.fromListWithR (<>) (map (\m -> (m.provider, [m])) markers)
+         let groupedMarkers = Map.fromListWithR (<>) (map (\m -> ((m.provider, m.beneficiary), [m])) markers)
          round <- fetchReferenceData (ForDso dso) openMiningRoundCid
          require ("mining round is open: " <> show round) (round.opensAt <= now)
          let configUsd = getValueAsOf now configSchedule
              amountUsd = fromOptional defaultFeaturedAppActivityMarkerAmount configUsd.featuredAppActivityMarkerAmount
              amountAmulet = amountUsd / round.amuletPrice
-         appRewardCouponCids <- forA (Map.toList groupedMarkers) $ \(provider, markers) ->
+         appRewardCouponCids <- forA (Map.toList groupedMarkers) $ \((provider, beneficiary), markers) ->
            create AppRewardCoupon with
              dso
              provider
+             beneficiary = Some beneficiary
              featured = True
              round = round.round
-             amount = amountAmulet * intToDecimal (length markers)
+             amount = amountAmulet * sum (map (.weight) markers)
          pure AmuletRules_ConvertFeaturedAppActivityMarkersResult with appRewardCouponCids
 
 -- Transfer logic
@@ -983,6 +984,7 @@ issueRewards config csum sender provider summary
         void $ create AppRewardCoupon with
           dso = csum.openRound.dso
           provider
+          beneficiary = None
           featured
           amount = usageFees + extraAppReward
           round = csum.openRound.round

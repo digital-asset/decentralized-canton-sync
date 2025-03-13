@@ -27,6 +27,7 @@ testRewardComputation = do
   appCoupon1 <- submitMulti [app.dso, aliceValidator.primaryParty] [] $ createCmd AppRewardCoupon with
     dso = app.dso
     provider = aliceValidator.primaryParty
+    beneficiary = None
     amount = featuredAppRewardCoupon
     round = Round 0
     featured = True
@@ -34,6 +35,7 @@ testRewardComputation = do
   appCoupon2 <- submitMulti [app.dso, aliceValidator.primaryParty] [] $ createCmd AppRewardCoupon with
     dso = app.dso
     provider = aliceValidator.primaryParty
+    beneficiary = None
     amount = unfeaturedAppRewardCoupon
     round = Round 0
     featured = False

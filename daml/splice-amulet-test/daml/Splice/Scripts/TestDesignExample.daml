@@ -92,6 +92,7 @@ test_designExample= do
   appRewardCoupon === AppRewardCoupon with
     dso = app.dso
     provider = alice.primaryParty
+    beneficiary = None
     featured = False
     amount = transferConfig.createFee.fee + transferConfig.lockHolderFee.fee
     round = Round 2
@@ -109,6 +110,7 @@ test_designExample= do
   appRewardCoupon === AppRewardCoupon with
     dso = app.dso
     provider = alice.primaryParty
+    beneficiary = None
     featured = False
     amount = transferConfig.createFee.fee
     round = Round 40002
@@ -206,6 +208,7 @@ test_designExample= do
   appRewardCoupon === AppRewardCoupon with
     dso = app.dso
     provider = arbiter.primaryParty
+    beneficiary = None
     featured = True
     amount =
       -- rewards are issued for all output fees, but not the senderChangeFee
@@ -222,6 +225,7 @@ test_designExample= do
   appReward === AppRewardCoupon with
     dso = app.dso
     provider = arbiter.primaryParty
+    beneficiary = None
     featured = True
     amount =
       transferConfig.createFee.fee

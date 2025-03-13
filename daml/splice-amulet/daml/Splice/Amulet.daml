@@ -4,8 +4,10 @@
 -- | The contracts representing the long-term state of Splice.
 module Splice.Amulet where
 
-import Prelude hiding (forA)
+import Prelude
 import DA.Action (void)
+import DA.Map as Map
+import DA.Optional (fromOptional)
 
 import Splice.Expiry
 import Splice.Fees
@@ -50,9 +52,6 @@ data ValidatorRight_ArchiveAsUserResult = ValidatorRight_ArchiveAsUserResult
 data FeaturedAppRight_WithdrawResult = FeaturedAppRight_WithdrawResult
 
 data FeaturedAppRight_CancelResult = FeaturedAppRight_CancelResult
-
-data FeaturedAppRight_CreateActivityMarkerResult = FeaturedAppRight_CreateActivityMarkerResult with
-  featuredAppActivityMarkerCid : ContractId FeaturedAppActivityMarker
 
 data AppRewardCoupon_DsoExpireResult = AppRewardCoupon_DsoExpireResult with
   featured : Bool
@@ -186,9 +185,19 @@ template FeaturedAppRight with
     interface instance Splice.Api.FeaturedAppRightV1.FeaturedAppRight for FeaturedAppRight where
       view = Splice.Api.FeaturedAppRightV1.FeaturedAppRightView with dso, provider
 
-      featuredAppRight_CreateActivityMarkerImpl = do
-         cid <- create FeaturedAppActivityMarker with dso, provider
-         pure (Splice.Api.FeaturedAppRightV1.FeaturedAppRight_CreateActivityMarkerResult $ toInterfaceContractId cid)
+      featuredAppRight_CreateActivityMarkerImpl arg = do
+         -- Note: we limit the minimal weight to limit the management overhead of the SVs
+         require "Beneficiary weights are between 0.05 and 1.0" (all (\beneficiary -> 0.05 <= beneficiary.weight && beneficiary.weight <= 1.0) arg.beneficiaries)
+         require "Beneficiary weights add up to 1.0" (sum (map (.weight) arg.beneficiaries) == 1.0)
+         let groupedBeneficiaries = Map.fromListWithR (<>) (map (\b -> (b.beneficiary, [b.weight])) arg.beneficiaries)
+         cids <- forA (Map.toList groupedBeneficiaries) $ \(beneficiary, weights) ->
+           create FeaturedAppActivityMarker
+             with
+               dso
+               provider
+               beneficiary = beneficiary
+               weight = sum weights
+         pure (Splice.Api.FeaturedAppRightV1.FeaturedAppRight_CreateActivityMarkerResult $ map toInterfaceContractId cids)
 
 -- | A marker created by a featured application for activity generated from that app. This is used
 -- to record activity other than amulet transfers where regular AppRewardCoupons are not created directly.
@@ -199,12 +208,22 @@ template FeaturedAppActivityMarker
   with
     dso : Party
     provider : Party
+      -- ^ The featured app provider that created the activity marker.
+    beneficiary : Party
+      -- ^ The party that has the right to mint the reward.
+    weight : Decimal
+      -- ^ The weight of the marker. This is used to split the rewards
+      -- for a single action, e.g., multiple parties collaborating to enable
+      -- a transfer,
+      -- by creating several FeaturedAppActivityMarkers with different
+      -- beneficiaries such that the weights add up to 1.0.
   where
     signatory dso
-    observer provider
+    observer provider, beneficiary
+    ensure 0.0 < weight && weight <= 1.0
 
     interface instance Splice.Api.FeaturedAppRightV1.FeaturedAppActivityMarker for FeaturedAppActivityMarker where
-      view = Splice.Api.FeaturedAppRightV1.FeaturedAppActivityMarkerView with dso, provider
+      view = Splice.Api.FeaturedAppRightV1.FeaturedAppActivityMarkerView with dso, provider, beneficiary, weight
 
 
 -- | A coupon for receiving app rewards proportional to the usage fee paid as part of a
@@ -216,13 +235,16 @@ template AppRewardCoupon
     featured : Bool
     amount : Decimal
     round : Round
+    beneficiary : Optional Party
+      -- ^ The party that can mint this reward.
+      -- If not set, this is the provider
   where
     signatory dso
     ensure amount > 0.0
 
     -- The provider is no signatory so their node's unavailability does not hold up the rewards issuance process.
     -- The coupon will be archived once it expired as part of standard DSO.
-    observer provider
+    observer provider, beneficiary
 
     choice AppRewardCoupon_DsoExpire : AppRewardCoupon_DsoExpireResult
       with
@@ -335,7 +357,7 @@ instance HasCheckedFetch LockedAmulet ForOwner where
   contractGroupId lockedAmulet = contractGroupId (lockedAmulet.amulet)
 
 instance HasCheckedFetch AppRewardCoupon ForOwner where
-  contractGroupId AppRewardCoupon{..} = ForOwner with dso; owner = provider
+  contractGroupId AppRewardCoupon{..} = ForOwner with dso; owner = fromOptional provider beneficiary
 
 instance HasCheckedFetch SvRewardCoupon ForOwner where
   contractGroupId SvRewardCoupon{..} = ForOwner with dso; owner = beneficiary
