@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.17-ci-snapshot.20250314.1.0.v01e84888
+                0.3.17-ci-snapshot.20250314.1.0.v8c502e47
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -885,12 +885,12 @@
 <h2>Daml Code Architecture<a class="headerlink" href="#daml-code-architecture" title="Link to this heading"></a></h2>
 <section id="package-structure">
 <h3>Package Structure<a class="headerlink" href="#package-structure" title="Link to this heading"></a></h3>
-<p>The Daml code implementing CC, CNS, and the GS governance is implemented in seven packages:</p>
+<p>The Daml code implementing Canton Coin (CC), the Canton Name Service (CNS), and Global Synchronizer governance is implemented in seven packages:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">splice-util</span></code>: implements utility functions used across the other packages</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">splice-amulet</span></code>: implements CC</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">splice-amulet-name-service</span></code>: implements CNS</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">splice-dso-governance</span></code>: implements GS governance, and decentralized CC and CNS automation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">splice-dso-governance</span></code>: implements Global Synchronizer governance, and decentralized CC and CNS automation</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">splice-validator-lifecycle</span></code>: implements the workflows required for an SV node to onboard a validator</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">splice-wallet-payments</span></code>: implements CC specific payment workflows</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">splice-wallet</span></code>: implements the splice-wallet specific workflows for peer-to-peer transfers of CC and for delegating the automation for traffic-top-ups, sweeping, and batched transfer execution to a validator operator.</p></li>
@@ -915,11 +915,11 @@ from the CN token standard.</p>
 </section>
 <section id="decentralized-transaction-validation-and-automation">
 <h3>Decentralized Transaction Validation and Automation<a class="headerlink" href="#decentralized-transaction-validation-and-automation" title="Link to this heading"></a></h3>
-<p>CC, CNS, and GS governance are implemented in a decentralized fashion to tolerate up to <code class="docutils literal notranslate"><span class="pre">f</span></code> faulty or dishonest SV nodes
+<p>CC, CNS, and Global Synchronizer governance are implemented in a decentralized fashion to tolerate up to <code class="docutils literal notranslate"><span class="pre">f</span></code> faulty or dishonest SV nodes
 for <code class="docutils literal notranslate"><span class="pre">f</span> <span class="pre">=</span> <span class="pre">numSvNodes</span> <span class="pre">-</span> <span class="pre">t</span></code> and confirmation threshold <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">=</span> <span class="pre">ceiling</span> <span class="pre">(numSvNodes</span> <span class="pre">*</span> <span class="pre">2.0</span> <span class="pre">/</span> <span class="pre">3.0)</span></code>.</p>
 <p>The implementation uses three key techniques to achieves this Byzantine fault tolerance:</p>
 <ul class="simple">
-<li><p><strong>decentralized DSO party</strong>: it sets up a decentralized Daml party, called the DSO party, with
+<li><p><strong>DSO party</strong>: it sets up a decentralized Daml party, called the DSO party, with
 confirmation threshold <code class="docutils literal notranslate"><span class="pre">t</span></code> and hosted on all SV nodes.</p></li>
 <li><p><strong>on-ledger confirmations</strong>: it requires explicit on-ledger confirmations from <code class="docutils literal notranslate"><span class="pre">t</span></code> SV nodes for
 exercising choices with off-ledger input in the name of the DSO party.</p></li>
