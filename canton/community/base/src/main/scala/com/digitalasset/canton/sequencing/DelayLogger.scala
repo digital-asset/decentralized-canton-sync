@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.sequencing
@@ -15,8 +15,8 @@ import com.digitalasset.canton.tracing.TraceContext
 
 import java.util.concurrent.atomic.AtomicBoolean
 
-/** Wrapper for a sequencer subscription event handler that will log warnings if the timestamps of received messages
-  * appear significantly behind this consumer's clock.
+/** Wrapper for a sequencer subscription event handler that will log warnings if the timestamps of
+  * received messages appear significantly behind this consumer's clock.
   */
 class DelayLogger(
     clock: Clock,

@@ -22,7 +22,7 @@ lazy val `canton-community-app` = BuildCommon.`canton-community-app`
 lazy val `canton-community-app-base` = BuildCommon.`canton-community-app-base`
 lazy val `canton-community-base` = BuildCommon.`canton-community-base`
 lazy val `canton-community-common` = BuildCommon.`canton-community-common`
-lazy val `canton-community-domain` = BuildCommon.`canton-community-domain`
+lazy val `canton-community-synchronizer` = BuildCommon.`canton-community-synchronizer`
 lazy val `canton-community-participant` = BuildCommon.`canton-community-participant`
 lazy val `canton-community-admin-api` = BuildCommon.`canton-community-admin-api`
 lazy val `canton-community-integration-testing` = BuildCommon.`canton-community-integration-testing`
@@ -34,10 +34,12 @@ lazy val `canton-util-external` = BuildCommon.`canton-util-external`
 lazy val `canton-util-internal` = BuildCommon.`canton-util-internal`
 lazy val `canton-util-logging` = BuildCommon.`canton-util-logging`
 lazy val `canton-pekko-fork` = BuildCommon.`canton-pekko-fork`
+lazy val `canton-magnolify-addon` = BuildCommon.`canton-magnolify-addon`
 lazy val `canton-ledger-common` = BuildCommon.`canton-ledger-common`
 lazy val `canton-ledger-api-core` = BuildCommon.`canton-ledger-api-core`
 lazy val `canton-ledger-api-value` = BuildCommon.`canton-ledger-api-value`
 lazy val `canton-ledger-json-api` = BuildCommon.`canton-ledger-json-api`
+lazy val `canton-daml-adjustable-clock` = BuildCommon.`canton-daml-adjustable-clock`
 lazy val `canton-daml-errors` = BuildCommon.`canton-daml-errors`
 lazy val `canton-daml-jwt` = BuildCommon.`canton-daml-jwt`
 lazy val `canton-daml-grpc-utils` = BuildCommon.`canton-daml-grpc-utils`
@@ -46,6 +48,7 @@ lazy val `canton-ledger-api` = BuildCommon.`canton-ledger-api`
 lazy val `canton-bindings-java` = BuildCommon.`canton-bindings-java`
 lazy val `canton-google-common-protos-scala` = BuildCommon.`canton-google-common-protos-scala`
 lazy val `canton-sequencer-driver-api` = BuildCommon.`canton-sequencer-driver-api`
+lazy val `canton-kms-driver-api` = BuildCommon.`canton-kms-driver-api`
 lazy val `canton-community-reference-driver` = BuildCommon.`canton-community-reference-driver`
 lazy val `canton-transcode` = BuildCommon.`canton-transcode`
 
@@ -101,6 +104,14 @@ lazy val root: Project = (project in file("."))
     `splice-dso-governance-test-daml`,
     `splice-validator-lifecycle-daml`,
     `splice-validator-lifecycle-test-daml`,
+    `splice-api-token-metadata-v1-daml`,
+    `splice-api-token-holding-v1-daml`,
+    `splice-api-token-transfer-instruction-v1-daml`,
+    `splice-api-token-allocation-v1-daml`,
+    `splice-api-token-allocation-request-v1-daml`,
+    `splice-api-token-allocation-instruction-v1-daml`,
+    `splice-token-standard-test-daml`,
+    `splice-token-test-dummy-holding-daml`,
     `build-tools-dar-lock-checker`,
     `canton-community-base`,
     `canton-community-common`,
@@ -111,7 +122,7 @@ lazy val root: Project = (project in file("."))
     `canton-wartremover-extension`,
     `canton-community-app`,
     `canton-community-app-base`,
-    `canton-community-domain`,
+    `canton-community-synchronizer`,
     `canton-community-participant`,
     `canton-ledger-common`,
     `canton-ledger-api-core`,
@@ -124,6 +135,7 @@ lazy val root: Project = (project in file("."))
     tools,
     `splice-wartremover-extension`,
     docs,
+    `token-standard-cli`,
   )
   .settings(
     BuildCommon.sharedSettings,
@@ -203,6 +215,7 @@ lazy val docs = project
           (`splice-dso-governance-daml` / Compile / damlBuild).value ++
           (`splice-validator-lifecycle-daml` / Compile / damlBuild).value ++
           (`splice-wallet-daml` / Compile / damlBuild).value ++
+          (`splice-token-standard-test-daml` / Compile / damlBuild).value ++
           (`splice-wallet-payments-daml` / Compile / damlBuild).value
       cacheDamlDocs(
         damlSources.toSet
@@ -271,6 +284,130 @@ lazy val docs = project
     Headers.ApacheDAHeaderSettings,
   )
 
+// Shared token standard code
+lazy val `splice-api-token-metadata-v1-daml` =
+  project
+    .in(file("token-standard/splice-api-token-metadata-v1"))
+    .enablePlugins(DamlPlugin)
+    .settings(
+      BuildCommon.damlSettings
+    )
+    .dependsOn(`canton-bindings-java`)
+
+lazy val `splice-api-token-holding-v1-daml` =
+  project
+    .in(file("token-standard/splice-api-token-holding-v1"))
+    .enablePlugins(DamlPlugin)
+    .settings(
+      BuildCommon.damlSettings,
+      Compile / damlDependencies :=
+        (`splice-api-token-metadata-v1-daml` / Compile / damlBuild).value,
+    )
+    .dependsOn(`canton-bindings-java`)
+
+lazy val `splice-api-token-transfer-instruction-v1-daml` =
+  project
+    .in(file("token-standard/splice-api-token-transfer-instruction-v1"))
+    .enablePlugins(DamlPlugin)
+    .settings(
+      BuildCommon.damlSettings,
+      Compile / damlDependencies :=
+        (`splice-api-token-metadata-v1-daml` / Compile / damlBuild).value ++
+          (`splice-api-token-holding-v1-daml` / Compile / damlBuild).value,
+    )
+    .dependsOn(`canton-bindings-java`)
+
+lazy val `splice-api-token-allocation-v1-daml` =
+  project
+    .in(file("token-standard/splice-api-token-allocation-v1"))
+    .enablePlugins(DamlPlugin)
+    .settings(
+      BuildCommon.damlSettings,
+      Compile / damlDependencies :=
+        (`splice-api-token-metadata-v1-daml` / Compile / damlBuild).value ++
+          (`splice-api-token-transfer-instruction-v1-daml` / Compile / damlBuild).value,
+    )
+    .dependsOn(`canton-bindings-java`)
+
+lazy val `splice-api-token-allocation-request-v1-daml` =
+  project
+    .in(file("token-standard/splice-api-token-allocation-request-v1"))
+    .enablePlugins(DamlPlugin)
+    .settings(
+      BuildCommon.damlSettings,
+      Compile / damlDependencies :=
+        (`splice-api-token-metadata-v1-daml` / Compile / damlBuild).value ++
+          (`splice-api-token-transfer-instruction-v1-daml` / Compile / damlBuild).value ++
+          (`splice-api-token-allocation-v1-daml` / Compile / damlBuild).value,
+    )
+    .dependsOn(`canton-bindings-java`)
+
+lazy val `splice-api-token-allocation-instruction-v1-daml` =
+  project
+    .in(file("token-standard/splice-api-token-allocation-instruction-v1"))
+    .enablePlugins(DamlPlugin)
+    .settings(
+      BuildCommon.damlSettings,
+      Compile / damlDependencies :=
+        (`splice-api-token-metadata-v1-daml` / Compile / damlBuild).value ++
+          (`splice-api-token-holding-v1-daml` / Compile / damlBuild).value ++
+          (`splice-api-token-allocation-v1-daml` / Compile / damlBuild).value,
+    )
+    .dependsOn(`canton-bindings-java`)
+
+lazy val `splice-token-standard-test-daml` =
+  project
+    .in(file("token-standard/splice-token-standard-test"))
+    .enablePlugins(DamlPlugin)
+    .settings(
+      BuildCommon.damlSettings,
+      Compile / damlDependencies :=
+        (`splice-api-token-metadata-v1-daml` / Compile / damlBuild).value ++
+          (`splice-api-token-holding-v1-daml` / Compile / damlBuild).value ++
+          (`splice-api-token-transfer-instruction-v1-daml` / Compile / damlBuild).value ++
+          (`splice-api-token-allocation-v1-daml` / Compile / damlBuild).value ++
+          (`splice-api-token-allocation-request-v1-daml` / Compile / damlBuild).value ++
+          (`splice-api-token-allocation-instruction-v1-daml` / Compile / damlBuild).value ++
+          (`splice-util-daml` / Compile / damlBuild).value ++
+          (`splice-amulet-daml` / Compile / damlBuild).value,
+      Compile / damlEnableJavaCodegen := false,
+    )
+
+lazy val `splice-token-test-dummy-holding-daml` =
+  project
+    .in(file("token-standard/examples/splice-token-test-dummy-holding"))
+    .enablePlugins(DamlPlugin)
+    .settings(
+      BuildCommon.damlSettings,
+      Compile / damlDependencies :=
+        (`splice-api-token-metadata-v1-daml` / Compile / damlBuild).value ++
+          (`splice-api-token-holding-v1-daml` / Compile / damlBuild).value,
+      Compile / damlEnableJavaCodegen := true,
+    )
+    .dependsOn(`canton-bindings-java`)
+
+lazy val `token-standard-cli` =
+  project
+    .in(file("token-standard/cli"))
+    .settings(
+      Headers.TsHeaderSettings,
+      npmInstallOpenApiDeps := Seq.empty,
+      npmInstallDeps := Seq(baseDirectory.value / "package.json"),
+      npmInstall := BuildCommon.npmInstallTask.value,
+      npmRootDir := baseDirectory.value,
+      npmTest := {
+        val log = streams.value.log
+        (Test / compile).value
+        npmInstall.value
+        runCommand(
+          Seq("npm", "run", "test:sbt"),
+          log,
+          None,
+          Some(npmRootDir.value),
+        )
+      },
+    )
+
 // Shared non-template/non-interface code
 // used across our DARs.
 lazy val `splice-util-daml` =
@@ -291,7 +428,13 @@ lazy val `splice-amulet-daml` =
     .settings(
       BuildCommon.damlSettings,
       Compile / damlDependencies :=
-        (`splice-util-daml` / Compile / damlBuild).value,
+        (`splice-util-daml` / Compile / damlBuild).value ++
+          (`splice-api-token-metadata-v1-daml` / Compile / damlBuild).value ++
+          (`splice-api-token-holding-v1-daml` / Compile / damlBuild).value ++
+          (`splice-api-token-transfer-instruction-v1-daml` / Compile / damlBuild).value ++
+          (`splice-api-token-allocation-v1-daml` / Compile / damlBuild).value ++
+          (`splice-api-token-allocation-request-v1-daml` / Compile / damlBuild).value ++
+          (`splice-api-token-allocation-instruction-v1-daml` / Compile / damlBuild).value,
     )
     .dependsOn(`canton-bindings-java`)
 
@@ -302,7 +445,9 @@ lazy val `splice-amulet-test-daml` =
     .settings(
       BuildCommon.damlSettings,
       Compile / damlDependencies :=
-        (`splice-amulet-daml` / Compile / damlBuild).value,
+        (`splice-amulet-daml` / Compile / damlBuild).value ++
+          (`splice-token-standard-test-daml` / Compile / damlBuild).value,
+      Compile / damlEnableJavaCodegen := false,
     )
     .dependsOn(`canton-bindings-java`)
 
@@ -332,6 +477,7 @@ lazy val `splice-dso-governance-test-daml` =
           (`splice-amulet-name-service-test-daml` / Compile / damlBuild).value ++
           (`splice-dso-governance-daml` / Compile / damlBuild).value ++
           (`splice-wallet-payments-daml` / Compile / damlBuild).value,
+      Compile / damlEnableJavaCodegen := false,
     )
     .dependsOn(`canton-bindings-java`)
 
@@ -352,6 +498,7 @@ lazy val `splice-validator-lifecycle-test-daml` =
     .settings(
       BuildCommon.damlSettings,
       Compile / damlDependencies := (`splice-util-daml` / Compile / damlBuild).value ++ (`splice-validator-lifecycle-daml` / Compile / damlBuild).value,
+      Compile / damlEnableJavaCodegen := false,
     )
     .dependsOn(`canton-bindings-java`)
 
@@ -377,7 +524,14 @@ lazy val `splice-wallet-daml` =
     .enablePlugins(DamlPlugin)
     .settings(
       BuildCommon.damlSettings,
-      Compile / damlDependencies := (`splice-amulet-daml` / Compile / damlBuild).value ++ (`splice-wallet-payments-daml` / Compile / damlBuild).value ++ (`splice-amulet-name-service-daml` / Compile / damlBuild).value,
+      Compile / damlDependencies :=
+        (`splice-amulet-daml` / Compile / damlBuild).value ++
+          (`splice-wallet-payments-daml` / Compile / damlBuild).value ++
+          (`splice-amulet-name-service-daml` / Compile / damlBuild).value ++
+          (`splice-util-daml` / Compile / damlBuild).value ++
+          (`splice-api-token-metadata-v1-daml` / Compile / damlBuild).value ++
+          (`splice-api-token-transfer-instruction-v1-daml` / Compile / damlBuild).value ++
+          (`splice-api-token-allocation-request-v1-daml` / Compile / damlBuild).value,
     )
     .dependsOn(`canton-bindings-java`)
 
@@ -388,6 +542,7 @@ lazy val `splice-wallet-test-daml` =
     .settings(
       BuildCommon.damlSettings,
       Compile / damlDependencies := (`splice-amulet-test-daml` / Compile / damlBuild).value ++ (`splice-wallet-daml` / Compile / damlBuild).value,
+      Compile / damlEnableJavaCodegen := false,
     )
     .dependsOn(`canton-bindings-java`)
 
@@ -407,7 +562,12 @@ lazy val `splice-amulet-name-service-test-daml` =
     .enablePlugins(DamlPlugin)
     .settings(
       BuildCommon.damlSettings,
-      Compile / damlDependencies := (`splice-wallet-test-daml` / Compile / damlBuild).value ++ (`splice-amulet-test-daml` / Compile / damlBuild).value ++ (`splice-amulet-name-service-daml` / Compile / damlBuild).value,
+      Compile / damlDependencies :=
+        (`splice-wallet-test-daml` / Compile / damlBuild).value ++
+          (`splice-amulet-test-daml` / Compile / damlBuild).value ++
+          (`splice-amulet-name-service-daml` / Compile / damlBuild).value ++
+          (`splice-token-standard-test-daml` / Compile / damlBuild).value,
+      Compile / damlEnableJavaCodegen := false,
     )
     .dependsOn(`canton-bindings-java`)
 
@@ -428,6 +588,7 @@ lazy val `splitwell-test-daml` =
     .settings(
       BuildCommon.damlSettings,
       Compile / damlDependencies := (`splice-wallet-test-daml` / Compile / damlBuild).value ++ (`splitwell-daml` / Compile / damlBuild).value,
+      Compile / damlEnableJavaCodegen := false,
     )
     .dependsOn(`canton-bindings-java`)
 
@@ -438,7 +599,7 @@ lazy val `apps-common` =
       `canton-bindings-java` % "test->test",
       `canton-community-common`,
       `canton-community-app` % "compile->compile;test->test",
-      `canton-community-testing` % "test",
+      `canton-community-testing` % "test->test",
       `splice-wartremover-extension` % "compile->compile;test->test",
       // We include all DARs here to make sure they are available as resources.
       `splice-amulet-daml`,
@@ -448,6 +609,13 @@ lazy val `apps-common` =
       `splice-validator-lifecycle-daml`,
       `splice-wallet-daml`,
       `splice-wallet-payments-daml`,
+      `splice-api-token-metadata-v1-daml`,
+      `splice-api-token-holding-v1-daml`,
+      `splice-api-token-transfer-instruction-v1-daml`,
+      `splice-api-token-allocation-v1-daml`,
+      `splice-api-token-allocation-request-v1-daml`,
+      `splice-api-token-allocation-instruction-v1-daml`,
+      `splice-token-test-dummy-holding-daml`,
     )
     .enablePlugins(BuildInfoPlugin)
     .settings(
@@ -611,22 +779,42 @@ lazy val `apps-scan` =
       BuildCommon.sharedAppSettings,
       templateDirectory := (`openapi-typescript-template` / patchTemplate).value,
       BuildCommon.TS.openApiSettings(
+        npmName = "scan-external-openapi",
+        openApiSpec = "scan-external.yaml",
+        directory = "external-openapi-ts-client",
+      ),
+      BuildCommon.TS.openApiSettings(
         npmName = "scan-openapi",
-        openApiSpec = "scan.yaml",
+        openApiSpec = "scan-internal.yaml",
       ),
       Compile / guardrailTasks :=
-        List(
-          ScalaServer(
-            new File(s"apps/scan/src/main/openapi/scan.yaml"),
-            pkg = "org.lfdecentralizedtrust.splice.http.v0",
-            modules = List("pekko-http-v1.0.0", "circe"),
-            customExtraction = true,
+        List("external", "internal").flatMap { scope =>
+          List(
+            ScalaServer(
+              new File(s"apps/scan/src/main/openapi/scan-$scope.yaml"),
+              pkg = "org.lfdecentralizedtrust.splice.http.v0",
+              modules = List("pekko-http-v1.0.0", "circe"),
+              customExtraction = true,
+            ),
+            ScalaClient(
+              new File(s"apps/scan/src/main/openapi/scan-$scope.yaml"),
+              modules = List("pekko-http-v1.0.0", "circe"),
+              pkg = "org.lfdecentralizedtrust.splice.http.v0",
+            ),
+          )
+        } :+ ScalaServer(
+          new File(
+            "token-standard/splice-api-token-transfer-instruction-v1/openapi/transfer-instruction.yaml"
           ),
-          ScalaClient(
-            new File(s"apps/scan/src/main/openapi/scan.yaml"),
-            modules = List("pekko-http-v1.0.0", "circe"),
-            pkg = "org.lfdecentralizedtrust.splice.http.v0",
+          pkg = "org.lfdecentralizedtrust.tokenstandard.transferinstruction.v0",
+          modules = List("pekko-http-v1.0.0", "circe"),
+          customExtraction = true,
+        ) :+ ScalaClient(
+          new File(
+            "token-standard/splice-api-token-transfer-instruction-v1/openapi/transfer-instruction.yaml"
           ),
+          modules = List("pekko-http-v1.0.0", "circe"),
+          pkg = "org.lfdecentralizedtrust.tokenstandard.transferinstruction.v0",
         ),
     )
 
@@ -1188,9 +1376,13 @@ lazy val bundleTask = {
       )
     val dars =
       Seq(
+        (`splice-api-token-metadata-v1-daml` / Compile / damlBuild).value,
+        (`splice-api-token-holding-v1-daml` / Compile / damlBuild).value,
+        (`splice-api-token-transfer-instruction-v1-daml` / Compile / damlBuild).value,
+        (`splice-api-token-allocation-v1-daml` / Compile / damlBuild).value,
+        (`splice-api-token-allocation-request-v1-daml` / Compile / damlBuild).value,
+        (`splice-api-token-allocation-instruction-v1-daml` / Compile / damlBuild).value,
         (`splice-amulet-daml` / Compile / damlBuild).value,
-        (`splice-wallet-daml` / Compile / damlBuild).value,
-        (`splitwell-daml` / Compile / damlBuild).value,
         (`splitwell-daml` / Compile / damlBuild).value,
         (`splice-dso-governance-daml` / Compile / damlBuild).value,
         (`splice-amulet-name-service-daml` / Compile / damlBuild).value,
@@ -1265,7 +1457,20 @@ cleanCnDars := {
   val log = streams.value.log
   runCommand(Seq("find", "apps", "-name", "*.dar", "-delete"), log)
   // daml/dars contains the versions of all dars that we want to keep committed, so we don't delete them
-  runCommand(Seq("find", "daml", "-name", "*.dar", "-not", "-path", "*daml/dars/*", "-delete"), log)
+  runCommand(
+    Seq(
+      "find",
+      "token-standard",
+      "daml",
+      "-name",
+      "*.dar",
+      "-not",
+      "-path",
+      "*daml/dars/*",
+      "-delete",
+    ),
+    log,
+  )
 }
 
 lazy val checkErrors = taskKey[Unit](
@@ -1459,7 +1664,12 @@ printTests := {
 
   val allTestNames =
     definedTests
-      .all(ScopeFilter(inAggregates(root), inConfigurations(Test)))
+      .all(
+        ScopeFilter(inAggregates(root), inConfigurations(Test)) -- ScopeFilter(
+          inProjects(`canton-ledger-api-core`),
+          inConfigurations(Test),
+        )
+      )
       .value
       .flatten
       .map(_.name)
@@ -1535,6 +1745,11 @@ printTests := {
       "disaster recovery tests",
       "test-full-class-names-disaster-recovery.log",
       (t: String) => !isTimeBasedTest(t) && isDisasterRecoveryTest(t),
+    ),
+    (
+      "canton bft tests",
+      "test-full-class-names-canton-bft.log",
+      (t: String) => t.contains("BFTManualStartIntegrationTest"),
     ),
     (
       "app upgrade tests",

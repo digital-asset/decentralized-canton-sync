@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.platform.apiserver.meteringreport
@@ -37,9 +37,12 @@ object HmacSha256 {
       .fold(deserializationError(s"Failed to deserialize $json", _), identity)
   }
 
-  /** @param scheme  - a long lived name that be associated with, and only with, this key
-    * @param encoded - the encoded bytes of a HmacSha256 secret key
-    * @param algorithm - the key algorithm
+  /** @param scheme
+    *   a long lived name that be associated with, and only with, this key
+    * @param encoded
+    *   the encoded bytes of a HmacSha256 secret key
+    * @param algorithm
+    *   the key algorithm
     */
   final case class Key(scheme: String, encoded: Bytes, algorithm: String)
 

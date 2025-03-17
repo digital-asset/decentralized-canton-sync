@@ -11,15 +11,11 @@ import org.lfdecentralizedtrust.splice.codegen.java.splice.dsorules.dsorules_act
 }
 import org.lfdecentralizedtrust.splice.config.ConfigTransforms
 import org.lfdecentralizedtrust.splice.config.ConfigTransforms.{
-  updateAutomationConfig,
   ConfigurableApp,
+  updateAutomationConfig,
 }
-import org.lfdecentralizedtrust.splice.environment.EnvironmentImpl
 import org.lfdecentralizedtrust.splice.integration.EnvironmentDefinition
-import org.lfdecentralizedtrust.splice.integration.tests.SpliceTests.{
-  IntegrationTest,
-  SpliceTestConsoleEnvironment,
-}
+import org.lfdecentralizedtrust.splice.integration.tests.SpliceTests.IntegrationTest
 import org.lfdecentralizedtrust.splice.sv.automation.singlesv.LocalSequencerConnectionsTrigger
 import org.lfdecentralizedtrust.splice.sv.automation.singlesv.offboarding.{
   SvOffboardingMediatorTrigger,
@@ -28,7 +24,7 @@ import org.lfdecentralizedtrust.splice.sv.automation.singlesv.offboarding.{
 import org.lfdecentralizedtrust.splice.sv.automation.delegatebased.ExecuteConfirmedActionTrigger
 import org.lfdecentralizedtrust.splice.util.{ProcessTestUtil, StandaloneCanton}
 import com.digitalasset.canton.config.RequireTypes.PositiveInt
-import com.digitalasset.canton.integration.BaseEnvironmentDefinition
+import com.digitalasset.canton.topology.admin.grpc.TopologyStoreId
 import com.digitalasset.canton.topology.{MediatorId, SequencerId}
 import org.scalatest.time.{Minute, Span}
 import cats.syntax.foldable.*
@@ -51,8 +47,7 @@ class SvOffboardingIntegrationTest
   override lazy val resetRequiredTopologyState = false
 
   override implicit val patienceConfig: PatienceConfig = PatienceConfig(scaled(Span(1, Minute)))
-  override def environmentDefinition
-      : BaseEnvironmentDefinition[EnvironmentImpl, SpliceTestConsoleEnvironment] =
+  override def environmentDefinition: SpliceEnvironmentDefinition =
     EnvironmentDefinition
       .simpleTopology4Svs(this.getClass.getSimpleName)
       .withPreSetup(_ => ())
@@ -260,7 +255,7 @@ class SvOffboardingIntegrationTest
               val decentralizedNamespaces =
                 sv1Backend.participantClient.topology.decentralized_namespaces
                   .list(
-                    filterStore = decentralizedSynchronizerId.filterString,
+                    store = TopologyStoreId.Synchronizer(decentralizedSynchronizerId),
                     filterNamespace = dsoParty.uid.namespace.toProtoPrimitive,
                   )
               inside(decentralizedNamespaces) { case Seq(decentralizedNamespace) =>
@@ -277,7 +272,7 @@ class SvOffboardingIntegrationTest
             clue("Check mediator offboarding") {
               val mediators =
                 sv3Backend.appState.participantAdminConnection
-                  .getMediatorDomainState(decentralizedSynchronizerId)
+                  .getMediatorSynchronizerState(decentralizedSynchronizerId)
                   .futureValue
                   .mapping
                   .active
@@ -309,7 +304,7 @@ class SvOffboardingIntegrationTest
             clue("Check sequencer offboarding") {
               val sequencers =
                 sv3Backend.appState.participantAdminConnection
-                  .getSequencerDomainState(decentralizedSynchronizerId)
+                  .getSequencerSynchronizerState(decentralizedSynchronizerId)
                   .futureValue
                   .mapping
                   .active

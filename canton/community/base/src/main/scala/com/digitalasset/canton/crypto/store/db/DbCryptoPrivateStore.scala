@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.crypto.store.db
@@ -26,16 +26,22 @@ import slick.sql.SqlAction
 
 import scala.concurrent.ExecutionContext
 
-/** Represents the data to be stored in the crypto_private_keys table.
-  * If wrapperKeyId is set (Some(wrapperKeyId)) then the data field is encrypted
-  * otherwise (None), then the data field is in plaintext.
-  * @param id canton identifier for a private key
-  * @param data a ByteString that stores either: (1) the serialized private key case class, which contains the private
-  *             key plus metadata, or (2) the above proto serialization but encrypted with the wrapper key if present.
-  * @param purpose to identify if the key is for signing or encryption
-  * @param name an alias name for the private key
-  * @param wrapperKeyId identifies what is the key being used to encrypt the data field. If empty, data is
-  *                     unencrypted.
+/** Represents the data to be stored in the crypto_private_keys table. If wrapperKeyId is set
+  * (Some(wrapperKeyId)) then the data field is encrypted otherwise (None), then the data field is
+  * in plaintext.
+  * @param id
+  *   canton identifier for a private key
+  * @param data
+  *   a ByteString that stores either: (1) the serialized private key case class, which contains the
+  *   private key plus metadata, or (2) the above proto serialization but encrypted with the wrapper
+  *   key if present.
+  * @param purpose
+  *   to identify if the key is for signing or encryption
+  * @param name
+  *   an alias name for the private key
+  * @param wrapperKeyId
+  *   identifies what is the key being used to encrypt the data field. If empty, data is
+  *   unencrypted.
   */
 final case class StoredPrivateKey(
     id: Fingerprint,
@@ -108,13 +114,13 @@ class DbCryptoPrivateStore(
 
     for {
       inserted <- EitherT.right(
-        storage.updateUnlessShutdown(insertKeyUpdate(key), functionFullName)
+        storage.update(insertKeyUpdate(key), functionFullName)
       )
       res <-
         if (inserted == 0) {
           // If no key was inserted by the insert query, check that the existing value matches
           storage
-            .querySingleUnlessShutdown(queryKey(key.id, key.purpose), functionFullName)
+            .querySingle(queryKey(key.id, key.purpose), functionFullName)
             // If we don't find the duplicate key, it may have been concurrently deleted and we could retry to insert it.
             .toRight(
               CryptoPrivateStoreError
@@ -125,7 +131,11 @@ class DbCryptoPrivateStore(
                 .cond[FutureUnlessShutdown](
                   equalKeys(existingKey, key),
                   (),
-                  CryptoPrivateStoreError.KeyAlreadyExists(key.id, existingKey.name.map(_.unwrap)),
+                  CryptoPrivateStoreError.KeyAlreadyExists(
+                    key.id,
+                    existingKey.name.map(_.unwrap),
+                    key.name.map(_.unwrap),
+                  ),
                 )
                 .leftWiden[CryptoPrivateStoreError]
             }
@@ -141,7 +151,7 @@ class DbCryptoPrivateStore(
   ): EitherT[FutureUnlessShutdown, CryptoPrivateStoreError, Option[StoredPrivateKey]] =
     EitherT.right(
       storage
-        .querySingleUnlessShutdown(
+        .querySingle(
           queryKey(keyId, purpose),
           functionFullName,
         )
@@ -159,10 +169,15 @@ class DbCryptoPrivateStore(
   private[canton] def listPrivateKeys(purpose: KeyPurpose, encrypted: Boolean)(implicit
       traceContext: TraceContext
   ): EitherT[FutureUnlessShutdown, CryptoPrivateStoreError, Set[StoredPrivateKey]] =
+    listPrivateKeys(purpose).map(keys => keys.filter(_.isEncrypted == encrypted))
+
+  @VisibleForTesting
+  private[canton] def listPrivateKeys(purpose: KeyPurpose)(implicit
+      traceContext: TraceContext
+  ): EitherT[FutureUnlessShutdown, CryptoPrivateStoreError, Set[StoredPrivateKey]] =
     EitherT.right(
       storage
-        .queryUnlessShutdown(queryKeys(purpose), functionFullName)
-        .map(keys => keys.filter(_.isEncrypted == encrypted))
+        .query(queryKeys(purpose), functionFullName)
     )
 
   private def deleteKey(keyId: Fingerprint): SqlAction[Int, NoStream, Effect.Write] =
@@ -176,7 +191,7 @@ class DbCryptoPrivateStore(
   ): EitherT[FutureUnlessShutdown, CryptoPrivateStoreError, Unit] =
     EitherT.right(
       storage
-        .updateUnlessShutdown_(
+        .update_(
           DBIOAction
             .sequence(
               newKeys.map(key => deleteKey(key.id).andThen(insertKeyUpdate(key)))
@@ -191,7 +206,7 @@ class DbCryptoPrivateStore(
   ): EitherT[FutureUnlessShutdown, CryptoPrivateStoreError, Unit] =
     EitherT.right(
       storage
-        .updateUnlessShutdown_(deleteKey(keyId), functionFullName)
+        .update_(deleteKey(keyId), functionFullName)
     )
 
   private[crypto] def encrypted(
@@ -217,15 +232,14 @@ class DbCryptoPrivateStore(
     EitherT
       .right(
         storage
-          .queryUnlessShutdown(
+          .query(
             sql"select distinct wrapper_key_id from common_crypto_private_keys"
-              .as[Option[String300]]
-              .map(_.toSeq),
+              .as[Option[String300]],
             functionFullName,
           )
       )
       .subflatMap { wrapperKeys =>
-        if (wrapperKeys.size > 1)
+        if (wrapperKeys.sizeIs > 1)
           Left(
             CryptoPrivateStoreError
               .FailedToGetWrapperKeyId("Found more than one distinct wrapper_key_id")

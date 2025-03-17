@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.platform.store.dao
@@ -16,6 +16,7 @@ import com.daml.metrics.DatabaseMetrics
 import com.daml.metrics.api.MetricHandle.Timer
 import com.daml.metrics.api.MetricName
 import com.digitalasset.canton.ledger.api.health.{HealthStatus, ReportsHealth}
+import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
 import com.digitalasset.canton.logging.LoggingContextWithTrace.{
   implicitExtractTraceContext,
   withEnrichedLoggingContext,
@@ -41,9 +42,16 @@ import scala.util.control.NonFatal
 
 private[canton] trait DbDispatcher {
   val executor: QueueAwareExecutor with NamedExecutor
+
+  /** consider using executeSqlUS if possible */
   def executeSql[T](databaseMetrics: DatabaseMetrics)(sql: Connection => T)(implicit
       loggingContext: LoggingContextWithTrace
   ): Future[T]
+
+  def executeSqlUS[T](databaseMetrics: DatabaseMetrics)(sql: Connection => T)(implicit
+      loggingContext: LoggingContextWithTrace,
+      ec: ExecutionContext,
+  ): FutureUnlessShutdown[T]
 
 }
 
@@ -66,10 +74,12 @@ private[dao] final class DbDispatcherImpl private[dao] (
   override def currentHealth(): HealthStatus =
     connectionProvider.currentHealth()
 
-  /** Runs an SQL statement in a dedicated Executor. The whole block will be run in a single database transaction.
+  /** Runs an SQL statement in a dedicated Executor. The whole block will be run in a single
+    * database transaction.
     *
-    * The isolation level by default is the one defined in the JDBC driver, it can be however overridden per query on
-    * the Connection. See further details at: https://docs.oracle.com/cd/E19830-01/819-4721/beamv/index.html
+    * The isolation level by default is the one defined in the JDBC driver, it can be however
+    * overridden per query on the Connection. See further details at:
+    * https://docs.oracle.com/cd/E19830-01/819-4721/beamv/index.html
     */
   def executeSql[T](databaseMetrics: DatabaseMetrics)(
       sql: Connection => T
@@ -92,6 +102,11 @@ private[dao] final class DbDispatcherImpl private[dao] (
           }
         }(executionContext)
     }
+
+  def executeSqlUS[T](databaseMetrics: DatabaseMetrics)(sql: Connection => T)(implicit
+      loggingContext: LoggingContextWithTrace,
+      ec: ExecutionContext,
+  ): FutureUnlessShutdown[T] = FutureUnlessShutdown.outcomeF(executeSql(databaseMetrics)(sql))
 
   private def updateMetrics(databaseMetrics: DatabaseMetrics, startExec: Long)(implicit
       traceContext: TraceContext
@@ -132,9 +147,13 @@ object DbDispatcher {
       metrics: LedgerApiServerMetrics,
       loggerFactory: NamedLoggerFactory,
   ): ResourceOwner[DbDispatcher with ReportsHealth] = {
-    val logger = loggerFactory.getTracedLogger(getClass)
-    def log(s: String): Unit =
-      logger.debug(s"[${serverRole.threadPoolSuffix}] $s")(TraceContext.empty)
+    val logger = loggerFactory.getLogger(getClass)
+    def log(s: String, info: Boolean = false): Unit = {
+      val logMessage = s"[${serverRole.threadPoolSuffix}] $s"
+      if (info) logger.info(logMessage)
+      else logger.debug(logMessage)
+    }
+
     for {
       hikariDataSource <- HikariDataSourceOwner(
         dataSource = dataSource,
@@ -142,7 +161,9 @@ object DbDispatcher {
         minimumIdle = connectionPoolSize,
         maxPoolSize = connectionPoolSize,
         connectionTimeout = connectionTimeout,
-      ).afterReleased(log("HikariDataSource released"))
+      )
+        .afterReleased(log("HikariDataSource released"))
+        .afterReleased(log("DbDispatcher released", info = true))
       connectionProvider <- DataSourceConnectionProvider
         .owner(
           hikariDataSource,

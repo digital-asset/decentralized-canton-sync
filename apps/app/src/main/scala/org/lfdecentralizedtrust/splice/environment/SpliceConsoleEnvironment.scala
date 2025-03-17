@@ -3,28 +3,26 @@
 
 package org.lfdecentralizedtrust.splice.environment
 
+import com.digitalasset.canton.config.CantonRequireTypes.InstanceName
+import com.digitalasset.canton.console.{
+  ConsoleEnvironment,
+  ConsoleEnvironmentBinding,
+  ConsoleOutput,
+  LocalInstanceReference,
+  NodeReferences,
+  StandardConsoleOutput,
+  ThrowErrorHandler,
+}
+import org.apache.pekko.actor.ActorSystem
 import org.lfdecentralizedtrust.splice.console.*
 import org.lfdecentralizedtrust.splice.scan.config.ScanAppClientConfig
 import org.lfdecentralizedtrust.splice.sv.SvAppClientConfig
 import org.lfdecentralizedtrust.splice.util.ResourceTemplateDecoder
-import org.lfdecentralizedtrust.splice.validator.config.AnsAppExternalClientConfig
-import org.lfdecentralizedtrust.splice.validator.config.ValidatorAppClientConfig
-import org.lfdecentralizedtrust.splice.wallet.config.WalletAppClientConfig
-import com.digitalasset.canton.admin.api.client.data.CommunityCantonStatus
-import com.digitalasset.canton.config.CantonRequireTypes.InstanceName
-import com.digitalasset.canton.console.{
-  CantonHealthAdministration,
-  CommunityCantonHealthAdministration,
-  ConsoleEnvironment,
-  ConsoleEnvironmentBinding,
-  ConsoleOutput,
-  Help,
-  LocalInstanceReference,
-  NodeReferences,
-  StandardConsoleOutput,
-  ThrowWithDetailsErrorHandler,
+import org.lfdecentralizedtrust.splice.validator.config.{
+  AnsAppExternalClientConfig,
+  ValidatorAppClientConfig,
 }
-import org.apache.pekko.actor.ActorSystem
+import org.lfdecentralizedtrust.splice.wallet.config.WalletAppClientConfig
 
 class SpliceConsoleEnvironment(
     val environment: EnvironmentImpl,
@@ -32,11 +30,12 @@ class SpliceConsoleEnvironment(
 ) extends ConsoleEnvironment // TODO(#736): Generalize this.
     {
 
-  override val errorHandler: com.digitalasset.canton.console.ThrowWithDetailsErrorHandler.type =
-    ThrowWithDetailsErrorHandler
+  override val errorHandler: com.digitalasset.canton.console.ThrowErrorHandler.type =
+    ThrowErrorHandler
 
   val packageSignatures = ResourceTemplateDecoder.loadPackageSignaturesFromResources(
-    DarResources.splitwell.all ++
+    DarResources.TokenStandard.allPackageResources.flatMap(_.all) ++
+      DarResources.splitwell.all ++
       DarResources.validatorLifecycle.all ++
       DarResources.wallet.all ++
       DarResources.amulet.all ++
@@ -49,10 +48,10 @@ class SpliceConsoleEnvironment(
     environment,
     environment.config.parameters.timeouts.processing,
     environment.config.parameters.timeouts.console,
+    environment.config.parameters.timeouts.requestTimeout,
   )(this.tracer, templateDecoder)
 
   override type Env = EnvironmentImpl
-  override type Status = CommunityCantonStatus
 
   def mergeLocalSpliceInstances(
       locals: Seq[AppBackendReference]*
@@ -338,15 +337,9 @@ class SpliceConsoleEnvironment(
 
   }
 
-  private lazy val health_ = new CommunityCantonHealthAdministration(this)
   override protected val consoleEnvironmentBindings = new ConsoleEnvironmentBinding()
 
-  @Help.Summary("Environment health inspection")
-  @Help.Group("Health")
-  override def health: CantonHealthAdministration[CommunityCantonStatus] =
-    health_
-
-  override protected def startupOrderPrecedence(instance: LocalInstanceReference): Int =
+  override def startupOrderPrecedence(instance: LocalInstanceReference): Int =
     instance match {
       case _: SvAppBackendReference => 1
       case _: ScanAppBackendReference => 2

@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.protocol.messages
@@ -11,21 +11,24 @@ import com.digitalasset.canton.protocol.*
 import com.digitalasset.canton.sequencing.protocol.MediatorGroupRecipient
 import com.digitalasset.canton.serialization.ProtoConverter
 import com.digitalasset.canton.serialization.ProtoConverter.ParsingResult
-import com.digitalasset.canton.topology.{DomainId, ParticipantId}
+import com.digitalasset.canton.topology.{ParticipantId, SynchronizerId}
 import com.digitalasset.canton.util.ReassignmentTag.Target
 import com.digitalasset.canton.version.{
-  HasProtocolVersionedWithContextCompanion,
   ProtoVersion,
   ProtocolVersion,
   RepresentativeProtocolVersion,
+  VersionedProtoCodec,
+  VersioningCompanionContext,
 }
 
 import java.util.UUID
 
 /** Message sent to the mediator as part of an assignment request
   *
-  * @param tree The assignment view tree blinded for the mediator
-  * @throws java.lang.IllegalArgumentException if the common data is blinded or the view is not blinded
+  * @param tree
+  *   The assignment view tree blinded for the mediator
+  * @throws java.lang.IllegalArgumentException
+  *   if the common data is blinded or the view is not blinded
   */
 final case class AssignmentMediatorMessage(
     tree: AssignmentViewTree,
@@ -46,7 +49,7 @@ final case class AssignmentMediatorMessage(
       : RepresentativeProtocolVersion[AssignmentMediatorMessage.type] =
     AssignmentMediatorMessage.protocolVersionRepresentativeFor(protocolVersion.unwrap)
 
-  override def domainId: DomainId = commonData.targetDomain.unwrap
+  override def synchronizerId: SynchronizerId = commonData.targetSynchronizerId.unwrap
 
   override def mediator: MediatorGroupRecipient = commonData.targetMediatorGroup
 
@@ -69,20 +72,18 @@ final case class AssignmentMediatorMessage(
 
   @transient override protected lazy val companionObj: AssignmentMediatorMessage.type =
     AssignmentMediatorMessage
-
-  override def informeesArePublic: Boolean = true
 }
 
 object AssignmentMediatorMessage
-    extends HasProtocolVersionedWithContextCompanion[
+    extends VersioningCompanionContext[
       AssignmentMediatorMessage,
       (HashOps, Target[ProtocolVersion]),
     ] {
 
-  val supportedProtoVersions = SupportedProtoVersions(
-    ProtoVersion(30) -> VersionedProtoConverter(ProtocolVersion.v32)(v30.AssignmentMediatorMessage)(
+  val versioningTable: VersioningTable = VersioningTable(
+    ProtoVersion(30) -> VersionedProtoCodec(ProtocolVersion.v33)(v30.AssignmentMediatorMessage)(
       supportedProtoVersion(_)((context, proto) => fromProtoV30(context)(proto)),
-      _.toProtoV30.toByteString,
+      _.toProtoV30,
     )
   )
 

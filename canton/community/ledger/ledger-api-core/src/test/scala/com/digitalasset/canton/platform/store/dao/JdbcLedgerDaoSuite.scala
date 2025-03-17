@@ -1,10 +1,10 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.platform.store.dao
 
 import com.digitalasset.canton.data.Offset
-import com.digitalasset.canton.ledger.api.domain.TemplateFilter
+import com.digitalasset.canton.ledger.api.TemplateFilter
 import com.digitalasset.canton.ledger.participant.state
 import com.digitalasset.canton.logging.LoggingContextWithTrace
 import com.digitalasset.canton.platform.store.entries.LedgerEntry
@@ -42,7 +42,7 @@ private[dao] trait JdbcLedgerDaoSuite extends JdbcLedgerDaoBackend with OptionVa
   protected final val nextOffset: () => Offset = {
     val counter = new AtomicLong(1)
     () => {
-      Offset.fromLong(counter.getAndIncrement())
+      Offset.tryFromLong(counter.getAndIncrement())
     }
   }
 
@@ -186,7 +186,6 @@ private[dao] trait JdbcLedgerDaoSuite extends JdbcLedgerDaoBackend with OptionVa
         ledgerEffectiveTime = tx.ledgerEffectiveTime,
         offset = offset,
         transaction = tx.transaction,
-        hostedWitnesses = Nil,
         recordTime = tx.recordedAt,
       )
     } yield offset -> tx
@@ -307,7 +306,7 @@ private[dao] trait JdbcLedgerDaoSuite extends JdbcLedgerDaoBackend with OptionVa
     val creation = create(cid)
     val eid = txBuilder.add(creation)
     val offset = nextOffset()
-    val id = offset.toLong
+    val id = offset.unwrap
     val let = Timestamp.now()
     offset -> LedgerEntry.Transaction(
       commandId = Some(s"commandId$id"),
@@ -333,7 +332,7 @@ private[dao] trait JdbcLedgerDaoSuite extends JdbcLedgerDaoBackend with OptionVa
       actAs: List[Party] = List(alice),
   ): (Offset, LedgerEntry.Transaction) = {
     val offset = nextOffset()
-    val id = offset.toLong
+    val id = offset.unwrap
     val let = Timestamp.now()
     offset -> LedgerEntry.Transaction(
       commandId = Some(s"commandId$id"),
@@ -385,7 +384,7 @@ private[dao] trait JdbcLedgerDaoSuite extends JdbcLedgerDaoBackend with OptionVa
     val txBuilder = newBuilder()
     val nid = txBuilder.add(exerciseNode(targetCid, key))
     val offset = nextOffset()
-    val id = offset.toLong
+    val id = offset.unwrap
     val let = Timestamp.now()
     offset -> LedgerEntry.Transaction(
       commandId = Some(s"commandId$id"),
@@ -407,7 +406,7 @@ private[dao] trait JdbcLedgerDaoSuite extends JdbcLedgerDaoBackend with OptionVa
     val txBuilder = newBuilder()
     val nid = txBuilder.add(exerciseNode(targetCid))
     val offset = nextOffset()
-    val id = offset.toLong
+    val id = offset.unwrap
     val let = Timestamp.now()
     offset -> LedgerEntry.Transaction(
       commandId = Some(s"commandId$id"),
@@ -429,7 +428,7 @@ private[dao] trait JdbcLedgerDaoSuite extends JdbcLedgerDaoBackend with OptionVa
     val txBuilder = newBuilder()
     val nid = txBuilder.add(exerciseNode(targetCid).copy(consuming = false))
     val offset = nextOffset()
-    val id = offset.toLong
+    val id = offset.unwrap
     val let = Timestamp.now()
     offset -> LedgerEntry.Transaction(
       commandId = Some(s"commandId$id"),
@@ -453,7 +452,7 @@ private[dao] trait JdbcLedgerDaoSuite extends JdbcLedgerDaoBackend with OptionVa
     val childId = txBuilder.add(create(txBuilder.newCid), exerciseId)
     val tx = txBuilder.buildCommitted()
     val offset = nextOffset()
-    val id = offset.toLong
+    val id = offset.unwrap
     val txId = s"trId$id"
     val let = Timestamp.now()
     offset -> LedgerEntry.Transaction(
@@ -527,15 +526,17 @@ private[dao] trait JdbcLedgerDaoSuite extends JdbcLedgerDaoBackend with OptionVa
 
   /** Creates the following transaction
     *
+    * {{{
     * Create A --> Exercise A
     *              |        |
     *              |        |
     *              v        v
     *           Create B  Create C
+    * }}}
     *
-    * A is visible to Charlie
-    * B is visible to Alice and Charlie
-    * C is visible to Bob and Charlie
+    *   - A is visible to Charlie
+    *   - B is visible to Alice and Charlie
+    *   - C is visible to Bob and Charlie
     */
   protected def partiallyVisible: (Offset, LedgerEntry.Transaction) = {
     val txBuilder = newBuilder()
@@ -582,10 +583,11 @@ private[dao] trait JdbcLedgerDaoSuite extends JdbcLedgerDaoBackend with OptionVa
 
   /** Creates a transactions with multiple top-level creates.
     *
-    * Every contract will be signed by a fixed "operator" and each contract will have a
-    * further signatory and a template as defined by signatoriesAndTemplates.
+    * Every contract will be signed by a fixed "operator" and each contract will have a further
+    * signatory and a template as defined by signatoriesAndTemplates.
     *
-    * @throws IllegalArgumentException if signatoryAndTemplate is empty
+    * @throws IllegalArgumentException
+    *   if signatoryAndTemplate is empty
     */
   protected def multipleCreates(
       operator: String,
@@ -634,7 +636,6 @@ private[dao] trait JdbcLedgerDaoSuite extends JdbcLedgerDaoBackend with OptionVa
       commandId,
       None,
       Some(submissionId),
-      None,
     )
 
   protected final def storeSync(
@@ -813,13 +814,13 @@ private[dao] trait JdbcLedgerDaoSuite extends JdbcLedgerDaoBackend with OptionVa
 
   // Returns the command ids and status of completed commands between two offsets
   protected def getCompletions(
-      startExclusive: Offset,
+      startInclusive: Offset,
       endInclusive: Offset,
       applicationId: String,
       parties: Set[Party],
   ): Future[Seq[(String, Int)]] =
     ledgerDao.completions
-      .getCommandCompletions(startExclusive, endInclusive, applicationId, parties)
+      .getCommandCompletions(startInclusive, endInclusive, applicationId, parties)
       .map(_._2.completionResponse.completion.toList.head)
       .map(c => c.commandId -> c.status.value.code)
       .runWith(Sink.seq)

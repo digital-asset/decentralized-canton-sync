@@ -81,11 +81,11 @@ import com.digitalasset.canton.config.ProcessingTimeout
 import com.digitalasset.canton.config.RequireTypes.NonNegativeLong
 import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.ledger.api.util.DurationConversion
-import com.digitalasset.canton.lifecycle.Lifecycle
+import com.digitalasset.canton.lifecycle.LifeCycle
 import com.digitalasset.canton.logging.{NamedLoggerFactory, TracedLogger}
 import com.digitalasset.canton.resource.Storage
 import com.digitalasset.canton.time.Clock
-import com.digitalasset.canton.topology.{DomainId, PartyId}
+import com.digitalasset.canton.topology.{SynchronizerId, PartyId}
 import com.digitalasset.canton.tracing.{TraceContext, TracerProvider}
 import io.grpc.Status
 import io.opentelemetry.api.trace.Tracer
@@ -191,7 +191,7 @@ class ValidatorApp(
               loggerFactory,
             )
             domainAlreadyRegistered <- participantAdminConnection
-              .lookupDomainConnectionConfig(config.domains.global.alias)
+              .lookupSynchronizerConnectionConfig(config.domains.global.alias)
               .map(_.isDefined)
             now = clock.now
             // This is used by the ReconcileSequencerConnectionsTrigger to avoid travelling back in time if the domain time is behind this.
@@ -238,7 +238,8 @@ class ValidatorApp(
                         val readWriteConnection = ledgerClient.connection(
                           this.getClass.getSimpleName,
                           loggerFactory,
-                          PackageIdResolver.inferFromAmuletRules(
+                          PackageIdResolver.inferFromAmuletRulesIfEnabled(
+                            config.parameters.enableCantonPackageSelection,
                             clock,
                             scanConnection,
                             loggerFactory,
@@ -461,12 +462,12 @@ class ValidatorApp(
       validatorParty: PartyId,
       storeWithIngestion: AppStoreWithIngestion[ValidatorStore],
       participantAdminConnection: ParticipantAdminConnection,
-      domainId: DomainId,
+      synchronizerId: SynchronizerId,
   )(implicit traceContext: TraceContext): Future[Unit] = {
     logger.info(s"Attempting to setup app $name...")
     for {
       _ <- instance.dars.traverse_(dar =>
-        participantAdminConnection.uploadDarFileWithVettingOnAllConnectedDomains(
+        participantAdminConnection.uploadDarFileWithVettingOnAllConnectedSynchronizers(
           dar,
           RetryFor.WaitingOnInitDependency,
         )
@@ -482,8 +483,8 @@ class ValidatorApp(
           Some(party),
           storeWithIngestion,
           validatorUserName = config.ledgerApiUser,
-          // we're initializing so AmuletRules is guaranteed to be on domainId
-          getAmuletRulesDomain = () => _ => Future successful domainId,
+          // we're initializing so AmuletRules is guaranteed to be on synchronizerId
+          getAmuletRulesDomain = () => _ => Future successful synchronizerId,
           participantAdminConnection,
           retryProvider,
           logger,
@@ -621,7 +622,7 @@ class ValidatorApp(
       participantAdminConnection: ParticipantAdminConnection,
       scanConnection: BftScanConnection,
   )(implicit traceContext: TraceContext) = {
-    def lookupReservedTraffic(domainId: DomainId): Future[Option[NonNegativeLong]] = {
+    def lookupReservedTraffic(synchronizerId: SynchronizerId): Future[Option[NonNegativeLong]] = {
       config.domains.global.reservedTrafficO
         .fold(Future.successful(Option.empty[NonNegativeLong]))(reservedTraffic => {
           for {
@@ -629,7 +630,7 @@ class ValidatorApp(
             amuletConfig = AmuletConfigSchedule(amuletRules).getConfigAsOf(clock.now)
             reservedTrafficO = Option.when(
               amuletConfig.decentralizedSynchronizer.requiredSynchronizers.map
-                .containsKey(domainId.toProtoPrimitive)
+                .containsKey(synchronizerId.toProtoPrimitive)
             )(reservedTraffic)
           } yield reservedTrafficO
         })
@@ -768,6 +769,7 @@ class ValidatorApp(
             participantId,
             config.ingestFromParticipantBegin,
             config.ingestUpdateHistoryFromParticipantBegin,
+            config.parameters.enableCantonPackageSelection,
           )
           val walletManager = new UserWalletManager(
             ledgerClient,
@@ -792,6 +794,7 @@ class ValidatorApp(
             config.autoAcceptTransfers,
             config.supportsSoftDomainMigrationPoc,
             dedupDuration,
+            config.parameters.enableCantonPackageSelection,
           )
           Some(walletManager)
         } else {
@@ -833,9 +836,10 @@ class ValidatorApp(
         config.contactPoint,
         config.supportsSoftDomainMigrationPoc,
         initialSynchronizerTime,
+        config.parameters.enableCantonPackageSelection,
         loggerFactory,
       )
-      domainId <- scanConnection.getAmuletRulesDomain()(traceContext)
+      synchronizerId <- scanConnection.getAmuletRulesDomain()(traceContext)
       _ <- config.appInstances.toList.traverse({ case (name, instance) =>
         appInitStep(s"Set up app instance $name") {
           setupAppInstance(
@@ -844,7 +848,7 @@ class ValidatorApp(
             validatorParty,
             automation,
             participantAdminConnection,
-            domainId,
+            synchronizerId,
           )
         }
       })
@@ -861,8 +865,8 @@ class ValidatorApp(
             knownParty = Some(validatorParty),
             automation,
             validatorUserName = config.ledgerApiUser,
-            // we're initializing so AmuletRules is guaranteed to be on domainId
-            getAmuletRulesDomain = () => _ => Future successful domainId,
+            // we're initializing so AmuletRules is guaranteed to be on synchronizerId
+            getAmuletRulesDomain = () => _ => Future successful synchronizerId,
             participantAdminConnection,
             retryProvider,
             logger,
@@ -1048,7 +1052,7 @@ object ValidatorApp {
     override def isHealthy: Boolean = storage.isActive && automation.isHealthy
 
     override def close(): Unit =
-      Lifecycle.close(
+      LifeCycle.close(
         (Seq(
           participantAdminConnection,
           automation,

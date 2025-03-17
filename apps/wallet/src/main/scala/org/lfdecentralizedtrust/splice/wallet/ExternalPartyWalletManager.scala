@@ -44,6 +44,7 @@ class ExternalPartyWalletManager(
     participantId: ParticipantId,
     ingestFromParticipantBegin: Boolean,
     ingestUpdateHistoryFromParticipantBegin: Boolean,
+    enableCantonPackageSelection: Boolean,
 )(implicit
     ec: ExecutionContext,
     mat: Materializer,
@@ -174,13 +175,14 @@ class ExternalPartyWalletManager(
       participantId,
       ingestFromParticipantBegin,
       ingestUpdateHistoryFromParticipantBegin,
+      enableCantonPackageSelection,
     )
     (externalPartyRetryProvider, walletService)
   }
 
   override def isHealthy: Boolean = externalPartyWalletsMap.values.forall(_._2.isHealthy)
 
-  override def close(): Unit = Lifecycle.close(
+  override def close(): Unit = LifeCycle.close(
     // per-party retry providers should have been closed by the shutdown signal, so only closing the services here
     externalPartyWalletsMap.values.map(_._2).toSeq*
   )(logger)

@@ -1,0 +1,60 @@
+-- Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: Apache-2.0
+
+-- | Common utilities for implementing the token APIs for Amulet.
+
+module Splice.Amulet.TokenApiUtils where
+
+import DA.Map qualified as Map
+
+import Splice.Api.Token.MetadataV1
+import Splice.Api.Token.HoldingV1 qualified as Api.Token.HoldingV1
+
+
+splicePrefix : Text
+splicePrefix = "splice.lfdecentralizedtrust.org/"
+
+-- | Shared definition of the instrument-id used for amulets.
+amuletInstrumentId : Party -> Api.Token.HoldingV1.InstrumentId
+amuletInstrumentId dso =
+  Api.Token.HoldingV1.InstrumentId with admin = dso; id = "Amulet"
+
+
+-- Metadata keys
+----------------
+
+createdInRoundMetaKey : Text
+createdInRoundMetaKey = splicePrefix <> "created-in-round"
+
+ratePerRoundMetaKey : Text
+ratePerRoundMetaKey = splicePrefix <> "rate-per-round"
+
+
+-- Choice contexts
+------------------
+
+amuletRulesContextKey : Text
+amuletRulesContextKey = "amulet-rules"
+
+openRoundContextKey : Text
+openRoundContextKey = "open-round"
+
+featuredAppRightContextKey : Text
+featuredAppRightContextKey = "featured-app-right"
+
+transferPreapprovalContextKey : Text
+transferPreapprovalContextKey = "transfer-preapproval"
+
+lookupContextContractId : Template t => ChoiceContext -> Text -> Update (Optional (ContractId t))
+lookupContextContractId context k = do
+  case Map.lookup k context.values of
+    None -> pure None
+    Some (AV_ContractId anyCid) -> pure (Some (coerceContractId anyCid))
+    Some value -> fail $ "Expected contract id for: " <> k <> ", got: " <> show value
+
+getContextContractId : Template t => ChoiceContext -> Text -> Update (ContractId t)
+getContextContractId context k = do
+  optCid <- lookupContextContractId context k
+  case optCid of
+    None -> fail $ "Missing context entry for: " <> k
+    Some cid -> pure cid

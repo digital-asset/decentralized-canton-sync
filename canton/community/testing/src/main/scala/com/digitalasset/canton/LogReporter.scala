@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton
@@ -8,8 +8,8 @@ import com.typesafe.scalalogging.Logger
 import org.scalatest.Reporter
 import org.scalatest.events.*
 
-/** Logs when a test case or suite is started or completed.
-  * To use it, register this class with "-C" when ScalaTest is started.
+/** Logs when a test case or suite is started or completed. To use it, register this class with "-C"
+  * when ScalaTest is started.
   */
 class LogReporter extends Reporter {
 

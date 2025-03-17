@@ -1,9 +1,9 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.ledger.error.groups
 
-import com.daml.error.{DamlError, DamlErrorWithDefiniteAnswer, *}
+import com.daml.error.*
 import com.digitalasset.canton.ledger.error.ParticipantErrorGroup.LedgerApiErrorGroup.AdminServicesErrorGroup.IdentityProviderConfigServiceErrorGroup
 
 object IdentityProviderConfigServiceErrors extends IdentityProviderConfigServiceErrorGroup {
@@ -22,7 +22,7 @@ object IdentityProviderConfigServiceErrors extends IdentityProviderConfigService
       ) {
     final case class Reject(identityProviderId: String, reason: String)(implicit
         loggingContext: ContextualizedErrorLogger
-    ) extends DamlError(
+    ) extends ContextualizedDamlError(
           cause =
             s"Update operation for identity provider config '$identityProviderId' failed due to: $reason"
         ) {

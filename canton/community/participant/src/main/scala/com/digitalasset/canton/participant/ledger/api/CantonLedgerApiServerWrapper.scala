@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.participant.ledger.api
@@ -15,7 +15,7 @@ import com.digitalasset.canton.concurrent.{
 import com.digitalasset.canton.config.ProcessingTimeout
 import com.digitalasset.canton.http.JsonApiConfig
 import com.digitalasset.canton.http.metrics.HttpApiMetrics
-import com.digitalasset.canton.lifecycle.{FlagCloseable, FutureUnlessShutdown, Lifecycle}
+import com.digitalasset.canton.lifecycle.{FlagCloseable, FutureUnlessShutdown, LifeCycle}
 import com.digitalasset.canton.logging.pretty.{Pretty, PrettyPrinting}
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging, TracedLogger}
 import com.digitalasset.canton.metrics.LedgerApiServerMetrics
@@ -40,18 +40,30 @@ object CantonLedgerApiServerWrapper extends NoTracing {
 
   /** Config for ledger API server
     *
-    * @param serverConfig          ledger API server configuration
-    * @param jsonApiConfig         JSON API configuration
-    * @param participantId         unique participant id used e.g. for a unique ledger API server index db name
-    * @param engine                daml engine shared with Canton for performance reasons
-    * @param syncService           canton sync service implementing both read and write services
-    * @param cantonParameterConfig configurations meant to be overridden primarily in tests (applying to all participants)
-    * @param testingTimeService    an optional service during testing for advancing time, participant-specific
-    * @param adminToken            canton admin token for ledger api auth
-    * @param enableCommandInspection     whether canton should support inspection service or not
-    * @param loggerFactory         canton logger factory
-    * @param tracerProvider        tracer provider for open telemetry grpc injection
-    * @param metrics               upstream metrics module
+    * @param serverConfig
+    *   ledger API server configuration
+    * @param jsonApiConfig
+    *   JSON API configuration
+    * @param participantId
+    *   unique participant id used e.g. for a unique ledger API server index db name
+    * @param engine
+    *   daml engine shared with Canton for performance reasons
+    * @param syncService
+    *   canton sync service implementing both read and write services
+    * @param cantonParameterConfig
+    *   configurations meant to be overridden primarily in tests (applying to all participants)
+    * @param testingTimeService
+    *   an optional service during testing for advancing time, participant-specific
+    * @param adminToken
+    *   canton admin token for ledger api auth
+    * @param enableCommandInspection
+    *   whether canton should support inspection service or not
+    * @param loggerFactory
+    *   canton logger factory
+    * @param tracerProvider
+    *   tracer provider for open telemetry grpc injection
+    * @param metrics
+    *   upstream metrics module
     */
   final case class Config(
       serverConfig: LedgerApiServerConfig,
@@ -77,10 +89,13 @@ object CantonLedgerApiServerWrapper extends NoTracing {
 
   /** Initialize a ledger API server asynchronously
     *
-    * @param config ledger API server configuration
-    * @param startLedgerApiServer whether to start the ledger API server or not
-    *              (i.e. when participant node is initialized in passive mode)
-    * @return ledger API server state wrapper EitherT-future
+    * @param config
+    *   ledger API server configuration
+    * @param startLedgerApiServer
+    *   whether to start the ledger API server or not (i.e. when participant node is initialized in
+    *   passive mode)
+    * @return
+    *   ledger API server state wrapper EitherT-future
     */
   def initialize(
       config: Config,
@@ -133,7 +148,7 @@ object CantonLedgerApiServerWrapper extends NoTracing {
   ) extends FlagCloseable {
 
     override protected def onClosed(): Unit =
-      Lifecycle.close(startableStoppableLedgerApi)(logger)
+      LifeCycle.close(startableStoppableLedgerApi)(logger)
 
     override def toString: String = getClass.getSimpleName
   }

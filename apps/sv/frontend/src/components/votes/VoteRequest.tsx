@@ -27,7 +27,7 @@ import {
 } from '@mui/material';
 import { DesktopDateTimePicker } from '@mui/x-date-pickers/DesktopDateTimePicker';
 
-import { RelTime } from '@daml.js/b70db8369e1c461d5c70f1c86f526a29e9776c655e6ffc2560f95b05ccb8b946/lib/DA/Time/Types';
+import { RelTime } from '@daml.js/daml-stdlib-DA-Time-Types-1.0.0/lib/DA/Time/Types/module';
 import { ActionRequiringConfirmation } from '@daml.js/splice-dso-governance/lib/Splice/DsoRules/module';
 
 import { useSvAdminClient } from '../../contexts/SvAdminServiceContext';
@@ -85,8 +85,6 @@ export const CreateVoteRequest: React.FC = () => {
     ),
     'milliseconds'
   );
-
-  const [isValidSynchronizerPauseTime, setIsValidSynchronizerPauseTime] = useState<boolean>(true);
 
   useEffect(() => {
     setExpiration(expirationFromVoteRequestTimeout);
@@ -187,7 +185,6 @@ export const CreateVoteRequest: React.FC = () => {
       listVoteRequestsQuery.data!,
       effectiveDate
     );
-
     if (!scheduleValidity.isValid) {
       setAlertMessage(scheduleValidity.alertMessage);
     }
@@ -289,9 +286,6 @@ export const CreateVoteRequest: React.FC = () => {
               slotProps={{
                 textField: {
                   id: 'datetime-picker-vote-request-expiration',
-                  inputProps: {
-                    'data-testid': 'datetime-picker-vote-request-expiration',
-                  },
                 },
               }}
               closeOnSelect
@@ -312,13 +306,7 @@ export const CreateVoteRequest: React.FC = () => {
           {actionName === 'SRARC_RevokeFeaturedAppRight' && (
             <RevokeFeaturedAppRight chooseAction={chooseAction} />
           )}
-          {actionName === 'SRARC_SetConfig' && (
-            <SetDsoRulesConfig
-              expiration={expiration}
-              chooseAction={chooseAction}
-              setIsValidSynchronizerPauseTime={setIsValidSynchronizerPauseTime}
-            />
-          )}
+          {actionName === 'SRARC_SetConfig' && <SetDsoRulesConfig chooseAction={chooseAction} />}
           {actionName === 'CRARC_AddFutureAmuletConfigSchedule' && (
             <AddFutureAmuletConfigSchedule chooseAction={chooseAction} />
           )}
@@ -400,15 +388,10 @@ export const CreateVoteRequest: React.FC = () => {
                 },
                 { disabled: summary === '', reason: 'No summary' },
                 { disabled: !isValidUrl(url), reason: 'Invalid URL' },
-                {
-                  disabled: !isValidSynchronizerPauseTime,
-                  reason: 'Synchronizer upgrade time is before the expiry/effective date',
-                },
               ]}
             >
               <Button
                 id="create-voterequest-submit-button"
-                data-testid="create-voterequest-submit-button"
                 fullWidth
                 type={'submit'}
                 size="large"

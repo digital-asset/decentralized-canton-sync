@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.lifecycle
@@ -9,12 +9,13 @@ import scala.annotation.tailrec
 import scala.util.control.NoStackTrace
 import scala.util.{Failure, Success, Try}
 
-/** The outcome of a computation ([[UnlessShutdown.Outcome]])
-  * unless the computation has aborted due to a shutdown ([[UnlessShutdown.AbortedDueToShutdown]]).
+/** The outcome of a computation ([[UnlessShutdown.Outcome]]) unless the computation has aborted due
+  * to a shutdown ([[UnlessShutdown.AbortedDueToShutdown]]).
   *
   * A copy of [[scala.Option]]. We use a separate class to document the purpose.
   *
-  * @tparam A The type of the outcome.
+  * @tparam A
+  *   The type of the outcome.
   */
 sealed trait UnlessShutdown[+A] extends Product with Serializable {
 
@@ -24,10 +25,14 @@ sealed trait UnlessShutdown[+A] extends Product with Serializable {
   /** Transforms the outcome using the given function. */
   def map[B](f: A => B): UnlessShutdown[B]
 
+  def forall(p: A => Boolean): Boolean
+
   /** Monadically chain two outcome computations. Abortion due to shutdown propagates. */
   def flatMap[B](f: A => UnlessShutdown[B]): UnlessShutdown[B]
 
-  /** Applicative traverse for outcome computations. The given function is not applied upon abortion. */
+  /** Applicative traverse for outcome computations. The given function is not applied upon
+    * abortion.
+    */
   def traverse[F[_], B](f: A => F[B])(implicit F: Applicative[F]): F[UnlessShutdown[B]]
 
   /** Convert the outcome into an [[scala.Right$]] or [[scala.Left$]]`(aborted)` upon abortion. */
@@ -48,17 +53,20 @@ object UnlessShutdown {
     override def foreach(f: A => Unit): Unit = f(result)
     override def map[B](f: A => B): Outcome[B] = Outcome(f(result))
     override def flatMap[B](f: A => UnlessShutdown[B]): UnlessShutdown[B] = f(result)
+    override def forall(p: A => Boolean): Boolean = p(this.result)
     override def traverse[F[_], B](f: A => F[B])(implicit F: Applicative[F]): F[UnlessShutdown[B]] =
       F.map(f(result))(Outcome(_))
     override def toRight[L](aborted: => L): Either[L, A] = Right(result)
     override def onShutdown[B >: A](ifShutdown: => B): A = result
     override def isOutcome: Boolean = true
+
   }
 
   case object AbortedDueToShutdown extends UnlessShutdown[Nothing] {
     override def foreach(f: Nothing => Unit): Unit = ()
     override def map[B](f: Nothing => B): AbortedDueToShutdown = this
     override def flatMap[B](f: Nothing => UnlessShutdown[B]): AbortedDueToShutdown = this
+    override def forall(p: Nothing => Boolean): Boolean = true
     override def traverse[F[_], B](f: Nothing => F[B])(implicit
         F: Applicative[F]
     ): F[UnlessShutdown[B]] = F.pure(this)
@@ -73,10 +81,12 @@ object UnlessShutdown {
   def fromOption[A](x: Option[A]): UnlessShutdown[A] =
     x.fold[UnlessShutdown[A]](AbortedDueToShutdown)(Outcome.apply)
 
-  /** Converts [[com.digitalasset.canton.lifecycle.UnlessShutdown.AbortedDueToShutdown]]s into
-    * an internal exception so that shutdowns can tunnel through APIs that expect a plain [[scala.util.Try]]
-    * Must be used together with [[com.digitalasset.canton.lifecycle.UnlessShutdown.recoverFromAbortException]]
-    * to turn the internal exception back into [[com.digitalasset.canton.lifecycle.UnlessShutdown.AbortedDueToShutdown]].
+  /** Converts [[com.digitalasset.canton.lifecycle.UnlessShutdown.AbortedDueToShutdown]]s into an
+    * internal exception so that shutdowns can tunnel through APIs that expect a plain
+    * [[scala.util.Try]] Must be used together with
+    * [[com.digitalasset.canton.lifecycle.UnlessShutdown.recoverFromAbortException]] to turn the
+    * internal exception back into
+    * [[com.digitalasset.canton.lifecycle.UnlessShutdown.AbortedDueToShutdown]].
     */
   def failOnShutdownToAbortException[A](x: Try[UnlessShutdown[A]], action: String): Try[A] =
     x.flatMap {
@@ -133,8 +143,7 @@ object UnlessShutdown {
       }
     }
 
-  /** Lift a [[cats.Monoid]] on outcomes to [[UnlessShutdown]].
-    * [[AbortedDueToShutdown]] cancels.
+  /** Lift a [[cats.Monoid]] on outcomes to [[UnlessShutdown]]. [[AbortedDueToShutdown]] cancels.
     */
   implicit def monoidUnlessShutdown[A](implicit monoid: Monoid[A]): Monoid[UnlessShutdown[A]] =
     new Monoid[UnlessShutdown[A]] {
@@ -147,9 +156,10 @@ object UnlessShutdown {
         }
     }
 
-  /** Internal exception to channel an [[com.digitalasset.canton.lifecycle.UnlessShutdown.AbortedDueToShutdown]]
-    * through an API that expects plain [[scala.concurrent.Future]] or [[scala.util.Try]].
-    * Do not use this exception for reporting a shutdown to the caller of an API.
+  /** Internal exception to channel an
+    * [[com.digitalasset.canton.lifecycle.UnlessShutdown.AbortedDueToShutdown]] through an API that
+    * expects plain [[scala.concurrent.Future]] or [[scala.util.Try]]. Do not use this exception for
+    * reporting a shutdown to the caller of an API.
     */
   private final case class AbortedDueToShutdownException(action: String)
       extends RuntimeException(s"'$action' was aborted due to shutdown.")

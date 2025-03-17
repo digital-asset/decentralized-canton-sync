@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.auth
@@ -12,23 +12,28 @@ import com.daml.jwt.{
   StandardJWTPayload,
 }
 import com.digitalasset.canton.auth.AuthService.AUTHORIZATION_KEY
+import com.digitalasset.canton.config.manual.CantonConfigValidatorDerivation
+import com.digitalasset.canton.config.{CantonConfigValidator, UniformCantonConfigValidation}
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.tracing.TraceContext
 import io.grpc.Metadata
 import spray.json.*
 
-import java.util.concurrent.{CompletableFuture, CompletionStage}
+import scala.concurrent.Future
 import scala.util.Try
 
-sealed trait AccessLevel extends Product with Serializable
+sealed trait AccessLevel extends Product with Serializable with UniformCantonConfigValidation
 
 object AccessLevel {
+  implicit val accessLevelCantonConfigValidator: CantonConfigValidator[AccessLevel] =
+    CantonConfigValidatorDerivation[AccessLevel]
+
   case object Admin extends AccessLevel
   case object Wildcard extends AccessLevel
 }
 
-/** An AuthService that reads a JWT token from a `Authorization: Bearer` HTTP header.
-  * The token is expected to use the format as defined in [[com.daml.jwt.AuthServiceJWTPayload]]:
+/** An AuthService that reads a JWT token from a `Authorization: Bearer` HTTP header. The token is
+  * expected to use the format as defined in [[com.daml.jwt.AuthServiceJWTPayload]]:
   */
 abstract class AuthServiceJWTBase(
     verifier: JwtVerifierBase,
@@ -39,8 +44,8 @@ abstract class AuthServiceJWTBase(
 
   override def decodeMetadata(
       headers: Metadata
-  )(implicit traceContext: TraceContext): CompletionStage[ClaimSet] =
-    CompletableFuture.completedFuture {
+  )(implicit traceContext: TraceContext): Future[ClaimSet] =
+    Future.successful {
       getAuthorizationHeader(headers) match {
         case None => ClaimSet.Unauthenticated
         case Some(header) => parseHeader(header)
@@ -141,15 +146,16 @@ class AuthServiceJWT(
   }
 }
 
-class AuthServicePrivilegedJWT(
+class AuthServicePrivilegedJWT private[auth] (
     verifier: JwtVerifierBase,
-    targetScope: String,
+    targetAudience: Option[String],
+    targetScope: Option[String],
     accessLevel: AccessLevel,
     val loggerFactory: NamedLoggerFactory,
 ) extends AuthServiceJWTBase(
       verifier = verifier,
-      targetAudience = None,
-      targetScope = Some(targetScope),
+      targetAudience = targetAudience,
+      targetScope = targetScope,
     ) {
 
   private def claims = accessLevel match {
@@ -178,14 +184,16 @@ object AuthServiceJWT {
       accessLevel: AccessLevel,
       loggerFactory: NamedLoggerFactory,
   ): AuthServiceJWTBase =
-    (privileged, targetScope) match {
-      case (true, Some(scope)) =>
-        new AuthServicePrivilegedJWT(verifier, scope, accessLevel, loggerFactory)
-      case (true, None) =>
+    (privileged, targetScope, targetAudience) match {
+      case (true, Some(scope), _) =>
+        new AuthServicePrivilegedJWT(verifier, None, Some(scope), accessLevel, loggerFactory)
+      case (true, None, Some(audience)) =>
+        new AuthServicePrivilegedJWT(verifier, Some(audience), None, accessLevel, loggerFactory)
+      case (true, None, None) =>
         throw new IllegalArgumentException(
-          "Missing targetScope in the definition of a privileged JWT AuthService"
+          "Missing targetScope or targetAudience in the definition of a privileged JWT AuthService"
         )
-      case (false, _) =>
+      case (false, _, _) =>
         new AuthServiceJWT(verifier, targetAudience, targetScope, loggerFactory)
     }
 }

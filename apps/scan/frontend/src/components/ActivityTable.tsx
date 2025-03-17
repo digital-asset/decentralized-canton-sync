@@ -11,7 +11,6 @@ import {
   TitledTable,
 } from 'common-frontend';
 import { useActivity } from 'common-frontend/scan-api';
-import { useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { ListActivityResponseItem, SenderAmount, Transfer, AmuletAmount } from 'scan-openapi';
 
@@ -36,7 +35,13 @@ export const ActivityTable: React.FC = () => {
     isFetchingNextPage,
   } = useActivity();
 
-  const { ref, inView } = useInView();
+  const { ref } = useInView({
+    onChange: inView => {
+      if (inView && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    },
+  });
 
   const hasNoActivities = (pagedActivities: ListActivityResponseItem[][]): boolean => {
     return (
@@ -47,12 +52,6 @@ export const ActivityTable: React.FC = () => {
   };
 
   const pagedActivities = activityData ? activityData.pages : [];
-
-  useEffect(() => {
-    if (inView && hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
     <Stack spacing={4} direction="column" data-testid="activity-table">
@@ -242,7 +241,7 @@ interface ActivityRowProps {
 
 const ActivityRow: React.FC<ActivityRowProps> = ({ activity }) => {
   return (
-    <TableRow className="activity-row">
+    <TableRow>
       <TableCell>
         <Typography className="activity_type" variant="body1">
           {activity.activityType}

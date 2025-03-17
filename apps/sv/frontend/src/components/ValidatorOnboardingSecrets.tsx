@@ -64,7 +64,6 @@ const ValidatorOnboardingSecrets: React.FC = () => {
           id="create-validator-onboarding-secret"
           variant="pill"
           fullWidth
-          disabled={prepareOnboardingMutation.isLoading}
           size="large"
           onClick={() => prepareOnboardingMutation.mutate()}
         >

@@ -45,7 +45,7 @@ case class EnvironmentDefinition(
     val context: String, // String context included in generation of unique names. This could, e.g., be the test suite name
     val configTransformsWithContext: (String => Seq[SpliceConfig => SpliceConfig]) = (_: String) =>
       ConfigTransforms.defaults(),
-) extends BaseEnvironmentDefinition[EnvironmentImpl, SpliceTestConsoleEnvironment](
+) extends BaseEnvironmentDefinition[SpliceConfig, EnvironmentImpl, SpliceTestConsoleEnvironment](
       baseConfig,
       testingConfig,
       List(preSetup, setup),
@@ -334,17 +334,17 @@ case class EnvironmentDefinition(
       )
       .withSequencerConnectionsFromScanDisabled(10_000)
 
-  override lazy val environmentFactory: EnvironmentFactory[EnvironmentImpl] =
+  override lazy val environmentFactory: EnvironmentFactory[SpliceConfig, EnvironmentImpl] =
     SpliceEnvironmentFactory
 
   override def createTestConsole(
       environment: EnvironmentImpl,
       loggerFactory: NamedLoggerFactory,
-  ): TestConsoleEnvironment[EnvironmentImpl] =
+  ): TestConsoleEnvironment[SpliceConfig, EnvironmentImpl] =
     new SpliceConsoleEnvironment(
       environment,
       new TestConsoleOutput(loggerFactory),
-    ) with TestEnvironment[EnvironmentImpl] {
+    ) with TestEnvironment[SpliceConfig, EnvironmentImpl] {
       override val actorSystem = super[TestEnvironment].actorSystem
       override val actualConfig: SpliceConfig = this.environment.config
 
@@ -409,7 +409,7 @@ object EnvironmentDefinition extends CommonAppInstanceReferences {
     env.amuletNodes.local.foreach(_.waitForInitialization())
 
   def allocateParty(participant: ParticipantClientReference, hint: String) =
-    participant.ledger_api.parties.allocate(hint, hint).party
+    participant.ledger_api.parties.allocate(hint).party
 
   private def withAllocatedAdminUser(
       user: String,

@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.environment
@@ -10,31 +10,34 @@ import cats.syntax.foldable.*
 import cats.{Applicative, Id}
 import com.digitalasset.canton.concurrent.ExecutionContextIdlenessExecutorService
 import com.digitalasset.canton.config.{DbConfig, LocalNodeConfig, ProcessingTimeout, StorageConfig}
+import com.digitalasset.canton.console.GrpcAdminCommandRunner
+import com.digitalasset.canton.console.declarative.DeclarativeApiManager
 import com.digitalasset.canton.discard.Implicits.DiscardOps
-import com.digitalasset.canton.domain.mediator.{
-  MediatorNode,
-  MediatorNodeBootstrap,
-  MediatorNodeConfigCommon,
-  MediatorNodeParameters,
-}
-import com.digitalasset.canton.domain.sequencing.config.{
-  SequencerNodeConfigCommon,
-  SequencerNodeParameters,
-}
-import com.digitalasset.canton.domain.sequencing.{SequencerNode, SequencerNodeBootstrap}
 import com.digitalasset.canton.lifecycle.*
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.participant.*
 import com.digitalasset.canton.participant.config.LocalParticipantConfig
 import com.digitalasset.canton.resource.DbStorage.RetryConfig
 import com.digitalasset.canton.resource.{DbMigrations, DbMigrationsFactory}
+import com.digitalasset.canton.synchronizer.mediator.{
+  MediatorNode,
+  MediatorNodeBootstrap,
+  MediatorNodeConfig,
+  MediatorNodeParameters,
+}
+import com.digitalasset.canton.synchronizer.sequencer.config.{
+  SequencerNodeConfig,
+  SequencerNodeParameters,
+}
+import com.digitalasset.canton.synchronizer.sequencer.{SequencerNode, SequencerNodeBootstrap}
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.Thereafter.syntax.*
 
+import java.util.concurrent.ScheduledExecutorService
 import scala.collection.concurrent.TrieMap
 import scala.concurrent.{ExecutionContext, Future, Promise, blocking}
 
-/** Group of CantonNodes of the same type (domains, participants, sequencers). */
+/** Group of CantonNodes of the same type (mediators, participants, sequencers). */
 trait Nodes[+Node <: CantonNode, +NodeBootstrap <: CantonNodeBootstrap[Node]]
     extends FlagCloseable {
 
@@ -42,9 +45,9 @@ trait Nodes[+Node <: CantonNode, +NodeBootstrap <: CantonNodeBootstrap[Node]]
 
   /** Returns the startup group (nodes in the same group will start together)
     *
-    * Mediator & Topology manager automatically connect to a domain. Participants
-    * require an external call to reconnectDomains. Therefore, we can start participants, sequencer and domain
-    * nodes together, but we have to wait for the sequencers to be up before we can kick off mediators & topology managers.
+    * Mediators automatically connect to a synchronizer. Participants require an external call to
+    * reconnectSynchronizers. Therefore, we can start participant and sequencer nodes together, but
+    * we have to wait for the sequencers to be up before we can kick off mediators.
     */
   def startUpGroup: Int
 
@@ -66,8 +69,8 @@ trait Nodes[+Node <: CantonNode, +NodeBootstrap <: CantonNodeBootstrap[Node]]
   /** Get the single running node */
   def getRunning(name: InstanceName): Option[NodeBootstrap]
 
-  /** Get the node while it is still being started. This is mostly useful during testing to access the node in earlier
-    * stages of its initialization phase.
+  /** Get the node while it is still being started. This is mostly useful during testing to access
+    * the node in earlier stages of its initialization phase.
     */
   def getStarting(name: InstanceName): Option[NodeBootstrap]
 
@@ -86,7 +89,9 @@ trait Nodes[+Node <: CantonNode, +NodeBootstrap <: CantonNodeBootstrap[Node]]
   /** Independently run any pending database migrations for the named node */
   def migrateDatabase(name: InstanceName): Either[StartupError, Unit]
 
-  /** Independently repair the Flyway schema history table for the named node to reset Flyway migration checksums etc */
+  /** Independently repair the Flyway schema history table for the named node to reset Flyway
+    * migration checksums etc
+    */
   def repairDatabaseMigration(name: InstanceName): Either[StartupError, Unit]
 }
 
@@ -117,6 +122,7 @@ class ManagedNodes[
     parametersFor: String => CantonNodeParameters,
     override val startUpGroup: Int,
     protected val loggerFactory: NamedLoggerFactory,
+    protected val declarativeManager: Option[DeclarativeApiManager[NodeConfig]] = None,
 )(implicit ec: ExecutionContext)
     extends Nodes[Node, NodeBootstrap]
     with NamedLogging
@@ -145,8 +151,34 @@ class ManagedNodes[
         configs
           .get(name)
           .toRight(ConfigurationNotFound(name): StartupError)
+          .flatMap { c =>
+            declarativeManager
+              .map(_.verifyConfig(name, c))
+              .getOrElse(Either.unit)
+              .map(_ => c)
+              .leftMap(InvalidDeclarativeStateConfig(name, _))
+          }
       )
       .flatMap(startNode(name, _).map(_ => ()))
+
+  private def startDeclarativeApi(
+      instance: NodeBootstrap,
+      name: InstanceName,
+      config: NodeConfig,
+  ): EitherT[Future, String, Unit] = {
+    def getAdminToken = instance.getNode.flatMap(n => Option.when(n.isActive)(n.adminToken))
+    declarativeManager
+      .map { manager =>
+        manager.started(
+          name,
+          config,
+          getAdminToken,
+          instance.metrics.declarativeApiMetrics,
+          instance.closeContext,
+        )
+      }
+      .getOrElse(EitherT.rightT(()))
+  }
 
   private def startNode(
       name: InstanceName,
@@ -170,11 +202,15 @@ class ManagedNodes[
           instanceCreated
         }
         _ <-
-          instance.start().leftMap { error =>
-            instance.close() // clean up resources allocated during instance creation (e.g., db)
-            StartFailed(name, error): StartupError
-          }
+          instance
+            .start()
+            .flatMap(_ => startDeclarativeApi(instance, name, config))
+            .leftMap { error =>
+              instance.close() // clean up resources allocated during instance creation (e.g., db)
+              StartFailed(name, error): StartupError
+            }
       } yield {
+
         // register the running instance
         nodes.put(name, Running(instance)).discard
         instance
@@ -270,7 +306,7 @@ class ManagedNodes[
         nodes.remove(name).foreach {
           // if there were other processes messing with the node, we won't shutdown
           case Running(current) if node == current =>
-            Lifecycle.close(node)(logger)
+            LifeCycle.close(node)(logger)
           case _ =>
             logger.info(s"Node $name has already disappeared.")
         }
@@ -359,16 +395,18 @@ class ManagedNodes[
     }
 }
 
-class ParticipantNodes[B <: CantonNodeBootstrap[N], N <: CantonNode, PC <: LocalParticipantConfig](
-    create: (String, PC) => B, // (nodeName, config) => bootstrap
+class ParticipantNodes[B <: CantonNodeBootstrap[N], N <: CantonNode](
+    create: (String, LocalParticipantConfig) => B, // (nodeName, config) => bootstrap
     migrationsFactory: DbMigrationsFactory,
     timeouts: ProcessingTimeout,
-    configs: Map[String, PC],
+    configs: Map[String, LocalParticipantConfig],
     parametersFor: String => ParticipantNodeParameters,
+    runnerFactory: String => GrpcAdminCommandRunner,
     loggerFactory: NamedLoggerFactory,
 )(implicit
-    protected val executionContext: ExecutionContextIdlenessExecutorService
-) extends ManagedNodes[N, PC, ParticipantNodeParameters, B](
+    protected val executionContext: ExecutionContextIdlenessExecutorService,
+    scheduler: ScheduledExecutorService,
+) extends ManagedNodes[N, LocalParticipantConfig, ParticipantNodeParameters, B](
       create,
       migrationsFactory,
       timeouts,
@@ -376,17 +414,26 @@ class ParticipantNodes[B <: CantonNodeBootstrap[N], N <: CantonNode, PC <: Local
       parametersFor,
       startUpGroup = 2,
       loggerFactory,
+      Some(
+        DeclarativeApiManager
+          .forParticipants(runnerFactory, loggerFactory)
+      ),
     ) {}
 
-class SequencerNodes[SC <: SequencerNodeConfigCommon](
-    create: (String, SC) => SequencerNodeBootstrap,
+class SequencerNodes(
+    create: (String, SequencerNodeConfig) => SequencerNodeBootstrap,
     migrationsFactory: DbMigrationsFactory,
     timeouts: ProcessingTimeout,
-    configs: Map[String, SC],
+    configs: Map[String, SequencerNodeConfig],
     parameters: String => SequencerNodeParameters,
     loggerFactory: NamedLoggerFactory,
 )(implicit ec: ExecutionContext)
-    extends ManagedNodes[SequencerNode, SC, SequencerNodeParameters, SequencerNodeBootstrap](
+    extends ManagedNodes[
+      SequencerNode,
+      SequencerNodeConfig,
+      SequencerNodeParameters,
+      SequencerNodeBootstrap,
+    ](
       create,
       migrationsFactory,
       timeouts,
@@ -396,17 +443,17 @@ class SequencerNodes[SC <: SequencerNodeConfigCommon](
       loggerFactory,
     )
 
-class MediatorNodes[MNC <: MediatorNodeConfigCommon](
-    create: (String, MNC) => MediatorNodeBootstrap,
+class MediatorNodes(
+    create: (String, MediatorNodeConfig) => MediatorNodeBootstrap,
     migrationsFactory: DbMigrationsFactory,
     timeouts: ProcessingTimeout,
-    configs: Map[String, MNC],
+    configs: Map[String, MediatorNodeConfig],
     parameters: String => MediatorNodeParameters,
     loggerFactory: NamedLoggerFactory,
 )(implicit ec: ExecutionContext)
     extends ManagedNodes[
       MediatorNode,
-      MNC,
+      MediatorNodeConfig,
       MediatorNodeParameters,
       MediatorNodeBootstrap,
     ](

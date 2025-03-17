@@ -10,12 +10,13 @@ import cats.syntax.traverse.*
 import org.lfdecentralizedtrust.splice.admin.api.client.commands.{HttpClientBuilder, HttpCommand}
 import org.lfdecentralizedtrust.splice.http.HttpClient
 import org.lfdecentralizedtrust.splice.http.v0.{definitions, scan_soft_domain_migration_poc as http}
-import org.lfdecentralizedtrust.splice.http.v0.scan as scanHttp
+import org.lfdecentralizedtrust.splice.http.v0.external.scan as externalHttp
 import org.lfdecentralizedtrust.splice.util.{Codec, TemplateJsonDecoder}
 import com.digitalasset.canton.topology.{MediatorId, SequencerId}
 import com.digitalasset.canton.topology.transaction.SignedTopologyTransaction
 import com.digitalasset.canton.topology.transaction.SignedTopologyTransaction.GenericSignedTopologyTransaction
 import com.digitalasset.canton.tracing.TraceContext
+import com.digitalasset.canton.version.ProtocolVersionValidation.NoValidation
 import com.google.protobuf.ByteString
 
 import java.util.Base64
@@ -39,7 +40,7 @@ object HttpScanSoftDomainMigrationPocAppClient {
   }
 
   abstract class ExternalBaseCommand[Res, Result] extends HttpCommand[Res, Result] {
-    override type Client = scanHttp.ScanClient
+    override type Client = externalHttp.ScanClient
 
     def createClient(host: String)(implicit
         httpClient: HttpClient,
@@ -47,7 +48,7 @@ object HttpScanSoftDomainMigrationPocAppClient {
         ec: ExecutionContext,
         mat: Materializer,
     ): Client =
-      scanHttp.ScanClient.httpClient(HttpClientBuilder().buildClient(), host)
+      externalHttp.ScanClient.httpClient(HttpClientBuilder().buildClient(), host)
   }
 
   final case class SynchronizerIdentities(
@@ -66,7 +67,7 @@ object HttpScanSoftDomainMigrationPocAppClient {
         sequencerIdentityTransactions <- identities.sequencerIdentityTransactions
           .traverse(tx =>
             // TODO(#13301) switch to safe version
-            SignedTopologyTransaction.fromTrustedByteString(
+            SignedTopologyTransaction.fromTrustedByteString(NoValidation)(
               ByteString.copyFrom(Base64.getDecoder.decode(tx))
             )
           )
@@ -76,7 +77,7 @@ object HttpScanSoftDomainMigrationPocAppClient {
         mediatorIdentityTransactions <- identities.mediatorIdentityTransactions
           .traverse(tx =>
             // TODO(#13301) switch to safe version
-            SignedTopologyTransaction.fromTrustedByteString(
+            SignedTopologyTransaction.fromTrustedByteString(NoValidation)(
               ByteString.copyFrom(Base64.getDecoder.decode(tx))
             )
           )
@@ -90,14 +91,14 @@ object HttpScanSoftDomainMigrationPocAppClient {
       )
   }
 
-  final case class GetSynchronizerIdentities(domainIdPrefix: String)
+  final case class GetSynchronizerIdentities(synchronizerIdPrefix: String)
       extends InternalBaseCommand[http.GetSynchronizerIdentitiesResponse, SynchronizerIdentities] {
     override def submitRequest(
         client: Client,
         headers: List[HttpHeader],
     ): EitherT[Future, Either[Throwable, HttpResponse], http.GetSynchronizerIdentitiesResponse] =
       client.getSynchronizerIdentities(
-        domainIdPrefix
+        synchronizerIdPrefix
       )
 
     override def handleOk()(implicit decoder: TemplateJsonDecoder) = {
@@ -108,7 +109,7 @@ object HttpScanSoftDomainMigrationPocAppClient {
 
   final case class SynchronizerBootstrappingTransactions(
       domainParameters: GenericSignedTopologyTransaction,
-      sequencerDomainState: GenericSignedTopologyTransaction,
+      sequencerSynchronizerState: GenericSignedTopologyTransaction,
       mediatorDomainState: GenericSignedTopologyTransaction,
   )
 
@@ -118,15 +119,15 @@ object HttpScanSoftDomainMigrationPocAppClient {
     ): Either[String, SynchronizerBootstrappingTransactions] =
       (for {
         // TODO(#13301) switch to safe version
-        domainParameters <- SignedTopologyTransaction.fromTrustedByteString(
+        domainParameters <- SignedTopologyTransaction.fromTrustedByteString(NoValidation)(
           ByteString.copyFrom(Base64.getDecoder.decode(state.domainParameters))
         )
         // TODO(#13301) switch to safe version
-        sequencerDomainState <- SignedTopologyTransaction.fromTrustedByteString(
+        sequencerDomainState <- SignedTopologyTransaction.fromTrustedByteString(NoValidation)(
           ByteString.copyFrom(Base64.getDecoder.decode(state.sequencerDomainState))
         )
         // TODO(#13301) switch to safe version
-        mediatorDomainState <- SignedTopologyTransaction.fromTrustedByteString(
+        mediatorDomainState <- SignedTopologyTransaction.fromTrustedByteString(NoValidation)(
           ByteString.copyFrom(Base64.getDecoder.decode(state.mediatorDomainState))
         )
       } yield SynchronizerBootstrappingTransactions(
@@ -136,7 +137,7 @@ object HttpScanSoftDomainMigrationPocAppClient {
       )).left.map(_.toString)
   }
 
-  final case class GetSynchronizerBootstrappingTransactions(domainIdPrefix: String)
+  final case class GetSynchronizerBootstrappingTransactions(synchronizerIdPrefix: String)
       extends InternalBaseCommand[
         http.GetSynchronizerBootstrappingTransactionsResponse,
         SynchronizerBootstrappingTransactions,
@@ -149,7 +150,7 @@ object HttpScanSoftDomainMigrationPocAppClient {
       HttpResponse,
     ], http.GetSynchronizerBootstrappingTransactionsResponse] =
       client.getSynchronizerBootstrappingTransactions(
-        domainIdPrefix
+        synchronizerIdPrefix
       )
 
     override def handleOk()(implicit decoder: TemplateJsonDecoder) = {

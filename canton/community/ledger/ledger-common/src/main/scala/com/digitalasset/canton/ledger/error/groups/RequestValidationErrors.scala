@@ -1,11 +1,11 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.ledger.error.groups
 
 import com.daml.error.{
+  ContextualizedDamlError,
   ContextualizedErrorLogger,
-  DamlError,
   DamlErrorWithDefiniteAnswer,
   ErrorCategory,
   ErrorCode,
@@ -62,7 +62,7 @@ object RequestValidationErrors extends RequestValidationErrorGroup {
       "The transaction does not exist or the requesting set of parties are not authorized to fetch it."
     )
     @Resolution(
-      "Check the transaction id and verify that the requested transaction is visible to the requesting parties."
+      "Check the transaction id or offset and verify that the requested transaction is visible to the requesting parties."
     )
     object Transaction
         extends ErrorCode(
@@ -70,11 +70,19 @@ object RequestValidationErrors extends RequestValidationErrorGroup {
           ErrorCategory.InvalidGivenCurrentSystemStateResourceMissing,
         ) {
 
-      final case class Reject(transactionId: String)(implicit
+      final case class RejectWithTxId(transactionId: String)(implicit
           loggingContext: ContextualizedErrorLogger
       ) extends DamlErrorWithDefiniteAnswer(cause = "Transaction not found, or not visible.") {
         override def resources: Seq[(ErrorResource, String)] = Seq(
           (ErrorResource.TransactionId, transactionId)
+        )
+      }
+
+      final case class RejectWithOffset(offset: Long)(implicit
+          loggingContext: ContextualizedErrorLogger
+      ) extends DamlErrorWithDefiniteAnswer(cause = "Transaction not found, or not visible.") {
+        override def resources: Seq[(ErrorResource, String)] = Seq(
+          (ErrorResource.Offset, offset.toString)
         )
       }
     }
@@ -326,7 +334,7 @@ object RequestValidationErrors extends RequestValidationErrorGroup {
         message: String,
     )(implicit
         val loggingContext: ContextualizedErrorLogger
-    ) extends DamlError(
+    ) extends ContextualizedDamlError(
           cause = s"Offset $offsetValue in $fieldName is not a positive integer: $message"
         )
   }
@@ -344,7 +352,7 @@ object RequestValidationErrors extends RequestValidationErrorGroup {
         message: String,
     )(implicit
         val loggingContext: ContextualizedErrorLogger
-    ) extends DamlError(
+    ) extends ContextualizedDamlError(
           cause = s"Offset $offsetValue in $fieldName is a negative integer: $message"
         )
   }

@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.protocol
@@ -13,9 +13,10 @@ import com.digitalasset.canton.config.RequireTypes.{NonNegativeInt, PositiveInt}
 import com.digitalasset.canton.crypto.*
 import com.digitalasset.canton.crypto.provider.symbolic.SymbolicPureCrypto
 import com.digitalasset.canton.data.*
+import com.digitalasset.canton.data.DeduplicationPeriod.DeduplicationDuration
 import com.digitalasset.canton.data.TransactionViewDecomposition.{NewView, SameView}
 import com.digitalasset.canton.data.ViewPosition.MerklePathElement
-import com.digitalasset.canton.protocol.AuthenticatedContractIdVersionV10
+import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
 import com.digitalasset.canton.protocol.ExampleTransactionFactory.*
 import com.digitalasset.canton.protocol.SerializableContract.LedgerCreateTime
 import com.digitalasset.canton.sequencing.protocol.MediatorGroupRecipient
@@ -28,8 +29,8 @@ import com.digitalasset.canton.topology.transaction.ParticipantPermission.{
 }
 import com.digitalasset.canton.topology.transaction.{ParticipantAttributes, VettedPackage}
 import com.digitalasset.canton.topology.{
-  DomainId,
   ParticipantId,
+  SynchronizerId,
   TestingIdentityFactory,
   TestingTopology,
   UniqueIdentifier,
@@ -42,28 +43,20 @@ import com.digitalasset.canton.util.LfTransactionUtil.{
 }
 import com.digitalasset.canton.util.{LfTransactionBuilder, LfTransactionUtil}
 import com.digitalasset.canton.version.ProtocolVersion
-import com.digitalasset.daml.lf.data.Ref.{PackageId, PackageName}
+import com.digitalasset.daml.lf.data.Ref.PackageName
 import com.digitalasset.daml.lf.data.{Bytes, ImmArray}
 import com.digitalasset.daml.lf.language.LanguageVersion
 import com.digitalasset.daml.lf.transaction.Versioned
 import com.digitalasset.daml.lf.value.Value
-import com.digitalasset.daml.lf.value.Value.{
-  ValueContractId,
-  ValueOptional,
-  ValueRecord,
-  ValueUnit,
-  VersionedValue,
-}
+import com.digitalasset.daml.lf.value.Value.*
 import org.scalatest.EitherValues
 
 import java.time.Duration as JDuration
 import java.util.UUID
 import scala.collection.immutable.HashMap
 import scala.concurrent.duration.*
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext}
 import scala.util.Random
-
-import DeduplicationPeriod.DeduplicationDuration
 
 /** Provides convenience methods for creating [[ExampleTransaction]]s and parts thereof.
   */
@@ -110,10 +103,10 @@ object ExampleTransactionFactory {
   ): SerializableContract = {
     val unicumGenerator = new UnicumGenerator(new SymbolicPureCrypto())
     val contractIdVersion =
-      CantonContractIdVersion.fromProtocolVersion(BaseTest.testedProtocolVersion).value
+      CantonContractIdVersion.maximumSupportedVersion(BaseTest.testedProtocolVersion).value
 
     val (contractSalt, unicum) = unicumGenerator.generateSaltAndUnicum(
-      domainId = DomainId(UniqueIdentifier.tryFromProtoPrimitive("domain::da")),
+      synchronizerId = SynchronizerId(UniqueIdentifier.tryFromProtoPrimitive("synchronizer::da")),
       mediator = MediatorGroupRecipient(MediatorGroupIndex.one),
       transactionUuid = new UUID(1L, 1L),
       viewPosition = ViewPosition(List.empty),
@@ -122,7 +115,7 @@ object ExampleTransactionFactory {
       ledgerCreateTime = LedgerCreateTime(ledgerTime),
       metadata = metadata,
       suffixedContractInstance = ExampleTransactionFactory.asSerializableRaw(instance),
-      contractIdVersion = contractIdVersion,
+      cantonContractIdVersion = contractIdVersion,
     )
 
     val contractId = contractIdVersion.fromDiscriminator(
@@ -135,7 +128,7 @@ object ExampleTransactionFactory {
       contractInstance = instance,
       metadata = metadata,
       ledgerTime = ledgerTime,
-      contractSalt = Some(contractSalt.unwrap),
+      contractSalt = contractSalt.unwrap,
     ).value
   }
 
@@ -358,7 +351,7 @@ object ExampleTransactionFactory {
       asSerializableRaw(contractInstance),
       metadata,
       LedgerCreateTime(ledgerTime),
-      Some(salt),
+      salt,
     )
 
   private def serializableFromCreate(
@@ -424,19 +417,12 @@ object ExampleTransactionFactory {
   def defaultTopologySnapshot: TopologySnapshot =
     defaultTestingIdentityFactory.topologySnapshot()
 
-  def defaultPackageInfoService: PackageInfoService = new PackageInfoService {
-    override def getDescription(packageId: PackageId)(implicit
-        traceContext: TraceContext
-    ): Future[Option[PackageDescription]] = Future.successful(None)
-  }
-
   // Merkle trees
   def blinded[A](tree: MerkleTree[A]): MerkleTree[A] = BlindedNode(tree.rootHash)
 
 }
 
-/** Factory for [[ExampleTransaction]].
-  * Also contains a number of predefined example transactions.
+/** Factory for [[ExampleTransaction]]. Also contains a number of predefined example transactions.
   * Also provides convenience methods for creating [[ExampleTransaction]]s and parts thereof.
   */
 class ExampleTransactionFactory(
@@ -446,7 +432,9 @@ class ExampleTransactionFactory(
     val transactionSalt: Salt = TestSalt.generateSalt(0),
     val transactionSeed: SaltSeed = TestSalt.generateSeed(0),
     val transactionUuid: UUID = UUID.fromString("11111111-2222-3333-4444-555555555555"),
-    val domainId: DomainId = DomainId(UniqueIdentifier.tryFromProtoPrimitive("example::default")),
+    val synchronizerId: SynchronizerId = SynchronizerId(
+      UniqueIdentifier.tryFromProtoPrimitive("example::default")
+    ),
     val mediatorGroup: MediatorGroupRecipient = MediatorGroupRecipient(MediatorGroupIndex.zero),
     val ledgerTime: CantonTimestamp = CantonTimestamp.Epoch,
     val ledgerTimeUsed: CantonTimestamp = CantonTimestamp.Epoch.minusSeconds(1),
@@ -456,7 +444,7 @@ class ExampleTransactionFactory(
     extends EitherValues {
 
   private val protocolVersion = versionOverride.getOrElse(BaseTest.testedProtocolVersion)
-  private val cantonContractIdVersion = AuthenticatedContractIdVersionV10
+  private val cantonContractIdVersion = AuthenticatedContractIdVersionV11
   private val random = new Random(0)
 
   private def createNewView(
@@ -465,7 +453,7 @@ class ExampleTransactionFactory(
       rootNodeId: LfNodeId,
       tailNodes: Seq[TransactionViewDecomposition],
       isRoot: Boolean,
-  ): Future[NewView] = {
+  ): FutureUnlessShutdown[NewView] = {
 
     val rootRbContext = RollbackContext.empty
 
@@ -493,19 +481,21 @@ class ExampleTransactionFactory(
       tailNodes: Seq[TransactionViewDecomposition],
       isRoot: Boolean,
   ): NewView =
-    Await.result(
-      createNewView(
-        rootNode,
-        rootSeed,
-        rootNodeId,
-        tailNodes,
-        isRoot,
-      ),
-      10.seconds,
-    )
+    Await
+      .result(
+        createNewView(
+          rootNode,
+          rootSeed,
+          rootNodeId,
+          tailNodes,
+          isRoot,
+        ),
+        10.seconds,
+      )
+      .onShutdown(throw new RuntimeException("Aborted due to shutdown"))
 
-  /** Yields standard test cases that the sync-protocol must be able to handle.
-    * Yields only "happy" cases, i.e., the sync-protocol must not emit an error.
+  /** Yields standard test cases that the sync-protocol must be able to handle. Yields only "happy"
+    * cases, i.e., the sync-protocol must not emit an error.
     */
   lazy val standardHappyCases: Seq[ExampleTransaction] =
     Seq[ExampleTransaction](
@@ -568,7 +558,7 @@ class ExampleTransactionFactory(
     val viewParticipantDataSalt = participantDataSalt(viewIndex)
     val (contractSalt, unicum) = unicumGenerator
       .generateSaltAndUnicum(
-        domainId,
+        synchronizerId,
         mediatorGroup,
         transactionUuid,
         viewPosition,
@@ -698,7 +688,8 @@ class ExampleTransactionFactory(
     val (rawInformeesWithParticipantData, rawThreshold) =
       Await.result(
         TransactionViewDecompositionFactory
-          .informeesParticipantsAndThreshold(node, topologySnapshot, submittingAdminPartyO),
+          .informeesParticipantsAndThreshold(node, topologySnapshot, submittingAdminPartyO)
+          .failOnShutdownTo(new Exception("Aborted due to shutdown")),
         10.seconds,
       )
     val rawInformees = rawInformeesWithParticipantData.fmap { case (_, weight) => weight }
@@ -742,7 +733,8 @@ class ExampleTransactionFactory(
               Option.when(isRoot && nodeToMerge == node)(
                 submitterMetadata.submittingParticipant.adminParty.toLf
               ),
-            ),
+            )
+            .failOnShutdownTo(new Exception("Aborted due to shutdown")),
           10.seconds,
         )
       val rawInformees = rawInformeesWithParticipantData.fmap { case (_, weight) => weight }
@@ -805,7 +797,7 @@ class ExampleTransactionFactory(
   val commonMetadata: CommonMetadata =
     CommonMetadata
       .create(cryptoOps, protocolVersion)(
-        domainId,
+        synchronizerId,
         mediatorGroup,
         Salt.tryDeriveSalt(transactionSeed, 1, cryptoOps),
         transactionUuid,
@@ -1056,12 +1048,15 @@ class ExampleTransactionFactory(
       )
   }
 
-  /** Single create.
-    * By default, [[submitter]] is the only signatory and [[observer]] the only observer.
+  /** Single create. By default, [[submitter]] is the only signatory and [[observer]] the only
+    * observer.
     *
-    * @param seed the node seed for the create node, used to derive the contract id
-    * @param capturedContractIds contract ids captured by the contract instance
-    * @throws IllegalArgumentException if [[unsuffixedCapturedContractIds]] and [[capturedContractIds]] have different sizes
+    * @param seed
+    *   the node seed for the create node, used to derive the contract id
+    * @param capturedContractIds
+    *   contract ids captured by the contract instance
+    * @throws IllegalArgumentException
+    *   if [[unsuffixedCapturedContractIds]] and [[capturedContractIds]] have different sizes
     */
   case class SingleCreate(
       seed: LfHash,
@@ -1132,9 +1127,12 @@ class ExampleTransactionFactory(
 
   /** Single fetch with [[submitter]] as signatory and [[observer]] as observer and acting party.
     *
-    * @param lfContractId id of the fetched contract
-    * @param contractId id of the fetched contract
-    * @param fetchedContractInstance instance of the used contract.
+    * @param lfContractId
+    *   id of the fetched contract
+    * @param contractId
+    *   id of the fetched contract
+    * @param fetchedContractInstance
+    *   instance of the used contract.
     */
   @SuppressWarnings(Array("org.wartremover.warts.IsInstanceOf"))
   case class SingleFetch(
@@ -1167,12 +1165,15 @@ class ExampleTransactionFactory(
     override def consuming: Boolean = false
   }
 
-  /** Single consuming exercise without children with [[submitter]] as signatory, acting party and controller, and
-    * [[observer]] as observer.
+  /** Single consuming exercise without children with [[submitter]] as signatory, acting party and
+    * controller, and [[observer]] as observer.
     *
-    * @param lfContractId id of the exercised contract
-    * @param contractId id of the exercised contract
-    * @param inputContractInstance instance of the used contract.
+    * @param lfContractId
+    *   id of the exercised contract
+    * @param contractId
+    *   id of the exercised contract
+    * @param inputContractInstance
+    *   instance of the used contract.
     */
   @SuppressWarnings(Array("org.wartremover.warts.IsInstanceOf"))
   case class SingleExercise(
@@ -1205,9 +1206,12 @@ class ExampleTransactionFactory(
   /** Single consuming exercise without children without any acting party or signatory, and
     * [[observer]] as observer.
     *
-    * @param lfContractId id of the exercised contract
-    * @param contractId id of the exercised contract
-    * @param inputContractInstance instance of the used contract.
+    * @param lfContractId
+    *   id of the exercised contract
+    * @param contractId
+    *   id of the exercised contract
+    * @param inputContractInstance
+    *   instance of the used contract.
     */
   @SuppressWarnings(Array("org.wartremover.warts.IsInstanceOf"))
   case class SingleExerciseWithoutConfirmingParties(
@@ -1285,13 +1289,8 @@ class ExampleTransactionFactory(
 
   }
 
-  /** Transaction structure:
-    * 0. create
-    * 1. create capturing 0.
-    * 2. fetch
-    * 3. fetch 0.
-    * 4. exercise
-    * 5. exercise 1.
+  /** Transaction structure: 0. create
+    *   1. create capturing 0. 2. fetch 3. fetch 0. 4. exercise 5. exercise 1.
     */
   case object MultipleRoots extends ExampleTransaction {
 
@@ -1407,19 +1406,16 @@ class ExampleTransactionFactory(
       transaction(0 until rootViewCount, examples.map(_.node)*)
   }
 
-  /** Transaction structure:
-    * 0. create
-    * 1. exercise absolute
+  /** Transaction structure: 0. create
+    *   1. exercise absolute
     * 1.0. create
     * 1.1. fetch 1.0.
     * 1.2. create
     * 1.3. exercise 1.2.
     *
-    * In this specific
-    * scenario we make sure informees and quorums for action nodes 1.0, 1.1. and 1.3 are correctly merged
-    * to the parent view (v1):
-    * 0. View0
-    * 1. View1
+    * In this specific scenario we make sure informees and quorums for action nodes 1.0, 1.1. and
+    * 1.3 are correctly merged to the parent view (v1): 0. View0
+    *   1. View1
     * 1.2 View10
     */
   case object MultipleRootsAndSimpleViewNesting extends ExampleTransaction {
@@ -1457,7 +1453,6 @@ class ExampleTransactionFactory(
     def genCreate10(
         cid: LfContractId,
         contractInstance: LfContractInst,
-        agreementText: String,
     ): LfNodeCreate =
       createNode(
         cid,
@@ -1468,7 +1463,6 @@ class ExampleTransactionFactory(
     def genCreate12(
         cid: LfContractId,
         contractInstance: LfContractInst,
-        agreementText: String,
     ): LfNodeCreate =
       createNode(
         cid,
@@ -1482,12 +1476,12 @@ class ExampleTransactionFactory(
       discriminator(create10seed, Set(submitter, signatory, signatoryReplica))
 
     val lfCreate10: LfNodeCreate =
-      genCreate10(LfContractId.V1(create10disc), create10Inst, create10Agreement)
+      genCreate10(LfContractId.V1(create10disc), create10Inst)
     val create12Agreement = "create12"
     val create12seed: LfHash = deriveNodeSeed(1, 2)
     val create12disc: LfHash = discriminator(create12seed, Set(submitter, signatory, extra))
     val lfCreate12: LfNodeCreate =
-      genCreate12(LfContractId.V1(create12disc), create12Inst, create12Agreement)
+      genCreate12(LfContractId.V1(create12disc), create12Inst)
 
     def genFetch11(cid: LfContractId): LfNodeFetch =
       fetchNode(
@@ -1641,7 +1635,7 @@ class ExampleTransactionFactory(
         create10disc,
         signatories = Set(submitter, signatory, signatoryReplica),
       )
-    val create10: LfNodeCreate = genCreate10(create10Id, create10Inst, create10Agreement)
+    val create10: LfNodeCreate = genCreate10(create10Id, create10Inst)
 
     val fetch11: LfNodeFetch = lfFetch11
 
@@ -1654,7 +1648,7 @@ class ExampleTransactionFactory(
         create12disc,
         signatories = Set(submitter, signatory, extra),
       )
-    val create12: LfNodeCreate = genCreate12(create12Id, create12Inst, create12Agreement)
+    val create12: LfNodeCreate = genCreate12(create12Id, create12Inst)
 
     val exercise13Id: LfContractId = suffixedId(-1, 0)
     val exercise13: LfNodeExercises = genExercise13(exercise13Id)
@@ -1804,9 +1798,8 @@ class ExampleTransactionFactory(
 
   }
 
-  /** Transaction structure:
-    * 0. create
-    * 1. exercise absolute
+  /** Transaction structure: 0. create
+    *   1. exercise absolute
     * 1.0. create
     * 1.1. fetch 1.0.
     * 1.2. create
@@ -1815,9 +1808,8 @@ class ExampleTransactionFactory(
     * 1.3.1. exercise absolute
     * 1.3.1.0 create
     *
-    * View structure:
-    * 0. View0
-    * 1. View1
+    * View structure: 0. View0
+    *   1. View1
     * 1.3.0. View10
     * 1.3.1. View11
     * 1.3.1.0 View110
@@ -2313,25 +2305,21 @@ class ExampleTransactionFactory(
 
   }
 
-  /** Transaction structure:
-    * 0. create
-    * 1. exerciseN
+  /** Transaction structure: 0. create
+    *   1. exerciseN
     * 1.0. exercise
     * 1.0.0. create
     * 1.1. create(capturing 1.0.0)
     * 1.2. exercise
     * 1.2.0. create(capturing 1.0.0)
-    * 1.3. create(capturing 1.2.0)
-    * 2. create
+    * 1.3. create(capturing 1.2.0) 2. create
     *
-    * View structure:
-    * 0. View0
-    * 1. View1
+    * View structure: 0. View0
+    *   1. View1
     * 1.0. View10
     * 1.0.0. View100
     * 1.2. View11
-    * 1.2.0. View110
-    * 2. View2
+    * 1.2.0. View110 2. View2
     */
   case object ViewInterleavings extends ExampleTransaction {
 
@@ -2937,18 +2925,16 @@ class ExampleTransactionFactory(
       )
   }
 
-  /** Transaction structure:
-    * 0. create
-    * 1. exercise(0)
+  /** Transaction structure: 0. create
+    *   1. exercise(0)
     * 1.0. create
     * 1.1. exerciseN(1.0)
     * 1.1.0. create
     * 1.2. exercise(1.1.0)
     * 1.3. exercise(1.0)
     *
-    * View structure:
-    * 0. view0
-    * 1. view1
+    * View structure: 0. view0
+    *   1. view1
     * 1.1. view10
     */
   case object TransientContracts extends ExampleTransaction {

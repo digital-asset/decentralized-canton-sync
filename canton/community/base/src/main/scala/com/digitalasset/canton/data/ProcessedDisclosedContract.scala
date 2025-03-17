@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.data
@@ -8,12 +8,15 @@ import com.digitalasset.daml.lf.language.LanguageVersion
 import com.digitalasset.daml.lf.transaction.{GlobalKeyWithMaintainers, Node}
 import com.digitalasset.daml.lf.value.Value
 
-/** An explicitly-disclosed contract that has been used during command interpretation
-  * and enriched with additional contract metadata.
+/** An explicitly-disclosed contract that has been used during command interpretation and enriched
+  * with additional contract metadata.
   *
-  * @param create the create event of the contract
-  * @param createdAt ledger effective time of the transaction that created the contract
-  * @param driverMetadata opaque bytestring used by the underlying ledger implementation
+  * @param create
+  *   the create event of the contract
+  * @param createdAt
+  *   ledger effective time of the transaction that created the contract
+  * @param driverMetadata
+  *   opaque bytestring used by the underlying ledger implementation
   */
 final case class ProcessedDisclosedContract(
     create: Node.Create,

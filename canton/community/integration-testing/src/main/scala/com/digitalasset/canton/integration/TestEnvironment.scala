@@ -1,10 +1,11 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.integration
 
 import com.daml.grpc.adapter.ExecutionSequencerFactory
 import com.digitalasset.canton.concurrent.ExecutionContextIdlenessExecutorService
+import com.digitalasset.canton.config.SharedCantonConfig
 import com.digitalasset.canton.console.{
   ConsoleEnvironment,
   ConsoleEnvironmentTestHelpers,
@@ -14,13 +15,13 @@ import com.digitalasset.canton.environment.Environment
 import org.apache.pekko.actor.ActorSystem
 
 /** Type including all environment macros and utilities to appear as you're using canton console */
-trait TestEnvironment[+E <: Environment]
+trait TestEnvironment[C <: SharedCantonConfig[C], +E <: Environment]
     extends ConsoleEnvironmentTestHelpers[E#Console]
     with ConsoleMacros
     with CommonTestAliases[E#Console]
     with ConsoleEnvironment.Implicits {
   this: E#Console =>
-  val actualConfig: E#Config
+  val actualConfig: C
 
   implicit val executionContext: ExecutionContextIdlenessExecutorService =
     environment.executionContext
@@ -28,5 +29,5 @@ trait TestEnvironment[+E <: Environment]
   implicit val executionSequencerFactory: ExecutionSequencerFactory =
     environment.executionSequencerFactory
 
-  def verifyParticipantLapiIntegrity(plugins: Seq[EnvironmentSetupPlugin[_, _]]): Unit = ()
+  def verifyParticipantLapiIntegrity(plugins: Seq[EnvironmentSetupPlugin[_, _, _]]): Unit = ()
 }

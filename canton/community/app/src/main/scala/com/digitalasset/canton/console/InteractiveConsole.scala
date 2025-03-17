@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.console
@@ -140,9 +140,8 @@ object InteractiveConsole extends NoTracing {
     }
   }
 
-  /** Turns the given String into a string literal suitable for including in scala code.
-    * Includes adding surrounding quotes.
-    * e.g. `some\\path` will return `"some\\\\path"`
+  /** Turns the given String into a string literal suitable for including in scala code. Includes
+    * adding surrounding quotes. e.g. `some\\path` will return `"some\\\\path"`
     */
   private def toStringLiteral(raw: String): String = {
     // uses the scala reflection primitives but doesn't actually do any reflection

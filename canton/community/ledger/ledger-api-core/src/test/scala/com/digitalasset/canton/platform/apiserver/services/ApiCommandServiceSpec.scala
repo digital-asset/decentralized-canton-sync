@@ -1,9 +1,10 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.platform.apiserver.services
 
 import com.daml.ledger.api.v2.command_service.{
+  SubmitAndWaitForTransactionRequest,
   SubmitAndWaitForTransactionResponse,
   SubmitAndWaitForTransactionTreeResponse,
   SubmitAndWaitRequest,
@@ -17,6 +18,7 @@ import com.digitalasset.canton.ledger.api.MockMessages.*
 import com.digitalasset.canton.ledger.api.services.CommandService
 import com.digitalasset.canton.ledger.api.validation.{
   CommandsValidator,
+  ValidateDisclosedContracts,
   ValidateUpgradingPackageResolutions,
 }
 import com.digitalasset.canton.logging.LoggingContextWithTrace
@@ -61,26 +63,37 @@ class ApiCommandServiceSpec
 
       for {
         _ <- grpcCommandService.submitAndWait(aSubmitAndWaitRequestWithNoSubmissionId)
-        _ <- grpcCommandService.submitAndWaitForTransaction(aSubmitAndWaitRequestWithNoSubmissionId)
+        _ <- grpcCommandService.submitAndWaitForTransaction(
+          aSubmitAndWaitForTransactionRequestWithNoSubmissionId
+        )
         _ <- grpcCommandService.submitAndWaitForTransactionTree(
           aSubmitAndWaitRequestWithNoSubmissionId
         )
       } yield {
         def expectedSubmitAndWaitRequest(submissionIdSuffix: String): SubmitAndWaitRequest =
-          aSubmitAndWaitRequestWithNoSubmissionId.copy(commands =
-            aSubmitAndWaitRequestWithNoSubmissionId.commands
-              .map(_.copy(submissionId = s"$submissionIdPrefix$submissionIdSuffix"))
+          aSubmitAndWaitRequestWithNoSubmissionId.update(
+            _.commands.submissionId := s"$submissionIdPrefix$submissionIdSuffix"
+          )
+        def expectedSubmitAndWaitForTransactionRequest(
+            submissionIdSuffix: String
+        ): SubmitAndWaitForTransactionRequest =
+          aSubmitAndWaitForTransactionRequestWithNoSubmissionId.update(
+            _.commands.submissionId := s"$submissionIdPrefix$submissionIdSuffix"
           )
         val requestCaptorSubmitAndWait = ArgCaptor[SubmitAndWaitRequest]
+        val requestCaptorSubmitAndWaitForTransaction = ArgCaptor[SubmitAndWaitForTransactionRequest]
 
         verify(mockCommandService).submitAndWait(requestCaptorSubmitAndWait.capture)(
           any[LoggingContextWithTrace]
         )
         requestCaptorSubmitAndWait.value shouldBe expectedSubmitAndWaitRequest("1")
-        verify(mockCommandService).submitAndWaitForTransaction(requestCaptorSubmitAndWait.capture)(
+        verify(mockCommandService).submitAndWaitForTransaction(
+          requestCaptorSubmitAndWaitForTransaction.capture
+        )(
           any[LoggingContextWithTrace]
         )
-        requestCaptorSubmitAndWait.value shouldBe expectedSubmitAndWaitRequest("2")
+        requestCaptorSubmitAndWaitForTransaction.value shouldBe
+          expectedSubmitAndWaitForTransactionRequest("2")
         verify(mockCommandService).submitAndWaitForTransactionTree(
           requestCaptorSubmitAndWait.capture
         )(any[LoggingContextWithTrace])
@@ -106,9 +119,16 @@ class ApiCommandServiceSpec
         _.commands.disclosedContracts.set(Seq(DisclosedContractCreator.disclosedContract))
       )
 
+      val submissionWithDisclosedContractsForTransaction =
+        aSubmitAndWaitForTransactionRequestWithNoSubmissionId.update(
+          _.commands.disclosedContracts.set(Seq(DisclosedContractCreator.disclosedContract))
+        )
+
       for {
         _ <- grpcCommandService.submitAndWait(submissionWithDisclosedContracts)
-        _ <- grpcCommandService.submitAndWaitForTransaction(submissionWithDisclosedContracts)
+        _ <- grpcCommandService.submitAndWaitForTransaction(
+          submissionWithDisclosedContractsForTransaction
+        )
         _ <- grpcCommandService.submitAndWaitForTransactionTree(submissionWithDisclosedContracts)
       } yield {
         succeed
@@ -133,14 +153,19 @@ object ApiCommandServiceSpec {
     )
   )
 
-  private val aSubmitAndWaitRequestWithNoSubmissionId = submitAndWaitRequest.copy(
-    commands = Some(commands.copy(commands = Seq(aCommand), submissionId = ""))
-  )
+  private val aSubmitAndWaitRequestWithNoSubmissionId =
+    submitAndWaitRequest.update(_.commands.commands := Seq(aCommand), _.commands.submissionId := "")
+  private val aSubmitAndWaitForTransactionRequestWithNoSubmissionId =
+    submitAndWaitForTransactionRequest.update(
+      _.commands.commands := Seq(aCommand),
+      _.commands.submissionId := "",
+    )
 
   private val submissionIdPrefix = "submissionId-"
 
   private val commandsValidator = new CommandsValidator(
-    validateUpgradingPackageResolutions = ValidateUpgradingPackageResolutions.Empty
+    validateUpgradingPackageResolutions = ValidateUpgradingPackageResolutions.Empty,
+    validateDisclosedContracts = ValidateDisclosedContracts.WithContractIdVerificationDisabled,
   )
 
   def createMockCommandService: CommandService & AutoCloseable = {
@@ -152,7 +177,7 @@ object ApiCommandServiceSpec {
     )
       .thenReturn(Future.successful(SubmitAndWaitResponse.defaultInstance))
     when(
-      mockCommandService.submitAndWaitForTransaction(any[SubmitAndWaitRequest])(
+      mockCommandService.submitAndWaitForTransaction(any[SubmitAndWaitForTransactionRequest])(
         any[LoggingContextWithTrace]
       )
     )

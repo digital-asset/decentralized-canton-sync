@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.console.commands
@@ -23,8 +23,8 @@ import com.digitalasset.canton.crypto.admin.grpc.PrivateKeyMetadata
 import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
 import com.digitalasset.canton.logging.NamedLoggerFactory
 import com.digitalasset.canton.time.Clock
-import com.digitalasset.canton.topology.store.TopologyStoreId.AuthorizedStore
-import com.digitalasset.canton.topology.{Member, MemberCode}
+import com.digitalasset.canton.topology.admin.grpc.TopologyStoreId
+import com.digitalasset.canton.topology.{Member, MemberCode, SynchronizerId}
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.BinaryFileUtil
 import com.digitalasset.canton.version.ProtocolVersion
@@ -65,10 +65,13 @@ class SecretKeyAdministration(
   def list(
       filterFingerprint: String = "",
       filterName: String = "",
-      purpose: Set[KeyPurpose] = Set.empty,
+      filterPurpose: Set[KeyPurpose] = Set.empty,
+      filterUsage: Set[SigningKeyUsage] = Set.empty,
   ): Seq[PrivateKeyMetadata] =
     consoleEnvironment.run {
-      adminCommand(VaultAdminCommands.ListMyKeys(filterFingerprint, filterName, purpose))
+      adminCommand(
+        VaultAdminCommands.ListMyKeys(filterFingerprint, filterName, filterPurpose, filterUsage)
+      )
     }
 
   @Help.Summary("Generate new public/private key pair for signing and store it in the vault")
@@ -84,7 +87,7 @@ class SecretKeyAdministration(
   )
   def generate_signing_key(
       name: String = "",
-      usage: Set[SigningKeyUsage] = SigningKeyUsage.All,
+      usage: Set[SigningKeyUsage],
       keySpec: Option[SigningKeySpec] = None,
   ): SigningPublicKey =
     NonEmpty.from(usage) match {
@@ -124,7 +127,7 @@ class SecretKeyAdministration(
   )
   def register_kms_signing_key(
       kmsKeyId: String,
-      usage: Set[SigningKeyUsage] = SigningKeyUsage.All,
+      usage: Set[SigningKeyUsage],
       name: String = "",
   ): SigningPublicKey =
     NonEmpty.from(usage) match {
@@ -182,7 +185,7 @@ class SecretKeyAdministration(
 
     val currentKey = findPublicKey(fingerprint, instance.topology, owner)
     val newKey = currentKey match {
-      case SigningPublicKey(_, _, _, usage) =>
+      case SigningPublicKey(_, _, _, usage, _) =>
         instance.keys.secret.register_kms_signing_key(newKmsKeyId, usage, name)
       case _: EncryptionPublicKey =>
         instance.keys.secret.register_kms_encryption_key(newKmsKeyId, name)
@@ -192,7 +195,6 @@ class SecretKeyAdministration(
 
     // Rotate the key for the node in the topology management
     instance.topology.owner_to_key_mappings.rotate_key(
-      instance,
       owner,
       currentKey,
       newKey,
@@ -221,7 +223,6 @@ class SecretKeyAdministration(
 
     // Rotate the key for the node in the topology management
     instance.topology.owner_to_key_mappings.rotate_key(
-      instance,
       owner,
       currentKey,
       newKey,
@@ -255,7 +256,6 @@ class SecretKeyAdministration(
 
       // Rotate the key for the node in the topology management
       instance.topology.owner_to_key_mappings.rotate_key(
-        instance,
         owner,
         currentKey,
         newKey,
@@ -263,7 +263,7 @@ class SecretKeyAdministration(
     }
   }
 
-  /** Helper to find public keys for topology/x shared between community and enterprise
+  /** Helper to find public keys for topology shared between community and enterprise
     */
   private def findPublicKeys(
       topologyAdmin: TopologyAdministrationGroup,
@@ -271,14 +271,14 @@ class SecretKeyAdministration(
   ): Seq[PublicKey] =
     topologyAdmin.owner_to_key_mappings
       .list(
-        filterStore = AuthorizedStore.filterName,
+        store = Some(TopologyStoreId.Authorized),
         filterKeyOwnerUid = owner.filterString,
         filterKeyOwnerType = Some(owner.code),
       )
       .flatMap(_.item.keys)
 
-  /** Helper to name new keys generated during a rotation with a ...-rotated-<timestamp> tag to better identify
-    * the new keys after a rotation
+  /** Helper to name new keys generated during a rotation with a ...-rotated-<timestamp> tag to
+    * better identify the new keys after a rotation
     */
   private def generateNewNameForRotatedKey(
       currentKeyId: String,
@@ -470,9 +470,21 @@ class PublicKeyAdministration(
   @Help.Summary("List public keys in registry")
   @Help.Description("""Returns all public keys that have been added to the key registry.
     Optional arguments can be used for filtering.""")
-  def list(filterFingerprint: String = "", filterContext: String = ""): Seq[PublicKeyWithName] =
+  def list(
+      filterFingerprint: String = "",
+      filterContext: String = "",
+      filterPurpose: Set[KeyPurpose] = Set.empty,
+      filterUsage: Set[SigningKeyUsage] = Set.empty,
+  ): Seq[PublicKeyWithName] =
     consoleEnvironment.run {
-      adminCommand(VaultAdminCommands.ListPublicKeys(filterFingerprint, filterContext))
+      adminCommand(
+        VaultAdminCommands.ListPublicKeys(
+          filterFingerprint,
+          filterContext,
+          filterPurpose,
+          filterUsage,
+        )
+      )
     }
 
   @Help.Summary("List active owners with keys for given search arguments.")
@@ -483,13 +495,13 @@ class PublicKeyAdministration(
   def list_owners(
       filterKeyOwnerUid: String = "",
       filterKeyOwnerType: Option[MemberCode] = None,
-      filterDomain: String = "",
+      synchronizerIds: Set[SynchronizerId] = Set.empty,
       asOf: Option[Instant] = None,
       limit: PositiveInt = defaultLimit,
   ): Seq[ListKeyOwnersResult] = consoleEnvironment.run {
     adminCommand(
       TopologyAdminCommands.Aggregation
-        .ListKeyOwners(filterDomain, filterKeyOwnerType, filterKeyOwnerUid, asOf, limit)
+        .ListKeyOwners(synchronizerIds, filterKeyOwnerType, filterKeyOwnerUid, asOf, limit)
     )
   }
 
@@ -500,14 +512,14 @@ class PublicKeyAdministration(
   )
   def list_by_owner(
       keyOwner: Member,
-      filterDomain: String = "",
+      synchronizerIds: Set[SynchronizerId] = Set.empty,
       asOf: Option[Instant] = None,
       limit: PositiveInt = defaultLimit,
   ): Seq[ListKeyOwnersResult] =
     consoleEnvironment.run {
       adminCommand(
         TopologyAdminCommands.Aggregation.ListKeyOwners(
-          filterDomain = filterDomain,
+          synchronizerIds = synchronizerIds,
           filterKeyOwnerType = Some(keyOwner.code),
           filterKeyOwnerUid = keyOwner.uid.toProtoPrimitive,
           asOf,
@@ -593,7 +605,7 @@ class LocalSecretKeyAdministration(
         keyPairBytes = password match {
           case Some(password) =>
             crypto.pureCrypto
-              .encryptWithPassword(keyPair, password, protocolVersion)
+              .encryptWithPassword(keyPair.toByteString(protocolVersion), password)
               .fold(
                 err => sys.error(s"Failed to encrypt key pair for export: $err"),
                 _.toByteString(protocolVersion),

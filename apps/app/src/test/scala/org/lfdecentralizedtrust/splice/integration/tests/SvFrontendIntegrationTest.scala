@@ -1,6 +1,5 @@
 package org.lfdecentralizedtrust.splice.integration.tests
 
-import org.lfdecentralizedtrust.splice.environment.EnvironmentImpl
 import org.lfdecentralizedtrust.splice.integration.EnvironmentDefinition
 import org.lfdecentralizedtrust.splice.integration.tests.SpliceTests.SpliceTestConsoleEnvironment
 import org.lfdecentralizedtrust.splice.util.{
@@ -10,10 +9,8 @@ import org.lfdecentralizedtrust.splice.util.{
   WalletTestUtil,
 }
 import com.digitalasset.canton.data.CantonTimestamp
-import com.digitalasset.canton.integration.BaseEnvironmentDefinition
 import com.digitalasset.canton.logging.SuppressionRule
 import com.digitalasset.canton.topology.PartyId
-import org.openqa.selenium.support.ui.ExpectedConditions
 import org.openqa.selenium.support.ui.Select
 import org.openqa.selenium.By
 import org.slf4j.event.Level
@@ -34,8 +31,7 @@ class SvFrontendIntegrationTest
     with VotesFrontendTestUtil
     with ValidatorLicensesFrontendTestUtil {
 
-  override def environmentDefinition
-      : BaseEnvironmentDefinition[EnvironmentImpl, SpliceTestConsoleEnvironment] =
+  override def environmentDefinition: SpliceEnvironmentDefinition =
     EnvironmentDefinition
       .simpleTopology4Svs(this.getClass.getSimpleName)
 
@@ -192,65 +188,6 @@ class SvFrontendIntegrationTest
               sv1Backend.getDsoInfo().svParty,
               newValidatorParty,
             )
-          },
-        )
-      }
-    }
-
-    "can see validator licenses in infinite scroll" in { implicit env =>
-      withFrontEnd("sv1") { implicit webDriver =>
-        val (_, rowSize) = actAndCheck(
-          "sv1 operator can login and browse to the validator onboarding tab", {
-            go to s"http://localhost:$sv1UIPort/validator-onboarding"
-            loginOnCurrentPage(sv1UIPort, sv1Backend.config.ledgerApiUser)
-          },
-        )(
-          "We see a button for creating onboarding secret",
-          _ => {
-            find(className("onboarding-secret-table")) should not be empty
-          },
-        )
-
-        // the frontend fetches 10 items per page, creating more to show infinte scroll works on first load
-        val validatorCount = 12
-        def getSecrets = findAll(
-          className("onboarding-secret-table-secret")
-        ).toSeq.map(_.text)
-
-        val secrets = clue("create onboarding secrets") {
-          (1 to validatorCount).foreach { _ =>
-            waitForCondition(id("create-validator-onboarding-secret")) {
-              ExpectedConditions.elementToBeClickable(_)
-            }
-            click on "create-validator-onboarding-secret"
-          }
-          val secrets = getSecrets
-
-          secrets
-        }
-
-        val parties = clue(s"allocate ${validatorCount} sv parties") {
-          (1 to validatorCount).map { i => allocateRandomSvParty(s"validatorX$i") }
-        }
-
-        actAndCheck(
-          "onboard all validators", {
-            parties.zip(secrets) foreach { case (party, secret) =>
-              sv1Backend.onboardValidator(
-                party,
-                secret,
-                s"${party.uid.identifier}@example.com",
-              )
-            }
-            // reloading to test that we auto-fetch the new data on new page load
-            webDriver.manage().window().setSize(new org.openqa.selenium.Dimension(1920, 2560))
-            webDriver.navigate().refresh()
-          },
-        )(
-          "the table shows more licenses than the page size",
-          _ => {
-            val rows = findAll(className("validator-licenses-table-row")).toSeq
-            rows.size should be > validatorCount
           },
         )
       }

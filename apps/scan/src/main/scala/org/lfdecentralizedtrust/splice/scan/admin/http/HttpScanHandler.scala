@@ -3,14 +3,24 @@
 
 package org.lfdecentralizedtrust.splice.scan.admin.http
 
-import com.digitalasset.canton.data.CantonTimestamp
 import cats.data.OptionT
 import cats.syntax.either.*
 import cats.syntax.traverseFilter.*
+import com.digitalasset.canton.config.NonNegativeFiniteDuration
+import com.digitalasset.canton.data.CantonTimestamp
+import com.digitalasset.canton.logging.NamedLoggerFactory
+import com.digitalasset.canton.participant.admin.data.ActiveContract
+import com.digitalasset.canton.time.Clock
+import com.digitalasset.canton.topology.{PartyId, SynchronizerId}
+import com.digitalasset.canton.tracing.TraceContext
+import com.digitalasset.canton.util.ShowUtil.*
 import com.digitalasset.daml.lf.data.Time.Timestamp
+import com.google.protobuf.ByteString
+import io.grpc.Status
+import io.opentelemetry.api.trace.Tracer
 import org.lfdecentralizedtrust.splice.admin.http.HttpErrorHandler
-import org.lfdecentralizedtrust.splice.codegen.java.splice.amulet
 import org.lfdecentralizedtrust.splice.codegen.java.splice.amuletrules.AmuletRules
+import org.lfdecentralizedtrust.splice.codegen.java.splice.{amulet, ans as ansCodegen}
 import org.lfdecentralizedtrust.splice.codegen.java.splice.externalpartyamuletrules.{
   ExternalPartyAmuletRules,
   TransferCommand,
@@ -21,14 +31,13 @@ import org.lfdecentralizedtrust.splice.codegen.java.splice.round.{
   OpenMiningRound,
   SummarizingMiningRound,
 }
-import org.lfdecentralizedtrust.splice.codegen.java.splice.ans as ansCodegen
-import org.lfdecentralizedtrust.splice.config.Thresholds
-import org.lfdecentralizedtrust.splice.config.SpliceInstanceNamesConfig
-import org.lfdecentralizedtrust.splice.environment.{
-  ParticipantAdminConnection,
-  SequencerAdminConnection,
+import org.lfdecentralizedtrust.splice.config.{SpliceInstanceNamesConfig, Thresholds}
+import org.lfdecentralizedtrust.splice.environment.ParticipantAdminConnection
+import org.lfdecentralizedtrust.splice.http.v0.definitions.TransactionHistoryResponseItem.TransactionType.members.{
+  DevnetTap,
+  Mint,
+  Transfer,
 }
-import org.lfdecentralizedtrust.splice.http.v0.{definitions, scan as v0}
 import org.lfdecentralizedtrust.splice.http.v0.definitions.{
   AcsRequest,
   BatchListVotesByVoteRequestsRequest,
@@ -38,7 +47,16 @@ import org.lfdecentralizedtrust.splice.http.v0.definitions.{
   MaybeCachedContractWithState,
 }
 import org.lfdecentralizedtrust.splice.http.v0.scan.ScanResource
+import org.lfdecentralizedtrust.splice.http.v0.{definitions, scan as v0}
+import org.lfdecentralizedtrust.splice.http.{
+  HttpValidatorLicensesHandler,
+  HttpVotesHandler,
+  UrlValidator,
+}
+import org.lfdecentralizedtrust.splice.scan.dso.DsoAnsResolver
 import org.lfdecentralizedtrust.splice.scan.store.{AcsSnapshotStore, ScanStore, TxLogEntry}
+import org.lfdecentralizedtrust.splice.store.{AppStore, PageLimit, SortOrder, VotesStore}
+import org.lfdecentralizedtrust.splice.util.PrettyInstances.*
 import org.lfdecentralizedtrust.splice.util.{
   Codec,
   Contract,
@@ -46,50 +64,20 @@ import org.lfdecentralizedtrust.splice.util.{
   PackageQualifiedName,
   QualifiedName,
 }
-import org.lfdecentralizedtrust.splice.util.PrettyInstances.*
-import com.digitalasset.canton.logging.{ErrorLoggingContext, NamedLoggerFactory}
-import com.digitalasset.canton.participant.admin.data.ActiveContract
-import com.digitalasset.canton.topology.{DomainId, Member, PartyId}
-import com.digitalasset.canton.tracing.TraceContext
-import com.digitalasset.canton.util.ShowUtil.*
-import com.google.protobuf.ByteString
-import io.grpc.Status
-import io.opentelemetry.api.trace.Tracer
 
+import java.time.{Instant, OffsetDateTime, ZoneOffset}
+import java.util.Base64
+import java.util.zip.GZIPOutputStream
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
 import scala.util.{Try, Using}
-import java.util.Base64
-import java.util.zip.GZIPOutputStream
-import java.time.{Instant, OffsetDateTime, ZoneOffset}
-import org.lfdecentralizedtrust.splice.http.v0.definitions.TransactionHistoryResponseItem.TransactionType.members.{
-  DevnetTap,
-  Mint,
-  Transfer,
-}
-import org.lfdecentralizedtrust.splice.http.{
-  HttpValidatorLicensesHandler,
-  HttpVotesHandler,
-  UrlValidator,
-}
-import org.lfdecentralizedtrust.splice.scan.dso.DsoAnsResolver
-import org.lfdecentralizedtrust.splice.store.{
-  AppStore,
-  PageLimit,
-  SortOrder,
-  TreeUpdateWithMigrationId,
-  VotesStore,
-}
-import com.digitalasset.canton.config.NonNegativeFiniteDuration
-import com.digitalasset.canton.time.Clock
 
 class HttpScanHandler(
     svParty: PartyId,
     svUserName: String,
     spliceInstanceNames: SpliceInstanceNamesConfig,
     participantAdminConnection: ParticipantAdminConnection,
-    sequencerAdminConnection: SequencerAdminConnection,
     protected val store: ScanStore,
     snapshotStore: AcsSnapshotStore,
     dsoAnsResolver: DsoAnsResolver,
@@ -608,11 +596,11 @@ class HttpScanHandler(
       store
         .listFromSvNodeStates { nodeState =>
           for {
-            (domainId, domainConfig) <- nodeState.state.synchronizerNodes.asScala.toVector
+            (synchronizerId, domainConfig) <- nodeState.state.synchronizerNodes.asScala.toVector
             sequencers = for {
               sequencer <- domainConfig.sequencer.toScala
               availableAfter <- sequencer.availableAfter.toScala
-            } yield domainId -> definitions.DsoSequencer(
+            } yield synchronizerId -> definitions.DsoSequencer(
               sequencer.migrationId,
               sequencer.sequencerId,
               sequencer.url,
@@ -621,7 +609,7 @@ class HttpScanHandler(
             )
             legacySequencers = for {
               legacyConfig <- domainConfig.legacySequencerConfig.toScala.toList
-            } yield domainId -> definitions.DsoSequencer(
+            } yield synchronizerId -> definitions.DsoSequencer(
               legacyConfig.migrationId,
               legacyConfig.sequencerId,
               legacyConfig.url,
@@ -632,12 +620,12 @@ class HttpScanHandler(
           } yield sequencerConfig
         }
         .map(list =>
-          list.map { case (domainId, sequencers) =>
-            domainId -> sequencers.filter { sequencer =>
+          list.map { case (synchronizerId, sequencers) =>
+            synchronizerId -> sequencers.filter { sequencer =>
               UrlValidator.isValid(sequencer.url) match {
                 case Left(failure) =>
                   logger.warn(
-                    s"Not serving sequencer $sequencer for domain $domainId as it has an invalid url: $failure"
+                    s"Not serving sequencer $sequencer for domain $synchronizerId as it has an invalid url: $failure"
                   )
                   false
                 case Right(_) => true
@@ -646,8 +634,8 @@ class HttpScanHandler(
           }
         )
         .map(list =>
-          definitions.ListDsoSequencersResponse(list.map { case (domainId, sequencers) =>
-            definitions.DomainSequencers(domainId, sequencers.toVector)
+          definitions.ListDsoSequencersResponse(list.map { case (synchronizerId, sequencers) =>
+            definitions.DomainSequencers(synchronizerId, sequencers.toVector)
           })
         )
     }
@@ -661,9 +649,9 @@ class HttpScanHandler(
       store
         .listDsoScans()
         .map(list =>
-          definitions.ListDsoScansResponse(list.map { case (domainId, scans) =>
+          definitions.ListDsoScansResponse(list.map { case (synchronizerId, scans) =>
             definitions.DomainScans(
-              domainId,
+              synchronizerId,
               scans.map(s => definitions.ScanInfo(s.publicUrl, s.svName)).toVector,
             )
           })
@@ -696,25 +684,6 @@ class HttpScanHandler(
         txs.map(TxLogEntry.Http.toResponseItem).toVector
       )
     }
-  }
-
-  private def encodeUpdate(
-      update: TreeUpdateWithMigrationId,
-      encoding: definitions.DamlValueEncoding,
-      consistentResponses: Boolean,
-  )(implicit
-      elc: ErrorLoggingContext
-  ): definitions.UpdateHistoryItem = {
-    val update2 = if (consistentResponses) {
-      ScanHttpEncodings.makeConsistentAcrossSvs(update)
-    } else {
-      update
-    }
-    val encodings: ScanHttpEncodings = encoding match {
-      case definitions.DamlValueEncoding.members.CompactJson => CompactJsonScanHttpEncodings
-      case definitions.DamlValueEncoding.members.ProtobufJson => ProtobufJsonScanHttpEncodings
-    }
-    encodings.lapiToHttpUpdate(update2)
   }
 
   def getUpdateHistory(
@@ -769,10 +738,10 @@ class HttpScanHandler(
               )
             } yield txs
               .map(
-                encodeUpdate(
+                ScanHttpEncodings.encodeUpdate(
                   _,
                   encoding = encoding,
-                  consistentResponses = consistentResponses,
+                  version = if (consistentResponses) ScanHttpEncodings.V1 else ScanHttpEncodings.V0,
                 )
               )
               .toVector
@@ -1202,7 +1171,7 @@ class HttpScanHandler(
         )
       } else {
         for {
-          domainId <- store
+          synchronizerId <- store
             .lookupAmuletRules()
             .map(
               _.getOrElse(
@@ -1219,7 +1188,7 @@ class HttpScanHandler(
           snapshotTime <- snapshotStore.updateHistory
             .getUpdatesBefore(
               snapshotStore.currentMigrationId,
-              domainId,
+              synchronizerId,
               CantonTimestamp.MaxValue,
               None,
               PageLimit.tryCreate(1),
@@ -1293,7 +1262,12 @@ class HttpScanHandler(
                   recordTime,
                   migrationId,
                   result.createdEventsInPage
-                    .map(CompactJsonScanHttpEncodings.javaToHttpCreatedEvent(_)),
+                    .map(event =>
+                      CompactJsonScanHttpEncodings.javaToHttpCreatedEvent(
+                        event.eventId,
+                        event.event,
+                      )
+                    ),
                   result.afterToken,
                 )
               )
@@ -1306,7 +1280,7 @@ class HttpScanHandler(
       body: HoldingsStateRequest
   )(extracted: TraceContext): Future[ScanResource.GetHoldingsStateAtResponse] = {
     implicit val tc: TraceContext = extracted
-    withSpan(s"$workflowId.getAmuletStateAt") { _ => _ =>
+    withSpan(s"$workflowId.getHoldingsStateAt") { _ => _ =>
       body match {
         case HoldingsStateRequest(migrationId, recordTime, after, pageSize, ownerPartyIds) =>
           snapshotStore
@@ -1323,7 +1297,12 @@ class HttpScanHandler(
                   recordTime,
                   migrationId,
                   result.createdEventsInPage
-                    .map(CompactJsonScanHttpEncodings.javaToHttpCreatedEvent(_)),
+                    .map(event =>
+                      CompactJsonScanHttpEncodings.javaToHttpCreatedEvent(
+                        event.eventId,
+                        event.event,
+                      )
+                    ),
                   result.afterToken,
                 )
               )
@@ -1425,10 +1404,10 @@ class HttpScanHandler(
           )
         )(txWithMigration =>
           Right(
-            encodeUpdate(
+            ScanHttpEncodings.encodeUpdate(
               txWithMigration,
               encoding = encoding,
-              consistentResponses = consistentResponses,
+              version = if (consistentResponses) ScanHttpEncodings.V1 else ScanHttpEncodings.V0,
             )
           )
         )
@@ -1684,9 +1663,9 @@ class HttpScanHandler(
             definitions.GetMigrationInfoResponse(
               previousMigrationId = info.previousMigrationId,
               complete = info.complete,
-              recordTimeRange = info.recordTimeRange.iterator.map { case (domainId, range) =>
+              recordTimeRange = info.recordTimeRange.iterator.map { case (synchronizerId, range) =>
                 definitions.RecordTimeRange(
-                  synchronizerId = domainId.toProtoPrimitive,
+                  synchronizerId = synchronizerId.toProtoPrimitive,
                   min = java.time.OffsetDateTime.ofInstant(range.min.toInstant, ZoneOffset.UTC),
                   max = java.time.OffsetDateTime.ofInstant(range.max.toInstant, ZoneOffset.UTC),
                 )
@@ -1710,7 +1689,7 @@ class HttpScanHandler(
       updateHistory
         .getUpdatesBefore(
           migrationId = body.migrationId,
-          domainId = DomainId.tryFromString(body.synchronizerId),
+          synchronizerId = SynchronizerId.tryFromString(body.synchronizerId),
           beforeRecordTime = CantonTimestamp.assertFromInstant(body.before.toInstant),
           atOrAfterRecordTime =
             body.atOrAfter.map(x => CantonTimestamp.assertFromInstant(x.toInstant)),
@@ -1720,112 +1699,15 @@ class HttpScanHandler(
           definitions.GetUpdatesBeforeResponse(
             txs
               .map(
-                encodeUpdate(
+                ScanHttpEncodings.encodeUpdate(
                   _,
                   encoding = definitions.DamlValueEncoding.members.ProtobufJson,
-                  consistentResponses = true,
+                  version = ScanHttpEncodings.V1,
                 )
               )
               .toVector
           )
         }
-    }
-  }
-  override def getMemberTrafficStatus(
-      respond: ScanResource.GetMemberTrafficStatusResponse.type
-  )(domainId: String, memberId: String)(
-      extracted: TraceContext
-  ): Future[ScanResource.GetMemberTrafficStatusResponse] = {
-    implicit val tc = extracted
-    withSpan(s"$workflowId.getMemberTrafficStatus") { _ => _ =>
-      for {
-        member <- Member.fromProtoPrimitive_(memberId) match {
-          case Right(member) => Future.successful(member)
-          case Left(error) =>
-            Future.failed(
-              HttpErrorHandler.badRequest(s"Could not decode member ID: $error")
-            )
-        }
-        domain <- DomainId.fromString(domainId) match {
-          case Right(domain) => Future.successful(domain)
-          case Left(error) =>
-            Future.failed(
-              HttpErrorHandler.badRequest(s"Could not decode domain ID: $error")
-            )
-        }
-        actual <- sequencerAdminConnection.getSequencerTrafficControlState(member)
-        actualConsumed = actual.extraTrafficConsumed.value
-        actualLimit = actual.extraTrafficLimit.value
-        targetTotalPurchased <- store.getTotalPurchasedMemberTraffic(member, domain)
-      } yield {
-        definitions.GetMemberTrafficStatusResponse(
-          definitions.MemberTrafficStatus(
-            definitions.ActualMemberTrafficState(actualConsumed, actualLimit),
-            definitions.TargetMemberTrafficState(targetTotalPurchased),
-          )
-        )
-      }
-    }
-  }
-
-  override def getPartyToParticipant(respond: ScanResource.GetPartyToParticipantResponse.type)(
-      domainId: String,
-      partyId: String,
-  )(extracted: TraceContext): Future[ScanResource.GetPartyToParticipantResponse] = {
-    implicit val tc = extracted
-    withSpan(s"$workflowId.getPartyToParticipant") { _ => _ =>
-      for {
-        domain <- DomainId.fromString(domainId) match {
-          case Right(domain) => Future.successful(domain)
-          case Left(error) =>
-            Future.failed(
-              HttpErrorHandler.badRequest(s"Could not decode domain ID: $error")
-            )
-        }
-        party <- PartyId.fromProtoPrimitive(partyId, "partyId") match {
-          case Right(party) => Future.successful(party)
-          case Left(error) =>
-            Future.failed(
-              HttpErrorHandler.badRequest(s"Could not decode party ID: $error")
-            )
-        }
-        response <- sequencerAdminConnection.getPartyToParticipant(domain, party)
-        participantId <- response.mapping.participantIds match {
-          case Seq() =>
-            Future.failed(
-              HttpErrorHandler.notFound(
-                s"No participant id found hosting party: $party"
-              )
-            )
-          case Seq(participantId) => Future.successful(participantId)
-          case _ =>
-            Future.failed(
-              HttpErrorHandler.internalServerError(
-                s"Party ${party} is hosted on multiple participants, which is not currently supported"
-              )
-            )
-        }
-      } yield definitions.GetPartyToParticipantResponse(participantId.toProtoPrimitive)
-    }
-  }
-
-  override def getValidatorFaucetsByValidator(
-      respond: ScanResource.GetValidatorFaucetsByValidatorResponse.type
-  )(validators: Vector[String])(
-      extracted: TraceContext
-  ): Future[ScanResource.GetValidatorFaucetsByValidatorResponse] = {
-    implicit val tc = extracted
-    withSpan(s"$workflowId.getValidatorFaucetsByValidator") { _ => _ =>
-      store
-        .getValidatorLicenseByValidator(validators.map(v => PartyId.tryFromProtoPrimitive(v)))
-        .map(licenses =>
-          ScanResource.GetValidatorFaucetsByValidatorResponse.OK(
-            definitions
-              .GetValidatorFaucetsByValidatorResponse(
-                FaucetProcessor.process(licenses)
-              )
-          )
-        )
     }
   }
 }

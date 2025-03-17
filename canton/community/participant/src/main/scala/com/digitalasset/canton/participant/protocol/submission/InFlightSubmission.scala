@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.participant.protocol.submission
@@ -10,39 +10,45 @@ import com.digitalasset.canton.participant.store.InFlightSubmissionStore.InFligh
 import com.digitalasset.canton.protocol.RootHash
 import com.digitalasset.canton.sequencing.protocol.MessageId
 import com.digitalasset.canton.store.db.DbSerializationException
-import com.digitalasset.canton.topology.DomainId
+import com.digitalasset.canton.topology.SynchronizerId
 import com.digitalasset.canton.tracing.{SerializableTraceContext, TraceContext}
 import com.digitalasset.canton.{LedgerSubmissionId, SequencerCounter}
 import slick.jdbc.GetResult
 
 import java.util.UUID
 
-/** Collects information about an in-flight submission,
-  * to be stored in [[com.digitalasset.canton.participant.store.InFlightSubmissionStore]].
+/** Collects information about an in-flight submission, to be stored in
+  * [[com.digitalasset.canton.participant.store.InFlightSubmissionStore]].
   *
-  * @param changeIdHash The identifier for the intended ledger change.
-  *                     We only include the hash instead of the
-  *                     [[com.digitalasset.canton.ledger.participant.state.ChangeId]] so that
-  *                     we do not need to persist and reconstruct the actual contents
-  *                     of the [[com.digitalasset.canton.ledger.participant.state.ChangeId]] when
-  *                     we read an [[InFlightSubmission]] from the store.
-  * @param submissionId Optional submission id.
-  * @param submissionDomain The domain to which the submission is supposed to be/was sent.
-  * @param messageUuid The message UUID that will be/has been used for the
-  *                  [[com.digitalasset.canton.sequencing.protocol.SubmissionRequest]]
-  * @param rootHashO The root hash contained in the [[com.digitalasset.canton.sequencing.protocol.SubmissionRequest]].
-  *                  Optional because:
-  *                  - currently, the root hash is not available when creating an entry for registration, and is
-  *                    added as a second step;
-  *                  - it can be an older entry for which the root hash was never added.
-  * @param sequencingInfo Information about when the request will be/was sequenced
-  * @param submissionTraceContext The [[com.digitalasset.canton.tracing.TraceContext]] of the submission.
+  * @param changeIdHash
+  *   The identifier for the intended ledger change. We only include the hash instead of the
+  *   [[com.digitalasset.canton.ledger.participant.state.ChangeId]] so that we do not need to
+  *   persist and reconstruct the actual contents of the
+  *   [[com.digitalasset.canton.ledger.participant.state.ChangeId]] when we read an
+  *   [[InFlightSubmission]] from the store.
+  * @param submissionId
+  *   Optional submission id.
+  * @param submissionSynchronizerId
+  *   The synchronizer to which the submission is supposed to be/was sent.
+  * @param messageUuid
+  *   The message UUID that will be/has been used for the
+  *   [[com.digitalasset.canton.sequencing.protocol.SubmissionRequest]]
+  * @param rootHashO
+  *   The root hash contained in the
+  *   [[com.digitalasset.canton.sequencing.protocol.SubmissionRequest]]. Optional because:
+  *   - currently, the root hash is not available when creating an entry for registration, and is
+  *     added as a second step;
+  *   - it can be an older entry for which the root hash was never added.
+  * @param sequencingInfo
+  *   Information about when the request will be/was sequenced
+  * @param submissionTraceContext
+  *   The [[com.digitalasset.canton.tracing.TraceContext]] of the submission.
   */
 // TODO(#7348) Add submission rank
 final case class InFlightSubmission[+SequencingInfo <: SubmissionSequencingInfo](
     changeIdHash: ChangeIdHash,
     submissionId: Option[LedgerSubmissionId],
-    submissionDomain: DomainId,
+    submissionSynchronizerId: SynchronizerId,
     messageUuid: UUID,
     rootHashO: Option[RootHash],
     sequencingInfo: SequencingInfo,
@@ -75,14 +81,15 @@ final case class InFlightSubmission[+SequencingInfo <: SubmissionSequencingInfo]
   override protected def pretty: Pretty[InFlightSubmission.this.type] = prettyOfClass(
     param("change ID hash", _.changeIdHash),
     paramIfDefined("submissionid", _.submissionId),
-    param("submission domain", _.submissionDomain),
+    param("submission synchronizer", _.submissionSynchronizerId),
     param("message UUID", _.messageUuid),
     paramIfDefined("root hash", _.rootHashO),
     param("sequencing info", _.sequencingInfo),
     param("submission trace context", _.submissionTraceContext),
   )
 
-  def referenceByMessageId: InFlightByMessageId = InFlightByMessageId(submissionDomain, messageId)
+  def referenceByMessageId: InFlightByMessageId =
+    InFlightByMessageId(submissionSynchronizerId, messageId)
 }
 
 object InFlightSubmission {
@@ -92,7 +99,7 @@ object InFlightSubmission {
     import com.digitalasset.canton.resource.DbStorage.Implicits.*
     val changeId = r.<<[ChangeIdHash]
     val submissionId = r.<<[Option[SerializableSubmissionId]].map(_.submissionId)
-    val submissionDomain = r.<<[DomainId]
+    val submissionSynchronizer = r.<<[SynchronizerId]
     val messageId = r.<<[UUID]
     val rootHashO = r.<<[Option[RootHash]]
     val sequencingInfo = r.<<[SequencingInfo]
@@ -100,7 +107,7 @@ object InFlightSubmission {
     InFlightSubmission(
       changeId,
       submissionId,
-      submissionDomain,
+      submissionSynchronizer,
       messageId,
       rootHashO,
       sequencingInfo,
@@ -143,12 +150,14 @@ object SubmissionSequencingInfo {
 
 /** Identifies an [[InFlightSubmission]] whose sequencing has not yet been observed.
   *
-  * @param timeout The point in sequencer time after which the submission cannot be sequenced any more.
-  *                Typically this is the max sequencing time for the
-  *                [[com.digitalasset.canton.sequencing.protocol.SubmissionRequest]].
-  *                It can be earlier if the submission logic decided to not send a request at all
-  *                or the sent request was rejected
-  * @param trackingData The information required to produce an appropriate rejection event when the timeout has elapsed.
+  * @param timeout
+  *   The point in sequencer time after which the submission cannot be sequenced any more. Typically
+  *   this is the max sequencing time for the
+  *   [[com.digitalasset.canton.sequencing.protocol.SubmissionRequest]]. It can be earlier if the
+  *   submission logic decided to not send a request at all or the sent request was rejected
+  * @param trackingData
+  *   The information required to produce an appropriate rejection event when the timeout has
+  *   elapsed.
   */
 final case class UnsequencedSubmission(
     timeout: CantonTimestamp,
@@ -176,9 +185,12 @@ object UnsequencedSubmission {
 
 /** The observed sequencing information of an [[InFlightSubmission]]
   *
-  * @param sequencerCounter The [[com.digitalasset.canton.SequencerCounter]] assigned to the
-  *                         [[com.digitalasset.canton.sequencing.protocol.SubmissionRequest]]
-  * @param sequencingTime The sequencer timestamp assigned to the [[com.digitalasset.canton.sequencing.protocol.SubmissionRequest]]
+  * @param sequencerCounter
+  *   The [[com.digitalasset.canton.SequencerCounter]] assigned to the
+  *   [[com.digitalasset.canton.sequencing.protocol.SubmissionRequest]]
+  * @param sequencingTime
+  *   The sequencer timestamp assigned to the
+  *   [[com.digitalasset.canton.sequencing.protocol.SubmissionRequest]]
   */
 final case class SequencedSubmission(
     sequencerCounter: SequencerCounter,

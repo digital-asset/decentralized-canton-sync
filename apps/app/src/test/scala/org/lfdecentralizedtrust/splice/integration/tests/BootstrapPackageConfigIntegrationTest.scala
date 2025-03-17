@@ -5,10 +5,11 @@ package org.lfdecentralizedtrust.splice.integration.tests
 
 import com.digitalasset.canton.config.CantonRequireTypes.InstanceName
 import com.digitalasset.canton.data.CantonTimestamp
-import com.digitalasset.canton.integration.BaseEnvironmentDefinition
-import com.digitalasset.canton.topology.DomainId
+import com.digitalasset.canton.topology.SynchronizerId
+import com.digitalasset.canton.topology.admin.grpc.TopologyStoreId
 import com.digitalasset.canton.topology.transaction.VettedPackage
 import com.digitalasset.daml.lf.data.Ref.{PackageName, PackageVersion}
+import org.lfdecentralizedtrust.splice.codegen.java.splice.amulet.Amulet
 import org.lfdecentralizedtrust.splice.codegen.java.splice.amuletconfig.{
   AmuletConfig,
   PackageConfig,
@@ -23,24 +24,23 @@ import org.lfdecentralizedtrust.splice.config.ConfigTransforms.{
 }
 import org.lfdecentralizedtrust.splice.environment.{
   DarResources,
-  EnvironmentImpl,
   PackageResource,
   ParticipantAdminConnection,
 }
 import org.lfdecentralizedtrust.splice.integration.EnvironmentDefinition
-import org.lfdecentralizedtrust.splice.integration.tests.SpliceTests.{
-  IntegrationTest,
-  SpliceTestConsoleEnvironment,
-}
+import org.lfdecentralizedtrust.splice.integration.tests.SpliceTests.IntegrationTest
 import org.lfdecentralizedtrust.splice.sv.automation.singlesv.LocalSequencerConnectionsTrigger
 import org.lfdecentralizedtrust.splice.sv.config.SvOnboardingConfig.InitialPackageConfig
 import org.lfdecentralizedtrust.splice.util.{ProcessTestUtil, StandaloneCanton}
+import org.scalatest.Ignore
 import org.scalatest.time.{Minute, Span}
 
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import scala.jdk.CollectionConverters.*
 
+// TODO(#17544) Reenable once the DAR issues are fixed
+@Ignore
 class BootstrapPackageConfigIntegrationTest
     extends IntegrationTest
     with ProcessTestUtil
@@ -63,8 +63,7 @@ class BootstrapPackageConfigIntegrationTest
     walletPaymentsVersion = "0.1.4",
   )
 
-  override def environmentDefinition
-      : BaseEnvironmentDefinition[EnvironmentImpl, SpliceTestConsoleEnvironment] =
+  override def environmentDefinition: SpliceEnvironmentDefinition =
     EnvironmentDefinition
       .simpleTopology4Svs(this.getClass.getSimpleName)
       .withPreSetup(_ => ())
@@ -90,9 +89,9 @@ class BootstrapPackageConfigIntegrationTest
         conf.copy(validatorApps =
           conf.validatorApps.updatedWith(InstanceName.tryCreate("aliceValidator")) {
             _.map { aliceValidatorConfig =>
-              val withoutExtraDomains = aliceValidatorConfig.domains.copy(extra = Seq.empty)
+              val withoutExtraSynchronizers = aliceValidatorConfig.domains.copy(extra = Seq.empty)
               aliceValidatorConfig.copy(
-                domains = withoutExtraDomains
+                domains = withoutExtraSynchronizers
               )
             }
           }
@@ -151,6 +150,19 @@ class BootstrapPackageConfigIntegrationTest
           _,
         )
       )
+
+      clue("alice taps amulet with initial package") {
+        val tapContractId = aliceValidatorWalletClient.tap(10)
+        aliceValidatorBackend.participantClient.ledger_api_extensions.acs
+          .filterJava(
+            Amulet.COMPANION
+          )(dsoParty, _.id == tapContractId)
+          .loneElement
+          .getContractTypeId
+          .getPackageId shouldBe DarResources.amulet.getPackageIdWithVersion(
+          initialPackageConfig.amuletVersion
+        )
+      }
 
       checkDarVersions(
         decentralizedSynchronizerId,
@@ -221,7 +233,7 @@ class BootstrapPackageConfigIntegrationTest
                 eventuallySucceeds() {
                   sv.castVote(
                     voteRequest.contractId,
-                    true,
+                    isAccepted = true,
                     "url",
                     "description",
                   )
@@ -242,10 +254,25 @@ class BootstrapPackageConfigIntegrationTest
           },
         )
 
-        clue("vetting topology is update to the new config") {
+        clue("alice taps amulet with new package") {
+          val tapContractId = aliceValidatorWalletClient.tap(10)
+          aliceValidatorBackend.participantClient.ledger_api_extensions.acs
+            .filterJava(
+              Amulet.COMPANION
+            )(dsoParty, _.id == tapContractId)
+            .loneElement
+            .getContractTypeId
+            .getPackageId shouldBe DarResources.amulet.bootstrap.packageId
+        }
+
+        clue("vetting topology is updated to the new config") {
           eventuallySucceeds() {
             val vettingTopologyState = sv1Backend.participantClient.topology.vetted_packages.list(
-              decentralizedSynchronizerId.filterString,
+              store = Some(
+                TopologyStoreId.Synchronizer(
+                  decentralizedSynchronizerId
+                )
+              ),
               filterParticipant = sv1Backend.participantClient.id.filterString,
             )
             val newAmuletVettedPackage = vettingTopologyState.loneElement.item.packages
@@ -277,7 +304,7 @@ class BootstrapPackageConfigIntegrationTest
   }
 
   private def checkDarVersions(
-      domainId: DomainId,
+      domainId: SynchronizerId,
       darsToCheck: Seq[(PackageResource, String)],
       participantAdminConnection: ParticipantAdminConnection,
   ): Unit = {

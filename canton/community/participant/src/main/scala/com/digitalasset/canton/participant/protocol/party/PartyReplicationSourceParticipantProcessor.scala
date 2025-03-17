@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.participant.protocol.party
@@ -11,10 +11,11 @@ import com.digitalasset.canton.config.RequireTypes.{NonNegativeInt, PositiveInt}
 import com.digitalasset.canton.data.CantonTimestamp
 import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
 import com.digitalasset.canton.logging.NamedLoggerFactory
-import com.digitalasset.canton.participant.protocol.party.PartyReplicationSourceMessage.ContractWithReassignmentCounter
+import com.digitalasset.canton.participant.admin.data.ActiveContract
 import com.digitalasset.canton.participant.store.AcsInspection
+import com.digitalasset.canton.participant.util.TimeOfChange
 import com.digitalasset.canton.sequencing.client.channel.SequencerChannelProtocolProcessor
-import com.digitalasset.canton.topology.{DomainId, PartyId}
+import com.digitalasset.canton.topology.{PartyId, SynchronizerId}
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.util.{EitherTUtil, MonadUtil}
 import com.digitalasset.canton.version.ProtocolVersion
@@ -23,32 +24,43 @@ import com.google.protobuf.ByteString
 import java.util.concurrent.atomic.AtomicReference
 import scala.concurrent.ExecutionContext
 
-/** The source participant processor exposes a party's active contracts on a specified domain and timestamp
-  * to a target participant as part of Online Party Replication.
+/** The source participant processor exposes a party's active contracts on a specified synchronizer
+  * and timestamp to a target participant as part of Online Party Replication.
   *
-  * The interaction happens via the [[com.digitalasset.canton.sequencing.client.channel.SequencerChannelProtocolProcessor]]
-  * API and the source participant processor enforces the protocol guarantees made by a [[PartyReplicationTargetParticipantProcessor]].
-  * The following guarantees made by the source participant processor are verifiable by the party replication protocol:
-  * The source participant
-  * - sends [[PartyReplicationSourceMessage.SourceParticipantIsReady]] when ready to send contracts,
-  * - only sends as many [[PartyReplicationSourceMessage.AcsChunk]]s as requested by the target participant to honor flow control,
-  * - sends [[PartyReplicationSourceMessage.AcsChunk]]s in strictly increasing and gap-free chunk id order,
-  * - sends [[PartyReplicationSourceMessage.EndOfACS]] iff the processor is closed by the next message,
-  * - and sends only deserializable payloads.
+  * The interaction happens via the
+  * [[com.digitalasset.canton.sequencing.client.channel.SequencerChannelProtocolProcessor]] API and
+  * the source participant processor enforces the protocol guarantees made by a
+  * [[PartyReplicationTargetParticipantProcessor]]. The following guarantees made by the source
+  * participant processor are verifiable by the party replication protocol: The source participant
+  *   - sends [[PartyReplicationSourceMessage.SourceParticipantIsReady]] when ready to send
+  *     contracts,
+  *   - only sends as many [[PartyReplicationSourceMessage.AcsChunk]]s as requested by the target
+  *     participant to honor flow control,
+  *   - sends [[PartyReplicationSourceMessage.AcsChunk]]s in strictly increasing and gap-free chunk
+  *     id order,
+  *   - sends [[PartyReplicationSourceMessage.EndOfACS]] iff the processor is closed by the next
+  *     message,
+  *   - and sends only deserializable payloads.
   *
-  * @param domainId      The domain id of the domain to replicate active contracts within.
-  * @param partyId       The party id of the party to replicate active contracts for.
-  * @param activeAt      The timestamp on which the ACS snapshot is based, i.e. the time at which the contract to be send are active.
-  * @param acsInspection Interface to inspect the ACS.
-  * @param protocolVersion The protocol version to use for now for the party replication protocol. Technically the
-  *                        online party replication protocol is a different protocol from the canton protocol.
+  * @param synchronizerId
+  *   The synchronizer id of the synchronizer to replicate active contracts within.
+  * @param partyId
+  *   The party id of the party to replicate active contracts for.
+  * @param activeAfter
+  *   The timestamp immediately after which the ACS snapshot is based, i.e. the time immediately
+  *   after which the contract to be sent are active.
+  * @param acsInspection
+  *   Interface to inspect the ACS.
+  * @param protocolVersion
+  *   The protocol version to use for now for the party replication protocol. Technically the online
+  *   party replication protocol is a different protocol from the canton protocol.
   */
 class PartyReplicationSourceParticipantProcessor private (
-    domainId: DomainId,
+    synchronizerId: SynchronizerId,
     partyId: PartyId,
-    activeAt: CantonTimestamp,
+    activeAfter: CantonTimestamp,
     acsInspection: AcsInspection, // TODO(#18525): Stream the ACS via the Ledger Api instead.
-    protocolVersion: ProtocolVersion,
+    protected val protocolVersion: ProtocolVersion,
     protected val timeouts: ProcessingTimeout,
     protected val loggerFactory: NamedLoggerFactory,
 )(implicit override val executionContext: ExecutionContext)
@@ -56,7 +68,8 @@ class PartyReplicationSourceParticipantProcessor private (
   private val chunkToSendUpToExclusive = new AtomicReference[NonNegativeInt](NonNegativeInt.zero)
   private val numberOfContractsPerChunk = PositiveInt.two
 
-  /** Once connected notify the target participant that the source participant is ready to be asked to send contracts.
+  /** Once connected notify the target participant that the source participant is ready to be asked
+    * to send contracts.
     */
   override def onConnected()(implicit
       traceContext: TraceContext
@@ -78,7 +91,7 @@ class PartyReplicationSourceParticipantProcessor private (
     for {
       instruction <- EitherT.fromEither[FutureUnlessShutdown](
         PartyReplicationInstruction
-          .fromByteString(protocolVersion)(payload)
+          .fromByteString(protocolVersion, payload)
           .leftMap(_.message)
       )
       previousChunkToSendUpToExclusive = chunkToSendUpToExclusive.get
@@ -117,17 +130,22 @@ class PartyReplicationSourceParticipantProcessor private (
   )(implicit
       traceContext: TraceContext
   ): EitherT[FutureUnlessShutdown, String, Seq[
-    (NonEmpty[Seq[ContractWithReassignmentCounter]], Int)
+    (NonEmpty[Seq[ActiveContract]], NonNegativeInt)
   ]] = {
-    val contracts = List.newBuilder[ContractWithReassignmentCounter]
+    val contracts = List.newBuilder[ActiveContract]
     performUnlessClosingEitherUSF(
       s"Read ACS from ${newChunkToConsumerFrom.unwrap} to $newChunkToConsumeTo"
     )(
       acsInspection
-        .forEachVisibleActiveContract(domainId, Set(partyId.toLf), Some(activeAt)) {
-          case (contract, reassignmentCounter) =>
-            contracts += ContractWithReassignmentCounter(contract, reassignmentCounter)
-            Right(())
+        .forEachVisibleActiveContract(
+          synchronizerId,
+          Set(partyId.toLf),
+          Some(TimeOfChange(activeAfter.immediateSuccessor)),
+        ) { case (contract, reassignmentCounter) =>
+          contracts += ActiveContract.create(synchronizerId, contract, reassignmentCounter)(
+            protocolVersion
+          )
+          Right(())
         }(traceContext, executionContext)
         .bimap(
           _.toString,
@@ -138,13 +156,14 @@ class PartyReplicationSourceParticipantProcessor private (
               .toSeq
               .map(NonEmpty.from(_).getOrElse(throw new IllegalStateException("Grouping failed")))
               .zipWithIndex
-              .slice(newChunkToConsumerFrom.unwrap, newChunkToConsumeTo.unwrap + 1),
+              .slice(newChunkToConsumerFrom.unwrap, newChunkToConsumeTo.unwrap + 1)
+              .map { case (chunk, index) => (chunk, NonNegativeInt.tryCreate(index)) },
         )
     )
   }
 
   private def sendContracts(
-      indexedContractChunks: Seq[(NonEmpty[Seq[ContractWithReassignmentCounter]], Int)]
+      indexedContractChunks: Seq[(NonEmpty[Seq[ActiveContract]], NonNegativeInt)]
   )(implicit
       traceContext: TraceContext
   ): EitherT[FutureUnlessShutdown, String, Unit] = {
@@ -154,7 +173,7 @@ class PartyReplicationSourceParticipantProcessor private (
     MonadUtil.sequentialTraverse_(indexedContractChunks) { case (chunkContracts, index) =>
       val acsChunk = PartyReplicationSourceMessage(
         PartyReplicationSourceMessage.AcsChunk(
-          NonNegativeInt.tryCreate(index),
+          index,
           chunkContracts,
         )
       )(
@@ -185,7 +204,7 @@ class PartyReplicationSourceParticipantProcessor private (
 
 object PartyReplicationSourceParticipantProcessor {
   def apply(
-      domainId: DomainId,
+      synchronizerId: SynchronizerId,
       partyId: PartyId,
       activeAt: CantonTimestamp,
       acsInspection: AcsInspection,
@@ -194,14 +213,14 @@ object PartyReplicationSourceParticipantProcessor {
       loggerFactory: NamedLoggerFactory,
   )(implicit executionContext: ExecutionContext): PartyReplicationSourceParticipantProcessor =
     new PartyReplicationSourceParticipantProcessor(
-      domainId,
+      synchronizerId,
       partyId,
       activeAt,
       acsInspection,
       protocolVersion,
       timeouts,
       loggerFactory
-        .append("domainId", domainId.toProtoPrimitive)
+        .append("synchronizerId", synchronizerId.toProtoPrimitive)
         .append("partyId", partyId.toProtoPrimitive),
     )
 }

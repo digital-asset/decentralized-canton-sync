@@ -1,10 +1,9 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.lifecycle
 
 import cats.data.EitherT
-import cats.syntax.traverse.*
 import com.digitalasset.canton.concurrent.Threading
 import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.tracing.TraceContext
@@ -18,38 +17,43 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 import scala.util.control.NonFatal
 
-/** Provides a way to synchronize closing with other running tasks in the class, such that new tasks aren't scheduled
-  * while closing, and such that closing waits for the scheduled tasks.
+/** Provides a way to synchronize closing with other running tasks in the class, such that new tasks
+  * aren't scheduled while closing, and such that closing waits for the scheduled tasks.
   *
-  * Use this type to pass such synchronization objects to other objects that merely need to synchronize,
-  * but should not be able to initiate closing themselves. To that end, this trait does not expose
-  * the [[java.lang.AutoCloseable.close]] method.
+  * Use this type to pass such synchronization objects to other objects that merely need to
+  * synchronize, but should not be able to initiate closing themselves. To that end, this trait does
+  * not expose the [[java.lang.AutoCloseable.close]] method.
   *
-  * @see FlagCloseable does expose the [[java.lang.AutoCloseable.close]] method.
+  * @see
+  *   FlagCloseable does expose the [[java.lang.AutoCloseable.close]] method.
   */
 trait PerformUnlessClosing extends OnShutdownRunner { this: AutoCloseable =>
   import PerformUnlessClosing.*
 
   protected def closingTimeout: FiniteDuration
 
-  /** Poor man's read-write lock; stores the number of tasks holding the read lock. If a write lock is held, this
-    * goes to -1. Not using Java's ReadWriteLocks since they are about thread synchronization, and since we can't
-    * count on acquires and releases happening on the same thread, since we support the synchronization of futures.
+  /** Poor man's read-write lock; stores the number of tasks holding the read lock. If a write lock
+    * is held, this goes to -1. Not using Java's ReadWriteLocks since they are about thread
+    * synchronization, and since we can't count on acquires and releases happening on the same
+    * thread, since we support the synchronization of futures.
     */
   private val readerState = new AtomicReference(ReaderState.empty)
 
   /** How often to poll to check that all tasks have completed. */
   protected def maxSleepMillis: Long = 500
 
-  /** Performs the task given by `f` unless a shutdown has been initiated.
-    * The shutdown will only begin after `f` completes, but other tasks may execute concurrently with `f`, if started using this
-    * function, or one of the other variants ([[performUnlessClosingF]] and [[performUnlessClosingEitherT]]).
-    * The tasks are assumed to take less than [[closingTimeout]] to complete.
+  /** Performs the task given by `f` unless a shutdown has been initiated. The shutdown will only
+    * begin after `f` completes, but other tasks may execute concurrently with `f`, if started using
+    * this function, or one of the other variants ([[performUnlessClosingF]] and
+    * [[performUnlessClosingEitherT]]). The tasks are assumed to take less than [[closingTimeout]]
+    * to complete.
     *
     * DO NOT CALL `this.close` as part of `f`, because it will result in a deadlock.
     *
-    * @param f The task to perform
-    * @return [[scala.None$]] if a shutdown has been initiated. Otherwise the result of the task.
+    * @param f
+    *   The task to perform
+    * @return
+    *   [[scala.None$]] if a shutdown has been initiated. Otherwise the result of the task.
     */
   def performUnlessClosing[A](
       name: String
@@ -64,51 +68,53 @@ trait PerformUnlessClosing extends OnShutdownRunner { this: AutoCloseable =>
         removeReader(name)
       }
 
-  /** Performs the Future given by `f` unless a shutdown has been initiated. The future is lazy and not evaluated during shutdown.
-    * The shutdown will only begin after `f` completes, but other tasks may execute concurrently with `f`, if started using this
-    * function, or one of the other variants ([[performUnlessClosing]] and [[performUnlessClosingEitherT]]).
-    * The tasks are assumed to take less than [[closingTimeout]] to complete.
+  /** Performs the Future given by `f` unless a shutdown has been initiated. The future is lazy and
+    * not evaluated during shutdown. The shutdown will only begin after `f` completes, but other
+    * tasks may execute concurrently with `f`, if started using this function, or one of the other
+    * variants ([[performUnlessClosing]] and [[performUnlessClosingEitherT]]). The tasks are assumed
+    * to take less than [[closingTimeout]] to complete.
     *
     * DO NOT CALL `this.close` as part of `f`, because it will result in a deadlock.
     *
-    * @param f The task to perform
-    * @return The future completes with [[com.digitalasset.canton.lifecycle.UnlessShutdown.AbortedDueToShutdown]] if
-    *         a shutdown has been initiated.
-    *         Otherwise the result of the task wrapped in [[com.digitalasset.canton.lifecycle.UnlessShutdown.Outcome]].
+    * @param f
+    *   The task to perform
+    * @return
+    *   The future completes with
+    *   [[com.digitalasset.canton.lifecycle.UnlessShutdown.AbortedDueToShutdown]] if a shutdown has
+    *   been initiated. Otherwise the result of the task wrapped in
+    *   [[com.digitalasset.canton.lifecycle.UnlessShutdown.Outcome]].
     */
   def performUnlessClosingF[A](name: String)(
       f: => Future[A]
   )(implicit ec: ExecutionContext, traceContext: TraceContext): FutureUnlessShutdown[A] =
-    FutureUnlessShutdown(internalPerformUnlessClosingF(name)(f).sequence)
+    performUnlessClosingUSF(name)(FutureUnlessShutdown.outcomeF(f))
 
   def performUnlessClosingUSF[A](name: String)(
       f: => FutureUnlessShutdown[A]
   )(implicit ec: ExecutionContext, traceContext: TraceContext): FutureUnlessShutdown[A] =
-    performUnlessClosingF(name)(f.unwrap).subflatMap(Predef.identity)
-
-  protected def internalPerformUnlessClosingF[A](name: String)(
-      f: => Future[A]
-  )(implicit ec: ExecutionContext, traceContext: TraceContext): UnlessShutdown[Future[A]] =
     if (isClosing || !addReader(name)) {
       logger.debug(s"Won't schedule the future '$name' as this object is closing")
-      UnlessShutdown.AbortedDueToShutdown
+      FutureUnlessShutdown.abortedDueToShutdown
     } else {
-      val fut = Try(f).fold(Future.failed, x => x).thereafter { _ =>
+      val fut = Try(f).fold(FutureUnlessShutdown.failed[A], x => x).thereafter { _ =>
         removeReader(name)
       }
-      trackFuture(fut)
-      UnlessShutdown.Outcome(fut)
+      trackFuture(fut.unwrap)
+      fut
     }
 
-  /** Performs the EitherT[Future] given by `etf` unless a shutdown has been initiated, in which case the provided error is returned instead.
-    * Both `etf` and the error are lazy; `etf` is only evaluated if there is no shutdown, the error only if we're shutting down.
-    * The shutdown will only begin after `etf` completes, but other tasks may execute concurrently with `etf`, if started using this
-    * function, or one of the other variants ([[performUnlessClosing]] and [[performUnlessClosingF]]).
-    * The tasks are assumed to take less than [[closingTimeout]] to complete.
+  /** Performs the EitherT[Future] given by `etf` unless a shutdown has been initiated, in which
+    * case the provided error is returned instead. Both `etf` and the error are lazy; `etf` is only
+    * evaluated if there is no shutdown, the error only if we're shutting down. The shutdown will
+    * only begin after `etf` completes, but other tasks may execute concurrently with `etf`, if
+    * started using this function, or one of the other variants ([[performUnlessClosing]] and
+    * [[performUnlessClosingF]]). The tasks are assumed to take less than [[closingTimeout]] to
+    * complete.
     *
     * DO NOT CALL `this.close` as part of `etf`, because it will result in a deadlock.
     *
-    * @param etf The task to perform
+    * @param etf
+    *   The task to perform
     */
   def performUnlessClosingEitherT[E, R](name: String, onClosing: => E)(
       etf: => EitherT[Future, E, R]
@@ -139,25 +145,17 @@ trait PerformUnlessClosing extends OnShutdownRunner { this: AutoCloseable =>
   ): CheckedT[Future, A, N, R] =
     CheckedT(performUnlessClosingF(name)(etf.value).unwrap.map(_.onShutdown(onClosing)))
 
-  def performUnlessClosingEitherTF[E, R](name: String, onClosing: => E)(
-      etf: => EitherT[Future, E, Future[R]]
-  )(implicit ec: ExecutionContext, traceContext: TraceContext): EitherT[Future, E, Future[R]] =
-    if (isClosing || !addReader(name)) {
-      logger.debug(s"Won't schedule the future '$name' as this object is closing")
-      EitherT.leftT(onClosing)
-    } else {
-      val res = Try(etf.value).fold(Future.failed, x => x)
-      trackFuture(res)
-      val _ = res
-        .flatMap {
-          case Left(_) => Future.unit
-          case Right(value) => value.map(_ => ())
-        }
-        .thereafter { _ =>
-          removeReader(name)
-        }
-      EitherT(res)
-    }
+  def performUnlessClosingCheckedUST[A, N, R](name: String, onClosing: => Checked[A, N, R])(
+      etf: => CheckedT[FutureUnlessShutdown, A, N, R]
+  )(implicit
+      ec: ExecutionContext,
+      traceContext: TraceContext,
+  ): CheckedT[FutureUnlessShutdown, A, N, R] =
+    CheckedT(
+      FutureUnlessShutdown.outcomeF(
+        performUnlessClosingUSF(name)(etf.value).unwrap.map(_.onShutdown(onClosing))
+      )
+    )
 
   /** track running futures on shutdown
     *
@@ -250,7 +248,9 @@ trait PerformUnlessClosing extends OnShutdownRunner { this: AutoCloseable =>
 
 object PerformUnlessClosing {
 
-  /** Logged upon forced shutdown. Pulled out a string here so that test log checking can refer to it. */
+  /** Logged upon forced shutdown. Pulled out a string here so that test log checking can refer to
+    * it.
+    */
   val forceShutdownStr = "Shutting down forcibly"
 
   private final case class ReaderState(count: Int, readers: MultiSet[String])

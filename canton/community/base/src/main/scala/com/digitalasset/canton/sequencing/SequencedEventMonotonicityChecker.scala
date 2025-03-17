@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.sequencing
@@ -16,14 +16,16 @@ import com.google.common.annotations.VisibleForTesting
 import org.apache.pekko.NotUsed
 import org.apache.pekko.stream.scaladsl.Flow
 
-/** Checks that the sequenced events' sequencer counters are a gap-free increasing sequencing starting at `firstSequencerCounter`
-  * and their timestamps increase strictly monotonically. When a violation is detected, an error is logged and
-  * the processing is aborted.
+/** Checks that the sequenced events' sequencer counters are a gap-free increasing sequencing
+  * starting at `firstSequencerCounter` and their timestamps increase strictly monotonically. When a
+  * violation is detected, an error is logged and the processing is aborted.
   *
-  * This is normally ensured by the [[com.digitalasset.canton.sequencing.client.SequencedEventValidator]] for individual sequencer subscriptions.
-  * However, due to aggregating multiple subscriptions from several sequencers up to a threshold,
-  * the stream of events emitted by the aggregation may violate monotonicity. This additional monotonicity check
-  * ensures that we catch such violations before we pass the events downstream.
+  * This is normally ensured by the
+  * [[com.digitalasset.canton.sequencing.client.SequencedEventValidator]] for individual sequencer
+  * subscriptions. However, due to aggregating multiple subscriptions from several sequencers up to
+  * a threshold, the stream of events emitted by the aggregation may violate monotonicity. This
+  * additional monotonicity check ensures that we catch such violations before we pass the events
+  * downstream.
   */
 class SequencedEventMonotonicityChecker(
     firstSequencerCounter: SequencerCounter,
@@ -32,7 +34,9 @@ class SequencedEventMonotonicityChecker(
 ) extends NamedLogging {
   import SequencedEventMonotonicityChecker.*
 
-  /** Pekko version of the check. Pulls the kill switch and drains the source when a violation is detected. */
+  /** Pekko version of the check. Pulls the kill switch and drains the source when a violation is
+    * detected.
+    */
   def flow[E]: Flow[
     WithKillSwitch[Either[E, OrdinarySerializedEvent]],
     WithKillSwitch[Either[E, OrdinarySerializedEvent]],

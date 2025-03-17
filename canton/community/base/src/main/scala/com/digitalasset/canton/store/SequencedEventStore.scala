@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.store
@@ -31,13 +31,12 @@ import com.digitalasset.canton.store.db.DbSequencedEventStore.SequencedEventDbTy
 import com.digitalasset.canton.store.memory.InMemorySequencedEventStore
 import com.digitalasset.canton.tracing.{HasTraceContext, SerializableTraceContext, TraceContext}
 import com.digitalasset.canton.version.ProtocolVersion
-import com.google.common.annotations.VisibleForTesting
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
-/** Persistent store for [[com.digitalasset.canton.sequencing.protocol.SequencedEvent]]s received from the sequencer.
-  * The store may assume that sequencer counters strictly increase with timestamps
-  * without checking this precondition.
+/** Persistent store for [[com.digitalasset.canton.sequencing.protocol.SequencedEvent]]s received
+  * from the sequencer. The store may assume that sequencer counters strictly increase with
+  * timestamps without checking this precondition.
   */
 trait SequencedEventStore extends PrunableByTime with NamedLogging with AutoCloseable {
 
@@ -46,25 +45,27 @@ trait SequencedEventStore extends PrunableByTime with NamedLogging with AutoClos
   implicit val ec: ExecutionContext
   protected def kind: String = "sequenced events"
 
-  /** Stores the given [[com.digitalasset.canton.sequencing.protocol.SequencedEvent]]s.
-    * If an event with the same timestamp already exist, the event may remain unchanged or overwritten.
+  /** Stores the given [[com.digitalasset.canton.sequencing.protocol.SequencedEvent]]s. If an event
+    * with the same timestamp already exist, the event may remain unchanged or overwritten.
     */
   def store(signedEvents: Seq[OrdinarySerializedEvent])(implicit
       traceContext: TraceContext,
       externalCloseContext: CloseContext,
-  ): Future[Unit]
+  ): FutureUnlessShutdown[Unit]
 
   /** Looks up an event by the given criterion.
     *
-    * @return [[SequencedEventNotFoundError]] if no stored event meets the criterion.
+    * @return
+    *   [[SequencedEventNotFoundError]] if no stored event meets the criterion.
     */
   def find(criterion: SearchCriterion)(implicit
       traceContext: TraceContext
-  ): EitherT[Future, SequencedEventNotFoundError, PossiblyIgnoredSerializedEvent]
+  ): EitherT[FutureUnlessShutdown, SequencedEventNotFoundError, PossiblyIgnoredSerializedEvent]
 
   /** Looks up a set of sequenced events within the given range.
     *
-    * @param limit The maximum number of elements in the returned iterable, if set.
+    * @param limit
+    *   The maximum number of elements in the returned iterable, if set.
     */
   def findRange(criterion: RangeCriterion, limit: Option[Int])(implicit
       traceContext: TraceContext
@@ -74,42 +75,58 @@ trait SequencedEventStore extends PrunableByTime with NamedLogging with AutoClos
 
   def sequencedEvents(limit: Option[Int] = None)(implicit
       traceContext: TraceContext
-  ): Future[Seq[PossiblyIgnoredSerializedEvent]]
+  ): FutureUnlessShutdown[Seq[PossiblyIgnoredSerializedEvent]]
 
-  /** Marks events between `from` and `to` as ignored.
-    * Fills any gap between `from` and `to` by empty ignored events, i.e. ignored events without any underlying real event.
+  /** Marks events between `from` and `to` as ignored. Fills any gap between `from` and `to` by
+    * empty ignored events, i.e. ignored events without any underlying real event.
     *
-    * @return [[ChangeWouldResultInGap]] if there would be a gap between the highest sequencer counter in the store and `from`.
+    * @return
+    *   [[ChangeWouldResultInGap]] if there would be a gap between the highest sequencer counter in
+    *   the store and `from`.
     */
   def ignoreEvents(fromInclusive: SequencerCounter, toInclusive: SequencerCounter)(implicit
       traceContext: TraceContext
-  ): EitherT[Future, ChangeWouldResultInGap, Unit]
+  ): EitherT[FutureUnlessShutdown, ChangeWouldResultInGap, Unit]
 
   /** Removes the ignored status from all events between `from` and `to`.
     *
-    * @return [[ChangeWouldResultInGap]] if deleting empty ignored events between `from` and `to` would result in a gap in sequencer counters.
+    * @return
+    *   [[ChangeWouldResultInGap]] if deleting empty ignored events between `from` and `to` would
+    *   result in a gap in sequencer counters.
     */
   def unignoreEvents(fromInclusive: SequencerCounter, toInclusive: SequencerCounter)(implicit
       traceContext: TraceContext
-  ): EitherT[Future, ChangeWouldResultInGap, Unit]
+  ): EitherT[FutureUnlessShutdown, ChangeWouldResultInGap, Unit]
 
   /** Deletes all events with sequencer counter greater than or equal to `from`.
     */
-  @VisibleForTesting
   private[canton] def delete(fromInclusive: SequencerCounter)(implicit
       traceContext: TraceContext
-  ): Future[Unit]
+  ): FutureUnlessShutdown[Unit]
 
   /** Purges all data from the store.
     */
-  def purge()(implicit traceContext: TraceContext): Future[Unit] = delete(SequencerCounter.Genesis)
+  def purge()(implicit traceContext: TraceContext): FutureUnlessShutdown[Unit] = delete(
+    SequencerCounter.Genesis
+  )
+
+  /** Look up a TraceContext for a sequenced event
+    *
+    * @param sequencedTimestamp
+    *   The timestemp which uniquely identifies the sequenced event
+    * @return
+    *   The TraceContext or None if the sequenced event cannot be found
+    */
+  def traceContext(sequencedTimestamp: CantonTimestamp)(implicit
+      traceContext: TraceContext
+  ): FutureUnlessShutdown[Option[TraceContext]]
 }
 
 object SequencedEventStore {
 
   def apply[Env <: Envelope[_]](
       storage: Storage,
-      indexedDomain: IndexedDomain,
+      indexedSynchronizer: IndexedSynchronizer,
       protocolVersion: ProtocolVersion,
       timeouts: ProcessingTimeout,
       loggerFactory: NamedLoggerFactory,
@@ -119,7 +136,7 @@ object SequencedEventStore {
       case dbStorage: DbStorage =>
         new DbSequencedEventStore(
           dbStorage,
-          indexedDomain,
+          indexedSynchronizer,
           protocolVersion,
           timeouts,
           loggerFactory,
@@ -134,14 +151,21 @@ object SequencedEventStore {
   /** Finds the event with the highest timestamp before or at `inclusive` */
   final case class LatestUpto(inclusive: CantonTimestamp) extends SearchCriterion
 
+  object SearchCriterion {
+    val Latest: SearchCriterion = LatestUpto(CantonTimestamp.MaxValue)
+  }
+
   /** Finds a sequence of events within a range */
   sealed trait RangeCriterion extends Product with Serializable with PrettyPrinting
 
   /** Finds all events with timestamps within the given range.
     *
-    * @param lowerInclusive The lower bound, inclusive. Must not be after `upperInclusive`
-    * @param upperInclusive The upper bound, inclusive. Must not be before `lowerInclusive`
-    * @throws java.lang.IllegalArgumentException if `lowerInclusive` is after `upperInclusive`
+    * @param lowerInclusive
+    *   The lower bound, inclusive. Must not be after `upperInclusive`
+    * @param upperInclusive
+    *   The upper bound, inclusive. Must not be before `lowerInclusive`
+    * @throws java.lang.IllegalArgumentException
+    *   if `lowerInclusive` is after `upperInclusive`
     */
   final case class ByTimestampRange(
       lowerInclusive: CantonTimestamp,
@@ -193,10 +217,10 @@ object SequencedEventStore {
 
   /** Encapsulates an ignored event, i.e., an event that should not be processed.
     *
-    * If an ordinary sequenced event `oe` is later converted to an ignored event `ie`,
-    * the actual event `oe.signedEvent` is retained as `ie.underlying` so that no information gets discarded by ignoring events.
-    * If an ignored event `ie` is inserted as a placeholder for an event that has not been received, the underlying
-    * event `ie.underlying` is left empty.
+    * If an ordinary sequenced event `oe` is later converted to an ignored event `ie`, the actual
+    * event `oe.signedEvent` is retained as `ie.underlying` so that no information gets discarded by
+    * ignoring events. If an ignored event `ie` is inserted as a placeholder for an event that has
+    * not been received, the underlying event `ie.underlying` is left empty.
     */
   final case class IgnoredSequencedEvent[+Env <: Envelope[?]](
       override val timestamp: CantonTimestamp,
@@ -247,8 +271,8 @@ object SequencedEventStore {
       }
   }
 
-  /** Encapsulates an event received by the sequencer.
-    * It has been signed by the sequencer and contains a trace context.
+  /** Encapsulates an event received by the sequencer. It has been signed by the sequencer and
+    * contains a trace context.
     */
   final case class OrdinarySequencedEvent[+Env <: Envelope[_]](
       signedEvent: SignedContent[SequencedEvent[Env]]
@@ -314,7 +338,7 @@ object SequencedEventStore {
       for {
         underlyingO <- underlyingPO.traverse(
           SignedContent
-            .fromByteString(protocolVersion)(_)
+            .fromByteString(protocolVersion, _)
             .flatMap(
               _.deserializeContent(SequencedEvent.fromByteStringOpen(hashOps, protocolVersion))
             )

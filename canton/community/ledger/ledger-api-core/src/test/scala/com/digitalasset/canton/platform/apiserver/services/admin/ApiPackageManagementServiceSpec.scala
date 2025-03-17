@@ -1,8 +1,9 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.platform.apiserver.services.admin
 
+import cats.data.EitherT
 import com.daml.error.ErrorsAssertions
 import com.daml.ledger.api.testing.utils.PekkoBeforeAndAfterAll
 import com.daml.ledger.api.v2.admin.package_management_service.{
@@ -15,6 +16,7 @@ import com.daml.tracing.DefaultOpenTelemetry
 import com.daml.tracing.TelemetrySpecBase.*
 import com.digitalasset.canton.BaseTest
 import com.digitalasset.canton.data.{Offset, ProcessedDisclosedContract}
+import com.digitalasset.canton.error.CantonBaseError
 import com.digitalasset.canton.ledger.api.health.HealthStatus
 import com.digitalasset.canton.ledger.participant.state
 import com.digitalasset.canton.ledger.participant.state.{
@@ -23,11 +25,15 @@ import com.digitalasset.canton.ledger.participant.state.{
   ReassignmentCommand,
   SubmissionResult,
   SubmitterInfo,
+  SynchronizerRank,
   TransactionMeta,
 }
+import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
 import com.digitalasset.canton.logging.SuppressionRule
-import com.digitalasset.canton.topology.DomainId
+import com.digitalasset.canton.protocol.{LfContractId, LfSubmittedTransaction}
+import com.digitalasset.canton.topology.SynchronizerId
 import com.digitalasset.canton.tracing.{TestTelemetrySetup, TraceContext}
+import com.digitalasset.canton.util.Thereafter.syntax.*
 import com.digitalasset.daml.lf.data.Ref.{ApplicationId, CommandId, Party, SubmissionId, WorkflowId}
 import com.digitalasset.daml.lf.data.{ImmArray, Ref}
 import com.digitalasset.daml.lf.transaction.{GlobalKey, SubmittedTransaction}
@@ -74,7 +80,7 @@ class ApiPackageManagementServiceSpec
       val scope = span.makeCurrent()
       apiService
         .uploadDarFile(UploadDarFileRequest(ByteString.EMPTY, aSubmissionId))
-        .andThen { case _ =>
+        .thereafter { _ =>
           scope.close()
           span.end()
         }
@@ -114,7 +120,7 @@ class ApiPackageManagementServiceSpec
 
   private def createApiService(): PackageManagementServiceGrpc.PackageManagementService =
     ApiPackageManagementService.createApiService(
-      TestWriteService(testTelemetrySetup.tracer),
+      TestSyncService(testTelemetrySetup.tracer),
       telemetry = new DefaultOpenTelemetry(OpenTelemetrySdk.builder().build()),
       loggerFactory = loggerFactory,
     )
@@ -123,9 +129,9 @@ class ApiPackageManagementServiceSpec
 object ApiPackageManagementServiceSpec {
   private val aSubmissionId = "aSubmission"
 
-  private final case class TestWriteService(tracer: Tracer) extends state.WriteService {
+  private final case class TestSyncService(tracer: Tracer) extends state.SyncService {
     override def uploadDar(
-        dar: ByteString,
+        dar: Seq[ByteString],
         submissionId: Ref.SubmissionId,
     )(implicit
         traceContext: TraceContext
@@ -163,7 +169,7 @@ object ApiPackageManagementServiceSpec {
 
     override def submitTransaction(
         submitterInfo: SubmitterInfo,
-        optDomainId: Option[DomainId],
+        optSynchronizerId: Option[SynchronizerId],
         transactionMeta: TransactionMeta,
         transaction: SubmittedTransaction,
         estimatedInterpretationCost: Long,
@@ -183,8 +189,7 @@ object ApiPackageManagementServiceSpec {
       throw new UnsupportedOperationException()
 
     override def allocateParty(
-        hint: Option[Party],
-        displayName: Option[String],
+        hint: Party,
         submissionId: SubmissionId,
     )(implicit traceContext: TraceContext): CompletionStage[SubmissionResult] =
       throw new UnsupportedOperationException()
@@ -194,6 +199,18 @@ object ApiPackageManagementServiceSpec {
         submissionId: SubmissionId,
         pruneAllDivulgedContracts: Boolean,
     ): CompletionStage[PruningResult] =
+      throw new UnsupportedOperationException()
+
+    override def selectRoutingSynchronizer(
+        submitterInfo: SubmitterInfo,
+        transaction: LfSubmittedTransaction,
+        transactionMeta: TransactionMeta,
+        disclosedContractIds: List[LfContractId],
+        optSynchronizerId: Option[SynchronizerId],
+        transactionUsedForExternalSigning: Boolean,
+    )(implicit
+        traceContext: TraceContext
+    ): EitherT[FutureUnlessShutdown, CantonBaseError, SynchronizerRank] =
       throw new UnsupportedOperationException()
   }
 }

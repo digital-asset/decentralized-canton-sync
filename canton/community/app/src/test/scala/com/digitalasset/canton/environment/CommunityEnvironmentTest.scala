@@ -1,21 +1,24 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.environment
 
 import cats.data.EitherT
 import cats.syntax.either.*
+import com.daml.metrics.api.noop.NoOpMetricsFactory
+import com.daml.metrics.api.{HistogramInventory, MetricName}
 import com.digitalasset.canton.config.CantonRequireTypes.InstanceName
 import com.digitalasset.canton.config.RequireTypes.Port
-import com.digitalasset.canton.config.{CantonCommunityConfig, TestingConfigInternal}
-import com.digitalasset.canton.domain.mediator.{CommunityMediatorNodeConfig, MediatorNodeBootstrap}
-import com.digitalasset.canton.domain.sequencing.SequencerNodeBootstrap
-import com.digitalasset.canton.domain.sequencing.config.CommunitySequencerNodeConfig
+import com.digitalasset.canton.config.{CantonConfig, TestingConfigInternal}
 import com.digitalasset.canton.integration.CommunityConfigTransforms
-import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
+import com.digitalasset.canton.lifecycle.{CloseContext, FlagCloseable, FutureUnlessShutdown}
 import com.digitalasset.canton.participant.config.*
+import com.digitalasset.canton.participant.metrics.{ParticipantHistograms, ParticipantMetrics}
 import com.digitalasset.canton.participant.sync.SyncServiceError
 import com.digitalasset.canton.participant.{ParticipantNode, ParticipantNodeBootstrap}
+import com.digitalasset.canton.synchronizer.mediator.{MediatorNodeBootstrap, MediatorNodeConfig}
+import com.digitalasset.canton.synchronizer.sequencer.SequencerNodeBootstrap
+import com.digitalasset.canton.synchronizer.sequencer.config.SequencerNodeConfig
 import com.digitalasset.canton.tracing.TraceContext
 import com.digitalasset.canton.{BaseTest, ConfigStubs, HasExecutionContext}
 import monocle.macros.syntax.lens.*
@@ -27,10 +30,10 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class CommunityEnvironmentTest extends AnyWordSpec with BaseTest with HasExecutionContext {
   // we don't care about any values of this config, so just mock
-  lazy val participant1Config: CommunityParticipantConfig = ConfigStubs.participant
-  lazy val participant2Config: CommunityParticipantConfig = ConfigStubs.participant
+  lazy val participant1Config: LocalParticipantConfig = ConfigStubs.participant
+  lazy val participant2Config: LocalParticipantConfig = ConfigStubs.participant
 
-  lazy val sampleConfig: CantonCommunityConfig = CantonCommunityConfig(
+  lazy val sampleConfig: CantonConfig = CantonConfig(
     sequencers = Map(
       InstanceName.tryCreate("s1") -> ConfigStubs.sequencer,
       InstanceName.tryCreate("s2") -> ConfigStubs.sequencer,
@@ -50,14 +53,14 @@ class CommunityEnvironmentTest extends AnyWordSpec with BaseTest with HasExecuti
   }
 
   trait TestEnvironment {
-    def config: CantonCommunityConfig = sampleConfig
+    def config: CantonConfig = sampleConfig
 
     private val createParticipantMock =
       mock[(String, LocalParticipantConfig) => ParticipantNodeBootstrap]
     private val createSequencerMock =
-      mock[(String, CommunitySequencerNodeConfig) => SequencerNodeBootstrap]
+      mock[(String, SequencerNodeConfig) => SequencerNodeBootstrap]
     private val createMediatorMock =
-      mock[(String, CommunityMediatorNodeConfig) => MediatorNodeBootstrap]
+      mock[(String, MediatorNodeConfig) => MediatorNodeBootstrap]
 
     def mockSequencer: SequencerNodeBootstrap = {
       val sequencer = mock[SequencerNodeBootstrap]
@@ -76,11 +79,22 @@ class CommunityEnvironmentTest extends AnyWordSpec with BaseTest with HasExecuti
     def mockParticipantAndNode: (ParticipantNodeBootstrap, ParticipantNode) = {
       val bootstrap = mock[ParticipantNodeBootstrap]
       val node = mock[ParticipantNode]
+      val metrics = new ParticipantMetrics(
+        new ParticipantHistograms(MetricName("test"))(new HistogramInventory),
+        new NoOpMetricsFactory,
+      )
+      val closeContext = CloseContext(mock[FlagCloseable])
       when(bootstrap.name).thenReturn(InstanceName.tryCreate("mockP"))
       when(bootstrap.start()).thenReturn(EitherT.pure[Future, String](()))
       when(bootstrap.getNode).thenReturn(Some(node))
-      when(node.reconnectDomainsIgnoreFailures()(any[TraceContext], any[ExecutionContext]))
-        .thenReturn(EitherT.pure[FutureUnlessShutdown, SyncServiceError](()))
+      when(
+        node.reconnectSynchronizersIgnoreFailures(any[Boolean])(
+          any[TraceContext],
+          any[ExecutionContext],
+        )
+      ).thenReturn(EitherT.pure[FutureUnlessShutdown, SyncServiceError](()))
+      when(bootstrap.metrics).thenReturn(metrics)
+      when(bootstrap.closeContext).thenReturn(closeContext)
       when(node.config).thenReturn(participant1Config)
       (bootstrap, node)
     }
@@ -93,19 +107,19 @@ class CommunityEnvironmentTest extends AnyWordSpec with BaseTest with HasExecuti
     ) {
       override def createParticipant(
           name: String,
-          participantConfig: CommunityParticipantConfig,
+          participantConfig: LocalParticipantConfig,
       ): ParticipantNodeBootstrap =
         createParticipantMock(name, participantConfig)
 
       override def createSequencer(
           name: String,
-          sequencerConfig: CommunitySequencerNodeConfig,
+          sequencerConfig: SequencerNodeConfig,
       ): SequencerNodeBootstrap =
         createSequencerMock(name, sequencerConfig)
 
       override def createMediator(
           name: String,
-          mediatorConfig: CommunityMediatorNodeConfig,
+          mediatorConfig: MediatorNodeConfig,
       ): MediatorNodeBootstrap =
         createMediatorMock(name, mediatorConfig)
     }
@@ -123,10 +137,10 @@ class CommunityEnvironmentTest extends AnyWordSpec with BaseTest with HasExecuti
       when(createParticipantMock(idMatcher, any[LocalParticipantConfig])).thenAnswer(create)
 
     protected def setupSequencerFactory(id: String, create: => SequencerNodeBootstrap): Unit =
-      when(createSequencerMock(eqTo(id), any[CommunitySequencerNodeConfig])).thenAnswer(create)
+      when(createSequencerMock(eqTo(id), any[SequencerNodeConfig])).thenAnswer(create)
 
     protected def setupMediatorFactory(id: String, create: => MediatorNodeBootstrap): Unit =
-      when(createMediatorMock(eqTo(id), any[CommunityMediatorNodeConfig])).thenAnswer(create)
+      when(createMediatorMock(eqTo(id), any[MediatorNodeConfig])).thenAnswer(create)
   }
 
   "Environment" when {
@@ -138,58 +152,18 @@ class CommunityEnvironmentTest extends AnyWordSpec with BaseTest with HasExecuti
         Seq("s1", "s2").foreach(setupSequencerFactory(_, mockSequencer))
         Seq("m1", "m2").foreach(setupMediatorFactory(_, mockMediator))
 
-        environment.startAndReconnect(false) shouldBe Either.unit
+        environment.startAndReconnect() shouldBe Either.unit
         verify(pp.getNode.valueOrFail("node should be set"), times(2))
-          .reconnectDomainsIgnoreFailures()(any[TraceContext], any[ExecutionContext])
+          .reconnectSynchronizersIgnoreFailures(any[Boolean])(
+            any[TraceContext],
+            any[ExecutionContext],
+          )
 
       }
 
-      // TODO(i14048): reenable this test
-//      "auto-connect if requested" in new TestEnvironment {
-//
-//        override def config: CantonCommunityConfig =
-//          (CommunityConfigTransforms.updateAllDomainConfigs { case (_, config) =>
-//            config
-//              .focus(_.publicApi)
-//              .replace(CommunityPublicServerConfig(internalPort = Some(Port.tryCreate(42))))
-//          })(sampleConfig)
-//
-//        val (pp, pn) = mockParticipantAndNode
-//        val d1 = mockDomain
-//        val d2 = mockDomain
-//
-//        when(pp.isActive).thenReturn(true)
-//        when(d1.isActive).thenReturn(true)
-//        when(d2.isActive).thenReturn(false)
-//
-//        when(d1.config).thenReturn(
-//          config.domainsByString.get("d1").valueOrFail("where is my config?")
-//        )
-//        when(
-//          pn.autoConnectLocalDomain(any[DomainConnectionConfig])(
-//            any[TraceContext],
-//            any[ExecutionContext],
-//          )
-//        ).thenReturn(EitherTUtil.unitUS)
-//
-//        Seq("p1", "p2").foreach(setupParticipantFactory(_, pp))
-//        setupDomainFactory("d1", d1)
-//        setupDomainFactory("d2", d2)
-//
-//        clue("auto-start") {
-//          environment.startAndReconnect(true) shouldBe Either.unit
-//        }
-//
-//        verify(pn, times(2)).autoConnectLocalDomain(any[DomainConnectionConfig])(
-//          any[TraceContext],
-//          any[ExecutionContext],
-//        )
-//
-//      }
-
       "write ports file if desired" in new TestEnvironment {
 
-        override def config: CantonCommunityConfig = {
+        override def config: CantonConfig = {
           val tmp = sampleConfig.focus(_.parameters.portsFile).replace(Some("my-ports.txt"))
           (CommunityConfigTransforms.updateAllParticipantConfigs { case (_, config) =>
             config
@@ -210,14 +184,14 @@ class CommunityEnvironmentTest extends AnyWordSpec with BaseTest with HasExecuti
         Seq("m1", "m2").foreach(setupMediatorFactory(_, mockMediator))
 
         clue("write ports file") {
-          environment.startAndReconnect(false) shouldBe Either.unit
+          environment.startAndReconnect() shouldBe Either.unit
         }
         assert(f.exists())
 
       }
 
       "not start if manual start is desired" in new TestEnvironment {
-        override def config: CantonCommunityConfig =
+        override def config: CantonConfig =
           sampleConfig.focus(_.parameters.manualStart).replace(true)
 
         // These would throw on start, as all methods return null.
@@ -229,7 +203,7 @@ class CommunityEnvironmentTest extends AnyWordSpec with BaseTest with HasExecuti
         Seq("s1", "s2").foreach(setupSequencerFactory(_, mySequencer))
         Seq("m1", "m2").foreach(setupMediatorFactory(_, myMediator))
 
-        environment.startAndReconnect(false) shouldBe Either.unit
+        environment.startAndReconnect() shouldBe Either.unit
       }
 
       "report exceptions" in new TestEnvironment {
@@ -239,7 +213,7 @@ class CommunityEnvironmentTest extends AnyWordSpec with BaseTest with HasExecuti
         Seq("s1", "s2").foreach(setupSequencerFactory(_, throw exception))
         Seq("m1", "m2").foreach(setupMediatorFactory(_, throw exception))
 
-        assertThrows[RuntimeException](environment.startAndReconnect(false))
+        assertThrows[RuntimeException](environment.startAndReconnect())
 
       }
     }

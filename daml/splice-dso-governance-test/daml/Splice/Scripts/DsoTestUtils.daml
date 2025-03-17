@@ -22,7 +22,7 @@ import Splice.Types
 import Splice.ValidatorLicense
 
 import Splice.Scripts.Util
-import Splice.Scripts.Parameters
+import Splice.Testing.Registries.AmuletRegistry.Parameters
 
 import Splice.CometBft
 import Splice.DsoRules
@@ -92,6 +92,7 @@ initDecentralizedSynchronizer isDevNet = do
                   migrationId = 0
                   sequencerId = "sequencer-id"
                   url = "sequencer.address:1234"
+                  peerUrl = Some "http://sequencer.address:3000"
                   availableAfter = Some now
                 mediator = Some MediatorConfig with
                   mediatorId = "mediator-id"

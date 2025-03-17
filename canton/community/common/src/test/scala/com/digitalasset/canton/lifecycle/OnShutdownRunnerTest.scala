@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.lifecycle
@@ -104,7 +104,7 @@ class OnShutdownRunnerTest extends AnyWordSpec with Matchers with NoTracing with
         override def run() =
           shutdownTasks = shutdownTasks :+ "third"
       })
-      closeable.cancelShutdownTask(token)
+      token.cancel()
 
       closeable.close()
 

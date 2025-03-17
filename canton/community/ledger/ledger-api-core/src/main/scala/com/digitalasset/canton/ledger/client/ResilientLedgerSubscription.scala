@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.ledger.client
@@ -27,12 +27,12 @@ import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.{Failure, Success, Try}
 
-/** Resilient ledger subscriber, which keeps continuously
-  * re-subscribing (on failure) to the Ledger API transaction stream
-  * and applies the received transactions to the `processTransaction` function.
+/** Resilient ledger subscriber, which keeps continuously re-subscribing (on failure) to the Ledger
+  * API transaction stream and applies the received transactions to the `processTransaction`
+  * function.
   *
-  * `processTransaction` must not throw. If it does, it must be idempotent
-  * (i.e. allow re-processing the same transaction twice).
+  * `processTransaction` must not throw. If it does, it must be idempotent (i.e. allow re-processing
+  * the same transaction twice).
   */
 class ResilientLedgerSubscription[S, T](
     makeSource: Long => Source[S, NotUsed],
@@ -72,7 +72,7 @@ class ResilientLedgerSubscription[S, T](
       isClosing && ledgerSubscriptionRef.get().forall(_.completed.isCompleted)
 
     override def run(): Unit =
-      ledgerSubscriptionRef.getAndSet(None).foreach(Lifecycle.close(_)(logger))
+      ledgerSubscriptionRef.getAndSet(None).foreach(LifeCycle.close(_)(logger))
   })
 
   override protected def closeAsync(): Seq[AsyncOrSyncCloseable] = {
@@ -185,6 +185,8 @@ object ResilientLedgerSubscription {
       case Update.Reassignment(value) =>
         Some(value.offset)
       case Update.OffsetCheckpoint(value) =>
+        Some(value.offset)
+      case Update.TopologyTransaction(value) =>
         Some(value.offset)
       case Update.Empty => None
     }

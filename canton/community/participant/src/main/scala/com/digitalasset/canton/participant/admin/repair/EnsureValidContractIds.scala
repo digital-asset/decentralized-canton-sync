@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.participant.admin.repair
@@ -8,7 +8,7 @@ import cats.data.EitherT
 import cats.syntax.either.*
 import cats.syntax.parallel.*
 import cats.syntax.traverse.*
-import com.digitalasset.canton.crypto.{HashOps, HmacOps, Salt}
+import com.digitalasset.canton.crypto.{HashOps, HmacOps}
 import com.digitalasset.canton.discard.Implicits.DiscardOps
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
 import com.digitalasset.canton.participant.admin.data.ActiveContract
@@ -19,7 +19,7 @@ import com.digitalasset.canton.protocol.{
   SerializableRawContractInstance,
   UnicumGenerator,
 }
-import com.digitalasset.canton.topology.DomainId
+import com.digitalasset.canton.topology.SynchronizerId
 import com.digitalasset.canton.tracing.{TraceContext, Traced}
 import com.digitalasset.canton.version.ProtocolVersion
 import com.digitalasset.daml.lf.crypto.Hash
@@ -28,7 +28,7 @@ import scala.collection.concurrent.TrieMap
 import scala.concurrent.{ExecutionContext, Future}
 
 sealed abstract class EnsureValidContractIds(
-    protocolVersionGetter: Traced[DomainId] => Option[ProtocolVersion]
+    protocolVersionGetter: Traced[SynchronizerId] => Option[ProtocolVersion]
 ) extends NamedLogging {
   def apply(contracts: Seq[ActiveContract])(implicit
       ec: ExecutionContext,
@@ -36,26 +36,28 @@ sealed abstract class EnsureValidContractIds(
   ): EitherT[Future, String, (Seq[ActiveContract], Map[LfContractId, LfContractId])]
 
   /*
-    In the context of a migration combining ACS import and domain change (such as the one we perform
+    In the context of a migration combining ACS import and synchronizer change (such as the one we perform
     as part a major upgrade for early mainnet), the `contract.protocolVersion` and the protocol
-    version of the domain will be different. Hence, we need to query it using the getter.
+    version of the synchronizer will be different. Hence, we need to query it using the getter.
    */
-  protected def getExpectedContractIdVersion(
-      contract: ActiveContract
+  protected def getMaximumSupportedContractIdVersion(
+      synchronizerId: SynchronizerId
   )(implicit tc: TraceContext): Either[String, CantonContractIdVersion] =
-    protocolVersionGetter(Traced(contract.domainId))
-      .toRight(s"Protocol version for domain with ID ${contract.domainId} cannot be resolved")
-      .flatMap(CantonContractIdVersion.fromProtocolVersion)
+    protocolVersionGetter(Traced(synchronizerId))
+      .toRight(
+        s"Protocol version for synchronizer with ID $synchronizerId cannot be resolved"
+      )
+      .flatMap(CantonContractIdVersion.maximumSupportedVersion)
 }
 
 object EnsureValidContractIds {
 
-  /** Verify that all contract IDs have a version greater or equal to the contract ID version associated
-    * with the protocol version of the domain to which the contract is assigned.
-    * If any contract ID fails, the whole process fails.
+  /** Verify that all contract IDs have a version greater or equal to the contract ID version
+    * associated with the protocol version of the synchronizer to which the contract is assigned. If
+    * any contract ID fails, the whole process fails.
     */
   private final class VerifyContractIdSuffixes(
-      protocolVersionGetter: Traced[DomainId] => Option[ProtocolVersion],
+      protocolVersionGetter: Traced[SynchronizerId] => Option[ProtocolVersion],
       override val loggerFactory: NamedLoggerFactory,
   ) extends EnsureValidContractIds(protocolVersionGetter) {
 
@@ -63,13 +65,17 @@ object EnsureValidContractIds {
         contract: ActiveContract
     )(implicit tc: TraceContext): Either[String, ActiveContract] =
       for {
-        contractIdVersion <- getExpectedContractIdVersion(contract)
-        _ <- CantonContractIdVersion
-          .ensureCantonContractId(contract.contract.contractId)
+        maxSynchronizerVersion <- getMaximumSupportedContractIdVersion(contract.synchronizerId)
+        activeContractVersion <- CantonContractIdVersion
+          .extractCantonContractIdVersion(contract.contract.contractId)
           .leftMap(_.toString)
-          .ensureOr(actualVersion =>
-            s"Contract ID ${contract.contract.contractId} has version ${actualVersion.v} but domain ${contract.domainId.toProtoPrimitive} requires ${contractIdVersion.v}"
-          )(_ >= contractIdVersion)
+        _ <-
+          if (maxSynchronizerVersion >= activeContractVersion)
+            Either.unit
+          else
+            Left(
+              s"Contract ID ${contract.contract.contractId} has version ${activeContractVersion.v} but synchronizer ${contract.synchronizerId.toProtoPrimitive} only supports up to ${maxSynchronizerVersion.v}"
+            )
       } yield contract
 
     override def apply(contracts: Seq[ActiveContract])(implicit
@@ -86,15 +92,15 @@ object EnsureValidContractIds {
       contractId: LfContractId,
   )
 
-  /** Recompute the contract IDs of all contracts using the provided cryptoOps.
-    * The whole preprocessing will fail if any of the following conditions apply to any contract:
-    * - the contract ID discriminator version is unknown
-    * - the contract salt is missing
-    * - any contract ID referenced in a payload is missing from the import
-    * - any contract is referenced by two different IDs (e.g. the ID in the payload is fine but the one in the contract is not)
+  /** Recompute the contract IDs of all contracts using the provided cryptoOps. The whole
+    * preprocessing will fail if any of the following conditions apply to any contract:
+    *   - the contract ID discriminator version is unknown
+    *   - any contract ID referenced in a payload is missing from the import
+    *   - any contract is referenced by two different IDs (e.g. the ID in the payload is fine but
+    *     the one in the contract is not)
     */
   private final class RecomputeContractIdSuffixes(
-      protocolVersionGetter: Traced[DomainId] => Option[ProtocolVersion],
+      protocolVersionGetter: Traced[SynchronizerId] => Option[ProtocolVersion],
       cryptoOps: HashOps with HmacOps,
       override val loggerFactory: NamedLoggerFactory,
   ) extends EnsureValidContractIds(protocolVersionGetter) {
@@ -112,9 +118,6 @@ object EnsureValidContractIds {
           Left(s"Unknown LF contract ID version, cannot recompute contract ID ${c.contractId.coid}")
       }
 
-    private def getSalt(c: SerializableContract): Either[String, Salt] =
-      c.contractSalt.toRight(s"Missing salt, cannot recompute contract ID ${c.contractId.coid}")
-
     // Recompute the contract ID of a single contract. Any dependency is taken from the `fullRemapping`,
     // which is pre-populated with a lazy reference to the contract ID recomputed here. The evaluation
     // of the `Eval` as part of resolving the (recomputed) contract ID for dependencies will cause the
@@ -131,7 +134,6 @@ object EnsureValidContractIds {
 
       for {
         discriminator <- EitherT.fromEither[Future](getDiscriminator(contract))
-        salt <- EitherT.fromEither[Future](getSalt(contract))
         depsRemapping <- contract.contractInstance.unversioned.cids.toSeq
           .parTraverse { contractId =>
             fullRemapping
@@ -156,7 +158,7 @@ object EnsureValidContractIds {
           Future.successful {
             unicumGenerator
               .recomputeUnicum(
-                salt,
+                contract.contractSalt,
                 contract.ledgerCreateTime,
                 contract.metadata,
                 newRawContractInstance,
@@ -181,19 +183,19 @@ object EnsureValidContractIds {
         ec: ExecutionContext,
         tc: TraceContext,
     ): Eval[EitherT[Future, String, ActiveContract]] =
-      getExpectedContractIdVersion(contract).fold(
+      getMaximumSupportedContractIdVersion(contract.synchronizerId).fold(
         error => Eval.now(EitherT.leftT[Future, ActiveContract](error)),
-        contractIdVersion => {
+        maxContractIdVersion => {
           val contractId = contract.contract.contractId
           val valid = CantonContractIdVersion
-            .ensureCantonContractId(contractId)
-            .exists(_ >= contractIdVersion)
+            .extractCantonContractIdVersion(contractId)
+            .exists(_ <= maxContractIdVersion)
           if (valid) {
             logger.debug(s"Contract ID '${contractId.coid}' is already valid")
             Eval.now(EitherT.rightT[Future, String](contract))
           } else {
             logger.debug(s"Contract ID '${contractId.coid}' needs to be recomputed")
-            Eval.later(recomputeContractIdSuffix(contract, contractIdVersion))
+            Eval.later(recomputeContractIdSuffix(contract, maxContractIdVersion))
           }
         },
       )
@@ -254,12 +256,15 @@ object EnsureValidContractIds {
       } yield completedRemapping
   }
 
-  /** Creates an object that ensures that all contract IDs comply with the scheme associated to the domain where the contracts are assigned.
-    * @param cryptoOps If defined, the contract IDs will be recomputed using the provided cryptoOps. Else, the contract IDs will only be verified.
+  /** Creates an object that ensures that all contract IDs comply with the scheme associated to the
+    * synchronizer where the contracts are assigned.
+    * @param cryptoOps
+    *   If defined, the contract IDs will be recomputed using the provided cryptoOps. Else, the
+    *   contract IDs will only be verified.
     */
   def apply(
       loggerFactory: NamedLoggerFactory,
-      protocolVersionGetter: Traced[DomainId] => Option[ProtocolVersion],
+      protocolVersionGetter: Traced[SynchronizerId] => Option[ProtocolVersion],
       cryptoOps: Option[HashOps with HmacOps],
   ): EnsureValidContractIds =
     cryptoOps.fold[EnsureValidContractIds](

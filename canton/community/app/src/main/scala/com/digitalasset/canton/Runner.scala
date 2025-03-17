@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton
@@ -13,8 +13,8 @@ import java.io.{File, OutputStream, StringWriter}
 import scala.io.Source
 import scala.util.control.NonFatal
 
-/** Result for exposing the process exit code.
-  * All logging is expected to take place inside of the runner.
+/** Result for exposing the process exit code. All logging is expected to take place inside of the
+  * runner.
   */
 trait Runner[E <: Environment] extends NamedLogging {
 

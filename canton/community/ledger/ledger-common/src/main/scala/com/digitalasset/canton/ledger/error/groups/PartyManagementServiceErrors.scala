@@ -1,11 +1,11 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.ledger.error.groups
 
 import com.daml.error.{
+  ContextualizedDamlError,
   ContextualizedErrorLogger,
-  DamlError,
   DamlErrorWithDefiniteAnswer,
   ErrorCategory,
   ErrorCode,
@@ -29,7 +29,7 @@ object PartyManagementServiceErrors extends PartyManagementServiceErrorGroup {
       ) {
     final case class Reject(party: String, reason: String)(implicit
         loggingContext: ContextualizedErrorLogger
-    ) extends DamlError(
+    ) extends ContextualizedDamlError(
           cause = s"Update operation for party '$party' failed due to: $reason"
         ) {
       override def resources: Seq[(ErrorResource, String)] = Seq(
@@ -52,7 +52,7 @@ object PartyManagementServiceErrors extends PartyManagementServiceErrorGroup {
       ) {
     final case class Reject(party: String)(implicit
         loggingContext: ContextualizedErrorLogger
-    ) extends DamlError(
+    ) extends ContextualizedDamlError(
           cause = s"Maximum annotations size for party '$party' has been exceeded"
         ) {
       override def resources: Seq[(ErrorResource, String)] = Seq(
@@ -77,7 +77,7 @@ object PartyManagementServiceErrors extends PartyManagementServiceErrorGroup {
       ) {
     final case class Reject(party: String)(implicit
         loggingContext: ContextualizedErrorLogger
-    ) extends DamlError(
+    ) extends ContextualizedDamlError(
           cause =
             s"Update operation for party '$party' failed due to a concurrent update to the same party"
         ) {

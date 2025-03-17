@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.participant.protocol.validation
@@ -9,24 +9,18 @@ import cats.syntax.alternative.*
 import cats.syntax.bifunctor.*
 import cats.syntax.parallel.*
 import com.daml.nonempty.NonEmpty
-import com.digitalasset.canton.crypto.InteractiveSubmission.*
+import com.digitalasset.canton.crypto.InteractiveSubmission.TransactionMetadataForHashing.saltFromSerializedContract
 import com.digitalasset.canton.crypto.{Hash, InteractiveSubmission}
+import com.digitalasset.canton.data.*
 import com.digitalasset.canton.data.ViewParticipantData.RootAction
-import com.digitalasset.canton.data.{
-  CantonTimestamp,
-  FullTransactionViewTree,
-  SubmitterMetadata,
-  TransactionView,
-  ViewPosition,
-}
 import com.digitalasset.canton.lifecycle.FutureUnlessShutdown
 import com.digitalasset.canton.logging.pretty.{Pretty, PrettyPrinting}
 import com.digitalasset.canton.logging.{NamedLoggerFactory, NamedLogging}
+import com.digitalasset.canton.participant.protocol.ContractAuthenticator
 import com.digitalasset.canton.participant.protocol.EngineController.{
   EngineAbortStatus,
   GetEngineAbortStatus,
 }
-import com.digitalasset.canton.participant.protocol.SerializableContractAuthenticator
 import com.digitalasset.canton.participant.protocol.TransactionProcessingSteps.CommonData
 import com.digitalasset.canton.participant.protocol.submission.TransactionTreeFactory
 import com.digitalasset.canton.participant.protocol.submission.TransactionTreeFactory.TransactionTreeConversionError
@@ -35,13 +29,10 @@ import com.digitalasset.canton.participant.protocol.validation.ModelConformanceC
   PackageNotFound,
   *,
 }
-import com.digitalasset.canton.participant.store.{
-  ContractLookup,
-  ExtendedContractLookup,
-  StoredContract,
-}
+import com.digitalasset.canton.participant.store.ExtendedContractLookup
 import com.digitalasset.canton.participant.util.DAMLe
 import com.digitalasset.canton.participant.util.DAMLe.{
+  CreateNodeEnricher,
   HasReinterpret,
   PackageResolver,
   ReInterpretationResult,
@@ -56,30 +47,31 @@ import com.digitalasset.canton.protocol.WellFormedTransaction.{
 import com.digitalasset.canton.protocol.hash.HashTracer.NoOp
 import com.digitalasset.canton.sequencing.protocol.MediatorGroupRecipient
 import com.digitalasset.canton.topology.client.TopologySnapshot
-import com.digitalasset.canton.topology.{DomainId, ParticipantId}
+import com.digitalasset.canton.topology.{ParticipantId, SynchronizerId}
 import com.digitalasset.canton.tracing.TraceContext
-import com.digitalasset.canton.util.FutureInstances.*
 import com.digitalasset.canton.util.{ErrorUtil, MapsUtil}
 import com.digitalasset.canton.version.{HashingSchemeVersion, ProtocolVersion}
-import com.digitalasset.canton.{LfCreateCommand, LfKeyResolver, LfPartyId, RequestCounter, checked}
+import com.digitalasset.canton.{LfCreateCommand, LfKeyResolver, LfPartyId, checked}
 import com.digitalasset.daml.lf.data.Ref.{CommandId, Identifier, PackageId, PackageName}
+import com.digitalasset.daml.lf.transaction.FatContractInstance
 
 import java.util.UUID
-import scala.collection.immutable.SortedMap
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
-/** Allows for checking model conformance of a list of transaction view trees.
-  * If successful, outputs the received transaction as LfVersionedTransaction along with TransactionMetadata.
+/** Allows for checking model conformance of a list of transaction view trees. If successful,
+  * outputs the received transaction as LfVersionedTransaction along with TransactionMetadata.
   *
-  * @param reinterpreter reinterprets the lf command to a transaction.
-  * @param transactionTreeFactory reconstructs a transaction view from the reinterpreted action description.
+  * @param reinterpreter
+  *   reinterprets the lf command to a transaction.
+  * @param transactionTreeFactory
+  *   reconstructs a transaction view from the reinterpreted action description.
   */
 class ModelConformanceChecker(
     val reinterpreter: HasReinterpret,
     val validateContract: SerializableContractValidation,
     val transactionTreeFactory: TransactionTreeFactory,
     val participantId: ParticipantId,
-    val serializableContractAuthenticator: SerializableContractAuthenticator,
+    val serializableContractAuthenticator: ContractAuthenticator,
     val packageResolver: PackageResolver,
     override protected val loggerFactory: NamedLoggerFactory,
 )(implicit executionContext: ExecutionContext)
@@ -87,16 +79,19 @@ class ModelConformanceChecker(
 
   /** Reinterprets the transaction resulting from the received transaction view trees.
     *
-    * @param rootViewTrees all received transaction view trees contained in a confirmation request that
-    *                      have the same transaction id and represent a top-most view
-    * @param keyResolverFor The key resolver to be used for re-interpreting root views
-    * @param commonData the common data of all the (rootViewTree :  TransactionViewTree) trees in `rootViews`
-    * @return the resulting LfTransaction with [[com.digitalasset.canton.protocol.LfContractId]]s only
+    * @param rootViewTrees
+    *   all received transaction view trees contained in a confirmation request that have the same
+    *   transaction id and represent a top-most view
+    * @param keyResolverFor
+    *   The key resolver to be used for re-interpreting root views
+    * @param commonData
+    *   the common data of all the (rootViewTree : TransactionViewTree) trees in `rootViews`
+    * @return
+    *   the resulting LfTransaction with [[com.digitalasset.canton.protocol.LfContractId]]s only
     */
   private[protocol] def check(
       rootViewTrees: NonEmpty[Seq[FullTransactionViewTree]],
       keyResolverFor: TransactionView => LfKeyResolver,
-      requestCounter: RequestCounter,
       topologySnapshot: TopologySnapshot,
       commonData: CommonData,
       getEngineAbortStatus: GetEngineAbortStatus,
@@ -128,7 +123,6 @@ class ModelConformanceChecker(
             mediator,
             transactionUuid,
             keyResolverFor(view),
-            requestCounter,
             ledgerTime,
             submissionTime,
             submittingParticipantO,
@@ -208,11 +202,10 @@ class ModelConformanceChecker(
 
   private def validateInputContracts(
       view: TransactionView,
-      requestCounter: RequestCounter,
       getEngineAbortStatus: GetEngineAbortStatus,
   )(implicit
       traceContext: TraceContext
-  ): EitherT[FutureUnlessShutdown, Error, Map[LfContractId, StoredContract]] =
+  ): EitherT[FutureUnlessShutdown, Error, Map[LfContractId, SerializableContract]] =
     view.tryFlattenToParticipantViews
       .flatMap(_.viewParticipantData.coreInputs)
       .parTraverse { case (cid, InputContract(contract, _)) =>
@@ -223,10 +216,9 @@ class ModelConformanceChecker(
             case ContractMismatch(actual, _) =>
               InvalidInputContract(cid, actual.templateId, view.viewHash): Error
           }
-          .map(_ => cid -> StoredContract(contract, requestCounter, isDivulged = true))
+          .map(_ => cid -> contract)
       }
       .map(_.toMap)
-      .mapK(FutureUnlessShutdown.outcomeK)
 
   private def buildPackageNameMap(
       packageIds: Set[PackageId]
@@ -253,12 +245,11 @@ class ModelConformanceChecker(
           ConflictingNameBindings(Map(participantId -> conflicts))
         }
       } yield nameBindings
-    }).mapK(FutureUnlessShutdown.outcomeK)
+    })
 
   def reInterpret(
       view: TransactionView,
       resolverFromView: LfKeyResolver,
-      requestCounter: RequestCounter,
       ledgerTime: CantonTimestamp,
       submissionTime: CantonTimestamp,
       getEngineAbortStatus: GetEngineAbortStatus,
@@ -272,12 +263,10 @@ class ModelConformanceChecker(
 
     val seed = viewParticipantData.actionDescription.seedOption
     for {
-      viewInputContracts <- validateInputContracts(view, requestCounter, getEngineAbortStatus)
+      viewInputContracts <- validateInputContracts(view, getEngineAbortStatus)
 
       contractLookupAndVerification =
         new ExtendedContractLookup(
-          // all contracts and keys specified explicitly
-          ContractLookup.noContracts(loggerFactory),
           viewInputContracts,
           resolverFromView,
           serializableContractAuthenticator,
@@ -299,7 +288,6 @@ class ModelConformanceChecker(
         )(traceContext)
         .leftMap(DAMLeError(_, view.viewHash))
         .leftWiden[Error]
-        .mapK(FutureUnlessShutdown.outcomeK)
     } yield ConformanceReInterpretationResult(
       lfTxAndMetadata,
       contractLookupAndVerification,
@@ -313,7 +301,6 @@ class ModelConformanceChecker(
       mediator: MediatorGroupRecipient,
       transactionUuid: UUID,
       resolverFromView: LfKeyResolver,
-      requestCounter: RequestCounter,
       ledgerTime: CantonTimestamp,
       submissionTime: CantonTimestamp,
       submitterMetadataO: Option[SubmitterMetadata],
@@ -338,7 +325,6 @@ class ModelConformanceChecker(
           reInterpret(
             view,
             resolverFromView,
-            requestCounter,
             ledgerTime,
             submissionTime,
             getEngineAbortStatus,
@@ -387,7 +373,7 @@ class ModelConformanceChecker(
             TransactionTreeFactory.contractInstanceLookup(contractLookupAndVerification),
           keyResolver = resolverFromReinterpretation,
         )
-      ).leftMap(err => TransactionTreeError(err, view.viewHash)).mapK(FutureUnlessShutdown.outcomeK)
+      ).leftMap(err => TransactionTreeError(err, view.viewHash))
 
       (reconstructedView, suffixedTx) = reconstructedViewAndTx
 
@@ -410,9 +396,9 @@ class ModelConformanceChecker(
     val informees = view.viewCommonData.tryUnwrap.viewConfirmationParameters.informees
 
     EitherT(for {
-      informeeParticipantsByParty <- FutureUnlessShutdown.outcomeF(
+      informeeParticipantsByParty <-
         snapshot.activeParticipantsOfParties(informees.toSeq)
-      )
+
       informeeParticipants = informeeParticipantsByParty.values.flatten.toSet
       unvetted <- informeeParticipants.toSeq
         .parTraverse(p =>
@@ -434,7 +420,7 @@ object ModelConformanceChecker {
   def apply(
       damlE: DAMLe,
       transactionTreeFactory: TransactionTreeFactory,
-      serializableContractAuthenticator: SerializableContractAuthenticator,
+      serializableContractAuthenticator: ContractAuthenticator,
       participantId: ParticipantId,
       packageResolver: PackageResolver,
       loggerFactory: NamedLoggerFactory,
@@ -462,11 +448,12 @@ object ModelConformanceChecker {
   private[protocol] final case class ConformanceReInterpretationResult(
       reInterpretationResult: ReInterpretationResult,
       contractLookup: ExtendedContractLookup,
-      viewInputContracts: Map[LfContractId, StoredContract],
+      viewInputContracts: Map[LfContractId, SerializableContract],
   ) {
 
-    /** Compute the hash of a re-interpreted transaction to validate external signatures.
-      * Note that we need to enrich the transaction to re-hydrate the record values with labels, since they're part of the hash
+    /** Compute the hash of a re-interpreted transaction to validate external signatures. Note that
+      * we need to enrich the transaction to re-hydrate the record values with labels, since they're
+      * part of the hash
       */
     def computeHash(
         hashingSchemeVersion: HashingSchemeVersion,
@@ -474,38 +461,49 @@ object ModelConformanceChecker {
         commandId: CommandId,
         transactionUUID: UUID,
         mediatorGroup: Int,
-        domainId: DomainId,
+        synchronizerId: SynchronizerId,
         protocolVersion: ProtocolVersion,
         transactionEnricher: TransactionEnricher,
+        createNodeEnricher: CreateNodeEnricher,
     )(implicit
         traceContext: TraceContext,
         ec: ExecutionContext,
     ): EitherT[FutureUnlessShutdown, String, Hash] =
       for {
+        // Enrich the transaction...
         enrichedTransaction <- transactionEnricher(
           reInterpretationResult.transaction
         )(traceContext)
+          .leftMap(_.toString)
+        // ... and the input contracts so that labels and template identifiers are set and can be included in the hash
+        enrichedInputContracts <- viewInputContracts.toList
+          .parTraverse { case (cid, storedContract) =>
+            createNodeEnricher(storedContract.toLf)(traceContext).map { enrichedNode =>
+              cid -> FatContractInstance.fromCreateNode(
+                enrichedNode,
+                storedContract.ledgerCreateTime.toLf,
+                saltFromSerializedContract(storedContract),
+              )
+            }
+          }
+          .map(_.toMap)
           .leftMap(_.toString)
         hash <- EitherT.fromEither[FutureUnlessShutdown](
           InteractiveSubmission
             .computeVersionedHash(
               hashingSchemeVersion,
               enrichedTransaction,
-              InteractiveSubmission.TransactionMetadataForHashing(
+              InteractiveSubmission.TransactionMetadataForHashing.create(
                 actAs,
                 commandId,
                 transactionUUID,
                 mediatorGroup,
-                domainId,
+                synchronizerId,
                 Option.when(reInterpretationResult.usesLedgerTime)(
                   reInterpretationResult.metadata.ledgerTime.toLf
                 ),
                 reInterpretationResult.metadata.submissionTime.toLf,
-                SortedMap.from(
-                  viewInputContracts.map { case (cid, storedContract) =>
-                    cid -> storedContract.contract
-                  }
-                ),
+                enrichedInputContracts,
               ),
               reInterpretationResult.metadata.seeds,
               protocolVersion,
@@ -529,13 +527,15 @@ object ModelConformanceChecker {
         SerializableContract,
         GetEngineAbortStatus,
         TraceContext,
-    ) => EitherT[Future, ContractValidationFailure, Unit]
+    ) => EitherT[FutureUnlessShutdown, ContractValidationFailure, Unit]
 
   private def validateSerializedContract(damlE: DAMLe)(
       contract: SerializableContract,
       getEngineAbortStatus: GetEngineAbortStatus,
       traceContext: TraceContext,
-  )(implicit ec: ExecutionContext): EitherT[Future, ContractValidationFailure, Unit] = {
+  )(implicit
+      ec: ExecutionContext
+  ): EitherT[FutureUnlessShutdown, ContractValidationFailure, Unit] = {
 
     val instance = contract.rawContractInstance
     val unversioned = instance.contractInstance.unversioned
@@ -564,7 +564,7 @@ object ModelConformanceChecker {
         keyOpt = metadata.maybeKeyWithMaintainers,
         version = instance.contractInstance.version,
       )
-      _ <- EitherT.cond[Future](
+      _ <- EitherT.cond[FutureUnlessShutdown](
         actual == expected,
         (),
         ContractMismatch(actual, expected): ContractValidationFailure,
@@ -575,8 +575,8 @@ object ModelConformanceChecker {
 
   sealed trait Error extends PrettyPrinting
 
-  /** Enriches a model conformance error with the valid subtransaction, if any.
-    * If there is a valid subtransaction, the list of valid subview trees will not be empty.
+  /** Enriches a model conformance error with the valid subtransaction, if any. If there is a valid
+    * subtransaction, the list of valid subview trees will not be empty.
     */
   final case class ErrorWithSubTransaction(
       errors: NonEmpty[Seq[Error]],
@@ -701,7 +701,11 @@ object ModelConformanceChecker {
       unnamedParam(
         _.conflicting
           .map { case (participant, conflicts) =>
-            show"$participant has detected conflicting package name resolutions $conflicts".unquoted
+            val ref =
+              conflicts
+                .map { case (name, packageIds) => s"$name -> $packageIds" }
+                .mkString("[", ", ", "]")
+            show"$participant has detected conflicting package name resolutions: $ref".unquoted
           }
           .mkShow("\n")
       )

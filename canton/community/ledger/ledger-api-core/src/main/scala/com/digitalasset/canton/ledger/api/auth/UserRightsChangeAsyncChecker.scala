@@ -1,12 +1,11 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.ledger.api.auth
 
 import com.digitalasset.canton.auth.ClaimSet
 import com.digitalasset.canton.ledger.api.auth.interceptor.UserBasedAuthorizationInterceptor
-import com.digitalasset.canton.ledger.api.domain
-import com.digitalasset.canton.ledger.api.domain.IdentityProviderId
+import com.digitalasset.canton.ledger.api.{IdentityProviderId, User, UserRight}
 import com.digitalasset.canton.ledger.localstore.api.UserManagementStore
 import com.digitalasset.canton.logging.LoggingContextWithTrace
 import com.digitalasset.daml.lf.data.Ref
@@ -28,8 +27,10 @@ private[auth] final class UserRightsChangeAsyncChecker(
 )(implicit ec: ExecutionContext) {
 
   /** Schedules an asynchronous and periodic task to check for user rights' state changes
-    * @param userClaimsMismatchCallback - called when user rights' state change has been detected.
-    * @return a function to cancel the scheduled task
+    * @param userClaimsMismatchCallback
+    *   called when user rights' state change has been detected.
+    * @return
+    *   a function to cancel the scheduled task
     */
   def schedule(
       userClaimsMismatchCallback: () => Unit
@@ -50,8 +51,7 @@ private[auth] final class UserRightsChangeAsyncChecker(
     val cancellable =
       pekkoScheduler.scheduleWithFixedDelay(initialDelay = delay, delay = delay) { () =>
         val idpId = IdentityProviderId.fromOptionalLedgerString(identityProviderId)
-        val userState
-            : Future[Either[UserManagementStore.Error, (domain.User, Set[domain.UserRight])]] =
+        val userState: Future[Either[UserManagementStore.Error, (User, Set[UserRight])]] =
           for {
             userRightsResult <- userManagementStore.listUserRights(userId, idpId)
             userResult <- userManagementStore.getUser(userId, idpId)

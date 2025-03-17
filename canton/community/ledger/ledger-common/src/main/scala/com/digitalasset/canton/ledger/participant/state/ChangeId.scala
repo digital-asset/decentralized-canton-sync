@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.ledger.participant.state
@@ -6,10 +6,11 @@ package com.digitalasset.canton.ledger.participant.state
 import com.digitalasset.daml.lf.crypto.Hash
 import com.digitalasset.daml.lf.data.Ref
 
-/** Identifier for ledger changes used by command deduplication.
-  * Equality is defined in terms of the cryptographic hash.
+/** Identifier for ledger changes used by command deduplication. Equality is defined in terms of the
+  * cryptographic hash.
   *
-  * @see ReadService.stateUpdates for the command deduplication guarantee
+  * @see
+  *   ReadService.stateUpdates for the command deduplication guarantee
   */
 final case class ChangeId(
     applicationId: Ref.ApplicationId,
@@ -17,8 +18,7 @@ final case class ChangeId(
     actAs: Set[Ref.Party],
 ) {
 
-  /** A stable hash of the change id.
-    * Suitable for storing in persistent storage.
+  /** A stable hash of the change id. Suitable for storing in persistent storage.
     */
   lazy val hash: Hash = Hash.hashChangeId(applicationId, commandId, actAs)
 

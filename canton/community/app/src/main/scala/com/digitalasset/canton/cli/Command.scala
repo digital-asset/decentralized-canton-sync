@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.cli
@@ -15,7 +15,8 @@ object Command {
 
   /** Run a console script then close
     *
-    * @param scriptPath the path to the script
+    * @param scriptPath
+    *   the path to the script
     */
   final case class RunScript(scriptPath: File) extends Command
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 package com.digitalasset.canton.networking.grpc
@@ -15,7 +15,6 @@ import com.digitalasset.canton.tracing.TraceContextGrpc
 import com.digitalasset.canton.tracing.TracingConfig.Propagation
 import com.digitalasset.canton.util.ResourceUtil.withResource
 import com.google.protobuf.ByteString
-import io.grpc.ManagedChannel
 import io.grpc.netty.{GrpcSslContexts, NettyChannelBuilder}
 import io.netty.handler.ssl.{SslContext, SslContextBuilder}
 
@@ -52,14 +51,12 @@ trait ClientChannelBuilder {
         .useTransportSecurity() // this is strictly unnecessary as is the default for the channel builder, but can't hurt either
 
       // add certificates if provided
-      trustCertificate
-        .fold(builder) { certChain =>
-          val sslContext = withResource(certChain.newInput()) { inputStream =>
-            GrpcSslContexts.forClient().trustManager(inputStream).build()
-          }
-          builder.sslContext(sslContext)
+      trustCertificate.foreach { certChain =>
+        val sslContext = withResource(certChain.newInput()) { inputStream =>
+          GrpcSslContexts.forClient().trustManager(inputStream).build()
         }
-        .discard
+        builder.sslContext(sslContext)
+      }
     } else
       builder.usePlaintext().discard
 
@@ -78,8 +75,8 @@ trait ClientChannelBuilder {
 
 trait ClientChannelBuilderFactory extends (NamedLoggerFactory => ClientChannelBuilder)
 
-/** Supports creating GRPC channels but only supports a single host.
-  * If multiple endpoints are provided a warning will be logged and the first supplied will be used.
+/** Supports creating GRPC channels but only supports a single host. If multiple endpoints are
+  * provided a warning will be logged and the first supplied will be used.
   */
 class CommunityClientChannelBuilder(protected val loggerFactory: NamedLoggerFactory)
     extends ClientChannelBuilder
@@ -91,10 +88,10 @@ class CommunityClientChannelBuilder(protected val loggerFactory: NamedLoggerFact
   ): NettyChannelBuilder = {
     val singleHost = endpoints.head1
 
-    // warn that community does not support more than one domain connection if we've been passed multiple
-    if (endpoints.size > 1) {
+    // warn that community does not support more than one synchronizer connection if we've been passed multiple
+    if (endpoints.sizeIs > 1) {
       noTracingLogger.warn(
-        s"Canton Community does not support using many connections for a domain. Defaulting to first: $singleHost"
+        s"Canton Community does not support using many connections for a synchronizer. Defaulting to first: $singleHost"
       )
     }
 
@@ -120,10 +117,12 @@ object ClientChannelBuilder {
     val builder = GrpcSslContexts
       .forClient()
     val trustBuilder = tls.trustCollectionFile.fold(builder)(trustCollection =>
-      builder.trustManager(trustCollection.unwrap)
+      builder.trustManager(trustCollection.pemStream)
     )
     tls.clientCert
-      .fold(trustBuilder)(cc => trustBuilder.keyManager(cc.certChainFile, cc.privateKeyFile))
+      .fold(trustBuilder)(cc =>
+        trustBuilder.keyManager(cc.certChainFile.pemStream, cc.privateKeyFile.pemStream)
+      )
   }
 
   def sslContext(
@@ -156,27 +155,41 @@ object ClientChannelBuilder {
         .keepAliveTimeout(timeout.toMillis, TimeUnit.MILLISECONDS)
     }
 
-  /** Simple channel construction for test and console clients.
-    * `maxInboundMessageSize` is 2GB; so don't use this to connect to an untrusted server.
+  /** Simple channel construction for test and console clients. `maxInboundMessageSize` is 2GB; so
+    * don't use this to connect to an untrusted server.
     */
-  def createChannelToTrustedServer(
+  def createChannelBuilderToTrustedServer(
       clientConfig: ClientConfig
-  )(implicit executor: Executor): ManagedChannel = {
-    val baseBuilder: NettyChannelBuilder = NettyChannelBuilder
-      .forAddress(clientConfig.address, clientConfig.port.unwrap)
-      .executor(executor)
-      .maxInboundMessageSize(Int.MaxValue)
+  )(implicit executor: Executor): ManagedChannelBuilderProxy =
+    createChannelBuilder(clientConfig, maxInboundMessageSize = Some(Int.MaxValue))
+
+  def createChannelBuilder(
+      clientConfig: ClientConfig,
+      maxInboundMessageSize: Option[Int] = None,
+  )(implicit executor: Executor): ManagedChannelBuilderProxy = {
+    val nettyChannelBuilder =
+      NettyChannelBuilder
+        .forAddress(clientConfig.address, clientConfig.port.unwrap)
+        .executor(executor)
+
+    val baseBuilder =
+      maxInboundMessageSize
+        .map(nettyChannelBuilder.maxInboundMessageSize)
+        .getOrElse(nettyChannelBuilder)
 
     // apply keep alive settings
-    configureKeepAlive(
-      clientConfig.keepAliveClient,
-      // if tls isn't configured assume that it's a plaintext channel
-      clientConfig.tls
+    val builder =
+      clientConfig.tlsConfig
+        // if tls isn't configured assume that it's a plaintext channel
         .fold(baseBuilder.usePlaintext()) { tls =>
-          baseBuilder
-            .useTransportSecurity()
-            .sslContext(sslContext(tls))
-        },
-    ).build()
+          if (tls.enabled)
+            baseBuilder
+              .useTransportSecurity()
+              .sslContext(sslContext(tls))
+          else
+            baseBuilder.usePlaintext()
+        }
+
+    ManagedChannelBuilderProxy(configureKeepAlive(clientConfig.keepAliveClient, builder))
   }
 }
