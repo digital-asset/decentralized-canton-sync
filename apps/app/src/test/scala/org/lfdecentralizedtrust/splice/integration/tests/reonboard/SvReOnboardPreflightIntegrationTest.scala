@@ -1,12 +1,11 @@
 package org.lfdecentralizedtrust.splice.integration.tests.reonboard
 
-import org.lfdecentralizedtrust.splice.environment.EnvironmentImpl
 import org.lfdecentralizedtrust.splice.integration.EnvironmentDefinition
 import org.lfdecentralizedtrust.splice.integration.tests.SpliceTests.SpliceTestConsoleEnvironment
 import org.lfdecentralizedtrust.splice.integration.tests.FrontendIntegrationTestWithSharedEnvironment
 import org.lfdecentralizedtrust.splice.integration.tests.runbook.{
-  SvUiIntegrationTestUtil,
   PreflightIntegrationTestUtil,
+  SvUiPreflightIntegrationTestUtil,
 }
 import org.lfdecentralizedtrust.splice.sv.util.AnsUtil
 import org.lfdecentralizedtrust.splice.util.{
@@ -14,13 +13,14 @@ import org.lfdecentralizedtrust.splice.util.{
   SvFrontendTestUtil,
   WalletFrontendTestUtil,
 }
-import com.digitalasset.canton.integration.BaseEnvironmentDefinition
 import com.digitalasset.canton.topology.PartyId
 import org.scalatest.time.{Minute, Span}
 
+import scala.concurrent.duration.DurationInt
+
 class SvReOnboardPreflightIntegrationTest
     extends FrontendIntegrationTestWithSharedEnvironment("validator", "sv")
-    with SvUiIntegrationTestUtil
+    with SvUiPreflightIntegrationTestUtil
     with SvFrontendTestUtil
     with PreflightIntegrationTestUtil
     with FrontendLoginUtil
@@ -28,8 +28,7 @@ class SvReOnboardPreflightIntegrationTest
 
   override lazy val resetRequiredTopologyState: Boolean = false
 
-  override def environmentDefinition
-      : BaseEnvironmentDefinition[EnvironmentImpl, SpliceTestConsoleEnvironment] =
+  override def environmentDefinition: SpliceEnvironmentDefinition =
     EnvironmentDefinition.preflightTopology(
       this.getClass.getSimpleName
     )
@@ -47,6 +46,8 @@ class SvReOnboardPreflightIntegrationTest
 
   private val password = sys.env(s"SV_DEV_NET_WEB_UI_PASSWORD");
 
+  private val usdTappedInOffboardTest = BigDecimal("100000")
+
   "Validator create a transfer offer to the reonboarded SV" in { implicit env =>
     val (_, offboardedSvParty) = withFrontEnd("validator") { implicit webDriver =>
       actAndCheck(
@@ -63,9 +64,11 @@ class SvReOnboardPreflightIntegrationTest
         _ => {
           userIsLoggedIn()
           val usdText = find(id("wallet-balance-usd")).value.text.trim
+          logger.info(s"Wallet balance: $usdText")
           usdText should not be "..."
           val usd = parseAmountText(usdText, "USD")
-          usd should be >= BigDecimal("100000")
+
+          usd should be >= usdTappedInOffboardTest
 
           val loggedInUser = seleniumText(find(id("logged-in-user")))
           val ansUtil = new AnsUtil(ansAcronym)
@@ -103,15 +106,29 @@ class SvReOnboardPreflightIntegrationTest
 
     reonbardedSvParty should not be offboardedSvParty
 
-    withFrontEnd("validator") { implicit webDriver =>
+    val amuletPrice = withFrontEnd("validator") { implicit webDriver =>
+      val amuletPrice = clue("Getting the amulet price") {
+        val usdText = find(id("wallet-balance-usd")).value.text.trim
+        val amuletText = find(id("wallet-balance-amulet")).value.text.trim
+
+        val amuletAcronym = sv1ScanClient.getSpliceInstanceNames().amuletNameAcronym
+        val amulet = parseAmountText(amuletText, amuletAcronym)
+        val usd = parseAmountText(usdText, "USD")
+
+        val amuletPrice = (usd / amulet).setScale(10, BigDecimal.RoundingMode.HALF_UP)
+        logger.info(s"Amulet price: $amuletPrice")
+
+        amuletPrice
+      }
       clue(s"Creating transfer offer for: $reonbardedSvParty") {
         createTransferOffer(
           reonbardedSvParty,
-          BigDecimal("100000") / 0.005,
+          walletUsdToAmulet(usdTappedInOffboardTest, amuletPrice),
           90,
           "p2ptransfer",
         )
       }
+      amuletPrice
     }
 
     withFrontEnd("sv") { implicit webDriver =>
@@ -123,7 +140,7 @@ class SvReOnboardPreflightIntegrationTest
         }
       }
 
-      actAndCheck(
+      actAndCheck(timeUntilSuccess = 30.seconds)(
         "Accept transfer offer", {
           click on acceptButton
           click on "navlink-transactions"
@@ -138,15 +155,14 @@ class SvReOnboardPreflightIntegrationTest
           }
           inside(expectedRow) { case Seq(tx) =>
             val transaction = readTransactionFromRow(tx)
+            logger.info(s"Found transaction $transaction")
             transaction.action should matchText("Received")
-            transaction.ccAmount should beWithin(
-              BigDecimal(20000000) - smallAmount,
-              BigDecimal(20000000),
+            // Lower bound because of transfer fees, upper bound because of rounding errors
+            // as we're converting from USD to amulet (when creating the offer) and back (here).
+            transaction.ccAmount should beAround(
+              walletUsdToAmulet(usdTappedInOffboardTest, amuletPrice)
             )
-            transaction.usdAmount should beWithin(
-              BigDecimal(100000) - smallAmount,
-              BigDecimal(100000),
-            )
+            transaction.usdAmount should beAround(usdTappedInOffboardTest)
           }
         },
       )
