@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.17-ci-snapshot.20250318.1.0.v6c320385
+                0.3.17-ci-snapshot.20250318.1.0.v9a4591e0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -70,7 +70,7 @@
 <li class="toctree-l3"><a class="reference internal" href="validator_hardware_requirements.html#database-latency">Database Latency</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="validator_compose.html">Docker-Compose Based Deployment of a Validator Node</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="validator_compose.html">Docker Compose-Based Deployment of a Validator Node</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="validator_compose.html#requirements">Requirements</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_compose.html#required-network-parameters">Required Network Parameters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="validator_compose.html#deployment">Deployment</a></li>
@@ -765,6 +765,7 @@
 <p class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../release_notes.html#upcoming">Upcoming</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id2">0.3.16</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id3">0.3.15</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../release_notes.html#id4">0.3.13</a></li>
@@ -991,7 +992,7 @@ whereas the validator app will reuse the existing state (see <a class="reference
 </section>
 <section id="deploying-the-validator-app-and-participant-docker-compose">
 <h4>Deploying the validator App and Participant (Docker-Compose)<a class="headerlink" href="#deploying-the-validator-app-and-participant-docker-compose" title="Link to this heading"></a></h4>
-<p>This section refers to validators that have been deployed in Docker-Compose using the instructions in <a class="reference internal" href="validator_compose.html#compose-validator"><span class="std std-ref">Docker-Compose Based Deployment of a Validator Node</span></a>.</p>
+<p>This section refers to validators that have been deployed in Docker-Compose using the instructions in <a class="reference internal" href="validator_compose.html#compose-validator"><span class="std std-ref">Docker Compose-Based Deployment of a Validator Node</span></a>.</p>
 <p>Once you confirmed that your validator is caught up, as explained above, confirm that a migration dump has been created using:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>compose<span class="w"> </span>logs<span class="w"> </span>validator<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;Wrote domain migration dump&quot;</span>
 </pre></div>
