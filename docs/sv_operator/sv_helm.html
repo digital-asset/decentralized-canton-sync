@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.17-ci-snapshot.20250318.1.0.v2dca2100
+                0.3.17-ci-snapshot.20250318.1.0.v43787e3a
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -195,10 +195,10 @@
 <li class="toctree-l4"><a class="reference internal" href="#configuring-authentication-on-your-sv-node">Configuring Authentication on your SV Node</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#configuring-your-cometbft-node">Configuring your CometBft node</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#generating-your-cometbft-node-keys">Generating your CometBft node keys</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#configuring-your-cometbft-node-keys">Configuring your CometBft node keys</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#configuring-cometbft-state-sync">Configuring CometBft state sync</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configuring-your-cometbft-node">Configuring your CometBFT node</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#generating-your-cometbft-node-keys">Generating your CometBFT node keys</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuring-your-cometbft-node-keys">Configuring your CometBFT node keys</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuring-cometbft-state-sync">Configuring CometBFT state sync</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#installing-postgres-instances">Installing Postgres instances</a><ul>
@@ -899,9 +899,9 @@ target cluster.</p>
 </div></blockquote>
 </li>
 <li><p>Your cluster needs a static egress IP. After acquiring that, propose to the other SVs to add it to the IP allowlist.</p></li>
-<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.17-ci-snapshot.20250318.1.0.v2dca2100_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
+<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.17-ci-snapshot.20250318.1.0.v43787e3a_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
 </ol>
-<pre class="literal-block">tar xzvf 0.3.17-ci-snapshot.20250318.1.0.v2dca2100_splice-node.tar.gz</pre>
+<pre class="literal-block">tar xzvf 0.3.17-ci-snapshot.20250318.1.0.v43787e3a_splice-node.tar.gz</pre>
 <ol class="arabic simple" start="5">
 <li><p>Please inquire if the global synchronizer (domain) on your target network has previously undergone a <a class="reference internal" href="sv_major_upgrade.html#sv-upgrades"><span class="std std-ref">synchronizer migration</span></a>.
 If it has, please record the current migration ID of the synchronizer.
@@ -1225,20 +1225,20 @@ kubectl<span class="w"> </span>create<span class="w"> </span>--namespace<span cl
 </section>
 </section>
 <section id="configuring-your-cometbft-node">
-<h2>Configuring your CometBft node<a class="headerlink" href="#configuring-your-cometbft-node" title="Link to this heading"></a></h2>
-<p>Every SV node also deploys a CometBft node. This node must be configured to join the existing Global Synchronizer BFT chain.
+<h2>Configuring your CometBFT node<a class="headerlink" href="#configuring-your-cometbft-node" title="Link to this heading"></a></h2>
+<p>Every SV node also deploys a CometBFT node. This node must be configured to join the existing Global Synchronizer BFT chain.
 To do that, you first must generate the keys that will identify the node.</p>
 <section id="generating-your-cometbft-node-keys">
-<span id="cometbft-identity"></span><h3>Generating your CometBft node keys<a class="headerlink" href="#generating-your-cometbft-node-keys" title="Link to this heading"></a></h3>
-<p>To generate the node config you use the CometBft docker image provided through Github Container Registry (ghcr.io/digital-asset/decentralized-canton-sync/docker).</p>
+<span id="cometbft-identity"></span><h3>Generating your CometBFT node keys<a class="headerlink" href="#generating-your-cometbft-node-keys" title="Link to this heading"></a></h3>
+<p>To generate the node config you use the CometBFT docker image provided through Github Container Registry (ghcr.io/digital-asset/decentralized-canton-sync/docker).</p>
 <p>Use the following shell commands to generate the proper keys:</p>
 <pre class="literal-block"># Create a folder to store the config
 mkdir cometbft
 cd cometbft
 # Init the node
-docker run --rm -v &quot;$(pwd):/init&quot; ghcr.io/digital-asset/decentralized-canton-sync/docker/cometbft:0.3.17-ci-snapshot.20250318.1.0.v2dca2100 init --home /init
+docker run --rm -v &quot;$(pwd):/init&quot; ghcr.io/digital-asset/decentralized-canton-sync/docker/cometbft:0.3.17-ci-snapshot.20250318.1.0.v43787e3a init --home /init
 # Read the node id and keep a note of it for the deployment
-docker run --rm -v &quot;$(pwd):/init&quot; ghcr.io/digital-asset/decentralized-canton-sync/docker/cometbft:0.3.17-ci-snapshot.20250318.1.0.v2dca2100 show-node-id --home /init</pre>
+docker run --rm -v &quot;$(pwd):/init&quot; ghcr.io/digital-asset/decentralized-canton-sync/docker/cometbft:0.3.17-ci-snapshot.20250318.1.0.v43787e3a show-node-id --home /init</pre>
 <p>Please keep a note of the node ID printed out above.</p>
 <p>In addition, please retain some of the configuration files generated, as follows (you might need to change the permissions/ownership for them as they are accessible only by the root user):</p>
 <div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="n">cometbft</span><span class="o">/</span><span class="n">config</span><span class="o">/</span><span class="n">node_key</span><span class="p">.</span><span class="n">json</span>
@@ -1248,8 +1248,8 @@ docker run --rm -v &quot;$(pwd):/init&quot; ghcr.io/digital-asset/decentralized-
 <p>Any other files can be ignored.</p>
 </section>
 <section id="configuring-your-cometbft-node-keys">
-<span id="helm-cometbft-secrets-config"></span><h3>Configuring your CometBft node keys<a class="headerlink" href="#configuring-your-cometbft-node-keys" title="Link to this heading"></a></h3>
-<p>The CometBft node is configured with a secret, based on the output from <a class="reference internal" href="#cometbft-identity"><span class="std std-ref">Generating the CometBft node identity</span></a>
+<span id="helm-cometbft-secrets-config"></span><h3>Configuring your CometBFT node keys<a class="headerlink" href="#configuring-your-cometbft-node-keys" title="Link to this heading"></a></h3>
+<p>The CometBFT node is configured with a secret, based on the output from <a class="reference internal" href="#cometbft-identity"><span class="std std-ref">Generating the CometBFT node identity</span></a>
 The secret is created as follows, with the <cite>node_key.json</cite> and <cite>priv_validator_key.json</cite> files representing the files generated as part of the node identity:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>create<span class="w"> </span>--namespace<span class="w"> </span>sv<span class="w"> </span>secret<span class="w"> </span>generic<span class="w"> </span>cometbft-keys<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span><span class="s2">&quot;--from-file=node_key.json=node_key.json&quot;</span><span class="w"> </span><span class="se">\</span>
@@ -1258,18 +1258,18 @@ The secret is created as follows, with the <cite>node_key.json</cite> and <cite>
 </div>
 </section>
 <section id="configuring-cometbft-state-sync">
-<span id="helm-cometbft-state-sync"></span><h3>Configuring CometBft state sync<a class="headerlink" href="#configuring-cometbft-state-sync" title="Link to this heading"></a></h3>
-<p>CometBft has a feature called state sync that allows a new peer to catch up quickly by reading a snapshot of data at or near the head of
-the chain and verifying it instead of fetching and replaying every block. (See <a class="reference external" href="https://docs.cometbft.com/v0.34/core/state-sync">CometBft documentation</a>).
+<span id="helm-cometbft-state-sync"></span><h3>Configuring CometBFT state sync<a class="headerlink" href="#configuring-cometbft-state-sync" title="Link to this heading"></a></h3>
+<p>CometBFT has a feature called state sync that allows a new peer to catch up quickly by reading a snapshot of data at or near the head of
+the chain and verifying it instead of fetching and replaying every block. (See <a class="reference external" href="https://docs.cometbft.com/v0.34/core/state-sync">CometBFT documentation</a>).
 This leads to drastically shorter times to onboard new nodes at the cost of new nodes having a truncated block history.
 Further, when the chain has been pruned, state sync needs to be enabled on new nodes in order to bootstrap them successfully.</p>
-<p>There are 3 main configuration parameters that control state sync in CometBft:</p>
+<p>There are 3 main configuration parameters that control state sync in CometBFT:</p>
 <ul class="simple">
-<li><p><cite>rpc_servers</cite> - The list of CometBft RPC servers to connect to in order to fetch snapshots</p></li>
+<li><p><cite>rpc_servers</cite> - The list of CometBFT RPC servers to connect to in order to fetch snapshots</p></li>
 <li><p><cite>trust_height</cite> - Height at which you should trust the chain</p></li>
 <li><p><cite>trust_hash</cite> - Hash corresponding to the trusted height</p></li>
 </ul>
-<p>A CometBft node installed using our helm charts (see <a class="reference internal" href="#helm-sv-install"><span class="std std-ref">Installing the Software</span></a>) with the default values set in
+<p>A CometBFT node installed using our helm charts (see <a class="reference internal" href="#helm-sv-install"><span class="std std-ref">Installing the Software</span></a>) with the default values set in
 <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/cometbft-values.yaml</span></code> automatically uses state sync for bootstrapping
 if:</p>
 <ul class="simple">
@@ -1277,7 +1277,7 @@ if:</p>
 <li><p>the block chain is mature enough for at least 1 state snapshot to have been taken i.e.
 the height of the latest block is greater than or equal to the configured interval between snapshots</p></li>
 </ul>
-<p>The snapshots are fetched from sv1 which exposes its CometBft RPC API at <cite>https://sv.sv-1.TARGET_HOSTNAME:443/cometbft-rpc/</cite>.
+<p>The snapshots are fetched from your onboarding sponsor which exposes its CometBFT RPC API at <cite>https://sv.sv-X.TARGET_HOSTNAME:443/cometbft-rpc/</cite>.
 This can be changed by setting <cite>stateSync.rpcServers</cite> accordingly. The <cite>trust_height</cite> and <cite>trust_hash</cite> are computed dynamically via an initialization script
 and setting them explicitly should not be required and is not currently supported.</p>
 </section>
@@ -1340,15 +1340,15 @@ you will also need to ensure that <cite>persistence.databaseName</cite> is uniqu
 cluster, you will need to meet a few preconditions. The first is that
 there needs to be an environment variable defined to refer to the
 version of the Helm charts necessary to connect to this environment:</p>
-<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.17-ci-snapshot.20250318.1.0.v2dca2100</span></code></p>
-<p>An SV node includes a CometBft node so you also need to configure
+<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.17-ci-snapshot.20250318.1.0.v43787e3a</span></code></p>
+<p>An SV node includes a CometBFT node so you also need to configure
 that. Please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/cometbft-values.yaml</span></code> as follows:</p>
 <ul class="simple">
 <li><p>Replace all instances of <code class="docutils literal notranslate"><span class="pre">TARGET_CLUSTER</span></code> with <span class="raw-html"><span class="splice-cluster">unknown_cluster</span></span>, per the cluster to which you are connecting.</p></li>
 <li><p>Replace all instances of <code class="docutils literal notranslate"><span class="pre">TARGET_HOSTNAME</span></code> with <span class="raw-html"><span class="splice-url-prefix">unknown_cluster.</span>global.canton.network.digitalasset.com</span>, per the cluster to which you are connecting.</p></li>
 <li><p>Replace all instances of <code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code> with the migration ID of the global synchronizer on your target cluster. Note that <code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code> is also used within port numbers in URLs here!</p></li>
 <li><p>Replace <code class="docutils literal notranslate"><span class="pre">YOUR_SV_NAME</span></code> with the name you chose when creating the SV identity (this must be an exact match of the string for your SV to be approved to onboard)</p></li>
-<li><p>Replace <code class="docutils literal notranslate"><span class="pre">YOUR_COMETBFT_NODE_ID</span></code> with the id obtained when generating the config for the CometBft node</p></li>
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">YOUR_COMETBFT_NODE_ID</span></code> with the id obtained when generating the config for the CometBFT node</p></li>
 <li><p>Replace <code class="docutils literal notranslate"><span class="pre">YOUR_HOSTNAME</span></code> with the hostname that will be used for the ingress</p></li>
 <li><p>Add <cite>db.volumeSize</cite> and <cite>db.volumeStorageClass</cite> to the values file adjust persistent storage size and storage class if necessary. (These values default to 20GiB and <cite>standard-rwo</cite>)</p></li>
 <li><p>Uncomment the appropriate <cite>nodeId</cite>, <cite>publicKey</cite> and <cite>keyAddress</cite> values in the <cite>sv1</cite> section as per the cluster to which you are connecting.</p></li>
@@ -1620,9 +1620,39 @@ Another reference Helm chart is provided for that, which can be installed after<
 </section>
 <section id="configuring-the-cluster-egress">
 <h2>Configuring the Cluster Egress<a class="headerlink" href="#configuring-the-cluster-egress" title="Link to this heading"></a></h2>
-<p>Here is a list of destinations of all outbound traffic from the Super Validator node.
+<p>Below is a complete list of destinations for outbound traffic from the Super Validator node.
 This list is useful for an SV that wishes to limit egress to only allow the minimum necessary outbound traffic.
-<code class="docutils literal notranslate"><span class="pre">M</span></code> will be used a shorthand for <code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">M</span></code> will be used a shorthand for <code class="docutils literal notranslate"><span class="pre">MIGRATION_ID</span></code>.
+The tables below are wide - you might need to scroll vertically to see the rightmost columns.</p>
+<p>Connectivity to the following destinations is required throughout operation to ensure the robustness of the ordering layer and scan:</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>Destination</p></td>
+<td><p>Url</p></td>
+<td><p>Protocol</p></td>
+<td><p>Source pod</p></td>
+</tr>
+<tr class="row-even"><td><p>CometBft P2P</p></td>
+<td><p>CometBft p2p IPs and ports 26&lt;M&gt;16, 26&lt;M&gt;26, 26&lt;M&gt;36, 26&lt;M&gt;46, 26&lt;M&gt;56</p></td>
+<td><p>TCP</p></td>
+<td><p>global-domain-&lt;M&gt;-cometbft</p></td>
+</tr>
+<tr class="row-odd"><td><p>All SV Scans</p></td>
+<td><p>all returned from <a class="reference external" href="https://scan.sv-1">https://scan.sv-1</a>.&lt;TARGET_HOSTNAME&gt;/api/scan/v0/scans</p></td>
+<td><p>HTTPS</p></td>
+<td><p>scan-app</p></td>
+</tr>
+</tbody>
+</table>
+<p>Connectivity from the local scan app to the scan instances of all other SVs is required so that the scan app can backfill its data in a <a class="reference internal" href="../glossary.html#term-BFT"><span class="xref std std-term">BFT</span></a> fashion.
+It might also be required in the future to support the operation of the ordering layer (post CometBFT).
+To get a list of all current scan instances, you can query the <code class="docutils literal notranslate"><span class="pre">/api/scan/v0/scans</span></code> endpoint on any scan instances known to you.
+For example using the sponsor’s scan instance (and with some optional post-processing using <a class="reference external" href="https://jqlang.org/">jq</a>):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>https://scan.sv-1.&lt;TARGET_HOSTNAME&gt;/api/scan/v0/scans<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;.scans.[].scans.[].publicUrl&#39;</span>
+</pre></div>
+</div>
+<p id="helm-sv-wallet-ui">In addition to above destinations,
+the SV node must be able to reach its onboarding sponsor and all scan instances for onboarding to the network:</p>
 <table class="docutils align-default">
 <tbody>
 <tr class="row-odd"><td><p>Destination</p></td>
@@ -1635,32 +1665,33 @@ This list is useful for an SV that wishes to limit egress to only allow the mini
 <td><p>HTTPS</p></td>
 <td><p>sv-app</p></td>
 </tr>
-<tr class="row-odd"><td><p>Sponsor SV Sequencer</p></td>
-<td><p>sequencer-&lt;M&gt;.sv-1.&lt;TARGET_HOSTNAME&gt;:443</p></td>
-<td><p>HTTPS</p></td>
-<td><p>participant-&lt;M&gt;</p></td>
-</tr>
-<tr class="row-even"><td><p>Sponsor SV Scan</p></td>
-<td><p>scan.sv-1.&lt;TARGET_HOSTNAME&gt;:443</p></td>
-<td><p>HTTPS</p></td>
-<td><p>validator-app</p></td>
-</tr>
-<tr class="row-odd"><td><p>CometBft P2P</p></td>
-<td><p>CometBft p2p IPs and ports 26&lt;M&gt;16, 26&lt;M&gt;26, 26&lt;M&gt;36, 26&lt;M&gt;46, 26&lt;M&gt;56</p></td>
-<td><p>TCP</p></td>
-<td><p>global-domain-&lt;M&gt;-cometbft</p></td>
-</tr>
-<tr class="row-even"><td><p>CometBft JSON RPC</p></td>
+<tr class="row-odd"><td><p>CometBft JSON RPC</p></td>
 <td><p>sv.sv-1.&lt;TARGET_HOSTNAME&gt;:443/api/sv/v0/admin/domain/cometbft/json-rpc</p></td>
 <td><p>HTTPS</p></td>
 <td><p>global-domain-&lt;M&gt;-cometbft</p></td>
 </tr>
+<tr class="row-even"><td><p>Sponsor SV Sequencer</p></td>
+<td><p>sequencer-&lt;M&gt;.sv-1.&lt;TARGET_HOSTNAME&gt;:443</p></td>
+<td><p>HTTPS</p></td>
+<td><p>participant-&lt;M&gt;</p></td>
+</tr>
+<tr class="row-odd"><td><p>Sponsor SV Scan</p></td>
+<td><p>scan.sv-1.&lt;TARGET_HOSTNAME&gt;:443</p></td>
+<td><p>HTTPS</p></td>
+<td><p>validator-app</p></td>
+</tr>
 </tbody>
 </table>
-<p>At present, we designate sv1 as the sponsor SV. However, in the long term, any onboarded SV can function as a sponsor SV.</p>
+<p>Note that you need to substitute both <code class="docutils literal notranslate"><span class="pre">&lt;TARGET_HOSTNAME&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">sv-1</span></code> in the above table to match the address of your SV onboarding sponsor.
+Note also that the address for the CometBft JSON RPC is configured in <code class="docutils literal notranslate"><span class="pre">cometbft-values.yaml</span></code> (under <code class="docutils literal notranslate"><span class="pre">stateSync.rpcServers</span></code>).
+Any onboarded SV can act as an SV onboarding sponsor.</p>
+<p>In general, connectivity to the sponsor SV (outside of scan) is only required during SV onboarding.
+Connectivity to the sponsor SV sequencer is required also for a limited transition time after onboarding
+during which the newly onboarded SV sequencer is not ready for use yet
+(60 seconds with the current Global Synchronizer configuration).</p>
 </section>
 <section id="logging-into-the-wallet-ui">
-<span id="helm-sv-wallet-ui"></span><h2>Logging into the wallet UI<a class="headerlink" href="#logging-into-the-wallet-ui" title="Link to this heading"></a></h2>
+<h2>Logging into the wallet UI<a class="headerlink" href="#logging-into-the-wallet-ui" title="Link to this heading"></a></h2>
 <p>After you deploy your ingress, open your browser at
 <a class="reference external" href="https://wallet.sv.YOUR_HOSTNAME">https://wallet.sv.YOUR_HOSTNAME</a> and login using the
 credentials for the user that you configured as

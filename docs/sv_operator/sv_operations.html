@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.17-ci-snapshot.20250318.1.0.v2dca2100
+                0.3.17-ci-snapshot.20250318.1.0.v43787e3a
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -195,10 +195,10 @@
 <li class="toctree-l4"><a class="reference internal" href="sv_helm.html#configuring-authentication-on-your-sv-node">Configuring Authentication on your SV Node</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#configuring-your-cometbft-node">Configuring your CometBft node</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#generating-your-cometbft-node-keys">Generating your CometBft node keys</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#configuring-your-cometbft-node-keys">Configuring your CometBft node keys</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#configuring-cometbft-state-sync">Configuring CometBft state sync</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#configuring-your-cometbft-node">Configuring your CometBFT node</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#generating-your-cometbft-node-keys">Generating your CometBFT node keys</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#configuring-your-cometbft-node-keys">Configuring your CometBFT node keys</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#configuring-cometbft-state-sync">Configuring CometBFT state sync</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="sv_helm.html#installing-postgres-instances">Installing Postgres instances</a><ul>
@@ -948,7 +948,7 @@ until the respective SV is offboarded from the DSO.</p></li>
 <h3>CometBFT node identities<a class="headerlink" href="#cometbft-node-identities" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Used within the CometBFT network spanned by SVs for operating the global synchronizer.
-See <a class="reference internal" href="sv_helm.html#cometbft-identity"><span class="std std-ref">Generating your CometBft node keys</span></a>.</p></li>
+See <a class="reference internal" href="sv_helm.html#cometbft-identity"><span class="std std-ref">Generating your CometBFT node keys</span></a>.</p></li>
 <li><p>The CometBFT validator key is used in CometBFT quorums (&gt;⅔ of SVs),
 which are required for advancing the CometBFT blockchain and changing the CometBFT configuration and validator set.</p></li>
 <li><p>Reusing CometBFT node identities can cause (transient) instability in the CometBFT network and is therefore not recommended.</p></li>
