@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.17-ci-snapshot.20250318.1.0.va8656aee
+                0.3.17-ci-snapshot.20250318.1.0.vd554111c
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -975,12 +975,12 @@ provides a JSON encoded version of the recorded update history. Once you have an
 <a class="reference external" href="scan_openapi.html#get--v0-updates-update_id">/v0/updates/{update_id}</a>.</p>
 <section id="id2">
 <span id="id3"></span><h4>POST /v1/updates<a class="headerlink" href="#id2" title="Link to this heading"></a></h4>
-<p>Post a paged <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/7345124f9f05395ab4797c0478c7e1dd37186369/apps/scan/src/main/openapi/scan.yaml#L1672">UpdateHistoryRequestV1</a>
-request to get all updates up to <code class="docutils literal notranslate"><span class="pre">page_size</span></code>.</p>
+<p>Post a paged update history request to get all updates up to <code class="docutils literal notranslate"><span class="pre">page_size</span></code>.
+Please see <a class="reference external" href="scan_openapi.html#post--v1-updates">POST /v1/updates</a> for more details.</p>
 <section id="requesting-all-updates">
 <h5>Requesting all updates<a class="headerlink" href="#requesting-all-updates" title="Link to this heading"></a></h5>
 <p>To get the first page of updates from the beginning of the network, omit the <code class="docutils literal notranslate"><span class="pre">after</span></code> field in the request body.</p>
-<p>An example of a <code class="docutils literal notranslate"><span class="pre">UpdateHistoryRequestV1</span></code> request body is shown below, getting a page of max 10 updates from the beginning of the network:</p>
+<p>An example of a request body is shown below, getting a page of max 10 updates from the beginning of the network:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;page_size&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span>
 <span class="p">}</span>
@@ -989,7 +989,7 @@ request to get all updates up to <code class="docutils literal notranslate"><spa
 <p>To get the next page of updates, take the <code class="docutils literal notranslate"><span class="pre">migration_id</span></code> and the <code class="docutils literal notranslate"><span class="pre">record_time</span></code> from the last update in the response of the previous successful request and use this
 in a subsequent request in the <code class="docutils literal notranslate"><span class="pre">after</span></code> object, to read the next page.
 Once you receive less updates than the requested <code class="docutils literal notranslate"><span class="pre">page_size</span></code>, you have reached the end of the stream.</p>
-<p>An example of a <code class="docutils literal notranslate"><span class="pre">UpdateHistoryRequestV1</span></code> request body is shown below, getting a page of max 10 updates after the specified record time:</p>
+<p>An example of a request body is shown below, getting a page of max 10 updates after the specified record time:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;page_size&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;after&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
@@ -1007,7 +1007,7 @@ where <code class="docutils literal notranslate"><span class="pre">after_record_
 and <code class="docutils literal notranslate"><span class="pre">after_migration_id</span></code> is the migration ID that was active at that time.</p>
 <p>Note that the record time ranges of different migrations may overlap,
 i.e., the record time can go back after a hard domain migration.
-Read the <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/893346e70b1220be999d89853a0f9ecae5083b08/apps/scan/src/main/openapi/scan.yaml#L1737">OpenAPI documentation</a>
+Read the <a class="reference external" href="https://github.com/hyperledger-labs/splice/blob/main/apps/scan/src/main/openapi/scan.yaml">OpenAPI documentation</a>
 to understand how the <code class="docutils literal notranslate"><span class="pre">after_migration_id</span></code> field affects the response.</p>
 <p>If you don’t know what migration ID was active at the chose time,
 start with migration ID 0 and keep incrementing it by one
@@ -1246,7 +1246,7 @@ which you can map against the template definitions in Daml source code and the <
 You can compute the state at any point in time by starting from a periodic snapshot and
 then stream updates from the timestamp of that snapshot. We’ll discuss this in more detail in the <a class="reference internal" href="#scan-txlog-script">Scan TxLog Script</a> section.</p>
 <section id="v0-state-acs-snapshot-timestamp">
-<span id="id6"></span><h4>GET /v0/state/acs/snapshot-timestamp<a class="headerlink" href="#v0-state-acs-snapshot-timestamp" title="Link to this heading"></a></h4>
+<span id="id7"></span><h4>GET /v0/state/acs/snapshot-timestamp<a class="headerlink" href="#v0-state-acs-snapshot-timestamp" title="Link to this heading"></a></h4>
 <p>The <a class="reference external" href="scan_openapi.html#get--v0-state-acs-snapshot-timestamp">/v0/state/acs/snapshot-timestamp</a> endpoint returns the timestamp of the most recent snapshot before the given date,
 for the given <code class="docutils literal notranslate"><span class="pre">migration_id</span></code>. Specify <code class="docutils literal notranslate"><span class="pre">migration_id</span> <span class="pre">=</span> <span class="pre">0</span></code> for the beginning of the network.
 The returned timestamp corresponds to the record time of the last transaction in the snapshot.</p>
@@ -1260,7 +1260,7 @@ The returned timestamp corresponds to the record time of the last transaction in
 </div>
 </section>
 <section id="v0-state-acs">
-<span id="id8"></span><h4>POST /v0/state/acs<a class="headerlink" href="#v0-state-acs" title="Link to this heading"></a></h4>
+<span id="id9"></span><h4>POST /v0/state/acs<a class="headerlink" href="#v0-state-acs" title="Link to this heading"></a></h4>
 <p>The <a class="reference external" href="scan_openapi.html#post--v0-state-acs">/v0/state/acs</a> endpoint returns the ACS in creation date ascending order, paged, for a given migration id and record time.
 Post an <code class="docutils literal notranslate"><span class="pre">AcsRequest</span></code> with a <code class="docutils literal notranslate"><span class="pre">migration_id</span></code>, <code class="docutils literal notranslate"><span class="pre">record_time</span></code> and <code class="docutils literal notranslate"><span class="pre">page_size</span></code> to get a page of contracts.
 An optional <code class="docutils literal notranslate"><span class="pre">templates</span></code> field filters the ACS by a set of <code class="docutils literal notranslate"><span class="pre">template_id</span></code>s.</p>
