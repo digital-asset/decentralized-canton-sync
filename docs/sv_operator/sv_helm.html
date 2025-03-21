@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.18-ci-snapshot.20250321.1.0.vfa074b92
+                0.3.18-ci-snapshot.20250321.1.0.v4425a0ef
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -899,9 +899,9 @@ target cluster.</p>
 </div></blockquote>
 </li>
 <li><p>Your cluster needs a static egress IP. After acquiring that, propose to the other SVs to add it to the IP allowlist.</p></li>
-<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.18-ci-snapshot.20250321.1.0.vfa074b92_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
+<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.18-ci-snapshot.20250321.1.0.v4425a0ef_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
 </ol>
-<pre class="literal-block">tar xzvf 0.3.18-ci-snapshot.20250321.1.0.vfa074b92_splice-node.tar.gz</pre>
+<pre class="literal-block">tar xzvf 0.3.18-ci-snapshot.20250321.1.0.v4425a0ef_splice-node.tar.gz</pre>
 <ol class="arabic simple" start="5">
 <li><p>Please inquire if the global synchronizer (domain) on your target network has previously undergone a <a class="reference internal" href="sv_major_upgrade.html#sv-upgrades"><span class="std std-ref">synchronizer migration</span></a>.
 If it has, please record the current migration ID of the synchronizer.
@@ -1236,9 +1236,9 @@ To do that, you first must generate the keys that will identify the node.</p>
 mkdir cometbft
 cd cometbft
 # Init the node
-docker run --rm -v &quot;$(pwd):/init&quot; ghcr.io/digital-asset/decentralized-canton-sync/docker/cometbft:0.3.18-ci-snapshot.20250321.1.0.vfa074b92 init --home /init
+docker run --rm -v &quot;$(pwd):/init&quot; ghcr.io/digital-asset/decentralized-canton-sync/docker/cometbft:0.3.18-ci-snapshot.20250321.1.0.v4425a0ef init --home /init
 # Read the node id and keep a note of it for the deployment
-docker run --rm -v &quot;$(pwd):/init&quot; ghcr.io/digital-asset/decentralized-canton-sync/docker/cometbft:0.3.18-ci-snapshot.20250321.1.0.vfa074b92 show-node-id --home /init</pre>
+docker run --rm -v &quot;$(pwd):/init&quot; ghcr.io/digital-asset/decentralized-canton-sync/docker/cometbft:0.3.18-ci-snapshot.20250321.1.0.v4425a0ef show-node-id --home /init</pre>
 <p>Please keep a note of the node ID printed out above.</p>
 <p>In addition, please retain some of the configuration files generated, as follows (you might need to change the permissions/ownership for them as they are accessible only by the root user):</p>
 <div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="n">cometbft</span><span class="o">/</span><span class="n">config</span><span class="o">/</span><span class="n">node_key</span><span class="p">.</span><span class="n">json</span>
@@ -1340,7 +1340,7 @@ you will also need to ensure that <cite>persistence.databaseName</cite> is uniqu
 cluster, you will need to meet a few preconditions. The first is that
 there needs to be an environment variable defined to refer to the
 version of the Helm charts necessary to connect to this environment:</p>
-<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.18-ci-snapshot.20250321.1.0.vfa074b92</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.18-ci-snapshot.20250321.1.0.v4425a0ef</span></code></p>
 <p>An SV node includes a CometBFT node so you also need to configure
 that. Please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/cometbft-values.yaml</span></code> as follows:</p>
 <ul class="simple">
