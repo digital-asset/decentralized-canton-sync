@@ -6,11 +6,12 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ $validatorAppLabel }}
-  namespace: {{ .Release.Namespace }}
   labels:
+    {{- toYaml .Values.pod.labels | nindent 4 }}
     app: {{ $validatorAppLabel }}
     migration: {{ .Values.migration.id | quote }}
+  name: {{ $validatorAppLabel }}
+  namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
   selector:
@@ -23,6 +24,7 @@ spec:
       annotations:
         {{- toYaml .Values.pod.annotations | nindent 8 }}
       labels:
+        {{- toYaml .Values.pod.labels | nindent 8 }}
         app: {{ $validatorAppLabel }}
         migration: {{ .Values.migration.id | quote }}
     spec:

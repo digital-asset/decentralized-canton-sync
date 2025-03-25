@@ -6,6 +6,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
+    {{- toYaml .Values.pod.labels | nindent 4 }}
     app: {{ $ansWebUiLabel }}
     migration: {{ .Values.migration.id | quote }}
   name: {{ $ansWebUiLabel }}
@@ -22,6 +23,7 @@ spec:
       annotations:
         {{- toYaml .Values.pod.annotations | nindent 8 }}
       labels:
+        {{- toYaml .Values.pod.labels | nindent 8 }}
         app: {{ $ansWebUiLabel }}
         migration: {{ .Values.migration.id | quote }}
     spec:
