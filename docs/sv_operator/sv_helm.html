@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.18-ci-snapshot.20250326.1.0.v0d7b278f
+                0.3.18-ci-snapshot.20250326.1.0.vf856c5b1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -900,9 +900,9 @@ target cluster.</p>
 </div></blockquote>
 </li>
 <li><p>Your cluster needs a static egress IP. After acquiring that, propose to the other SVs to add it to the IP allowlist.</p></li>
-<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.18-ci-snapshot.20250326.1.0.v0d7b278f_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
+<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.18-ci-snapshot.20250326.1.0.vf856c5b1_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
 </ol>
-<pre class="literal-block">tar xzvf 0.3.18-ci-snapshot.20250326.1.0.v0d7b278f_splice-node.tar.gz</pre>
+<pre class="literal-block">tar xzvf 0.3.18-ci-snapshot.20250326.1.0.vf856c5b1_splice-node.tar.gz</pre>
 <ol class="arabic simple" start="5">
 <li><p>Please inquire if the global synchronizer (domain) on your target network has previously undergone a <a class="reference internal" href="sv_major_upgrade.html#sv-upgrades"><span class="std std-ref">synchronizer migration</span></a>.
 If it has, please record the current migration ID of the synchronizer.
@@ -1237,9 +1237,9 @@ To do that, you first must generate the keys that will identify the node.</p>
 mkdir cometbft
 cd cometbft
 # Init the node
-docker run --rm -v &quot;$(pwd):/init&quot; ghcr.io/digital-asset/decentralized-canton-sync/docker/cometbft:0.3.18-ci-snapshot.20250326.1.0.v0d7b278f init --home /init
+docker run --rm -v &quot;$(pwd):/init&quot; ghcr.io/digital-asset/decentralized-canton-sync/docker/cometbft:0.3.18-ci-snapshot.20250326.1.0.vf856c5b1 init --home /init
 # Read the node id and keep a note of it for the deployment
-docker run --rm -v &quot;$(pwd):/init&quot; ghcr.io/digital-asset/decentralized-canton-sync/docker/cometbft:0.3.18-ci-snapshot.20250326.1.0.v0d7b278f show-node-id --home /init</pre>
+docker run --rm -v &quot;$(pwd):/init&quot; ghcr.io/digital-asset/decentralized-canton-sync/docker/cometbft:0.3.18-ci-snapshot.20250326.1.0.vf856c5b1 show-node-id --home /init</pre>
 <p>Please keep a note of the node ID printed out above.</p>
 <p>In addition, please retain some of the configuration files generated, as follows (you might need to change the permissions/ownership for them as they are accessible only by the root user):</p>
 <div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="n">cometbft</span><span class="o">/</span><span class="n">config</span><span class="o">/</span><span class="n">node_key</span><span class="p">.</span><span class="n">json</span>
@@ -1341,7 +1341,7 @@ you will also need to ensure that <cite>persistence.databaseName</cite> is uniqu
 cluster, you will need to meet a few preconditions. The first is that
 there needs to be an environment variable defined to refer to the
 version of the Helm charts necessary to connect to this environment:</p>
-<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.18-ci-snapshot.20250326.1.0.v0d7b278f</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.18-ci-snapshot.20250326.1.0.vf856c5b1</span></code></p>
 <p>An SV node includes a CometBFT node so you also need to configure
 that. Please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/cometbft-values.yaml</span></code> as follows:</p>
 <ul class="simple">
@@ -1519,8 +1519,16 @@ as they ommit the <code class="docutils literal notranslate"><span class="pre">e
 </section>
 <section id="ingress-configuration">
 <h3>Ingress Configuration<a class="headerlink" href="#ingress-configuration" title="Link to this heading"></a></h3>
-<p>An IP whitelisting json file <code class="docutils literal notranslate"><span class="pre">allowed-ip-ranges.json</span></code> will be provided in each SV operations announcement corresponding to the network to which you are connecting.
-This file contains other clusters’ egress IPs that require access to your super validator’s components. For example, it contains IPs belonging to peer super-validators and validators.</p>
+<p>An IP whitelisting json file <code class="docutils literal notranslate"><span class="pre">allowed-ip-ranges.json</span></code> is maintained for each relevant network (DevNet, TestNet, MainNet) in the
+<a class="reference external" href="https://github.com/global-synchronizer-foundation/configs-private">private SV configs repo</a>.
+This file contains other clusters’ egress IPs that require access to your SV’s components. For example, it contains IPs belonging to peer super-validators and validators.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>To keep the attack surface on your SV deployment and the Global Synchronizer small,
+please ensure that only traffic from trusted IPs -
+IPs from the whitelist file and any IPs that you manually verified and explicitly trust yourself -
+can reach your SV deployment.</p>
+</div>
 <p>Each SV is required to configure their cluster ingress to allow traffic from these IPs to be operational.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">https://wallet.sv.&lt;YOUR_HOSTNAME&gt;</span></code> should be routed to service <code class="docutils literal notranslate"><span class="pre">wallet-web-ui</span></code> in the <code class="docutils literal notranslate"><span class="pre">sv</span></code> namespace.</p></li>
@@ -1535,6 +1543,12 @@ Please note that cometBFT traffic is purely TCP. TLS is not supported so SNI hos
 <li><p><code class="docutils literal notranslate"><span class="pre">https://cns.sv.&lt;YOUR_HOSTNAME&gt;/api/validator</span></code> should be routed to <code class="docutils literal notranslate"><span class="pre">/api/validator</span></code> at port 5003 of service <code class="docutils literal notranslate"><span class="pre">validator-app</span></code> in the <code class="docutils literal notranslate"><span class="pre">sv</span></code> namespace.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">https://sequencer-&lt;MIGRATION_ID&gt;.sv.&lt;YOUR_HOSTNAME&gt;</span></code> should be routed to port 5008 of service <code class="docutils literal notranslate"><span class="pre">global-domain-&lt;MIGRATION_ID&gt;-sequencer</span></code> in the <code class="docutils literal notranslate"><span class="pre">sv</span></code> namespace.</p></li>
 </ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>To keep the attack surface on your SV deployment and the Global Synchronizer small,
+please disallow ingress connections to all other services in your SV deployment.
+It should be assumed that opening up <em>any</em> additional port or service represents a security risk that needs to be carefully evaluated on a case-by-case basis.</p>
+</div>
 <p>Internet ingress configuration is often specific to the network configuration and scenario of the
 cluster being configured. To illustrate the basic requirements of an SV node ingress, we have
 provided a Helm chart that configures the above cluster according to the routes above, as detailed in the sections below.</p>
