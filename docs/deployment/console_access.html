@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.19-snapshot.20250331.1.0.vd8c12d82
+                0.3.19-snapshot.20250401.1.0.vca4abc5c
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -934,9 +934,7 @@ Steps to obtain such access:</p>
 </li>
 <li><p>Run the docker command</p>
 <blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>--rm<span class="w"> </span>--network<span class="w"> </span>host<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/console.conf:/app/app.conf<span class="w"> </span>ghcr.io/digital-asset/decentralized-canton-sync/docker/canton:<span class="p">|</span>version_literal<span class="p">|</span><span class="w"> </span>--console
-</pre></div>
-</div>
+<div><pre class="literal-block">docker run -it --rm --network host -v $(pwd)/console.conf:/app/app.conf ghcr.io/digital-asset/decentralized-canton-sync-dev/docker/canton:<code class="docutils literal notranslate"><span class="pre">0.3.19-snapshot.20250401.1.0.vca4abc5c</span></code> --console</pre>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>If you run the participant using the docker compose setup the docker command must be run with the docker network used by the participant.
@@ -964,9 +962,7 @@ Adjust the configuration to connect to the participant container:</p>
 </div>
 </div></blockquote>
 <p>Running docker with the default network (<cite>splice-validator</cite>):</p>
-<div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span><span class="w"> </span><span class="n">run</span><span class="w"> </span><span class="o">-</span><span class="n">it</span><span class="w"> </span><span class="o">--</span><span class="n">rm</span><span class="w"> </span><span class="o">--</span><span class="n">network</span><span class="w"> </span><span class="n">splice</span><span class="o">-</span><span class="n">validator</span><span class="w"> </span><span class="o">-</span><span class="n">v</span><span class="w"> </span><span class="n">$</span><span class="p">(</span><span class="n">pwd</span><span class="p">)</span><span class="o">/</span><span class="n">console</span><span class="p">.</span><span class="n">conf</span><span class="p">:</span><span class="o">/</span><span class="n">app</span><span class="o">/</span><span class="n">app</span><span class="p">.</span><span class="n">conf</span><span class="w"> </span><span class="n">ghcr</span><span class="p">.</span><span class="n">io</span><span class="o">/</span><span class="n">digital</span><span class="o">-</span><span class="n">asset</span><span class="o">/</span><span class="n">decentralized</span><span class="o">-</span><span class="n">canton</span><span class="o">-</span><span class="n">sync</span><span class="o">/</span><span class="n">docker</span><span class="o">/</span><span class="n">canton</span><span class="p">:</span><span class="o">|</span><span class="n">version_literal</span><span class="o">|</span><span class="w"> </span><span class="o">--</span><span class="n">console</span>
-</pre></div>
-</div>
+<pre class="literal-block">docker run -it --rm --network splice-validator -v $(pwd)/console.conf:/app/app.conf ghcr.io/digital-asset/decentralized-canton-sync-dev/docker/canton:<code class="docutils literal notranslate"><span class="pre">0.3.19-snapshot.20250401.1.0.vca4abc5c</span></code> --console</pre>
 </div>
 </div></blockquote>
 </li>
@@ -1001,9 +997,7 @@ Adjust the configuration to connect to the participant container:</p>
 </li>
 <li><p>Run the docker command</p>
 <blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>--rm<span class="w"> </span>--network<span class="w"> </span>host<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/console.conf:/app/app.conf<span class="w"> </span>ghcr.io/digital-asset/decentralized-canton-sync/docker/canton:<span class="p">|</span>version_literal<span class="p">|</span><span class="w"> </span>--console
-</pre></div>
-</div>
+<div><pre class="literal-block">docker run -it --rm --network host -v $(pwd)/console.conf:/app/app.conf ghcr.io/digital-asset/decentralized-canton-sync-dev/docker/canton:<code class="docutils literal notranslate"><span class="pre">0.3.19-snapshot.20250401.1.0.vca4abc5c</span></code> --console</pre>
 </div></blockquote>
 </li>
 </ol>
@@ -1033,9 +1027,7 @@ Adjust the configuration to connect to the participant container:</p>
 </li>
 <li><p>Run the docker command</p>
 <blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>--rm<span class="w"> </span>--network<span class="w"> </span>host<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/console.conf:/app/app.conf<span class="w"> </span>ghcr.io/digital-asset/decentralized-canton-sync/docker/canton:<span class="p">|</span>version_literal<span class="p">|</span><span class="w"> </span>--console
-</pre></div>
-</div>
+<div><pre class="literal-block">docker run -it --rm --network host -v $(pwd)/console.conf:/app/app.conf ghcr.io/digital-asset/decentralized-canton-sync-dev/docker/canton:<code class="docutils literal notranslate"><span class="pre">0.3.19-snapshot.20250401.1.0.vca4abc5c</span></code> --console</pre>
 </div></blockquote>
 </li>
 </ol>
