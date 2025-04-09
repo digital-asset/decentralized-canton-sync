@@ -53,6 +53,8 @@ Data Types
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"sequencingKeys\" `CometBftConfig <type-splice-cometbft-cometbftconfig-79018_>`_ \[`SequencingKeyConfig <type-splice-cometbft-sequencingkeyconfig-30402_>`_\]
 
+  **instance** Patchable `CometBftConfig <type-splice-cometbft-cometbftconfig-79018_>`_
+
 .. _type-splice-cometbft-cometbftconfiglimits-81004:
 
 **data** `CometBftConfigLimits <type-splice-cometbft-cometbftconfiglimits-81004_>`_
@@ -114,6 +116,8 @@ Data Types
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"maxPubKeyLength\" `CometBftConfigLimits <type-splice-cometbft-cometbftconfiglimits-81004_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
 
+  **instance** Patchable `CometBftConfigLimits <type-splice-cometbft-cometbftconfiglimits-81004_>`_
+
 .. _type-splice-cometbft-cometbftnodeconfig-40106:
 
 **data** `CometBftNodeConfig <type-splice-cometbft-cometbftnodeconfig-40106_>`_
@@ -154,6 +158,8 @@ Data Types
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"votingPower\" `CometBftNodeConfig <type-splice-cometbft-cometbftnodeconfig-40106_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
 
+  **instance** Patchable `CometBftNodeConfig <type-splice-cometbft-cometbftnodeconfig-40106_>`_
+
 .. _type-splice-cometbft-governancekeyconfig-71820:
 
 **data** `GovernanceKeyConfig <type-splice-cometbft-governancekeyconfig-71820_>`_
@@ -177,6 +183,8 @@ Data Types
 
   **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `GovernanceKeyConfig <type-splice-cometbft-governancekeyconfig-71820_>`_
 
+  **instance** `Ord <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-ord-6395>`_ `GovernanceKeyConfig <type-splice-cometbft-governancekeyconfig-71820_>`_
+
   **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `GovernanceKeyConfig <type-splice-cometbft-governancekeyconfig-71820_>`_
 
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"governanceKeys\" `CometBftConfig <type-splice-cometbft-cometbftconfig-79018_>`_ \[`GovernanceKeyConfig <type-splice-cometbft-governancekeyconfig-71820_>`_\]
@@ -186,6 +194,8 @@ Data Types
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"governanceKeys\" `CometBftConfig <type-splice-cometbft-cometbftconfig-79018_>`_ \[`GovernanceKeyConfig <type-splice-cometbft-governancekeyconfig-71820_>`_\]
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"pubKey\" `GovernanceKeyConfig <type-splice-cometbft-governancekeyconfig-71820_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** Patchable `GovernanceKeyConfig <type-splice-cometbft-governancekeyconfig-71820_>`_
 
 .. _type-splice-cometbft-sequencingkeyconfig-30402:
 
@@ -210,6 +220,8 @@ Data Types
 
   **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `SequencingKeyConfig <type-splice-cometbft-sequencingkeyconfig-30402_>`_
 
+  **instance** `Ord <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-ord-6395>`_ `SequencingKeyConfig <type-splice-cometbft-sequencingkeyconfig-30402_>`_
+
   **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `SequencingKeyConfig <type-splice-cometbft-sequencingkeyconfig-30402_>`_
 
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"pubKey\" `SequencingKeyConfig <type-splice-cometbft-sequencingkeyconfig-30402_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
@@ -219,6 +231,8 @@ Data Types
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"pubKey\" `SequencingKeyConfig <type-splice-cometbft-sequencingkeyconfig-30402_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"sequencingKeys\" `CometBftConfig <type-splice-cometbft-cometbftconfig-79018_>`_ \[`SequencingKeyConfig <type-splice-cometbft-sequencingkeyconfig-30402_>`_\]
+
+  **instance** Patchable `SequencingKeyConfig <type-splice-cometbft-sequencingkeyconfig-30402_>`_
 
 Functions
 ---------

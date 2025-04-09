@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.20-snapshot.20250409.1.0.v829b1f27
+                0.3.20-snapshot.20250409.1.0.v2e663cf7
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -997,6 +997,7 @@ to a new synchronizer protocol version.</p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;decentralizedSynchronizer&quot; (<a class="reference internal" href="Splice-AmuletConfig.html#type-splice-amuletconfig-amuletconfig-37414"><span class="std std-ref">AmuletConfig</span></a> unit) <a class="reference internal" href="#type-splice-decentralizedsynchronizer-amuletdecentralizedsynchronizerconfig-15126">AmuletDecentralizedSynchronizerConfig</a></p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;fees&quot; <a class="reference internal" href="#type-splice-decentralizedsynchronizer-amuletdecentralizedsynchronizerconfig-15126">AmuletDecentralizedSynchronizerConfig</a> <a class="reference internal" href="#type-splice-decentralizedsynchronizer-synchronizerfeesconfig-12142">SynchronizerFeesConfig</a></p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;requiredSynchronizers&quot; <a class="reference internal" href="#type-splice-decentralizedsynchronizer-amuletdecentralizedsynchronizerconfig-15126">AmuletDecentralizedSynchronizerConfig</a> (<a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Set.html#type-da-set-types-set-90436">Set</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952">Text</a>)</p>
+<p><strong>instance</strong> Patchable <a class="reference internal" href="#type-splice-decentralizedsynchronizer-amuletdecentralizedsynchronizerconfig-15126">AmuletDecentralizedSynchronizerConfig</a></p>
 </div></blockquote>
 <p id="type-splice-decentralizedsynchronizer-baseratetrafficlimits-64372"><strong>data</strong> <a class="reference internal" href="#type-splice-decentralizedsynchronizer-baseratetrafficlimits-64372">BaseRateTrafficLimits</a></p>
 <blockquote>
@@ -1036,6 +1037,7 @@ It defines the base rate as allowing at most burstAmount of sequencing traffic w
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;baseRateTrafficLimits&quot; <a class="reference internal" href="#type-splice-decentralizedsynchronizer-synchronizerfeesconfig-12142">SynchronizerFeesConfig</a> <a class="reference internal" href="#type-splice-decentralizedsynchronizer-baseratetrafficlimits-64372">BaseRateTrafficLimits</a></p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;burstAmount&quot; <a class="reference internal" href="#type-splice-decentralizedsynchronizer-baseratetrafficlimits-64372">BaseRateTrafficLimits</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261">Int</a></p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;burstWindow&quot; <a class="reference internal" href="#type-splice-decentralizedsynchronizer-baseratetrafficlimits-64372">BaseRateTrafficLimits</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082">RelTime</a></p>
+<p><strong>instance</strong> Patchable <a class="reference internal" href="#type-splice-decentralizedsynchronizer-baseratetrafficlimits-64372">BaseRateTrafficLimits</a></p>
 </div></blockquote>
 <p id="type-splice-decentralizedsynchronizer-formembertraffic-62879"><strong>data</strong> <a class="reference internal" href="#type-splice-decentralizedsynchronizer-formembertraffic-62879">ForMemberTraffic</a></p>
 <blockquote>
@@ -1134,6 +1136,7 @@ It defines the base rate as allowing at most burstAmount of sequencing traffic w
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;fees&quot; <a class="reference internal" href="#type-splice-decentralizedsynchronizer-amuletdecentralizedsynchronizerconfig-15126">AmuletDecentralizedSynchronizerConfig</a> <a class="reference internal" href="#type-splice-decentralizedsynchronizer-synchronizerfeesconfig-12142">SynchronizerFeesConfig</a></p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;minTopupAmount&quot; <a class="reference internal" href="#type-splice-decentralizedsynchronizer-synchronizerfeesconfig-12142">SynchronizerFeesConfig</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261">Int</a></p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;readVsWriteScalingFactor&quot; <a class="reference internal" href="#type-splice-decentralizedsynchronizer-synchronizerfeesconfig-12142">SynchronizerFeesConfig</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261">Int</a></p>
+<p><strong>instance</strong> Patchable <a class="reference internal" href="#type-splice-decentralizedsynchronizer-synchronizerfeesconfig-12142">SynchronizerFeesConfig</a></p>
 </div></blockquote>
 </section>
 <section id="functions">

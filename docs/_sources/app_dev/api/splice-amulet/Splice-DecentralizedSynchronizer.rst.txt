@@ -108,6 +108,8 @@ Data Types
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"requiredSynchronizers\" `AmuletDecentralizedSynchronizerConfig <type-splice-decentralizedsynchronizer-amuletdecentralizedsynchronizerconfig-15126_>`_ (`Set <https://docs.daml.com/daml/stdlib/DA-Set.html#type-da-set-types-set-90436>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_)
 
+  **instance** Patchable `AmuletDecentralizedSynchronizerConfig <type-splice-decentralizedsynchronizer-amuletdecentralizedsynchronizerconfig-15126_>`_
+
 .. _type-splice-decentralizedsynchronizer-baseratetrafficlimits-64372:
 
 **data** `BaseRateTrafficLimits <type-splice-decentralizedsynchronizer-baseratetrafficlimits-64372_>`_
@@ -148,6 +150,8 @@ Data Types
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"burstAmount\" `BaseRateTrafficLimits <type-splice-decentralizedsynchronizer-baseratetrafficlimits-64372_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"burstWindow\" `BaseRateTrafficLimits <type-splice-decentralizedsynchronizer-baseratetrafficlimits-64372_>`_ `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_
+
+  **instance** Patchable `BaseRateTrafficLimits <type-splice-decentralizedsynchronizer-baseratetrafficlimits-64372_>`_
 
 .. _type-splice-decentralizedsynchronizer-formembertraffic-62879:
 
@@ -252,6 +256,8 @@ Data Types
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"minTopupAmount\" `SynchronizerFeesConfig <type-splice-decentralizedsynchronizer-synchronizerfeesconfig-12142_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"readVsWriteScalingFactor\" `SynchronizerFeesConfig <type-splice-decentralizedsynchronizer-synchronizerfeesconfig-12142_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** Patchable `SynchronizerFeesConfig <type-splice-decentralizedsynchronizer-synchronizerfeesconfig-12142_>`_
 
 Functions
 ---------

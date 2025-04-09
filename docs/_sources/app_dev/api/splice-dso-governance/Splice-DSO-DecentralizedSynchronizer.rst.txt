@@ -61,6 +61,8 @@ Data Types
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"synchronizers\" `DsoDecentralizedSynchronizerConfig <type-splice-dso-decentralizedsynchronizer-dsodecentralizedsynchronizerconfig-15965_>`_ (`Map <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-map-90052>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_ `SynchronizerConfig <type-splice-dso-decentralizedsynchronizer-synchronizerconfig-49093_>`_)
 
+  **instance** Patchable `DsoDecentralizedSynchronizerConfig <type-splice-dso-decentralizedsynchronizer-dsodecentralizedsynchronizerconfig-15965_>`_
+
 .. _type-splice-dso-decentralizedsynchronizer-legacysequencerconfig-76078:
 
 **data** `LegacySequencerConfig <type-splice-dso-decentralizedsynchronizer-legacysequencerconfig-76078_>`_
@@ -108,6 +110,8 @@ Data Types
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"url\" `LegacySequencerConfig <type-splice-dso-decentralizedsynchronizer-legacysequencerconfig-76078_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
 
+  **instance** Patchable `LegacySequencerConfig <type-splice-dso-decentralizedsynchronizer-legacysequencerconfig-76078_>`_
+
 .. _type-splice-dso-decentralizedsynchronizer-mediatorconfig-99298:
 
 **data** `MediatorConfig <type-splice-dso-decentralizedsynchronizer-mediatorconfig-99298_>`_
@@ -141,6 +145,8 @@ Data Types
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"mediatorId\" `MediatorConfig <type-splice-dso-decentralizedsynchronizer-mediatorconfig-99298_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
 
+  **instance** Patchable `MediatorConfig <type-splice-dso-decentralizedsynchronizer-mediatorconfig-99298_>`_
+
 .. _type-splice-dso-decentralizedsynchronizer-scanconfig-87910:
 
 **data** `ScanConfig <type-splice-dso-decentralizedsynchronizer-scanconfig-87910_>`_
@@ -173,6 +179,8 @@ Data Types
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"publicUrl\" `ScanConfig <type-splice-dso-decentralizedsynchronizer-scanconfig-87910_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"scan\" `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `ScanConfig <type-splice-dso-decentralizedsynchronizer-scanconfig-87910_>`_)
+
+  **instance** Patchable `ScanConfig <type-splice-dso-decentralizedsynchronizer-scanconfig-87910_>`_
 
 .. _type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423:
 
@@ -228,6 +236,8 @@ Data Types
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"url\" `SequencerConfig <type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
 
+  **instance** Patchable `SequencerConfig <type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423_>`_
+
 .. _type-splice-dso-decentralizedsynchronizer-synchronizerconfig-49093:
 
 **data** `SynchronizerConfig <type-splice-dso-decentralizedsynchronizer-synchronizerconfig-49093_>`_
@@ -275,6 +285,8 @@ Data Types
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"state\" `SynchronizerConfig <type-splice-dso-decentralizedsynchronizer-synchronizerconfig-49093_>`_ `SynchronizerState <type-splice-dso-decentralizedsynchronizer-synchronizerstate-25483_>`_
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"synchronizers\" `DsoDecentralizedSynchronizerConfig <type-splice-dso-decentralizedsynchronizer-dsodecentralizedsynchronizerconfig-15965_>`_ (`Map <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-map-90052>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_ `SynchronizerConfig <type-splice-dso-decentralizedsynchronizer-synchronizerconfig-49093_>`_)
+
+  **instance** Patchable `SynchronizerConfig <type-splice-dso-decentralizedsynchronizer-synchronizerconfig-49093_>`_
 
 .. _type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457:
 
@@ -337,6 +349,8 @@ Data Types
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"sequencer\" `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `SequencerConfig <type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423_>`_)
 
+  **instance** Patchable `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_
+
 .. _type-splice-dso-decentralizedsynchronizer-synchronizernodeconfiglimits-3659:
 
 **data** `SynchronizerNodeConfigLimits <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfiglimits-3659_>`_
@@ -367,6 +381,8 @@ Data Types
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"cometBft\" `SynchronizerNodeConfigLimits <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfiglimits-3659_>`_ :ref:`CometBftConfigLimits <type-splice-cometbft-cometbftconfiglimits-81004>`
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"synchronizerNodeConfigLimits\" :ref:`DsoRulesConfig <type-splice-dsorules-dsorulesconfig-6376>` `SynchronizerNodeConfigLimits <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfiglimits-3659_>`_
+
+  **instance** Patchable `SynchronizerNodeConfigLimits <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfiglimits-3659_>`_
 
 .. _type-splice-dso-decentralizedsynchronizer-synchronizernodeconfigmap-59848:
 
@@ -427,6 +443,8 @@ Data Types
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"state\" `SynchronizerConfig <type-splice-dso-decentralizedsynchronizer-synchronizerconfig-49093_>`_ `SynchronizerState <type-splice-dso-decentralizedsynchronizer-synchronizerstate-25483_>`_
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"state\" `SynchronizerConfig <type-splice-dso-decentralizedsynchronizer-synchronizerconfig-49093_>`_ `SynchronizerState <type-splice-dso-decentralizedsynchronizer-synchronizerstate-25483_>`_
+
+  **instance** Patchable `SynchronizerState <type-splice-dso-decentralizedsynchronizer-synchronizerstate-25483_>`_
 
 Functions
 ---------

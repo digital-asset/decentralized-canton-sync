@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.20-snapshot.20250409.1.0.v829b1f27
+                0.3.20-snapshot.20250409.1.0.v2e663cf7
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -969,6 +969,7 @@ TODO(M3-90): check whether this name matches usage in financial terms, it probab
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;createFee&quot; (<a class="reference internal" href="Splice-AmuletConfig.html#type-splice-amuletconfig-transferconfig-45691"><span class="std std-ref">TransferConfig</span></a> unit) <a class="reference internal" href="#type-splice-fees-fixedfee-53985">FixedFee</a></p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;fee&quot; <a class="reference internal" href="#type-splice-fees-fixedfee-53985">FixedFee</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135">Decimal</a></p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;lockHolderFee&quot; (<a class="reference internal" href="Splice-AmuletConfig.html#type-splice-amuletconfig-transferconfig-45691"><span class="std std-ref">TransferConfig</span></a> unit) <a class="reference internal" href="#type-splice-fees-fixedfee-53985">FixedFee</a></p>
+<p><strong>instance</strong> Patchable <a class="reference internal" href="#type-splice-fees-fixedfee-53985">FixedFee</a></p>
 </div></blockquote>
 <p id="type-splice-fees-rateperround-90570"><strong>data</strong> <a class="reference internal" href="#type-splice-fees-rateperround-90570">RatePerRound</a></p>
 <blockquote>
@@ -1003,6 +1004,7 @@ TODO(M3-90): check whether this name matches usage in financial terms, it probab
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;holdingFee&quot; (<a class="reference internal" href="Splice-AmuletConfig.html#type-splice-amuletconfig-transferconfig-45691"><span class="std std-ref">TransferConfig</span></a> unit) <a class="reference internal" href="#type-splice-fees-rateperround-90570">RatePerRound</a></p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;rate&quot; <a class="reference internal" href="#type-splice-fees-rateperround-90570">RatePerRound</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135">Decimal</a></p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;ratePerRound&quot; <a class="reference internal" href="#type-splice-fees-expiringamount-39537">ExpiringAmount</a> <a class="reference internal" href="#type-splice-fees-rateperround-90570">RatePerRound</a></p>
+<p><strong>instance</strong> Patchable <a class="reference internal" href="#type-splice-fees-rateperround-90570">RatePerRound</a></p>
 </div></blockquote>
 <p id="type-splice-fees-steppedrate-36691"><strong>data</strong> <a class="reference internal" href="#type-splice-fees-steppedrate-36691">SteppedRate</a></p>
 <blockquote>
@@ -1045,6 +1047,7 @@ and 0.001% for everything above that.</p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;initialRate&quot; <a class="reference internal" href="#type-splice-fees-steppedrate-36691">SteppedRate</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135">Decimal</a></p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;steps&quot; <a class="reference internal" href="#type-splice-fees-steppedrate-36691">SteppedRate</a> [(<a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135">Decimal</a>, <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135">Decimal</a>)]</p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;transferFee&quot; (<a class="reference internal" href="Splice-AmuletConfig.html#type-splice-amuletconfig-transferconfig-45691"><span class="std std-ref">TransferConfig</span></a> unit) <a class="reference internal" href="#type-splice-fees-steppedrate-36691">SteppedRate</a></p>
+<p><strong>instance</strong> Patchable <a class="reference internal" href="#type-splice-fees-steppedrate-36691">SteppedRate</a></p>
 </div></blockquote>
 </section>
 <section id="functions">

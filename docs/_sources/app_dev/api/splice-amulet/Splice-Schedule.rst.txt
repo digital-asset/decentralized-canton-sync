@@ -52,6 +52,8 @@ Data Types
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"issuanceCurve\" (:ref:`AmuletConfig <type-splice-amuletconfig-amuletconfig-37414>` unit) (`Schedule <type-splice-schedule-schedule-35504_>`_ `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_ :ref:`IssuanceConfig <type-splice-issuance-issuanceconfig-93012>`)
 
+  **instance** (Patchable t, Patchable a, `Ord <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-ord-6395>`_ t, `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ a) \=\> Patchable (`Schedule <type-splice-schedule-schedule-35504_>`_ t a)
+
 Functions
 ---------
 

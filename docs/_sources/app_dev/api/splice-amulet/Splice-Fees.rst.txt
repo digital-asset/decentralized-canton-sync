@@ -95,6 +95,8 @@ Data Types
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"lockHolderFee\" (:ref:`TransferConfig <type-splice-amuletconfig-transferconfig-45691>` unit) `FixedFee <type-splice-fees-fixedfee-53985_>`_
 
+  **instance** Patchable `FixedFee <type-splice-fees-fixedfee-53985_>`_
+
 .. _type-splice-fees-rateperround-90570:
 
 **data** `RatePerRound <type-splice-fees-rateperround-90570_>`_
@@ -131,6 +133,8 @@ Data Types
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"rate\" `RatePerRound <type-splice-fees-rateperround-90570_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"ratePerRound\" `ExpiringAmount <type-splice-fees-expiringamount-39537_>`_ `RatePerRound <type-splice-fees-rateperround-90570_>`_
+
+  **instance** Patchable `RatePerRound <type-splice-fees-rateperround-90570_>`_
 
 .. _type-splice-fees-steppedrate-36691:
 
@@ -176,6 +180,8 @@ Data Types
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"steps\" `SteppedRate <type-splice-fees-steppedrate-36691_>`_ \[(`Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_, `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_)\]
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"transferFee\" (:ref:`TransferConfig <type-splice-amuletconfig-transferconfig-45691>` unit) `SteppedRate <type-splice-fees-steppedrate-36691_>`_
+
+  **instance** Patchable `SteppedRate <type-splice-fees-steppedrate-36691_>`_
 
 Functions
 ---------

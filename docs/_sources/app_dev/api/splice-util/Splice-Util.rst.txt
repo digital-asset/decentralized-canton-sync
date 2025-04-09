@@ -112,3 +112,13 @@ Functions
 
   Please justify all its uses, and where possible prefer ``fetchAndArchive``
   so that the contract group identifier is surely performed\.
+
+.. _function-splice-util-patchlistasscalar-47719:
+
+`patchListAsScalar <function-splice-util-patchlistasscalar-47719_>`_
+  \: `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ a \=\> \[a\] \-\> \[a\] \-\> \[a\] \-\> \[a\]
+
+.. _function-splice-util-patchlistasset-9274:
+
+`patchListAsSet <function-splice-util-patchlistasset-9274_>`_
+  \: (Patchable a, `Ord <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-ord-6395>`_ a) \=\> \[a\] \-\> \[a\] \-\> \[a\] \-\> \[a\]

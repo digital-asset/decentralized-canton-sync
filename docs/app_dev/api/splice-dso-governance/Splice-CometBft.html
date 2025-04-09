@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.20-snapshot.20250409.1.0.v829b1f27
+                0.3.20-snapshot.20250409.1.0.v2e663cf7
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -932,6 +932,7 @@
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;governanceKeys&quot; <a class="reference internal" href="#type-splice-cometbft-cometbftconfig-79018">CometBftConfig</a> [<a class="reference internal" href="#type-splice-cometbft-governancekeyconfig-71820">GovernanceKeyConfig</a>]</p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;nodes&quot; <a class="reference internal" href="#type-splice-cometbft-cometbftconfig-79018">CometBftConfig</a> (<a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-map-90052">Map</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952">Text</a> <a class="reference internal" href="#type-splice-cometbft-cometbftnodeconfig-40106">CometBftNodeConfig</a>)</p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;sequencingKeys&quot; <a class="reference internal" href="#type-splice-cometbft-cometbftconfig-79018">CometBftConfig</a> [<a class="reference internal" href="#type-splice-cometbft-sequencingkeyconfig-30402">SequencingKeyConfig</a>]</p>
+<p><strong>instance</strong> Patchable <a class="reference internal" href="#type-splice-cometbft-cometbftconfig-79018">CometBftConfig</a></p>
 </div></blockquote>
 <p id="type-splice-cometbft-cometbftconfiglimits-81004"><strong>data</strong> <a class="reference internal" href="#type-splice-cometbft-cometbftconfiglimits-81004">CometBftConfigLimits</a></p>
 <blockquote>
@@ -988,6 +989,7 @@
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;maxNumGovernanceKeys&quot; <a class="reference internal" href="#type-splice-cometbft-cometbftconfiglimits-81004">CometBftConfigLimits</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261">Int</a></p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;maxNumSequencingKeys&quot; <a class="reference internal" href="#type-splice-cometbft-cometbftconfiglimits-81004">CometBftConfigLimits</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261">Int</a></p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;maxPubKeyLength&quot; <a class="reference internal" href="#type-splice-cometbft-cometbftconfiglimits-81004">CometBftConfigLimits</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261">Int</a></p>
+<p><strong>instance</strong> Patchable <a class="reference internal" href="#type-splice-cometbft-cometbftconfiglimits-81004">CometBftConfigLimits</a></p>
 </div></blockquote>
 <p id="type-splice-cometbft-cometbftnodeconfig-40106"><strong>data</strong> <a class="reference internal" href="#type-splice-cometbft-cometbftnodeconfig-40106">CometBftNodeConfig</a></p>
 <blockquote>
@@ -1026,6 +1028,7 @@
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;nodes&quot; <a class="reference internal" href="#type-splice-cometbft-cometbftconfig-79018">CometBftConfig</a> (<a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-map-90052">Map</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952">Text</a> <a class="reference internal" href="#type-splice-cometbft-cometbftnodeconfig-40106">CometBftNodeConfig</a>)</p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;validatorPubKey&quot; <a class="reference internal" href="#type-splice-cometbft-cometbftnodeconfig-40106">CometBftNodeConfig</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952">Text</a></p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;votingPower&quot; <a class="reference internal" href="#type-splice-cometbft-cometbftnodeconfig-40106">CometBftNodeConfig</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261">Int</a></p>
+<p><strong>instance</strong> Patchable <a class="reference internal" href="#type-splice-cometbft-cometbftnodeconfig-40106">CometBftNodeConfig</a></p>
 </div></blockquote>
 <p id="type-splice-cometbft-governancekeyconfig-71820"><strong>data</strong> <a class="reference internal" href="#type-splice-cometbft-governancekeyconfig-71820">GovernanceKeyConfig</a></p>
 <blockquote>
@@ -1053,11 +1056,13 @@
 </table>
 </div></blockquote>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713">Eq</a> <a class="reference internal" href="#type-splice-cometbft-governancekeyconfig-71820">GovernanceKeyConfig</a></p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-ord-6395">Ord</a> <a class="reference internal" href="#type-splice-cometbft-governancekeyconfig-71820">GovernanceKeyConfig</a></p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360">Show</a> <a class="reference internal" href="#type-splice-cometbft-governancekeyconfig-71820">GovernanceKeyConfig</a></p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979">GetField</a> &quot;governanceKeys&quot; <a class="reference internal" href="#type-splice-cometbft-cometbftconfig-79018">CometBftConfig</a> [<a class="reference internal" href="#type-splice-cometbft-governancekeyconfig-71820">GovernanceKeyConfig</a>]</p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979">GetField</a> &quot;pubKey&quot; <a class="reference internal" href="#type-splice-cometbft-governancekeyconfig-71820">GovernanceKeyConfig</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952">Text</a></p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;governanceKeys&quot; <a class="reference internal" href="#type-splice-cometbft-cometbftconfig-79018">CometBftConfig</a> [<a class="reference internal" href="#type-splice-cometbft-governancekeyconfig-71820">GovernanceKeyConfig</a>]</p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;pubKey&quot; <a class="reference internal" href="#type-splice-cometbft-governancekeyconfig-71820">GovernanceKeyConfig</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952">Text</a></p>
+<p><strong>instance</strong> Patchable <a class="reference internal" href="#type-splice-cometbft-governancekeyconfig-71820">GovernanceKeyConfig</a></p>
 </div></blockquote>
 <p id="type-splice-cometbft-sequencingkeyconfig-30402"><strong>data</strong> <a class="reference internal" href="#type-splice-cometbft-sequencingkeyconfig-30402">SequencingKeyConfig</a></p>
 <blockquote>
@@ -1085,11 +1090,13 @@
 </table>
 </div></blockquote>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713">Eq</a> <a class="reference internal" href="#type-splice-cometbft-sequencingkeyconfig-30402">SequencingKeyConfig</a></p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-ord-6395">Ord</a> <a class="reference internal" href="#type-splice-cometbft-sequencingkeyconfig-30402">SequencingKeyConfig</a></p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360">Show</a> <a class="reference internal" href="#type-splice-cometbft-sequencingkeyconfig-30402">SequencingKeyConfig</a></p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979">GetField</a> &quot;pubKey&quot; <a class="reference internal" href="#type-splice-cometbft-sequencingkeyconfig-30402">SequencingKeyConfig</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952">Text</a></p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979">GetField</a> &quot;sequencingKeys&quot; <a class="reference internal" href="#type-splice-cometbft-cometbftconfig-79018">CometBftConfig</a> [<a class="reference internal" href="#type-splice-cometbft-sequencingkeyconfig-30402">SequencingKeyConfig</a>]</p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;pubKey&quot; <a class="reference internal" href="#type-splice-cometbft-sequencingkeyconfig-30402">SequencingKeyConfig</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952">Text</a></p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;sequencingKeys&quot; <a class="reference internal" href="#type-splice-cometbft-cometbftconfig-79018">CometBftConfig</a> [<a class="reference internal" href="#type-splice-cometbft-sequencingkeyconfig-30402">SequencingKeyConfig</a>]</p>
+<p><strong>instance</strong> Patchable <a class="reference internal" href="#type-splice-cometbft-sequencingkeyconfig-30402">SequencingKeyConfig</a></p>
 </div></blockquote>
 </section>
 <section id="functions">

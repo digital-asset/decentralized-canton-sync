@@ -89,6 +89,8 @@ Data Types
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"validatorRewardPercentage\" `IssuanceConfig <type-splice-issuance-issuanceconfig-93012_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
 
+  **instance** Patchable `IssuanceConfig <type-splice-issuance-issuanceconfig-93012_>`_
+
 .. _type-splice-issuance-issuancetranche-71318:
 
 **data** `IssuanceTranche <type-splice-issuance-issuancetranche-71318_>`_

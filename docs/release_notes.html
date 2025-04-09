@@ -40,7 +40,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.20-snapshot.20250409.1.0.v829b1f27
+                0.3.20-snapshot.20250409.1.0.v2e663cf7
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -921,6 +921,114 @@ so that the files can be used independently of each other (and no longer incorre
 The library has always been packaged with every helm chart that uses it,
 there is no need to pull it separately from the ghcr.io container registry.</p></li>
 </ul>
+</li>
+<li><p>Implement <a class="reference external" href="https://github.com/global-synchronizer-foundation/cips/blob/main/cip-0051/cip-0051.md">Canton Improvement Proposal cip-0051</a></p>
+<blockquote>
+<div><ul>
+<li><p>Added the optional <cite>targetEffectiveAt</cite> field to the <cite>VoteRequest</cite> template, which allows specifying an effective date and time for the vote request.
+Additionally, the <cite>DsoRules_CloseVoteRequest</cite> now enforces the new semantics for vote requests that include an effective date and time.</p></li>
+<li><p>These changes will take full effect once all SVs upgrade to the new DAML package version and corresponding frontend and backend updates.</p></li>
+<li><p>New Vote Request Semantics:</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt>Vote Requests with an Effective Date-Time (<code class="docutils literal notranslate"><span class="pre">targetEffectiveAt</span> <span class="pre">!=</span> <span class="pre">None</span></code>):</dt><dd><ul>
+<li><dl class="simple">
+<dt><strong>Voting Period Starts (now &lt; voteBefore):</strong></dt><dd><ul>
+<li><p>Early closing occurs if a super-majority of SVs rejects the vote request.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>Voting Period Ends (now ≥ voteBefore and now &lt; targetEffectiveAt):</strong></dt><dd><ul>
+<li><p>If a super-majority has voted, the vote request remains open and SVs can still change their votes.</p></li>
+<li><p>If not, the vote request is marked as expired.</p></li>
+<li><p>Early closing occurs upon a super-majority of rejections after expiration.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>Effective Date-Time Reached (now ≥ targetEffectiveAt):</strong></dt><dd><ul>
+<li><p>If a super-majority accepts the vote request, the change takes effect.</p></li>
+<li><p>Otherwise, the vote request is registered as rejected.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Vote Requests Without an Effective Date-Time (<code class="docutils literal notranslate"><span class="pre">targetEffectiveAt</span> <span class="pre">=</span> <span class="pre">None</span></code>):</dt><dd><ul>
+<li><dl class="simple">
+<dt><strong>Voting Period Starts (now &lt; voteBefore):</strong></dt><dd><ul>
+<li><p>Early closing occurs when a super-majority rejects.</p></li>
+<li><p>Early acceptance occurs when a super-majority agrees.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>Voting Period Ends (now ≥ voteBefore):</strong></dt><dd><ul>
+<li><p>The vote request is marked as expired.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>The Daml changes in this release require a governance vote to upgrade the package configs to:</p></li>
+<li><p>Introducing <cite>CRARC_SetConfig</cite> choice in favor of <cite>CRARC_AddFutureAmuletConfigSchedule</cite>, <cite>CRARC_AddUpdateAmuletConfigSchedule</cite> and <cite>CRARC_AddRemoveAmuletConfigSchedule</cite></p></li>
+<li><p>The new action <cite>CRARC_SetConfig</cite> allows the SV to set the configuration of AmuletRules configuration in the same way of <cite>SRARC_SetConfig</cite>. This action is only available when the new dars below are vetted.</p></li>
+<li><p>Handling parallel proposals</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Before: concurrent editing proposals (<cite>CRARC_SetConfig</cite>  and <cite>SRARC_SetConfig</cite>) risked overwriting new changes with outdated values because the entire new configuration replaced the old one, regardless of the specific changes.</p></li>
+<li><p>Now: concurrent editing proposals (<cite>CRARC_SetConfig</cite>  and <cite>SRARC_SetConfig</cite>) apply only to the fields that were intented to be changed. A copy of the current configuration is passed along the modified configuration at the creation of a proposal.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Governance: new dars</p>
+<blockquote>
+<div><table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>name</p></th>
+<th class="head"><p>version</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>amulet</p></td>
+<td><p>0.1.8</p></td>
+</tr>
+<tr class="row-odd"><td><p>amuletNameService</p></td>
+<td><p>0.1.8</p></td>
+</tr>
+<tr class="row-even"><td><p>dsoGovernance</p></td>
+<td><p>0.1.11</p></td>
+</tr>
+<tr class="row-odd"><td><p>validatorLifecycle</p></td>
+<td><p>0.1.2</p></td>
+</tr>
+<tr class="row-even"><td><p>wallet</p></td>
+<td><p>0.1.8</p></td>
+</tr>
+<tr class="row-odd"><td><p>walletPayments</p></td>
+<td><p>0.1.8</p></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
 </li>
 <li><p>CometBFT</p>
 <blockquote>

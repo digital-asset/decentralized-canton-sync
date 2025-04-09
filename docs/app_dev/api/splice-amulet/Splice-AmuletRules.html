@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.20-snapshot.20250409.1.0.v829b1f27
+                0.3.20-snapshot.20250409.1.0.v2e663cf7
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -1460,6 +1460,33 @@ on behalf of the external party when exercising this choice</p>
 </tbody>
 </table>
 </li>
+<li><p id="type-splice-amuletrules-amuletrulessetconfig-85439"><strong>Choice</strong> <a class="reference internal" href="#type-splice-amuletrules-amuletrulessetconfig-85439">AmuletRules_SetConfig</a></p>
+<p>Controller: dso</p>
+<p>Returns: <a class="reference internal" href="#type-splice-amuletrules-amuletrulessetconfigresult-68086">AmuletRules_SetConfigResult</a></p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 27.3%" />
+<col style="width: 18.2%" />
+<col style="width: 54.5%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>newConfig</p></td>
+<td><p><a class="reference internal" href="Splice-AmuletConfig.html#type-splice-amuletconfig-amuletconfig-37414"><span class="std std-ref">AmuletConfig</span></a> <a class="reference internal" href="Splice-AmuletConfig.html#type-splice-amuletconfig-usd-42527"><span class="std std-ref">USD</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>baseConfig</p></td>
+<td><p><a class="reference internal" href="Splice-AmuletConfig.html#type-splice-amuletconfig-amuletconfig-37414"><span class="std std-ref">AmuletConfig</span></a> <a class="reference internal" href="Splice-AmuletConfig.html#type-splice-amuletconfig-usd-42527"><span class="std std-ref">USD</span></a></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</li>
 <li><p id="type-splice-amuletrules-amuletrulestransfer-23235"><strong>Choice</strong> <a class="reference internal" href="#type-splice-amuletrules-amuletrulestransfer-23235">AmuletRules_Transfer</a></p>
 <p>Controller: Set.toList (transferControllers transfer)</p>
 <p>Returns: <a class="reference internal" href="#type-splice-amuletrules-transferresult-93164">TransferResult</a></p>
@@ -2302,6 +2329,36 @@ the amulet transfers completed via the managed pre-approval.</p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422">HasExercise</a> <a class="reference internal" href="#type-splice-amuletrules-amuletrules-32426">AmuletRules</a> <a class="reference internal" href="#type-splice-amuletrules-amuletrulesremovefutureamuletconfigschedule-69936">AmuletRules_RemoveFutureAmuletConfigSchedule</a> <a class="reference internal" href="#type-splice-amuletrules-amuletrulesremovefutureamuletconfigscheduleresult-69237">AmuletRules_RemoveFutureAmuletConfigScheduleResult</a></p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184">HasFromAnyChoice</a> <a class="reference internal" href="#type-splice-amuletrules-amuletrules-32426">AmuletRules</a> <a class="reference internal" href="#type-splice-amuletrules-amuletrulesremovefutureamuletconfigschedule-69936">AmuletRules_RemoveFutureAmuletConfigSchedule</a> <a class="reference internal" href="#type-splice-amuletrules-amuletrulesremovefutureamuletconfigscheduleresult-69237">AmuletRules_RemoveFutureAmuletConfigScheduleResult</a></p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571">HasToAnyChoice</a> <a class="reference internal" href="#type-splice-amuletrules-amuletrules-32426">AmuletRules</a> <a class="reference internal" href="#type-splice-amuletrules-amuletrulesremovefutureamuletconfigschedule-69936">AmuletRules_RemoveFutureAmuletConfigSchedule</a> <a class="reference internal" href="#type-splice-amuletrules-amuletrulesremovefutureamuletconfigscheduleresult-69237">AmuletRules_RemoveFutureAmuletConfigScheduleResult</a></p>
+</div></blockquote>
+<p id="type-splice-amuletrules-amuletrulessetconfigresult-68086"><strong>data</strong> <a class="reference internal" href="#type-splice-amuletrules-amuletrulessetconfigresult-68086">AmuletRules_SetConfigResult</a></p>
+<blockquote>
+<div><p id="constr-splice-amuletrules-amuletrulessetconfigresult-73787"><a class="reference internal" href="#constr-splice-amuletrules-amuletrulessetconfigresult-73787">AmuletRules_SetConfigResult</a></p>
+<blockquote>
+<div><table class="docutils align-default">
+<colgroup>
+<col style="width: 27.3%" />
+<col style="width: 18.2%" />
+<col style="width: 54.5%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>newAmuletRules</p></td>
+<td><p><a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282">ContractId</a> <a class="reference internal" href="#type-splice-amuletrules-amuletrules-32426">AmuletRules</a></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979">GetField</a> &quot;newAmuletRules&quot; <a class="reference internal" href="#type-splice-amuletrules-amuletrulessetconfigresult-68086">AmuletRules_SetConfigResult</a> (<a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282">ContractId</a> <a class="reference internal" href="#type-splice-amuletrules-amuletrules-32426">AmuletRules</a>)</p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;newAmuletRules&quot; <a class="reference internal" href="#type-splice-amuletrules-amuletrulessetconfigresult-68086">AmuletRules_SetConfigResult</a> (<a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282">ContractId</a> <a class="reference internal" href="#type-splice-amuletrules-amuletrules-32426">AmuletRules</a>)</p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422">HasExercise</a> <a class="reference internal" href="#type-splice-amuletrules-amuletrules-32426">AmuletRules</a> <a class="reference internal" href="#type-splice-amuletrules-amuletrulessetconfig-85439">AmuletRules_SetConfig</a> <a class="reference internal" href="#type-splice-amuletrules-amuletrulessetconfigresult-68086">AmuletRules_SetConfigResult</a></p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184">HasFromAnyChoice</a> <a class="reference internal" href="#type-splice-amuletrules-amuletrules-32426">AmuletRules</a> <a class="reference internal" href="#type-splice-amuletrules-amuletrulessetconfig-85439">AmuletRules_SetConfig</a> <a class="reference internal" href="#type-splice-amuletrules-amuletrulessetconfigresult-68086">AmuletRules_SetConfigResult</a></p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571">HasToAnyChoice</a> <a class="reference internal" href="#type-splice-amuletrules-amuletrules-32426">AmuletRules</a> <a class="reference internal" href="#type-splice-amuletrules-amuletrulessetconfig-85439">AmuletRules_SetConfig</a> <a class="reference internal" href="#type-splice-amuletrules-amuletrulessetconfigresult-68086">AmuletRules_SetConfigResult</a></p>
 </div></blockquote>
 <p id="type-splice-amuletrules-amuletrulesupdatefutureamuletconfigscheduleresult-96070"><strong>data</strong> <a class="reference internal" href="#type-splice-amuletrules-amuletrulesupdatefutureamuletconfigscheduleresult-96070">AmuletRules_UpdateFutureAmuletConfigScheduleResult</a></p>
 <blockquote>

@@ -927,6 +927,9 @@ Templates
        * - voteRequestTimeout
          - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_
          -
+       * - targetEffectiveAt
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+         -
 
   + .. _type-splice-dsorules-dsorulesrevokefeaturedappright-46223:
 
@@ -964,6 +967,9 @@ Templates
          - Description
        * - newConfig
          - `DsoRulesConfig <type-splice-dsorules-dsorulesconfig-6376_>`_
+         -
+       * - baseConfig
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `DsoRulesConfig <type-splice-dsorules-dsorulesconfig-6376_>`_
          -
 
   + .. _type-splice-dsorules-dsorulessetsynchronizernodeconfig-79561:
@@ -1168,7 +1174,7 @@ Templates
 
   See the comments on ``ActionRequiringConfirmation`` for details\.
 
-  Version2, which tracks all votes in a single contract\.
+  Version 3, which introduces effectivity in vote request\.
 
   Signatory\: dso
 
@@ -1200,6 +1206,9 @@ Templates
      * - trackingCid
        - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `VoteRequest <type-splice-dsorules-voterequest-12683_>`_)
        - An optional tracking ContractId to be used for tracking the vote request through its updates\. This is always set to the first ContractId of the original vote request (None on creation)\.
+     * - targetEffectiveAt
+       - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+       - The time when the action is targeted to be made effective\. If None, the action is immediately effective upon 2/3 votes in favor\.
 
   + **Choice** Archive
 
@@ -1390,6 +1399,12 @@ Data Types
 
     Voted action to update a config schedule in the ``AmuletRules``\.
 
+  .. _constr-splice-dsorules-crarcsetconfig-80537:
+
+  `CRARC_SetConfig <constr-splice-dsorules-crarcsetconfig-80537_>`_ AmuletRules\_SetConfig
+
+    Voted action to change the ``AmuletConfig``\. Not idempotent\.
+
   **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `AmuletRules_ActionRequiringConfirmation <type-splice-dsorules-amuletrulesactionrequiringconfirmation-62783_>`_
 
   **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `AmuletRules_ActionRequiringConfirmation <type-splice-dsorules-amuletrulesactionrequiringconfirmation-62783_>`_
@@ -1494,6 +1509,8 @@ Data Types
 
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"actionConfirmationTimeout\" `DsoRulesConfig <type-splice-dsorules-dsorulesconfig-6376_>`_ `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_
 
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"baseConfig\" `DsoRules_SetConfig <type-splice-dsorules-dsorulessetconfig-76713_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `DsoRulesConfig <type-splice-dsorules-dsorulesconfig-6376_>`_)
+
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"config\" :ref:`DsoBootstrap <type-splice-dsobootstrap-dsobootstrap-38046>` `DsoRulesConfig <type-splice-dsorules-dsorulesconfig-6376_>`_
 
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"config\" `DsoRules <type-splice-dsorules-dsorules-35440_>`_ `DsoRulesConfig <type-splice-dsorules-dsorulesconfig-6376_>`_
@@ -1522,6 +1539,8 @@ Data Types
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"actionConfirmationTimeout\" `DsoRulesConfig <type-splice-dsorules-dsorulesconfig-6376_>`_ `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_
 
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"baseConfig\" `DsoRules_SetConfig <type-splice-dsorules-dsorulessetconfig-76713_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `DsoRulesConfig <type-splice-dsorules-dsorulesconfig-6376_>`_)
+
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"config\" :ref:`DsoBootstrap <type-splice-dsobootstrap-dsobootstrap-38046>` `DsoRulesConfig <type-splice-dsorules-dsorulesconfig-6376_>`_
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"config\" `DsoRules <type-splice-dsorules-dsorules-35440_>`_ `DsoRulesConfig <type-splice-dsorules-dsorulesconfig-6376_>`_
@@ -1547,6 +1566,8 @@ Data Types
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"synchronizerNodeConfigLimits\" `DsoRulesConfig <type-splice-dsorules-dsorulesconfig-6376_>`_ :ref:`SynchronizerNodeConfigLimits <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfiglimits-3659>`
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"voteRequestTimeout\" `DsoRulesConfig <type-splice-dsorules-dsorulesconfig-6376_>`_ `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_
+
+  **instance** Patchable `DsoRulesConfig <type-splice-dsorules-dsorulesconfig-6376_>`_
 
 .. _type-splice-dsorules-dsorulesactionrequiringconfirmation-12600:
 
@@ -3066,6 +3087,8 @@ Data Types
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"nextScheduledSynchronizerUpgrade\" `DsoRulesConfig <type-splice-dsorules-dsorulesconfig-6376_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `SynchronizerUpgradeSchedule <type-splice-dsorules-synchronizerupgradeschedule-64447_>`_)
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"time\" `SynchronizerUpgradeSchedule <type-splice-dsorules-synchronizerupgradeschedule-64447_>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+
+  **instance** Patchable `SynchronizerUpgradeSchedule <type-splice-dsorules-synchronizerupgradeschedule-64447_>`_
 
 .. _type-splice-dsorules-trafficstate-38069:
 
