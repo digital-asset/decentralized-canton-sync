@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.21-snapshot.20250416.1.0.vf09b0386
+                0.3.21-snapshot.20250416.1.0.ve7d030a0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -902,9 +902,9 @@
 </li>
 <li><p>Your cluster needs a static egress IP. After acquiring that, provide it to your SV sponsor who will propose
 adding it to the IP allowlist to the other SVs.</p></li>
-<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.21-snapshot.20250416.1.0.vf09b0386_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
+<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.21-snapshot.20250416.1.0.ve7d030a0_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
 </ol>
-<pre class="literal-block">tar xzvf 0.3.21-snapshot.20250416.1.0.vf09b0386_splice-node.tar.gz</pre>
+<pre class="literal-block">tar xzvf 0.3.21-snapshot.20250416.1.0.ve7d030a0_splice-node.tar.gz</pre>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p><strong>If you lose your keys, you lose access to your coins</strong>. While regular backups are not necessary to run your node,
@@ -1068,6 +1068,17 @@ We will refer to these using the following configuration values:</p>
 </tr>
 </tbody>
 </table>
+<p>Your IAM may also require a scope to be specified when the validator backend requests a token for the ledger API. We will refer to that using the following configuration value:</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>Name</p></td>
+<td><p>Value</p></td>
+</tr>
+<tr class="row-even"><td><p>OIDC_AUTHORITY_LEDGER_API_SCOPE</p></td>
+<td><p>The scope for the participant ledger API. Optional</p></td>
+</tr>
+</tbody>
+</table>
 <p>In case you are facing trouble with setting up your (non-Auth0) OIDC provider,
 it can be beneficial to skim the instructions in <a class="reference internal" href="#helm-validator-auth0"><span class="std std-ref">Configuring an Auth0 Tenant</span></a> as well, to check for functionality or configuration details that your OIDC provider setup might be missing.</p>
 <aside class="footnote-list brackets">
@@ -1175,13 +1186,14 @@ You can obtain the client ID and secret of each Auth0 app from the settings page
 <span id="helm-validator-auth-secrets-config"></span><h3>Configuring Authentication on your Validator<a class="headerlink" href="#configuring-authentication-on-your-validator" title="Link to this heading"></a></h3>
 <p>We are now going to configure your Validator node software based on the OIDC provider configuration values you exported to environment variables at the end of either <a class="reference internal" href="#helm-validator-auth-requirements"><span class="std std-ref">OIDC Provider Requirements</span></a> or <a class="reference internal" href="#helm-validator-auth0"><span class="std std-ref">Configuring an Auth0 Tenant</span></a>.
 (Note that some authentication-related configuration steps are also included in <a class="reference internal" href="#helm-validator-install"><span class="std std-ref">Installing the Software</span></a>)</p>
-<p>The validator app backend requires the following secret.</p>
+<p>The validator app backend requires the following secret (omit the scope if it is not needed in your setup)</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>create<span class="w"> </span>--namespace<span class="w"> </span>validator<span class="w"> </span>secret<span class="w"> </span>generic<span class="w"> </span>splice-app-validator-ledger-api-auth<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span><span class="s2">&quot;--from-literal=ledger-api-user=</span><span class="si">${</span><span class="nv">VALIDATOR_CLIENT_ID</span><span class="si">}</span><span class="s2">@clients&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">    </span><span class="s2">&quot;--from-literal=url=</span><span class="si">${</span><span class="nv">OIDC_AUTHORITY_URL</span><span class="si">}</span><span class="s2">/.well-known/openid-configuration&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">    </span><span class="s2">&quot;--from-literal=client-id=</span><span class="si">${</span><span class="nv">VALIDATOR_CLIENT_ID</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">    </span><span class="s2">&quot;--from-literal=client-secret=</span><span class="si">${</span><span class="nv">VALIDATOR_CLIENT_SECRET</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span><span class="s2">&quot;--from-literal=audience=</span><span class="si">${</span><span class="nv">OIDC_AUTHORITY_LEDGER_API_AUDIENCE</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="w">    </span><span class="s2">&quot;--from-literal=audience=</span><span class="si">${</span><span class="nv">OIDC_AUTHORITY_LEDGER_API_AUDIENCE</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">&quot;--from-literal=scope=</span><span class="si">${</span><span class="nv">OIDC_AUTHORITY_LEDGER_API_SCOPE</span><span class="si">}</span><span class="s2">&quot;</span>
 </pre></div>
 </div>
 <p>To setup the wallet and CNS UI, create the following two secrets.</p>
@@ -1204,7 +1216,7 @@ kubectl<span class="w"> </span>create<span class="w"> </span>--namespace<span cl
 cluster, you will need to meet a few preconditions. The first is that
 there needs to be an environment variable defined to refer to the
 version of the Helm charts necessary to connect to this environment:</p>
-<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.21-snapshot.20250416.1.0.vf09b0386</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.3.21-snapshot.20250416.1.0.ve7d030a0</span></code></p>
 <p>Please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/participant-values.yaml</span></code> as follows:</p>
 <ul class="simple">
 <li><p>Replace <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_LEDGER_API_AUDIENCE</span></code> in the <cite>auth.targetAudience</cite> entry with audience for the ledger API. e.g. <code class="docutils literal notranslate"><span class="pre">https://ledger_api.example.com</span></code>. If you are not ready to use a custom audience, you can use the suggested default <code class="docutils literal notranslate"><span class="pre">https://canton.network.global</span></code>.</p></li>

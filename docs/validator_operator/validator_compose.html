@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.3.21-snapshot.20250416.1.0.vf09b0386
+                0.3.21-snapshot.20250416.1.0.ve7d030a0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -939,9 +939,9 @@ jq-1.7.1
 (contact your sponsor SV to obtain access), or have a static egress IP address.
 In the latter case, please provide that IP address to your sponsor SV to
 add it to the firewall rules.</p></li>
-<li><p>Please download the release artifacts containing the docker-compose files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.21-snapshot.20250416.1.0.vf09b0386_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
+<li><p>Please download the release artifacts containing the docker-compose files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.3.21-snapshot.20250416.1.0.ve7d030a0_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
 </ol>
-<pre class="literal-block">tar xzvf 0.3.21-snapshot.20250416.1.0.vf09b0386_splice-node.tar.gz</pre>
+<pre class="literal-block">tar xzvf 0.3.21-snapshot.20250416.1.0.ve7d030a0_splice-node.tar.gz</pre>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p><strong>If you lose your keys, you lose access to your coins</strong>. While regular backups are not necessary to run your node,
@@ -988,7 +988,7 @@ calling the following endpoint on any SV (replace <code class="docutils literal 
 </pre></div>
 </div>
 <ol class="arabic simple" start="2">
-<li><p>Export the current version to an environment variable: <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">IMAGE_TAG=0.3.21-snapshot.20250416.1.0.vf09b0386</span></code></p></li>
+<li><p>Export the current version to an environment variable: <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">IMAGE_TAG=0.3.21-snapshot.20250416.1.0.ve7d030a0</span></code></p></li>
 <li><p>Run the following command to start the validator node, and wait for it to become ready (could take a few minutes):</p></li>
 </ol>
 <blockquote>
@@ -1058,25 +1058,28 @@ you need to configure it by seting the following environment variables in the <c
 <tr class="row-odd"><td><p>LEDGER_API_AUTH_AUDIENCE</p></td>
 <td><p>The audience for the participant ledger API. e.g. <code class="docutils literal notranslate"><span class="pre">https://ledger_api.example.com</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p>VALIDATOR_AUTH_AUDIENCE</p></td>
+<tr class="row-even"><td><p>LEDGER_API_AUTH_SCOPE</p></td>
+<td><p>The scope for the participant ledger API. Optional</p></td>
+</tr>
+<tr class="row-odd"><td><p>VALIDATOR_AUTH_AUDIENCE</p></td>
 <td><p>The audience for the validator backend API. e.g. <code class="docutils literal notranslate"><span class="pre">https://validator.example.com</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p>VALIDATOR_AUTH_CLIENT_ID</p></td>
+<tr class="row-even"><td><p>VALIDATOR_AUTH_CLIENT_ID</p></td>
 <td><p>The client id of the OAuth app for the validator app backend.</p></td>
 </tr>
-<tr class="row-even"><td><p>VALIDATOR_AUTH_CLIENT_SECRET</p></td>
+<tr class="row-odd"><td><p>VALIDATOR_AUTH_CLIENT_SECRET</p></td>
 <td><p>The client secret of the OAuth app for the validator app backend.</p></td>
 </tr>
-<tr class="row-odd"><td><p>LEDGER_API_ADMIN_USER</p></td>
+<tr class="row-even"><td><p>LEDGER_API_ADMIN_USER</p></td>
 <td><p>Should match the <cite>sub</cite> field of JWTs issued for the validator app. For some auth providers, this would be formed as <code class="docutils literal notranslate"><span class="pre">CLIENT_ID&#64;clients</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p>WALLET_ADMIN_USER</p></td>
+<tr class="row-odd"><td><p>WALLET_ADMIN_USER</p></td>
 <td><p>The user ID of the user which should login as the wallet administrator. Note that this should be the full user id, e.g., <code class="docutils literal notranslate"><span class="pre">auth0|43b68e1e4978b000cefba352</span></code>, <em>not</em> only the suffix <code class="docutils literal notranslate"><span class="pre">43b68e1e4978b000cefba352</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p>WALLET_UI_CLIENT_ID</p></td>
+<tr class="row-even"><td><p>WALLET_UI_CLIENT_ID</p></td>
 <td><p>The client id of the OAuth app for the wallet UI.</p></td>
 </tr>
-<tr class="row-even"><td><p>ANS_UI_CLIENT_ID</p></td>
+<tr class="row-odd"><td><p>ANS_UI_CLIENT_ID</p></td>
 <td><p>The client id of the OAuth app for the CNS UI.</p></td>
 </tr>
 </tbody>
