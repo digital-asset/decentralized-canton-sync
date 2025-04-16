@@ -1,0 +1,45 @@
+.. _module-splice-amuletallocation-77292:
+
+Splice.AmuletAllocation
+=======================
+
+Templates
+---------
+
+.. _type-splice-amuletallocation-amuletallocation-39850:
+
+**template** `AmuletAllocation <type-splice-amuletallocation-amuletallocation-39850_>`_
+
+  Amulet allocated in locked form to a trade\.
+
+  Signatory\: allocationInstrumentAdmin allocation, (DA\.Internal\.Record\.getField @\"sender\" (DA\.Internal\.Record\.getField @\"transferLeg\" allocation))
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - lockedAmulet
+       - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`LockedAmulet <type-splice-amulet-lockedamulet-7030>`
+       - Locked amulet that holds the funds for the allocation
+     * - allocation
+       - AllocationSpecification
+       -
+
+  + **Choice** Archive
+
+    Controller\: allocationInstrumentAdmin allocation, (DA\.Internal\.Record\.getField @\"sender\" (DA\.Internal\.Record\.getField @\"transferLeg\" allocation))
+
+    Returns\: ()
+
+    (no fields)
+
+Functions
+---------
+
+.. _function-splice-amuletallocation-allocationtotwosteptransfer-63709:
+
+`allocationToTwoStepTransfer <function-splice-amuletallocation-allocationtotwosteptransfer-63709_>`_
+  \: AllocationSpecification \-\> :ref:`TwoStepTransfer <type-splice-amulet-twosteptransfer-twosteptransfer-31697>`

@@ -55,6 +55,13 @@ Data Types
        * - expiresAt
          - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
          -
+       * - optContext
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         - Short, human\-readable description of the context in which the amulet is locked\. Intended for wallets to inform the user about the reason for the lock\. Consider what details to share about the context, as that might be private and the string here will be public information\.
+
+  **instance** :ref:`FromAnyValue <class-splice-amulet-tokenapiutils-fromanyvalue-31164>` `TimeLock <type-splice-expiry-timelock-2221_>`_
+
+  **instance** :ref:`ToAnyValue <class-splice-amulet-tokenapiutils-toanyvalue-45157>` `TimeLock <type-splice-expiry-timelock-2221_>`_
 
   **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `TimeLock <type-splice-expiry-timelock-2221_>`_
 
@@ -72,6 +79,8 @@ Data Types
 
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"lock\" :ref:`TransferOutput <type-splice-amuletrules-transferoutput-70512>` (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `TimeLock <type-splice-expiry-timelock-2221_>`_)
 
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"optContext\" `TimeLock <type-splice-expiry-timelock-2221_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_)
+
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"expiresAt\" `TimeLock <type-splice-expiry-timelock-2221_>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"holders\" `TimeLock <type-splice-expiry-timelock-2221_>`_ \[`Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_\]
@@ -81,6 +90,8 @@ Data Types
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"lock\" :ref:`PreprocessedTransferOutput <type-splice-amuletrules-preprocessedtransferoutput-12209>` (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `TimeLock <type-splice-expiry-timelock-2221_>`_)
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"lock\" :ref:`TransferOutput <type-splice-amuletrules-transferoutput-70512>` (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `TimeLock <type-splice-expiry-timelock-2221_>`_)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"optContext\" `TimeLock <type-splice-expiry-timelock-2221_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_)
 
 Functions
 ---------

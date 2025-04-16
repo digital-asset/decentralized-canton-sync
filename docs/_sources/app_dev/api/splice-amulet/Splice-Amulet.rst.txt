@@ -63,6 +63,8 @@ Templates
 
     (no fields)
 
+  + **interface instance** Holding **for** `Amulet <type-splice-amulet-amulet-63582_>`_
+
 .. _type-splice-amulet-apprewardcoupon-57229:
 
 **template** `AppRewardCoupon <type-splice-amulet-apprewardcoupon-57229_>`_
@@ -94,6 +96,9 @@ Templates
      * - round
        - :ref:`Round <type-splice-types-round-16181>`
        -
+     * - beneficiary
+       - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       - The party that can mint this reward\. If not set, this is the provider
 
   + .. _type-splice-amulet-apprewardcoupondsoexpire-84081:
 
@@ -121,6 +126,48 @@ Templates
     Returns\: ()
 
     (no fields)
+
+.. _type-splice-amulet-featuredappactivitymarker-16451:
+
+**template** `FeaturedAppActivityMarker <type-splice-amulet-featuredappactivitymarker-16451_>`_
+
+  A marker created by a featured application for activity generated from that app\. This is used
+  to record activity other than amulet transfers where regular AppRewardCoupons are not created directly\.
+
+  Will be converted to a AppRewardCoupon through automation run by the SVs and can then be
+  minted as part of the normal minting process\.
+
+  Signatory\: dso
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - dso
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - provider
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       - The featured app provider that created the activity marker\.
+     * - beneficiary
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       - The party that has the right to mint the reward\.
+     * - weight
+       - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+       - The weight of the marker\. This is used to split the rewards for a single action, e\.g\., multiple parties collaborating to enable a transfer, by creating several FeaturedAppActivityMarkers with different beneficiaries such that the weights add up to 1\.0\.
+
+  + **Choice** Archive
+
+    Controller\: dso
+
+    Returns\: ()
+
+    (no fields)
+
+  + **interface instance** FeaturedAppActivityMarker **for** `FeaturedAppActivityMarker <type-splice-amulet-featuredappactivitymarker-16451_>`_
 
 .. _type-splice-amulet-featuredappright-765:
 
@@ -180,6 +227,8 @@ Templates
        * - reason
          - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
          -
+
+  + **interface instance** FeaturedAppRight **for** `FeaturedAppRight <type-splice-amulet-featuredappright-765_>`_
 
 .. _type-splice-amulet-lockedamulet-7030:
 
@@ -265,6 +314,8 @@ Templates
        * - openRoundCid
          - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`OpenMiningRound <type-splice-round-openmininground-90060>`
          -
+
+  + **interface instance** Holding **for** `LockedAmulet <type-splice-amulet-lockedamulet-7030_>`_
 
 .. _type-splice-amulet-svrewardcoupon-68580:
 
@@ -626,10 +677,17 @@ Data Types
        * - expireSum
          - `AmuletExpireSummary <type-splice-amulet-amuletexpiresummary-4706_>`_
          -
+       * - meta
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata
+         -
 
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"expireSum\" `Amulet_ExpireResult <type-splice-amulet-amuletexpireresult-11748_>`_ `AmuletExpireSummary <type-splice-amulet-amuletexpiresummary-4706_>`_
 
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"meta\" `Amulet_ExpireResult <type-splice-amulet-amuletexpireresult-11748_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata)
+
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"expireSum\" `Amulet_ExpireResult <type-splice-amulet-amuletexpireresult-11748_>`_ `AmuletExpireSummary <type-splice-amulet-amuletexpiresummary-4706_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"meta\" `Amulet_ExpireResult <type-splice-amulet-amuletexpireresult-11748_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata)
 
   **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `Amulet <type-splice-amulet-amulet-63582_>`_ `Amulet_Expire <type-splice-amulet-amuletexpire-87297_>`_ `Amulet_ExpireResult <type-splice-amulet-amuletexpireresult-11748_>`_
 
@@ -721,10 +779,17 @@ Data Types
        * - expireSum
          - `AmuletExpireSummary <type-splice-amulet-amuletexpiresummary-4706_>`_
          -
+       * - meta
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata
+         -
 
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"expireSum\" `LockedAmulet_ExpireAmuletResult <type-splice-amulet-lockedamuletexpireamuletresult-88432_>`_ `AmuletExpireSummary <type-splice-amulet-amuletexpiresummary-4706_>`_
 
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"meta\" `LockedAmulet_ExpireAmuletResult <type-splice-amulet-lockedamuletexpireamuletresult-88432_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata)
+
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"expireSum\" `LockedAmulet_ExpireAmuletResult <type-splice-amulet-lockedamuletexpireamuletresult-88432_>`_ `AmuletExpireSummary <type-splice-amulet-amuletexpiresummary-4706_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"meta\" `LockedAmulet_ExpireAmuletResult <type-splice-amulet-lockedamuletexpireamuletresult-88432_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata)
 
   **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `LockedAmulet <type-splice-amulet-lockedamulet-7030_>`_ `LockedAmulet_ExpireAmulet <type-splice-amulet-lockedamuletexpireamulet-28333_>`_ `LockedAmulet_ExpireAmuletResult <type-splice-amulet-lockedamuletexpireamuletresult-88432_>`_
 
@@ -750,10 +815,17 @@ Data Types
        * - amuletSum
          - `AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `Amulet <type-splice-amulet-amulet-63582_>`_)
          -
+       * - meta
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata
+         -
 
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"amuletSum\" `LockedAmulet_OwnerExpireLockResult <type-splice-amulet-lockedamuletownerexpirelockresult-44583_>`_ (`AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `Amulet <type-splice-amulet-amulet-63582_>`_))
 
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"meta\" `LockedAmulet_OwnerExpireLockResult <type-splice-amulet-lockedamuletownerexpirelockresult-44583_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata)
+
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"amuletSum\" `LockedAmulet_OwnerExpireLockResult <type-splice-amulet-lockedamuletownerexpirelockresult-44583_>`_ (`AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `Amulet <type-splice-amulet-amulet-63582_>`_))
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"meta\" `LockedAmulet_OwnerExpireLockResult <type-splice-amulet-lockedamuletownerexpirelockresult-44583_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata)
 
   **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `LockedAmulet <type-splice-amulet-lockedamulet-7030_>`_ `LockedAmulet_OwnerExpireLock <type-splice-amulet-lockedamuletownerexpirelock-79102_>`_ `LockedAmulet_OwnerExpireLockResult <type-splice-amulet-lockedamuletownerexpirelockresult-44583_>`_
 
@@ -779,10 +851,17 @@ Data Types
        * - amuletSum
          - `AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `Amulet <type-splice-amulet-amulet-63582_>`_)
          -
+       * - meta
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata
+         -
 
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"amuletSum\" `LockedAmulet_UnlockResult <type-splice-amulet-lockedamuletunlockresult-29457_>`_ (`AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `Amulet <type-splice-amulet-amulet-63582_>`_))
 
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"meta\" `LockedAmulet_UnlockResult <type-splice-amulet-lockedamuletunlockresult-29457_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata)
+
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"amuletSum\" `LockedAmulet_UnlockResult <type-splice-amulet-lockedamuletunlockresult-29457_>`_ (`AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `Amulet <type-splice-amulet-amulet-63582_>`_))
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"meta\" `LockedAmulet_UnlockResult <type-splice-amulet-lockedamuletunlockresult-29457_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata)
 
   **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `LockedAmulet <type-splice-amulet-lockedamulet-7030_>`_ `LockedAmulet_Unlock <type-splice-amulet-lockedamuletunlock-59352_>`_ `LockedAmulet_UnlockResult <type-splice-amulet-lockedamuletunlockresult-29457_>`_
 
@@ -911,6 +990,16 @@ Data Types
 
 Functions
 ---------
+
+.. _function-splice-amulet-amuletmetadata-81241:
+
+`amuletMetadata <function-splice-amulet-amuletmetadata-81241_>`_
+  \: `Amulet <type-splice-amulet-amulet-63582_>`_ \-\> Metadata
+
+.. _function-splice-amulet-validateapprewardbeneficiaries-84669:
+
+`validateAppRewardBeneficiaries <function-splice-amulet-validateapprewardbeneficiaries-84669_>`_
+  \: \[AppRewardBeneficiary\] \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ ()
 
 .. _function-splice-amulet-requireamuletexpiredforallopenrounds-12337:
 

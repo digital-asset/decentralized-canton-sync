@@ -1,0 +1,146 @@
+.. _module-splice-tests-testamulettokentransfer-97274:
+
+Splice.Tests.TestAmuletTokenTransfer
+====================================
+
+Daml script tests showing that the token standard can be used to execute
+free\-of\-payment transfers of Amulet tokens; and how to do so\.
+
+Data Types
+----------
+
+.. _type-splice-tests-testamulettokentransfer-testsetup-23760:
+
+**data** `TestSetup <type-splice-tests-testamulettokentransfer-testsetup-23760_>`_
+
+  .. _constr-splice-tests-testamulettokentransfer-testsetup-65645:
+
+  `TestSetup <constr-splice-tests-testamulettokentransfer-testsetup-65645_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - registry
+         - :ref:`AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694>`
+         -
+       * - alice
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - aliceValidator
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - bob
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - now
+         - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+         -
+       * - defaultTransfer
+         - Transfer
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"alice\" `TestSetup <type-splice-tests-testamulettokentransfer-testsetup-23760_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"aliceValidator\" `TestSetup <type-splice-tests-testamulettokentransfer-testsetup-23760_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"bob\" `TestSetup <type-splice-tests-testamulettokentransfer-testsetup-23760_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"defaultTransfer\" `TestSetup <type-splice-tests-testamulettokentransfer-testsetup-23760_>`_ Transfer
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"now\" `TestSetup <type-splice-tests-testamulettokentransfer-testsetup-23760_>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"registry\" `TestSetup <type-splice-tests-testamulettokentransfer-testsetup-23760_>`_ :ref:`AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694>`
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"alice\" `TestSetup <type-splice-tests-testamulettokentransfer-testsetup-23760_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"aliceValidator\" `TestSetup <type-splice-tests-testamulettokentransfer-testsetup-23760_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"bob\" `TestSetup <type-splice-tests-testamulettokentransfer-testsetup-23760_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"defaultTransfer\" `TestSetup <type-splice-tests-testamulettokentransfer-testsetup-23760_>`_ Transfer
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"now\" `TestSetup <type-splice-tests-testamulettokentransfer-testsetup-23760_>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"registry\" `TestSetup <type-splice-tests-testamulettokentransfer-testsetup-23760_>`_ :ref:`AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694>`
+
+Functions
+---------
+
+.. _function-splice-tests-testamulettokentransfer-setuptest-24792:
+
+`setupTest <function-splice-tests-testamulettokentransfer-setuptest-24792_>`_
+  \: Script `TestSetup <type-splice-tests-testamulettokentransfer-testsetup-23760_>`_
+
+.. _function-splice-tests-testamulettokentransfer-setuptwosteptransfer-95496:
+
+`setupTwoStepTransfer <function-splice-tests-testamulettokentransfer-setuptwosteptransfer-95496_>`_
+  \: Script (`TestSetup <type-splice-tests-testamulettokentransfer-testsetup-23760_>`_, `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TransferInstruction)
+
+.. _function-splice-tests-testamulettokentransfer-assertnofeaturedrewards-59478:
+
+`assertNoFeaturedRewards <function-splice-tests-testamulettokentransfer-assertnofeaturedrewards-59478_>`_
+  \: \[`Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_\] \-\> Script ()
+
+.. _function-splice-tests-testamulettokentransfer-expectburn-52798:
+
+`expectBurn <function-splice-tests-testamulettokentransfer-expectburn-52798_>`_
+  \: Metadata \-\> Script ()
+
+.. _function-splice-tests-testamulettokentransfer-testhappypathself-81760:
+
+`test_happy_path_self <function-splice-tests-testamulettokentransfer-testhappypathself-81760_>`_
+  \: Script ()
+
+.. _function-splice-tests-testamulettokentransfer-testhappypathdirect-60815:
+
+`test_happy_path_direct <function-splice-tests-testamulettokentransfer-testhappypathdirect-60815_>`_
+  \: Script ()
+
+.. _function-splice-tests-testamulettokentransfer-testtwostepsuccess-72631:
+
+`test_two_step_success <function-splice-tests-testamulettokentransfer-testtwostepsuccess-72631_>`_
+  \: Script ()
+
+.. _function-splice-tests-testamulettokentransfer-testtwostepwithdraw-23771:
+
+`test_two_step_withdraw <function-splice-tests-testamulettokentransfer-testtwostepwithdraw-23771_>`_
+  \: Script ()
+
+.. _function-splice-tests-testamulettokentransfer-testtwostepwithdrawlockedamuletgone-99068:
+
+`test_two_step_withdraw_locked_amulet_gone <function-splice-tests-testamulettokentransfer-testtwostepwithdrawlockedamuletgone-99068_>`_
+  \: Script ()
+
+.. _function-splice-tests-testamulettokentransfer-testtwostepreject-58318:
+
+`test_two_step_reject <function-splice-tests-testamulettokentransfer-testtwostepreject-58318_>`_
+  \: Script ()
+
+.. _function-splice-tests-testamulettokentransfer-testtwosteprejectlockedamuletgone-59771:
+
+`test_two_step_reject_locked_amulet_gone <function-splice-tests-testamulettokentransfer-testtwosteprejectlockedamuletgone-59771_>`_
+  \: Script ()
+
+.. _function-splice-tests-testamulettokentransfer-testnoholdings-86337:
+
+`test_no_holdings <function-splice-tests-testamulettokentransfer-testnoholdings-86337_>`_
+  \: Script ()
+
+.. _function-splice-tests-testamulettokentransfer-testexpired-89770:
+
+`test_expired <function-splice-tests-testamulettokentransfer-testexpired-89770_>`_
+  \: Script ()
+
+.. _function-splice-tests-testamulettokentransfer-testwrongadmin-22190:
+
+`test_wrong_admin <function-splice-tests-testamulettokentransfer-testwrongadmin-22190_>`_
+  \: Script ()
+
+.. _function-splice-tests-testamulettokentransfer-testfactorypublicfetch-19587:
+
+`test_factory_PublicFetch <function-splice-tests-testamulettokentransfer-testfactorypublicfetch-19587_>`_
+  \: Script ()

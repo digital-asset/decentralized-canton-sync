@@ -1395,3 +1395,8 @@ Functions
 
 `mkMergeAmuletAndRewardsTransfer <function-splice-wallet-install-mkmergeamuletandrewardstransfer-3655_>`_
   \: `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> \[TransferInput\] \-\> Transfer
+
+.. _function-splice-wallet-install-unpackcid-65301:
+
+`unpackCid <function-splice-wallet-install-unpackcid-65301_>`_
+  \: AnyValue \-\> AnyContractId

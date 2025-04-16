@@ -64,6 +64,13 @@ Functions
 
   Get the value as of a specific time
 
+.. _function-splice-schedule-getvalueasofledgertime-35649:
+
+`getValueAsOfLedgerTime <function-splice-schedule-getvalueasofledgertime-35649_>`_
+  \: `Schedule <type-splice-schedule-schedule-35504_>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_ a \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ a
+
+  Variant of ``getValueAsOf`` that communicates workflow\-level bounds\.
+
 .. _function-splice-schedule-validschedule-3679:
 
 `validSchedule <function-splice-schedule-validschedule-3679_>`_

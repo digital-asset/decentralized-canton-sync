@@ -58,6 +58,9 @@ Data Types
        * - transferPreapprovalFee
          - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
          - Fee for keeping a transfer pre\-approval around\.
+       * - featuredAppActivityMarkerAmount
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         - $\-amount used for the conversion from FeaturedAppActivityMarker \-\> AppRewardCoupon
 
   **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ (`AmuletConfig <type-splice-amuletconfig-amuletconfig-37414_>`_ unit)
 
@@ -68,6 +71,8 @@ Data Types
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"configSchedule\" :ref:`AmuletRules <type-splice-amuletrules-amuletrules-32426>` (:ref:`Schedule <type-splice-schedule-schedule-35504>` `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_ (`AmuletConfig <type-splice-amuletconfig-amuletconfig-37414_>`_ `USD <type-splice-amuletconfig-usd-42527_>`_))
 
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"decentralizedSynchronizer\" (`AmuletConfig <type-splice-amuletconfig-amuletconfig-37414_>`_ unit) :ref:`AmuletDecentralizedSynchronizerConfig <type-splice-decentralizedsynchronizer-amuletdecentralizedsynchronizerconfig-15126>`
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"featuredAppActivityMarkerAmount\" (`AmuletConfig <type-splice-amuletconfig-amuletconfig-37414_>`_ unit) (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_)
 
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"issuanceCurve\" (`AmuletConfig <type-splice-amuletconfig-amuletconfig-37414_>`_ unit) (:ref:`Schedule <type-splice-schedule-schedule-35504>` `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_ :ref:`IssuanceConfig <type-splice-issuance-issuanceconfig-93012>`)
 
@@ -90,6 +95,8 @@ Data Types
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"configSchedule\" :ref:`AmuletRules <type-splice-amuletrules-amuletrules-32426>` (:ref:`Schedule <type-splice-schedule-schedule-35504>` `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_ (`AmuletConfig <type-splice-amuletconfig-amuletconfig-37414_>`_ `USD <type-splice-amuletconfig-usd-42527_>`_))
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"decentralizedSynchronizer\" (`AmuletConfig <type-splice-amuletconfig-amuletconfig-37414_>`_ unit) :ref:`AmuletDecentralizedSynchronizerConfig <type-splice-decentralizedsynchronizer-amuletdecentralizedsynchronizerconfig-15126>`
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"featuredAppActivityMarkerAmount\" (`AmuletConfig <type-splice-amuletconfig-amuletconfig-37414_>`_ unit) (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_)
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"issuanceCurve\" (`AmuletConfig <type-splice-amuletconfig-amuletconfig-37414_>`_ unit) (:ref:`Schedule <type-splice-schedule-schedule-35504>` `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_ :ref:`IssuanceConfig <type-splice-issuance-issuanceconfig-93012>`)
 

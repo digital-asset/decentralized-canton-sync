@@ -1,0 +1,51 @@
+.. _module-splice-testing-tokenstandard-registryapi-14184:
+
+Splice.Testing.TokenStandard.RegistryApi
+========================================
+
+Support for using a token compliant registry API in tests\.
+
+These simulate the OpenAPI endpoints that would be served by the backend of the registry implementation\.
+
+Typeclasses
+-----------
+
+.. _class-splice-testing-tokenstandard-registryapi-registryapi-36771:
+
+**class** `RegistryApi <class-splice-testing-tokenstandard-registryapi-registryapi-36771_>`_ app **where**
+
+  Type\-class for simulating calls to the off\-ledger API of a registry\.
+
+  The function names match the names of the handlers defined in the OpenAPI specification\.
+
+  .. _function-splice-testing-tokenstandard-registryapi-gettransferfactory-16733:
+
+  `getTransferFactory <function-splice-testing-tokenstandard-registryapi-gettransferfactory-16733_>`_
+    \: app \-\> TransferFactory\_Transfer \-\> Script (:ref:`EnrichedFactoryChoice <type-splice-testing-utils-enrichedfactorychoice-76896>` TransferFactory TransferFactory\_Transfer)
+
+  .. _function-splice-testing-tokenstandard-registryapi-getallocationfactory-44546:
+
+  `getAllocationFactory <function-splice-testing-tokenstandard-registryapi-getallocationfactory-44546_>`_
+    \: app \-\> AllocationFactory\_Allocate \-\> Script (:ref:`EnrichedFactoryChoice <type-splice-testing-utils-enrichedfactorychoice-76896>` AllocationFactory AllocationFactory\_Allocate)
+
+  .. _function-splice-testing-tokenstandard-registryapi-getallocationtransfercontext-89606:
+
+  `getAllocationTransferContext <function-splice-testing-tokenstandard-registryapi-getallocationtransfercontext-89606_>`_
+    \: app \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Allocation \-\> Metadata \-\> Script :ref:`OpenApiChoiceContext <type-splice-testing-utils-openapichoicecontext-5726>`
+
+  .. _function-splice-testing-tokenstandard-registryapi-gettransferinstructionacceptcontext-72301:
+
+  `getTransferInstruction_AcceptContext <function-splice-testing-tokenstandard-registryapi-gettransferinstructionacceptcontext-72301_>`_
+    \: app \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TransferInstruction \-\> Metadata \-\> Script :ref:`OpenApiChoiceContext <type-splice-testing-utils-openapichoicecontext-5726>`
+
+  .. _function-splice-testing-tokenstandard-registryapi-gettransferinstructionrejectcontext-89866:
+
+  `getTransferInstruction_RejectContext <function-splice-testing-tokenstandard-registryapi-gettransferinstructionrejectcontext-89866_>`_
+    \: app \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TransferInstruction \-\> Metadata \-\> Script :ref:`OpenApiChoiceContext <type-splice-testing-utils-openapichoicecontext-5726>`
+
+  .. _function-splice-testing-tokenstandard-registryapi-gettransferinstructionwithdrawcontext-233:
+
+  `getTransferInstruction_WithdrawContext <function-splice-testing-tokenstandard-registryapi-gettransferinstructionwithdrawcontext-233_>`_
+    \: app \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TransferInstruction \-\> Metadata \-\> Script :ref:`OpenApiChoiceContext <type-splice-testing-utils-openapichoicecontext-5726>`
+
+  **instance** `RegistryApi <class-splice-testing-tokenstandard-registryapi-registryapi-36771_>`_ :ref:`AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694>`

@@ -12,8 +12,8 @@ Common Metrics
 ++++++++++++++
 splice.domain_params_store.confirmation-requests-max-rate
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-* **Summary**: DynamicDomainParameters.confirmationRequestsMaxRate
-* **Description**: Last known value of DynamicDomainParameters.confirmationRequestsMaxRate on the configured global domain.
+* **Summary**: DynamicSynchronizerParameters.confirmationRequestsMaxRate
+* **Description**: Last known value of DynamicSynchronizerParameters.confirmationRequestsMaxRate on the configured global domain.
 * **Type**: gauge
 * **Qualification**: Traffic
 

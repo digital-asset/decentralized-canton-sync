@@ -1,0 +1,166 @@
+.. _module-splice-testing-utils-27610:
+
+Splice.Testing.Utils
+====================
+
+Testing utilities to simplify testing token standard usage and implementation\.
+
+Data Types
+----------
+
+.. _type-splice-testing-utils-disclosurestick-7569:
+
+**data** `Disclosures' <type-splice-testing-utils-disclosurestick-7569_>`_
+
+  A set of disclosures\. Used to work around the fact that duplicate disclosures for the
+  same contract are not allowed\.
+
+  .. _constr-splice-testing-utils-disclosurestick-34366:
+
+  `Disclosures' <constr-splice-testing-utils-disclosurestick-34366_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - disclosures
+         - `Map <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-map-90052>`_ AnyContractId Disclosure
+         -
+
+  **instance** `Monoid <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-prelude-monoid-6742>`_ `Disclosures' <type-splice-testing-utils-disclosurestick-7569_>`_
+
+  **instance** `Semigroup <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-prelude-semigroup-78998>`_ `Disclosures' <type-splice-testing-utils-disclosurestick-7569_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"disclosures\" `Disclosures' <type-splice-testing-utils-disclosurestick-7569_>`_ (`Map <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-map-90052>`_ AnyContractId Disclosure)
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"disclosures\" (`EnrichedFactoryChoice <type-splice-testing-utils-enrichedfactorychoice-76896_>`_ t ch) `Disclosures' <type-splice-testing-utils-disclosurestick-7569_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"disclosures\" `OpenApiChoiceContext <type-splice-testing-utils-openapichoicecontext-5726_>`_ `Disclosures' <type-splice-testing-utils-disclosurestick-7569_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"disclosures\" `Disclosures' <type-splice-testing-utils-disclosurestick-7569_>`_ (`Map <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-map-90052>`_ AnyContractId Disclosure)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"disclosures\" (`EnrichedFactoryChoice <type-splice-testing-utils-enrichedfactorychoice-76896_>`_ t ch) `Disclosures' <type-splice-testing-utils-disclosurestick-7569_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"disclosures\" `OpenApiChoiceContext <type-splice-testing-utils-openapichoicecontext-5726_>`_ `Disclosures' <type-splice-testing-utils-disclosurestick-7569_>`_
+
+.. _type-splice-testing-utils-enrichedfactorychoice-76896:
+
+**data** `EnrichedFactoryChoice <type-splice-testing-utils-enrichedfactorychoice-76896_>`_ t ch
+
+  A choice on a factory contract enriched with an appropriate choice\-context and disclosures\.
+
+  .. _constr-splice-testing-utils-enrichedfactorychoice-82153:
+
+  `EnrichedFactoryChoice <constr-splice-testing-utils-enrichedfactorychoice-82153_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - factoryCid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ t
+         -
+       * - arg
+         - ch
+         -
+       * - disclosures
+         - `Disclosures' <type-splice-testing-utils-disclosurestick-7569_>`_
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"arg\" (`EnrichedFactoryChoice <type-splice-testing-utils-enrichedfactorychoice-76896_>`_ t ch) ch
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"disclosures\" (`EnrichedFactoryChoice <type-splice-testing-utils-enrichedfactorychoice-76896_>`_ t ch) `Disclosures' <type-splice-testing-utils-disclosurestick-7569_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"factoryCid\" (`EnrichedFactoryChoice <type-splice-testing-utils-enrichedfactorychoice-76896_>`_ t ch) (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ t)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"arg\" (`EnrichedFactoryChoice <type-splice-testing-utils-enrichedfactorychoice-76896_>`_ t ch) ch
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"disclosures\" (`EnrichedFactoryChoice <type-splice-testing-utils-enrichedfactorychoice-76896_>`_ t ch) `Disclosures' <type-splice-testing-utils-disclosurestick-7569_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"factoryCid\" (`EnrichedFactoryChoice <type-splice-testing-utils-enrichedfactorychoice-76896_>`_ t ch) (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ t)
+
+.. _type-splice-testing-utils-openapichoicecontext-5726:
+
+**data** `OpenApiChoiceContext <type-splice-testing-utils-openapichoicecontext-5726_>`_
+
+  A representation of a ChoiceContext and disclosed contracts as they would be returned by the
+  an OpenAPI endpoint of the token standard\.
+
+  .. _constr-splice-testing-utils-openapichoicecontext-58633:
+
+  `OpenApiChoiceContext <constr-splice-testing-utils-openapichoicecontext-58633_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - choiceContext
+         - ChoiceContext
+         -
+       * - disclosures
+         - `Disclosures' <type-splice-testing-utils-disclosurestick-7569_>`_
+         -
+
+  **instance** `Semigroup <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-prelude-semigroup-78998>`_ `OpenApiChoiceContext <type-splice-testing-utils-openapichoicecontext-5726_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"choiceContext\" `OpenApiChoiceContext <type-splice-testing-utils-openapichoicecontext-5726_>`_ ChoiceContext
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"disclosures\" `OpenApiChoiceContext <type-splice-testing-utils-openapichoicecontext-5726_>`_ `Disclosures' <type-splice-testing-utils-disclosurestick-7569_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"choiceContext\" `OpenApiChoiceContext <type-splice-testing-utils-openapichoicecontext-5726_>`_ ChoiceContext
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"disclosures\" `OpenApiChoiceContext <type-splice-testing-utils-openapichoicecontext-5726_>`_ `Disclosures' <type-splice-testing-utils-disclosurestick-7569_>`_
+
+Functions
+---------
+
+.. _function-splice-testing-utils-emptyextraargs-23102:
+
+`emptyExtraArgs <function-splice-testing-utils-emptyextraargs-23102_>`_
+  \: ExtraArgs
+
+  Use this to construct an empty 'ExtraArgs' record\.
+
+.. _function-splice-testing-utils-withextradisclosures-38780:
+
+`withExtraDisclosures <function-splice-testing-utils-withextradisclosures-38780_>`_
+  \: `Disclosures' <type-splice-testing-utils-disclosurestick-7569_>`_ \-\> `OpenApiChoiceContext <type-splice-testing-utils-openapichoicecontext-5726_>`_ \-\> `OpenApiChoiceContext <type-splice-testing-utils-openapichoicecontext-5726_>`_
+
+  Add extra disclosures to an 'OpenApiChoiceContext'\.
+
+.. _function-splice-testing-utils-querydisclosuretick-36762:
+
+`queryDisclosure' <function-splice-testing-utils-querydisclosuretick-36762_>`_
+  \: `Template <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-template-functions-template-31804>`_ t \=\> `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ t \-\> Script `Disclosures' <type-splice-testing-utils-disclosurestick-7569_>`_
+
+  Retrieve a disclosed contract by its contract\-id from a specific party's ACS\.
+
+.. _function-splice-testing-utils-submitwithdisclosurestick-2335:
+
+`submitWithDisclosures' <function-splice-testing-utils-submitwithdisclosurestick-2335_>`_
+  \: `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> `Disclosures' <type-splice-testing-utils-disclosurestick-7569_>`_ \-\> Commands a \-\> Script a
+
+  Version of 'submitWithDisclosures' that works with the simplified ``Disclosures'`` type\.
+
+.. _function-splice-testing-utils-submitwithdisclosuresmustfailtick-79338:
+
+`submitWithDisclosuresMustFail' <function-splice-testing-utils-submitwithdisclosuresmustfailtick-79338_>`_
+  \: `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> `Disclosures' <type-splice-testing-utils-disclosurestick-7569_>`_ \-\> Commands a \-\> Script ()
+
+  Version of 'submitWithDisclosuresMustFail' that works with the simplified ``Disclosures'`` type\.
+
+.. _function-splice-testing-utils-allocatepartyexact-97926:
+
+`allocatePartyExact <function-splice-testing-utils-allocatepartyexact-97926_>`_
+  \: `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_ \-\> Script `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  Allocate party with a specific name\.

@@ -1,0 +1,122 @@
+.. _module-splice-amulet-twosteptransfer-66725:
+
+Splice.Amulet.TwoStepTransfer
+=============================
+
+Generic code for a two\-step transfer of amulet\. The first step is to lock
+the amulet, the second step is to transfer it\.
+
+Data Types
+----------
+
+.. _type-splice-amulet-twosteptransfer-twosteptransfer-31697:
+
+**data** `TwoStepTransfer <type-splice-amulet-twosteptransfer-twosteptransfer-31697_>`_
+
+  .. _constr-splice-amulet-twosteptransfer-twosteptransfer-922:
+
+  `TwoStepTransfer <constr-splice-amulet-twosteptransfer-twosteptransfer-922_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - dso
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - sender
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - receiver
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - amount
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         -
+       * - lockContext
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         - Context description of the lock\. This is used to display the reason for the lock in wallets\.
+       * - transferBefore
+         - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+         -
+       * - transferBeforeDeadline
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         - Name of the deadline for the transfer
+       * - provider
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         - Provider that should be marked as the app provider on the second step\.
+       * - allowFeaturing
+         - `Bool <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-bool-66265>`_
+         - Whether the second step can be featured\.
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"allowFeaturing\" `TwoStepTransfer <type-splice-amulet-twosteptransfer-twosteptransfer-31697_>`_ `Bool <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-bool-66265>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"amount\" `TwoStepTransfer <type-splice-amulet-twosteptransfer-twosteptransfer-31697_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"dso\" `TwoStepTransfer <type-splice-amulet-twosteptransfer-twosteptransfer-31697_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"lockContext\" `TwoStepTransfer <type-splice-amulet-twosteptransfer-twosteptransfer-31697_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"provider\" `TwoStepTransfer <type-splice-amulet-twosteptransfer-twosteptransfer-31697_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"receiver\" `TwoStepTransfer <type-splice-amulet-twosteptransfer-twosteptransfer-31697_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"sender\" `TwoStepTransfer <type-splice-amulet-twosteptransfer-twosteptransfer-31697_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"transferBefore\" `TwoStepTransfer <type-splice-amulet-twosteptransfer-twosteptransfer-31697_>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"transferBeforeDeadline\" `TwoStepTransfer <type-splice-amulet-twosteptransfer-twosteptransfer-31697_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"allowFeaturing\" `TwoStepTransfer <type-splice-amulet-twosteptransfer-twosteptransfer-31697_>`_ `Bool <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-bool-66265>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"amount\" `TwoStepTransfer <type-splice-amulet-twosteptransfer-twosteptransfer-31697_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"dso\" `TwoStepTransfer <type-splice-amulet-twosteptransfer-twosteptransfer-31697_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"lockContext\" `TwoStepTransfer <type-splice-amulet-twosteptransfer-twosteptransfer-31697_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"provider\" `TwoStepTransfer <type-splice-amulet-twosteptransfer-twosteptransfer-31697_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"receiver\" `TwoStepTransfer <type-splice-amulet-twosteptransfer-twosteptransfer-31697_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"sender\" `TwoStepTransfer <type-splice-amulet-twosteptransfer-twosteptransfer-31697_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"transferBefore\" `TwoStepTransfer <type-splice-amulet-twosteptransfer-twosteptransfer-31697_>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"transferBeforeDeadline\" `TwoStepTransfer <type-splice-amulet-twosteptransfer-twosteptransfer-31697_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+Functions
+---------
+
+.. _function-splice-amulet-twosteptransfer-holdingtotransferinputs-13824:
+
+`holdingToTransferInputs <function-splice-amulet-twosteptransfer-holdingtotransferinputs-13824_>`_
+  \: :ref:`ForOwner <type-splice-types-forowner-62144>` \-\> :ref:`PaymentTransferContext <type-splice-amuletrules-paymenttransfercontext-72190>` \-\> \[`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Holding\] \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ \[:ref:`TransferInput <type-splice-amuletrules-transferinput-61796>`\]
+
+  Converting a set of holding inputs to inputs for an amulet transfer,
+  unlocking any expired LockedAmulet holdings on the fly\.
+
+.. _function-splice-amulet-twosteptransfer-preparetwosteptransfer-60675:
+
+`prepareTwoStepTransfer <function-splice-amulet-twosteptransfer-preparetwosteptransfer-60675_>`_
+  \: `TwoStepTransfer <type-splice-amulet-twosteptransfer-twosteptransfer-31697_>`_ \-\> `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_ \-\> \[`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Holding\] \-\> :ref:`PaymentTransferContext <type-splice-amuletrules-paymenttransfercontext-72190>` \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`LockedAmulet <type-splice-amulet-lockedamulet-7030>`, \[`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Holding\], Metadata)
+
+  Prepare a two\-step transfer of amulet by locking the funds\.
+
+.. _function-splice-amulet-twosteptransfer-executetwosteptransfer-18767:
+
+`executeTwoStepTransfer <function-splice-amulet-twosteptransfer-executetwosteptransfer-18767_>`_
+  \: `TwoStepTransfer <type-splice-amulet-twosteptransfer-twosteptransfer-31697_>`_ \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`LockedAmulet <type-splice-amulet-lockedamulet-7030>` \-\> ExtraArgs \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ (\[`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Holding\], \[`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Holding\], Metadata)
+
+.. _function-splice-amulet-twosteptransfer-aborttwosteptransfer-11048:
+
+`abortTwoStepTransfer <function-splice-amulet-twosteptransfer-aborttwosteptransfer-11048_>`_
+  \: `TwoStepTransfer <type-splice-amulet-twosteptransfer-twosteptransfer-31697_>`_ \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`LockedAmulet <type-splice-amulet-lockedamulet-7030>` \-\> ExtraArgs \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ \[`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Holding\]
+
+.. _function-splice-amulet-twosteptransfer-holdingfeesforduration-17830:
+
+`holdingFeesForDuration <function-splice-amulet-twosteptransfer-holdingfeesforduration-17830_>`_
+  \: `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_ \-\> :ref:`OpenMiningRound <type-splice-round-openmininground-90060>` \-\> `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_

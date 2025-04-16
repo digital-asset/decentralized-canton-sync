@@ -198,6 +198,28 @@ Templates
          - \[`TransferOutput <type-splice-amuletrules-transferoutput-70512_>`_\]
          -
 
+  + .. _type-splice-amuletrules-amuletrulesconvertfeaturedappactivitymarkers-99721:
+
+    **Choice** `AmuletRules_ConvertFeaturedAppActivityMarkers <type-splice-amuletrules-amuletrulesconvertfeaturedappactivitymarkers-99721_>`_
+
+    Controller\: dso
+
+    Returns\: `AmuletRules_ConvertFeaturedAppActivityMarkersResult <type-splice-amuletrules-amuletrulesconvertfeaturedappactivitymarkersresult-77612_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - markerCids
+         - \[`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`FeaturedAppActivityMarker <type-splice-amulet-featuredappactivitymarker-16451>`\]
+         -
+       * - openMiningRoundCid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`OpenMiningRound <type-splice-round-openmininground-90060>`
+         -
+
   + .. _type-splice-amuletrules-amuletrulescreateexternalpartysetupproposal-53882:
 
     **Choice** `AmuletRules_CreateExternalPartySetupProposal <type-splice-amuletrules-amuletrulescreateexternalpartysetupproposal-53882_>`_
@@ -866,12 +888,17 @@ Data Types
        * - senderChangeAmulet
          - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`Amulet <type-splice-amulet-amulet-63582>`)
          -
+       * - meta
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata
+         -
 
   **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `AmuletRules_BuyMemberTrafficResult <type-splice-amuletrules-amuletrulesbuymembertrafficresult-65734_>`_
 
   **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `AmuletRules_BuyMemberTrafficResult <type-splice-amuletrules-amuletrulesbuymembertrafficresult-65734_>`_
 
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"amuletPaid\" `AmuletRules_BuyMemberTrafficResult <type-splice-amuletrules-amuletrulesbuymembertrafficresult-65734_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"meta\" `AmuletRules_BuyMemberTrafficResult <type-splice-amuletrules-amuletrulesbuymembertrafficresult-65734_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata)
 
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"purchasedTraffic\" `AmuletRules_BuyMemberTrafficResult <type-splice-amuletrules-amuletrulesbuymembertrafficresult-65734_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`MemberTraffic <type-splice-decentralizedsynchronizer-membertraffic-74049>`)
 
@@ -882,6 +909,8 @@ Data Types
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"summary\" `AmuletRules_BuyMemberTrafficResult <type-splice-amuletrules-amuletrulesbuymembertrafficresult-65734_>`_ `TransferSummary <type-splice-amuletrules-transfersummary-17366_>`_
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"amuletPaid\" `AmuletRules_BuyMemberTrafficResult <type-splice-amuletrules-amuletrulesbuymembertrafficresult-65734_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"meta\" `AmuletRules_BuyMemberTrafficResult <type-splice-amuletrules-amuletrulesbuymembertrafficresult-65734_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata)
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"purchasedTraffic\" `AmuletRules_BuyMemberTrafficResult <type-splice-amuletrules-amuletrulesbuymembertrafficresult-65734_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`MemberTraffic <type-splice-decentralizedsynchronizer-membertraffic-74049>`)
 
@@ -955,6 +984,35 @@ Data Types
 
   **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `AmuletRules <type-splice-amuletrules-amuletrules-32426_>`_ `AmuletRules_ComputeFees <type-splice-amuletrules-amuletrulescomputefees-56243_>`_ `AmuletRules_ComputeFeesResult <type-splice-amuletrules-amuletrulescomputefeesresult-44934_>`_
 
+.. _type-splice-amuletrules-amuletrulesconvertfeaturedappactivitymarkersresult-77612:
+
+**data** `AmuletRules_ConvertFeaturedAppActivityMarkersResult <type-splice-amuletrules-amuletrulesconvertfeaturedappactivitymarkersresult-77612_>`_
+
+  .. _constr-splice-amuletrules-amuletrulesconvertfeaturedappactivitymarkersresult-46141:
+
+  `AmuletRules_ConvertFeaturedAppActivityMarkersResult <constr-splice-amuletrules-amuletrulesconvertfeaturedappactivitymarkersresult-46141_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - appRewardCouponCids
+         - \[`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`AppRewardCoupon <type-splice-amulet-apprewardcoupon-57229>`\]
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"appRewardCouponCids\" `AmuletRules_ConvertFeaturedAppActivityMarkersResult <type-splice-amuletrules-amuletrulesconvertfeaturedappactivitymarkersresult-77612_>`_ \[`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`AppRewardCoupon <type-splice-amulet-apprewardcoupon-57229>`\]
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"appRewardCouponCids\" `AmuletRules_ConvertFeaturedAppActivityMarkersResult <type-splice-amuletrules-amuletrulesconvertfeaturedappactivitymarkersresult-77612_>`_ \[`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`AppRewardCoupon <type-splice-amulet-apprewardcoupon-57229>`\]
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `AmuletRules <type-splice-amuletrules-amuletrules-32426_>`_ `AmuletRules_ConvertFeaturedAppActivityMarkers <type-splice-amuletrules-amuletrulesconvertfeaturedappactivitymarkers-99721_>`_ `AmuletRules_ConvertFeaturedAppActivityMarkersResult <type-splice-amuletrules-amuletrulesconvertfeaturedappactivitymarkersresult-77612_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `AmuletRules <type-splice-amuletrules-amuletrules-32426_>`_ `AmuletRules_ConvertFeaturedAppActivityMarkers <type-splice-amuletrules-amuletrulesconvertfeaturedappactivitymarkers-99721_>`_ `AmuletRules_ConvertFeaturedAppActivityMarkersResult <type-splice-amuletrules-amuletrulesconvertfeaturedappactivitymarkersresult-77612_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `AmuletRules <type-splice-amuletrules-amuletrules-32426_>`_ `AmuletRules_ConvertFeaturedAppActivityMarkers <type-splice-amuletrules-amuletrulesconvertfeaturedappactivitymarkers-99721_>`_ `AmuletRules_ConvertFeaturedAppActivityMarkersResult <type-splice-amuletrules-amuletrulesconvertfeaturedappactivitymarkersresult-77612_>`_
+
 .. _type-splice-amuletrules-amuletrulescreateexternalpartysetupproposalresult-7515:
 
 **data** `AmuletRules_CreateExternalPartySetupProposalResult <type-splice-amuletrules-amuletrulescreateexternalpartysetupproposalresult-7515_>`_
@@ -985,12 +1043,17 @@ Data Types
        * - amuletPaid
          - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
          -
+       * - meta
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata
+         -
 
   **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `AmuletRules_CreateExternalPartySetupProposalResult <type-splice-amuletrules-amuletrulescreateexternalpartysetupproposalresult-7515_>`_
 
   **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `AmuletRules_CreateExternalPartySetupProposalResult <type-splice-amuletrules-amuletrulescreateexternalpartysetupproposalresult-7515_>`_
 
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"amuletPaid\" `AmuletRules_CreateExternalPartySetupProposalResult <type-splice-amuletrules-amuletrulescreateexternalpartysetupproposalresult-7515_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"meta\" `AmuletRules_CreateExternalPartySetupProposalResult <type-splice-amuletrules-amuletrulescreateexternalpartysetupproposalresult-7515_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata)
 
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"proposalCid\" `AmuletRules_CreateExternalPartySetupProposalResult <type-splice-amuletrules-amuletrulescreateexternalpartysetupproposalresult-7515_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `ExternalPartySetupProposal <type-splice-amuletrules-externalpartysetupproposal-90414_>`_)
 
@@ -1001,6 +1064,8 @@ Data Types
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"validator\" `AmuletRules_CreateExternalPartySetupProposalResult <type-splice-amuletrules-amuletrulescreateexternalpartysetupproposalresult-7515_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"amuletPaid\" `AmuletRules_CreateExternalPartySetupProposalResult <type-splice-amuletrules-amuletrulescreateexternalpartysetupproposalresult-7515_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"meta\" `AmuletRules_CreateExternalPartySetupProposalResult <type-splice-amuletrules-amuletrulescreateexternalpartysetupproposalresult-7515_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata)
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"proposalCid\" `AmuletRules_CreateExternalPartySetupProposalResult <type-splice-amuletrules-amuletrulescreateexternalpartysetupproposalresult-7515_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `ExternalPartySetupProposal <type-splice-amuletrules-externalpartysetupproposal-90414_>`_)
 
@@ -1040,6 +1105,9 @@ Data Types
        * - amuletPaid
          - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
          -
+       * - meta
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata
+         -
 
   **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `AmuletRules_CreateTransferPreapprovalResult <type-splice-amuletrules-amuletrulescreatetransferpreapprovalresult-96401_>`_
 
@@ -1047,11 +1115,15 @@ Data Types
 
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"amuletPaid\" `AmuletRules_CreateTransferPreapprovalResult <type-splice-amuletrules-amuletrulescreatetransferpreapprovalresult-96401_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
 
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"meta\" `AmuletRules_CreateTransferPreapprovalResult <type-splice-amuletrules-amuletrulescreatetransferpreapprovalresult-96401_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata)
+
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"transferPreapprovalCid\" `AmuletRules_CreateTransferPreapprovalResult <type-splice-amuletrules-amuletrulescreatetransferpreapprovalresult-96401_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `TransferPreapproval <type-splice-amuletrules-transferpreapproval-36220_>`_)
 
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"transferResult\" `AmuletRules_CreateTransferPreapprovalResult <type-splice-amuletrules-amuletrulescreatetransferpreapprovalresult-96401_>`_ `TransferResult <type-splice-amuletrules-transferresult-93164_>`_
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"amuletPaid\" `AmuletRules_CreateTransferPreapprovalResult <type-splice-amuletrules-amuletrulescreatetransferpreapprovalresult-96401_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"meta\" `AmuletRules_CreateTransferPreapprovalResult <type-splice-amuletrules-amuletrulescreatetransferpreapprovalresult-96401_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata)
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"transferPreapprovalCid\" `AmuletRules_CreateTransferPreapprovalResult <type-splice-amuletrules-amuletrulescreatetransferpreapprovalresult-96401_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `TransferPreapproval <type-splice-amuletrules-transferpreapproval-36220_>`_)
 
@@ -1110,10 +1182,17 @@ Data Types
        * - amuletSum
          - :ref:`AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609>` (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`Amulet <type-splice-amulet-amulet-63582>`)
          -
+       * - meta
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata
+         -
 
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"amuletSum\" `AmuletRules_DevNet_TapResult <type-splice-amuletrules-amuletrulesdevnettapresult-1845_>`_ (:ref:`AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609>` (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`Amulet <type-splice-amulet-amulet-63582>`))
 
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"meta\" `AmuletRules_DevNet_TapResult <type-splice-amuletrules-amuletrulesdevnettapresult-1845_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata)
+
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"amuletSum\" `AmuletRules_DevNet_TapResult <type-splice-amuletrules-amuletrulesdevnettapresult-1845_>`_ (:ref:`AmuletCreateSummary <type-splice-amulet-amuletcreatesummary-15609>` (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`Amulet <type-splice-amulet-amulet-63582>`))
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"meta\" `AmuletRules_DevNet_TapResult <type-splice-amuletrules-amuletrulesdevnettapresult-1845_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata)
 
   **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `AmuletRules <type-splice-amuletrules-amuletrules-32426_>`_ `AmuletRules_DevNet_Tap <type-splice-amuletrules-amuletrulesdevnettap-82572_>`_ `AmuletRules_DevNet_TapResult <type-splice-amuletrules-amuletrulesdevnettapresult-1845_>`_
 
@@ -1849,12 +1928,17 @@ Data Types
        * - outputs
          - \[`TransferOutput <type-splice-amuletrules-transferoutput-70512_>`_\]
          -
+       * - beneficiaries
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ \[AppRewardBeneficiary\]
+         - Beneficiaries between which the app reward is split\.
 
   **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `Transfer <type-splice-amuletrules-transfer-72721_>`_
 
   **instance** `Ord <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-ord-6395>`_ `Transfer <type-splice-amuletrules-transfer-72721_>`_
 
   **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `Transfer <type-splice-amuletrules-transfer-72721_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"beneficiaries\" `Transfer <type-splice-amuletrules-transfer-72721_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ \[AppRewardBeneficiary\])
 
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"inputs\" `Transfer <type-splice-amuletrules-transfer-72721_>`_ \[`TransferInput <type-splice-amuletrules-transferinput-61796_>`_\]
 
@@ -1865,6 +1949,8 @@ Data Types
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"sender\" `Transfer <type-splice-amuletrules-transfer-72721_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
 
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"transfer\" `AmuletRules_Transfer <type-splice-amuletrules-amuletrulestransfer-23235_>`_ `Transfer <type-splice-amuletrules-transfer-72721_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"beneficiaries\" `Transfer <type-splice-amuletrules-transfer-72721_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ \[AppRewardBeneficiary\])
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"inputs\" `Transfer <type-splice-amuletrules-transfer-72721_>`_ \[`TransferInput <type-splice-amuletrules-transferinput-61796_>`_\]
 
@@ -2299,12 +2385,17 @@ Data Types
        * - amuletPaid
          - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
          -
+       * - meta
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata
+         -
 
   **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `TransferPreapproval_RenewResult <type-splice-amuletrules-transferpreapprovalrenewresult-23849_>`_
 
   **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `TransferPreapproval_RenewResult <type-splice-amuletrules-transferpreapprovalrenewresult-23849_>`_
 
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"amuletPaid\" `TransferPreapproval_RenewResult <type-splice-amuletrules-transferpreapprovalrenewresult-23849_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"meta\" `TransferPreapproval_RenewResult <type-splice-amuletrules-transferpreapprovalrenewresult-23849_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata)
 
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"provider\" `TransferPreapproval_RenewResult <type-splice-amuletrules-transferpreapprovalrenewresult-23849_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
 
@@ -2315,6 +2406,8 @@ Data Types
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"transferResult\" `TransferPreapproval_RenewResult <type-splice-amuletrules-transferpreapprovalrenewresult-23849_>`_ `TransferResult <type-splice-amuletrules-transferresult-93164_>`_
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"amuletPaid\" `TransferPreapproval_RenewResult <type-splice-amuletrules-transferpreapprovalrenewresult-23849_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"meta\" `TransferPreapproval_RenewResult <type-splice-amuletrules-transferpreapprovalrenewresult-23849_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata)
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"provider\" `TransferPreapproval_RenewResult <type-splice-amuletrules-transferpreapprovalrenewresult-23849_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
 
@@ -2390,12 +2483,17 @@ Data Types
        * - senderChangeAmulet
          - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`Amulet <type-splice-amulet-amulet-63582>`)
          - Optional reference to the amulet for the change returned to the sender\. Only created if there was some change to be returned after deducting the fee for returning change\.
+       * - meta
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata
+         -
 
   **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `TransferResult <type-splice-amuletrules-transferresult-93164_>`_
 
   **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `TransferResult <type-splice-amuletrules-transferresult-93164_>`_
 
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"createdAmulets\" `TransferResult <type-splice-amuletrules-transferresult-93164_>`_ \[`CreatedAmulet <type-splice-amuletrules-createdamulet-4205_>`_\]
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"meta\" `TransferResult <type-splice-amuletrules-transferresult-93164_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata)
 
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"result\" `TransferPreapproval_SendResult <type-splice-amuletrules-transferpreapprovalsendresult-68419_>`_ `TransferResult <type-splice-amuletrules-transferresult-93164_>`_
 
@@ -2414,6 +2512,8 @@ Data Types
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"transferResult\" `TransferPreapproval_RenewResult <type-splice-amuletrules-transferpreapprovalrenewresult-23849_>`_ `TransferResult <type-splice-amuletrules-transferresult-93164_>`_
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"createdAmulets\" `TransferResult <type-splice-amuletrules-transferresult-93164_>`_ \[`CreatedAmulet <type-splice-amuletrules-createdamulet-4205_>`_\]
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"meta\" `TransferResult <type-splice-amuletrules-transferresult-93164_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata)
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"result\" `TransferPreapproval_SendResult <type-splice-amuletrules-transferpreapprovalsendresult-68419_>`_ `TransferResult <type-splice-amuletrules-transferresult-93164_>`_
 
@@ -2559,11 +2659,6 @@ Functions
 
   The controllers for a transfer\.
 
-.. _function-splice-amuletrules-scaleamuletconfig-83157:
-
-`scaleAmuletConfig <function-splice-amuletrules-scaleamuletconfig-83157_>`_
-  \: `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_ \-\> :ref:`AmuletConfig <type-splice-amuletconfig-amuletconfig-37414>` :ref:`USD <type-splice-amuletconfig-usd-42527>` \-\> :ref:`AmuletConfig <type-splice-amuletconfig-amuletconfig-37414>` :ref:`Amulet <type-splice-amulet-amulet-63582>`
-
 .. _function-splice-amuletrules-computefees-86753:
 
 `computeFees <function-splice-amuletrules-computefees-86753_>`_
@@ -2626,7 +2721,7 @@ Functions
 .. _function-splice-amuletrules-issuerewards-17863:
 
 `issueRewards <function-splice-amuletrules-issuerewards-17863_>`_
-  \: `RewardsIssuanceConfig <type-splice-amuletrules-rewardsissuanceconfig-37252_>`_ \-\> `TransferContextSummary <type-splice-amuletrules-transfercontextsummary-99392_>`_ \-\> `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> `TransferSummary <type-splice-amuletrules-transfersummary-17366_>`_ \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ ()
+  \: `RewardsIssuanceConfig <type-splice-amuletrules-rewardsissuanceconfig-37252_>`_ \-\> `TransferContextSummary <type-splice-amuletrules-transfercontextsummary-99392_>`_ \-\> `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ \[AppRewardBeneficiary\] \-\> `TransferSummary <type-splice-amuletrules-transfersummary-17366_>`_ \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ ()
 
 .. _function-splice-amuletrules-createtransferoutputs-14910:
 
@@ -2667,6 +2762,11 @@ Functions
 `exercisePaymentTransfer <function-splice-amuletrules-exercisepaymenttransfer-78288_>`_
   \: `PaymentTransferContext <type-splice-amuletrules-paymenttransfercontext-72190_>`_ \-\> `Transfer <type-splice-amuletrules-transfer-72721_>`_ \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ `TransferResult <type-splice-amuletrules-transferresult-93164_>`_
 
+.. _function-splice-amuletrules-exercisecheckedpaymenttransfer-97922:
+
+`exerciseCheckedPaymentTransfer <function-splice-amuletrules-exercisecheckedpaymenttransfer-97922_>`_
+  \: `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> `PaymentTransferContext <type-splice-amuletrules-paymenttransfercontext-72190_>`_ \-\> `Transfer <type-splice-amuletrules-transfer-72721_>`_ \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ `TransferResult <type-splice-amuletrules-transferresult-93164_>`_
+
 .. _function-splice-amuletrules-exercisecomputefees-35831:
 
 `exerciseComputeFees <function-splice-amuletrules-exercisecomputefees-35831_>`_
@@ -2678,6 +2778,11 @@ Functions
   \: `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`OpenMiningRound <type-splice-round-openmininground-90060>` \-\> `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`FeaturedAppRight <type-splice-amulet-featuredappright-765>`) \-\> `TransferContext <type-splice-amuletrules-transfercontext-68991_>`_
 
   Helper to construct transfer context with only amulet inputs
+
+.. _function-splice-amuletrules-createdamulettoholding-42008:
+
+`createdAmuletToHolding <function-splice-amuletrules-createdamulettoholding-42008_>`_
+  \: `CreatedAmulet <type-splice-amuletrules-createdamulet-4205_>`_ \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Holding
 
 .. _function-splice-amuletrules-mkinputvalidatorfaucetcoupon-66284:
 
@@ -2694,4 +2799,23 @@ Functions
 .. _function-splice-amuletrules-splitandburn-28460:
 
 `splitAndBurn <function-splice-amuletrules-splitandburn-28460_>`_
-  \: `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_ \-\> \[`TransferInput <type-splice-amuletrules-transferinput-61796_>`_\] \-\> `TransferContext <type-splice-amuletrules-transfercontext-68991_>`_ \-\> `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ `TransferResult <type-splice-amuletrules-transferresult-93164_>`_
+  \: `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_ \-\> \[`TransferInput <type-splice-amuletrules-transferinput-61796_>`_\] \-\> `TransferContext <type-splice-amuletrules-transfercontext-68991_>`_ \-\> `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_ \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ (`TransferResult <type-splice-amuletrules-transferresult-93164_>`_, Metadata)
+
+.. _function-splice-amuletrules-totalburnfromsummary-61907:
+
+`totalBurnFromSummary <function-splice-amuletrules-totalburnfromsummary-61907_>`_
+  \: `TransferSummary <type-splice-amuletrules-transfersummary-17366_>`_ \-\> `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  Compute the total burn done as part of the transfer\.
+
+.. _function-splice-amuletrules-paymentfromchoicecontext-91468:
+
+`paymentFromChoiceContext <function-splice-amuletrules-paymentfromchoicecontext-91468_>`_
+  \: `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> ChoiceContext \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ `PaymentTransferContext <type-splice-amuletrules-paymenttransfercontext-72190_>`_
+
+.. _function-splice-amuletrules-unfeaturedpaymentcontextfromchoicecontext-64473:
+
+`unfeaturedPaymentContextFromChoiceContext <function-splice-amuletrules-unfeaturedpaymentcontextfromchoicecontext-64473_>`_
+  \: `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> ChoiceContext \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ `PaymentTransferContext <type-splice-amuletrules-paymenttransfercontext-72190_>`_
+
+  Used when we want to ignore a featured app right, even if it is present in the context\.

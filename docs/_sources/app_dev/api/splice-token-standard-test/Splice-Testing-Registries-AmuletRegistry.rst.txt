@@ -1,0 +1,149 @@
+.. _module-splice-testing-registries-amuletregistry-28153:
+
+Splice.Testing.Registries.AmuletRegistry
+========================================
+
+Daml script functions for initializing and using an amulet registry via the
+token standard and the amulet specific functions\.
+
+Data Types
+----------
+
+.. _type-splice-testing-registries-amuletregistry-amuletregistry-76694:
+
+**data** `AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694_>`_
+
+  A reference to a mock amulet registry\.
+  Use it via the the token standard functions provided by the \"Splice\.Testing\.RegistryApi\" module
+  and type\-class; or via the amulet specific functions exported from this module\.
+
+  .. _constr-splice-testing-registries-amuletregistry-amuletregistry-65341:
+
+  `AmuletRegistry <constr-splice-testing-registries-amuletregistry-amuletregistry-65341_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - dso
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - instrumentId
+         - InstrumentId
+         -
+
+  **instance** :ref:`RegistryApi <class-splice-testing-tokenstandard-registryapi-registryapi-36771>` `AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694_>`_
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694_>`_
+
+  **instance** `Ord <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-ord-6395>`_ `AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"dso\" `AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"instrumentId\" `AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694_>`_ InstrumentId
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"registry\" :ref:`TestSetup <type-splice-tests-testamulettokentransfer-testsetup-23760>` `AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"dso\" `AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"instrumentId\" `AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694_>`_ InstrumentId
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"registry\" :ref:`TestSetup <type-splice-tests-testamulettokentransfer-testsetup-23760>` `AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694_>`_
+
+.. _type-splice-testing-registries-amuletregistry-amuletregistryconfig-57082:
+
+**data** `AmuletRegistryConfig <type-splice-testing-registries-amuletregistry-amuletregistryconfig-57082_>`_
+
+  .. _constr-splice-testing-registries-amuletregistry-amuletregistryconfig-72661:
+
+  `AmuletRegistryConfig <constr-splice-testing-registries-amuletregistry-amuletregistryconfig-72661_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - initialAmuletPrice
+         - `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+         -
+       * - demoTime
+         - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `AmuletRegistryConfig <type-splice-testing-registries-amuletregistry-amuletregistryconfig-57082_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `AmuletRegistryConfig <type-splice-testing-registries-amuletregistry-amuletregistryconfig-57082_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"demoTime\" `AmuletRegistryConfig <type-splice-testing-registries-amuletregistry-amuletregistryconfig-57082_>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"initialAmuletPrice\" `AmuletRegistryConfig <type-splice-testing-registries-amuletregistry-amuletregistryconfig-57082_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"demoTime\" `AmuletRegistryConfig <type-splice-testing-registries-amuletregistry-amuletregistryconfig-57082_>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"initialAmuletPrice\" `AmuletRegistryConfig <type-splice-testing-registries-amuletregistry-amuletregistryconfig-57082_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+Functions
+---------
+
+.. _function-splice-testing-registries-amuletregistry-defaultamuletregistryconfig-89742:
+
+`defaultAmuletRegistryConfig <function-splice-testing-registries-amuletregistry-defaultamuletregistryconfig-89742_>`_
+  \: `AmuletRegistryConfig <type-splice-testing-registries-amuletregistry-amuletregistryconfig-57082_>`_
+
+  Recommended default configuration for setting up the mock amulet registry\.
+
+.. _function-splice-testing-registries-amuletregistry-initialize-82895:
+
+`initialize <function-splice-testing-registries-amuletregistry-initialize-82895_>`_
+  \: `AmuletRegistryConfig <type-splice-testing-registries-amuletregistry-amuletregistryconfig-57082_>`_ \-\> Script `AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694_>`_
+
+  Initialize the mock amulet registry\.
+
+.. _function-splice-testing-registries-amuletregistry-tapfaucet-5281:
+
+`tapFaucet <function-splice-testing-registries-amuletregistry-tapfaucet-5281_>`_
+  \: `AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694_>`_ \-\> `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_ \-\> Script (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Holding)
+
+  Tap the faucet on DevNet to get a specified amount of Amulet\.
+
+.. _function-splice-testing-registries-amuletregistry-createlockedamulet-2941:
+
+`createLockedAmulet <function-splice-testing-registries-amuletregistry-createlockedamulet-2941_>`_
+  \: `AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694_>`_ \-\> `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_ \-\> TimeLock \-\> Script (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Holding)
+
+  Direct\-create locked amulet \-\- used for testing purposes only\.
+
+.. _function-splice-testing-registries-amuletregistry-createtransferpreapproval-18003:
+
+`createTransferPreapproval <function-splice-testing-registries-amuletregistry-createtransferpreapproval-18003_>`_
+  \: `AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694_>`_ \-\> `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_ \-\> Script (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TransferPreapproval)
+
+  Simulate that a validator operator created a transfer pre\-approval for a party
+  for the purpose of that party being able to receive Amulet from any other party\.
+
+.. _function-splice-testing-registries-amuletregistry-featureapp-19022:
+
+`featureApp <function-splice-testing-registries-amuletregistry-featureapp-19022_>`_
+  \: `AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694_>`_ \-\> `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> Script (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ FeaturedAppRight)
+
+  Mark a particular registry provider part as featured\.
+
+.. _function-splice-testing-registries-amuletregistry-expirelockasowner-96835:
+
+`expireLockAsOwner <function-splice-testing-registries-amuletregistry-expirelockasowner-96835_>`_
+  \: `AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694_>`_ \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Holding \-\> Script (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Holding)
+
+.. _function-splice-testing-registries-amuletregistry-taplockedandunlockedfunds-93647:
+
+`tapLockedAndUnlockedFunds <function-splice-testing-registries-amuletregistry-taplockedandunlockedfunds-93647_>`_
+  \: `AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694_>`_ \-\> `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_ \-\> Script \[`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Holding\]
+
+  Get funds in equal splits as locked and unlocked holdings to test using
+  expired locked holdings as transfer inputs\.

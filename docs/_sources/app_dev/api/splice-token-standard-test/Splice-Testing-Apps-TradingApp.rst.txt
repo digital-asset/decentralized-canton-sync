@@ -1,0 +1,195 @@
+.. _module-splice-testing-apps-tradingapp-19891:
+
+Splice.Testing.Apps.TradingApp
+==============================
+
+An example of how to build an OTC trading app for multi\-leg standard token trades\.
+
+Used as part of the testing infrastructure to test the DvP workflows based on the token standard\.
+
+Templates
+---------
+
+.. _type-splice-testing-apps-tradingapp-otctrade-80775:
+
+**template** `OTCTrade <type-splice-testing-apps-tradingapp-otctrade-80775_>`_
+
+  Signatory\: venue, tradingParties transferLegs
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - venue
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - transferLegs
+       - \[TransferLeg\]
+       -
+     * - tradeCid
+       - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `OTCTradeProposal <type-splice-testing-apps-tradingapp-otctradeproposal-78093_>`_
+       -
+     * - createdAt
+       - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+       -
+     * - prepareUntil
+       - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+       -
+     * - settleBefore
+       - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+       -
+
+  + **Choice** Archive
+
+    Controller\: venue, tradingParties transferLegs
+
+    Returns\: ()
+
+    (no fields)
+
+  + .. _type-splice-testing-apps-tradingapp-otctradesettle-9210:
+
+    **Choice** `OTCTrade_Settle <type-splice-testing-apps-tradingapp-otctradesettle-9210_>`_
+
+    Controller\: venue
+
+    Returns\: \[Allocation\_ExecuteTransferResult\]
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - allocationInstructions
+         - \[`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Allocation\]
+         -
+       * - extraArgss
+         - \[ExtraArgs\]
+         -
+
+  + **interface instance** AllocationRequest **for** `OTCTrade <type-splice-testing-apps-tradingapp-otctrade-80775_>`_
+
+.. _type-splice-testing-apps-tradingapp-otctradeproposal-78093:
+
+**template** `OTCTradeProposal <type-splice-testing-apps-tradingapp-otctradeproposal-78093_>`_
+
+  Signatory\: approvers
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - venue
+       - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+       -
+     * - tradeCid
+       - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `OTCTradeProposal <type-splice-testing-apps-tradingapp-otctradeproposal-78093_>`_)
+       -
+     * - transferLegs
+       - \[TransferLeg\]
+       -
+     * - approvers
+       - \[`Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_\]
+       - Parties that have approved the proposal
+
+  + **Choice** Archive
+
+    Controller\: approvers
+
+    Returns\: ()
+
+    (no fields)
+
+  + .. _type-splice-testing-apps-tradingapp-otctradeproposalaccept-97549:
+
+    **Choice** `OTCTradeProposal_Accept <type-splice-testing-apps-tradingapp-otctradeproposalaccept-97549_>`_
+
+    Controller\: approver
+
+    Returns\: `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `OTCTradeProposal <type-splice-testing-apps-tradingapp-otctradeproposal-78093_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - approver
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+
+  + .. _type-splice-testing-apps-tradingapp-otctradeproposalinitiatesettlement-54617:
+
+    **Choice** `OTCTradeProposal_InitiateSettlement <type-splice-testing-apps-tradingapp-otctradeproposalinitiatesettlement-54617_>`_
+
+    Controller\: venue
+
+    Returns\: `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `OTCTrade <type-splice-testing-apps-tradingapp-otctrade-80775_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - prepareUntil
+         - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+         -
+       * - settleBefore
+         - `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+         -
+
+  + .. _type-splice-testing-apps-tradingapp-otctradeproposalreject-13148:
+
+    **Choice** `OTCTradeProposal_Reject <type-splice-testing-apps-tradingapp-otctradeproposalreject-13148_>`_
+
+    Controller\: trader
+
+    Returns\: ()
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - trader
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+
+Functions
+---------
+
+.. _function-splice-testing-apps-tradingapp-tradeallocations-16894:
+
+`tradeAllocations <function-splice-testing-apps-tradingapp-tradeallocations-16894_>`_
+  \: SettlementInfo \-\> \[TransferLeg\] \-\> \[AllocationSpecification\]
+
+.. _function-splice-testing-apps-tradingapp-tradingparties-11886:
+
+`tradingParties <function-splice-testing-apps-tradingapp-tradingparties-11886_>`_
+  \: \[TransferLeg\] \-\> `Set <https://docs.daml.com/daml/stdlib/DA-Set.html#type-da-set-types-set-90436>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+.. _function-splice-testing-apps-tradingapp-require-88127:
+
+`require <function-splice-testing-apps-tradingapp-require-88127_>`_
+  \: `CanAssert <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-assert-canassert-67323>`_ m \=\> `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_ \-\> `Bool <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-bool-66265>`_ \-\> m ()
+
+  Check whether a required condition is true\. If it's not, abort the
+  transaction with a message saying that the requirement was not met\.
+
+.. _function-splice-testing-apps-tradingapp-maketraderef-67526:
+
+`makeTradeRef <function-splice-testing-apps-tradingapp-maketraderef-67526_>`_
+  \: `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `OTCTradeProposal <type-splice-testing-apps-tradingapp-otctradeproposal-78093_>`_ \-\> Reference

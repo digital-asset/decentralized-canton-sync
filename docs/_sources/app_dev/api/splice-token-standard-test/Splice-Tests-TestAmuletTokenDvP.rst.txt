@@ -1,0 +1,38 @@
+.. _module-splice-tests-testamulettokendvp-14922:
+
+Splice.Tests.TestAmuletTokenDvP
+===============================
+
+Daml script tests showing that the token standard can be used to execute
+DvP settlements of Amulet tokens; and how to do so\.
+
+See this test and the 'Splice\.Testing\.TradingApp' module for an example of
+how to integrate with the allocation APIs of the token standard to execute
+DvP settlements\.
+
+Note also that the delivery part of a DvP settelement can be both another
+token implementing the standard, as well as the creation of on\-ledger state
+specific to your registry; e\.g\., a license contract\.
+
+Functions
+---------
+
+.. _function-splice-tests-testamulettokendvp-testdvp-18055:
+
+`testDvP <function-splice-tests-testamulettokendvp-testdvp-18055_>`_
+  \: Script ()
+
+  Test that a DvP settlement of an OTC trade works when using Amulet via the token standard\.
+
+.. _function-splice-tests-testamulettokendvp-appbackendlistallocations-88475:
+
+`appBackendListAllocations <function-splice-tests-testamulettokendvp-appbackendlistallocations-88475_>`_
+  \: `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> Reference \-\> Script \[(`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Allocation, AllocationView)\]
+
+  List all allocations matching a particular settlement reference, sorted by their tradeLeg id\.
+  This function would be run on the trading app provider's backend as part of an automation loop\.
+
+.. _function-splice-tests-testamulettokendvp-expectburn-98454:
+
+`expectBurn <function-splice-tests-testamulettokendvp-expectburn-98454_>`_
+  \: Metadata \-\> Script ()

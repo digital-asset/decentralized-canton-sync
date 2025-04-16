@@ -37,6 +37,8 @@ Data Types
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"dso\" `ForDso <type-splice-types-fordso-8725_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
 
+  **instance** HasCheckedFetch :ref:`FeaturedAppActivityMarker <type-splice-amulet-featuredappactivitymarker-16451>` `ForDso <type-splice-types-fordso-8725_>`_
+
   **instance** HasCheckedFetch :ref:`UnclaimedReward <type-splice-amulet-unclaimedreward-7814>` `ForDso <type-splice-types-fordso-8725_>`_
 
   **instance** HasCheckedFetch :ref:`ValidatorRewardCoupon <type-splice-amulet-validatorrewardcoupon-76808>` `ForDso <type-splice-types-fordso-8725_>`_
@@ -99,6 +101,8 @@ Data Types
 
   **instance** HasCheckedFetch :ref:`AppRewardCoupon <type-splice-amulet-apprewardcoupon-57229>` `ForOwner <type-splice-types-forowner-62144_>`_
 
+  **instance** HasCheckedFetch :ref:`FeaturedAppActivityMarker <type-splice-amulet-featuredappactivitymarker-16451>` `ForOwner <type-splice-types-forowner-62144_>`_
+
   **instance** HasCheckedFetch :ref:`LockedAmulet <type-splice-amulet-lockedamulet-7030>` `ForOwner <type-splice-types-forowner-62144_>`_
 
   **instance** HasCheckedFetch :ref:`SvRewardCoupon <type-splice-amulet-svrewardcoupon-68580>` `ForOwner <type-splice-types-forowner-62144_>`_
@@ -110,6 +114,8 @@ Data Types
   **instance** HasCheckedFetch :ref:`ValidatorFaucetCoupon <type-splice-validatorlicense-validatorfaucetcoupon-19254>` `ForOwner <type-splice-types-forowner-62144_>`_
 
   **instance** HasCheckedFetch :ref:`ValidatorLivenessActivityRecord <type-splice-validatorlicense-validatorlivenessactivityrecord-17293>` `ForOwner <type-splice-types-forowner-62144_>`_
+
+  **instance** HasCheckedFetch HoldingView `ForOwner <type-splice-types-forowner-62144_>`_
 
 .. _type-splice-types-forround-72197:
 

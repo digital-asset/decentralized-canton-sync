@@ -1,0 +1,84 @@
+.. _module-splice-testing-registries-amuletregistry-parameters-49890:
+
+Splice.Testing.Registries.AmuletRegistry.Parameters
+===================================================
+
+Default configuration paramaters for the amulet registry used for testing\.
+
+Functions
+---------
+
+.. _function-splice-testing-registries-amuletregistry-parameters-defaulttransferconfig-26619:
+
+`defaultTransferConfig <function-splice-testing-registries-amuletregistry-parameters-defaulttransferconfig-26619_>`_
+  \: TransferConfig USD
+
+  Somewhat realistic fees to be used in test\-code\.
+
+.. _function-splice-testing-registries-amuletregistry-parameters-defaultamuletdecentralizedsynchronizerconfig-11431:
+
+`defaultAmuletDecentralizedSynchronizerConfig <function-splice-testing-registries-amuletregistry-parameters-defaultamuletdecentralizedsynchronizerconfig-11431_>`_
+  \: AmuletDecentralizedSynchronizerConfig
+
+  Decentralized synchronizer config to use for testing\.
+
+.. _function-splice-testing-registries-amuletregistry-parameters-defaultfeaturedappactivitymarkeramount-91429:
+
+`defaultFeaturedAppActivityMarkerAmount <function-splice-testing-registries-amuletregistry-parameters-defaultfeaturedappactivitymarkeramount-91429_>`_
+  \: `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+.. _function-splice-testing-registries-amuletregistry-parameters-defaultamuletconfig-4026:
+
+`defaultAmuletConfig <function-splice-testing-registries-amuletregistry-parameters-defaultamuletconfig-4026_>`_
+  \: AmuletConfig USD
+
+  Default proposal for issuance curve and tickDuration
+
+.. _function-splice-testing-registries-amuletregistry-parameters-defaultamuletconfigschedule-68093:
+
+`defaultAmuletConfigSchedule <function-splice-testing-registries-amuletregistry-parameters-defaultamuletconfigschedule-68093_>`_
+  \: Schedule `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_ (AmuletConfig USD)
+
+  Default configuration schedule with single current amulet config
+
+.. _function-splice-testing-registries-amuletregistry-parameters-issuanceconfig00p5-46562:
+
+`issuanceConfig_0_0p5 <function-splice-testing-registries-amuletregistry-parameters-issuanceconfig00p5-46562_>`_
+  \: IssuanceConfig
+
+.. _function-splice-testing-registries-amuletregistry-parameters-issuanceconfig0p51p5-32608:
+
+`issuanceConfig_0p5_1p5 <function-splice-testing-registries-amuletregistry-parameters-issuanceconfig0p51p5-32608_>`_
+  \: IssuanceConfig
+
+.. _function-splice-testing-registries-amuletregistry-parameters-issuanceconfig1p55-41998:
+
+`issuanceConfig_1p5_5 <function-splice-testing-registries-amuletregistry-parameters-issuanceconfig1p55-41998_>`_
+  \: IssuanceConfig
+
+.. _function-splice-testing-registries-amuletregistry-parameters-issuanceconfig510-86316:
+
+`issuanceConfig_5_10 <function-splice-testing-registries-amuletregistry-parameters-issuanceconfig510-86316_>`_
+  \: IssuanceConfig
+
+.. _function-splice-testing-registries-amuletregistry-parameters-issuanceconfig10plus-48446:
+
+`issuanceConfig_10plus <function-splice-testing-registries-amuletregistry-parameters-issuanceconfig10plus-48446_>`_
+  \: IssuanceConfig
+
+.. _function-splice-testing-registries-amuletregistry-parameters-defaultissuancecurve-61043:
+
+`defaultIssuanceCurve <function-splice-testing-registries-amuletregistry-parameters-defaultissuancecurve-61043_>`_
+  \: Schedule `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_ IssuanceConfig
+
+.. _function-splice-testing-registries-amuletregistry-parameters-defaultbaseratetrafficlimits-50057:
+
+`defaultBaseRateTrafficLimits <function-splice-testing-registries-amuletregistry-parameters-defaultbaseratetrafficlimits-50057_>`_
+  \: BaseRateTrafficLimits
+
+  Default synchronizer fees configuration
+
+.. _function-splice-testing-registries-amuletregistry-parameters-defaultsynchronizerfeesconfig-31989:
+
+`defaultSynchronizerFeesConfig <function-splice-testing-registries-amuletregistry-parameters-defaultsynchronizerfeesconfig-31989_>`_
+  \: SynchronizerFeesConfig

@@ -196,6 +196,28 @@ Templates
          - \[`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`AmuletPriceVote <type-splice-dso-amuletprice-amuletpricevote-96658>`\]
          -
 
+  + .. _type-splice-dsorules-dsorulesamuletrulesconvertfeaturedappactivitymarkers-52437:
+
+    **Choice** `DsoRules_AmuletRules_ConvertFeaturedAppActivityMarkers <type-splice-dsorules-dsorulesamuletrulesconvertfeaturedappactivitymarkers-52437_>`_
+
+    Controller\: dsoDelegate
+
+    Returns\: `DsoRules_AmuletRules_ConvertFeaturedAppActivityMarkersResult <type-splice-dsorules-dsorulesamuletrulesconvertfeaturedappactivitymarkersresult-72068_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - amuletRulesCid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ AmuletRules
+         -
+       * - argument
+         - AmuletRules\_ConvertFeaturedAppActivityMarkers
+         -
+
   + .. _type-splice-dsorules-dsorulesamuletexpire-71495:
 
     **Choice** `DsoRules_Amulet_Expire <type-splice-dsorules-dsorulesamuletexpire-71495_>`_
@@ -1728,6 +1750,35 @@ Data Types
   **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `DsoRules <type-splice-dsorules-dsorules-35440_>`_ `DsoRules_AdvanceOpenMiningRounds <type-splice-dsorules-dsorulesadvanceopenminingrounds-34192_>`_ `DsoRules_AdvanceOpenMiningRoundsResult <type-splice-dsorules-dsorulesadvanceopenminingroundsresult-57405_>`_
 
   **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `DsoRules <type-splice-dsorules-dsorules-35440_>`_ `DsoRules_AdvanceOpenMiningRounds <type-splice-dsorules-dsorulesadvanceopenminingrounds-34192_>`_ `DsoRules_AdvanceOpenMiningRoundsResult <type-splice-dsorules-dsorulesadvanceopenminingroundsresult-57405_>`_
+
+.. _type-splice-dsorules-dsorulesamuletrulesconvertfeaturedappactivitymarkersresult-72068:
+
+**data** `DsoRules_AmuletRules_ConvertFeaturedAppActivityMarkersResult <type-splice-dsorules-dsorulesamuletrulesconvertfeaturedappactivitymarkersresult-72068_>`_
+
+  .. _constr-splice-dsorules-dsorulesamuletrulesconvertfeaturedappactivitymarkersresult-81577:
+
+  `DsoRules_AmuletRules_ConvertFeaturedAppActivityMarkersResult <constr-splice-dsorules-dsorulesamuletrulesconvertfeaturedappactivitymarkersresult-81577_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - result
+         - AmuletRules\_ConvertFeaturedAppActivityMarkersResult
+         -
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"result\" `DsoRules_AmuletRules_ConvertFeaturedAppActivityMarkersResult <type-splice-dsorules-dsorulesamuletrulesconvertfeaturedappactivitymarkersresult-72068_>`_ AmuletRules\_ConvertFeaturedAppActivityMarkersResult
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"result\" `DsoRules_AmuletRules_ConvertFeaturedAppActivityMarkersResult <type-splice-dsorules-dsorulesamuletrulesconvertfeaturedappactivitymarkersresult-72068_>`_ AmuletRules\_ConvertFeaturedAppActivityMarkersResult
+
+  **instance** `HasExercise <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422>`_ `DsoRules <type-splice-dsorules-dsorules-35440_>`_ `DsoRules_AmuletRules_ConvertFeaturedAppActivityMarkers <type-splice-dsorules-dsorulesamuletrulesconvertfeaturedappactivitymarkers-52437_>`_ `DsoRules_AmuletRules_ConvertFeaturedAppActivityMarkersResult <type-splice-dsorules-dsorulesamuletrulesconvertfeaturedappactivitymarkersresult-72068_>`_
+
+  **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `DsoRules <type-splice-dsorules-dsorules-35440_>`_ `DsoRules_AmuletRules_ConvertFeaturedAppActivityMarkers <type-splice-dsorules-dsorulesamuletrulesconvertfeaturedappactivitymarkers-52437_>`_ `DsoRules_AmuletRules_ConvertFeaturedAppActivityMarkersResult <type-splice-dsorules-dsorulesamuletrulesconvertfeaturedappactivitymarkersresult-72068_>`_
+
+  **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `DsoRules <type-splice-dsorules-dsorules-35440_>`_ `DsoRules_AmuletRules_ConvertFeaturedAppActivityMarkers <type-splice-dsorules-dsorulesamuletrulesconvertfeaturedappactivitymarkers-52437_>`_ `DsoRules_AmuletRules_ConvertFeaturedAppActivityMarkersResult <type-splice-dsorules-dsorulesamuletrulesconvertfeaturedappactivitymarkersresult-72068_>`_
 
 .. _type-splice-dsorules-dsorulesamuletexpireresult-67290:
 

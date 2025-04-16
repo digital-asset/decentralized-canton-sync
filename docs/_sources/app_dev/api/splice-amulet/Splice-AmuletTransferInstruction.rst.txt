@@ -1,0 +1,46 @@
+.. _module-splice-amulettransferinstruction-51350:
+
+Splice.AmuletTransferInstruction
+================================
+
+Templates
+---------
+
+.. _type-splice-amulettransferinstruction-amulettransferinstruction-76678:
+
+**template** `AmuletTransferInstruction <type-splice-amulettransferinstruction-amulettransferinstruction-76678_>`_
+
+  A transfer instruction for transferring Amulet tokens pending on receiver
+  acceptance\.
+
+  Signatory\: (DA\.Internal\.Record\.getField @\"admin\" (DA\.Internal\.Record\.getField @\"instrumentId\" transfer)), (DA\.Internal\.Record\.getField @\"sender\" transfer)
+
+  .. list-table::
+     :widths: 15 10 30
+     :header-rows: 1
+
+     * - Field
+       - Type
+       - Description
+     * - lockedAmulet
+       - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`LockedAmulet <type-splice-amulet-lockedamulet-7030>`
+       - Locked amulet that holds the funds for executing the transfer upon acceptance
+     * - transfer
+       - Transfer
+       -
+
+  + **Choice** Archive
+
+    Controller\: (DA\.Internal\.Record\.getField @\"admin\" (DA\.Internal\.Record\.getField @\"instrumentId\" transfer)), (DA\.Internal\.Record\.getField @\"sender\" transfer)
+
+    Returns\: ()
+
+    (no fields)
+
+Functions
+---------
+
+.. _function-splice-amulettransferinstruction-standardtransfertotwosteptransfer-69205:
+
+`standardTransferToTwoStepTransfer <function-splice-amulettransferinstruction-standardtransfertotwosteptransfer-69205_>`_
+  \: Transfer \-\> :ref:`TwoStepTransfer <type-splice-amulet-twosteptransfer-twosteptransfer-31697>`

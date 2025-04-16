@@ -11,8 +11,12 @@ splice-amulet docs
    :titlesonly:
 
    Splice.Amulet <Splice-Amulet>
+   Splice.Amulet.TokenApiUtils <Splice-Amulet-TokenApiUtils>
+   Splice.Amulet.TwoStepTransfer <Splice-Amulet-TwoStepTransfer>
+   Splice.AmuletAllocation <Splice-AmuletAllocation>
    Splice.AmuletConfig <Splice-AmuletConfig>
    Splice.AmuletRules <Splice-AmuletRules>
+   Splice.AmuletTransferInstruction <Splice-AmuletTransferInstruction>
    Splice.DecentralizedSynchronizer <Splice-DecentralizedSynchronizer>
    Splice.Expiry <Splice-Expiry>
    Splice.ExternalPartyAmuletRules <Splice-ExternalPartyAmuletRules>

@@ -1,0 +1,94 @@
+.. _module-splice-testing-tokenstandard-walletclient-19256:
+
+Splice.Testing.TokenStandard.WalletClient
+=========================================
+
+Daml script test utilities for simulating the actions of wallet client
+based on the token standard\.
+
+NOTE\: there are likely more functions that could/should be added to this module\. PRs welcome\.
+
+Functions
+---------
+
+.. _function-splice-testing-tokenstandard-walletclient-listholdings-798:
+
+`listHoldings <function-splice-testing-tokenstandard-walletclient-listholdings-798_>`_
+  \: `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> InstrumentId \-\> Script \[(`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Holding, HoldingView)\]
+
+  List the hodlings of a party of a specific instrument\.
+
+.. _function-splice-testing-tokenstandard-walletclient-listlockedholdings-45902:
+
+`listLockedHoldings <function-splice-testing-tokenstandard-walletclient-listlockedholdings-45902_>`_
+  \: `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> InstrumentId \-\> Script \[(`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Holding, HoldingView)\]
+
+.. _function-splice-testing-tokenstandard-walletclient-listholdingcids-24613:
+
+`listHoldingCids <function-splice-testing-tokenstandard-walletclient-listholdingcids-24613_>`_
+  \: `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> InstrumentId \-\> Script \[`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Holding\]
+
+  List the cids of the hodlings of a party of a specific instrument\.
+
+.. _function-splice-testing-tokenstandard-walletclient-checkholdingwithamountexists-67059:
+
+`checkHoldingWithAmountExists <function-splice-testing-tokenstandard-walletclient-checkholdingwithamountexists-67059_>`_
+  \: `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> InstrumentId \-\> `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_ \-\> Script ()
+
+  Check that a holding with a specific amount exists for the given owner\.
+
+.. _function-splice-testing-tokenstandard-walletclient-checkbalancebounds-93015:
+
+`checkBalanceBounds <function-splice-testing-tokenstandard-walletclient-checkbalancebounds-93015_>`_
+  \: `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> InstrumentId \-\> (`Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_, `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_) \-\> Script ()
+
+  Check the bounds on a party's total balance of all holdings of the given instrument\.
+
+.. _function-splice-testing-tokenstandard-walletclient-checkholding-92171:
+
+`checkHolding <function-splice-testing-tokenstandard-walletclient-checkholding-92171_>`_
+  \: `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Holding \-\> `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_ \-\> Script ()
+
+  Check the exact value of on an individual holding's amount\.
+
+.. _function-splice-testing-tokenstandard-walletclient-checkholdingbounds-16142:
+
+`checkHoldingBounds <function-splice-testing-tokenstandard-walletclient-checkholdingbounds-16142_>`_
+  \: `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Holding \-\> (`Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_, `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_) \-\> Script ()
+
+  Check the bounds on an individual holding's amount\.
+
+.. _function-splice-testing-tokenstandard-walletclient-checkbalanceapprox-77056:
+
+`checkBalanceApprox <function-splice-testing-tokenstandard-walletclient-checkbalanceapprox-77056_>`_
+  \: `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> InstrumentId \-\> `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_ \-\> Script ()
+
+  Check the approximate value (\+/\- 1\.0) a party's total balance of all holdings of the given instrument\.
+
+.. _function-splice-testing-tokenstandard-walletclient-checkholdingapprox-49413:
+
+`checkHoldingApprox <function-splice-testing-tokenstandard-walletclient-checkholdingapprox-49413_>`_
+  \: `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Holding \-\> `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_ \-\> Script ()
+
+  Check the approximate (\+/\- 1\.0) amount of an individual holding\.
+
+.. _function-splice-testing-tokenstandard-walletclient-checkbalance-47862:
+
+`checkBalance <function-splice-testing-tokenstandard-walletclient-checkbalance-47862_>`_
+  \: `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> InstrumentId \-\> `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_ \-\> Script ()
+
+  Check the exact value a party's total balance of all holdings of the given instrument\.
+
+.. _function-splice-testing-tokenstandard-walletclient-listtransferoffers-42592:
+
+`listTransferOffers <function-splice-testing-tokenstandard-walletclient-listtransferoffers-42592_>`_
+  \: `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> InstrumentId \-\> Script \[(`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TransferInstruction, TransferInstructionView)\]
+
+  List pending transfer offers (as sender or receiver)
+
+.. _function-splice-testing-tokenstandard-walletclient-listrequestedallocations-63651:
+
+`listRequestedAllocations <function-splice-testing-tokenstandard-walletclient-listrequestedallocations-63651_>`_
+  \: `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> InstrumentId \-\> Script \[AllocationSpecification\]
+
+  List all allocations requested from the owner for a specific instrument\.

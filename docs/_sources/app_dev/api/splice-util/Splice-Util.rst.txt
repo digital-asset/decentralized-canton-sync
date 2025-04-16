@@ -10,17 +10,53 @@ Typeclasses
 
 .. _class-splice-util-hascheckedfetch-36555:
 
-**class** (`HasFetch <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfetch-52387>`_ t, `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ t, `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ cgid, `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ cgid) \=\> `HasCheckedFetch <class-splice-util-hascheckedfetch-36555_>`_ t cgid **where**
+**class** (`Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ t, `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ cgid, `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ cgid) \=\> `HasCheckedFetch <class-splice-util-hascheckedfetch-36555_>`_ t cgid **where**
 
   Contracts typically come in groups\. For example, all contracts managed by a specific DSO party\.
 
   We aim to always fetch with a specific contract group identifier to ensure that we do not mixup
   contracts from different groups\.
 
+  Note that we are not requiring ``HasFetch`` here, so that we can use this typeclass also for
+  contract groups that are not templates, e\.g\., interface views\.
+
   .. _function-splice-util-contractgroupid-63283:
 
   `contractGroupId <function-splice-util-contractgroupid-63283_>`_
     \: t \-\> cgid
+
+.. _class-splice-util-patchable-41062:
+
+**class** `Patchable <class-splice-util-patchable-41062_>`_ a **where**
+
+  A type class for patching values\. Used in particular for changing only a subset of
+  fields in a config value\.
+
+  .. _function-splice-util-patch-72775:
+
+  `patch <function-splice-util-patch-72775_>`_
+    \: a \-\> a \-\> a \-\> a
+
+    For records, ``patch new base current`` should set all fields in ``current`` to their value in ``new`` iff their value was changed
+    in ``new`` compared to ``base``\. For other kinds of values that have field\-like values
+    (e\.g\. Maps with keys) the implementation should match the one for records
+    by analogy\.
+
+  **instance** `Patchable <class-splice-util-patchable-41062_>`_ `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_
+
+  **instance** `Patchable <class-splice-util-patchable-41062_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+
+  **instance** `Patchable <class-splice-util-patchable-41062_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+  **instance** (`Ord <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-ord-6395>`_ k, `Patchable <class-splice-util-patchable-41062_>`_ v) \=\> `Patchable <class-splice-util-patchable-41062_>`_ (`Map <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-map-90052>`_ k v)
+
+  **instance** `Patchable <class-splice-util-patchable-41062_>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
+
+  **instance** `Patchable <class-splice-util-patchable-41062_>`_ a \=\> `Patchable <class-splice-util-patchable-41062_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ a)
+
+  **instance** (`Patchable <class-splice-util-patchable-41062_>`_ a, `Ord <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-ord-6395>`_ a) \=\> `Patchable <class-splice-util-patchable-41062_>`_ (`Set <https://docs.daml.com/daml/stdlib/DA-Set.html#type-da-set-types-set-90436>`_ a)
+
+  **instance** `Patchable <class-splice-util-patchable-41062_>`_ `RelTime <https://docs.daml.com/daml/stdlib/DA-Time.html#type-da-time-types-reltime-23082>`_
 
 Functions
 ---------
@@ -40,10 +76,28 @@ Functions
   Check whether a required condition is true\. If it's not, abort the
   transaction with a message saying that the requirement was not met\.
 
+.. _function-splice-util-fetchchecked-58913:
+
+`fetchChecked <function-splice-util-fetchchecked-58913_>`_
+  \: (`HasFetch <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfetch-52387>`_ t, `HasCheckedFetch <class-splice-util-hascheckedfetch-36555_>`_ t cgid) \=\> cgid \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ t \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ t
+
+  Fetch a contract that is part of a specific contract group\.
+
+  The group is typically chosen by the caller to match its own group, or a more specific group\.
+
+.. _function-splice-util-fetchcheckedinterface-8937:
+
+`fetchCheckedInterface <function-splice-util-fetchcheckedinterface-8937_>`_
+  \: (`HasFetch <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfetch-52387>`_ i, `HasInterfaceView <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-interface-hasinterfaceview-4492>`_ i v, `HasCheckedFetch <class-splice-util-hascheckedfetch-36555_>`_ v cgid) \=\> cgid \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ i \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ i
+
+  Fetch a contract that is part of a specific contract group defined by its interface view\.
+
+  The group is typically chosen by the caller to match its own group, or a more specific group\.
+
 .. _function-splice-util-fetchandarchive-96960:
 
 `fetchAndArchive <function-splice-util-fetchandarchive-96960_>`_
-  \: (`HasCheckedFetch <class-splice-util-hascheckedfetch-36555_>`_ t cgid, `HasArchive <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasarchive-7071>`_ t) \=\> cgid \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ t \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ t
+  \: (`HasFetch <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfetch-52387>`_ t, `HasCheckedFetch <class-splice-util-hascheckedfetch-36555_>`_ t cgid, `HasArchive <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasarchive-7071>`_ t) \=\> cgid \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ t \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ t
 
   Fetch and archive a contract in one go\.
 
@@ -53,7 +107,7 @@ Functions
 .. _function-splice-util-fetchreferencedata-72475:
 
 `fetchReferenceData <function-splice-util-fetchreferencedata-72475_>`_
-  \: `HasCheckedFetch <class-splice-util-hascheckedfetch-36555_>`_ t cgid \=\> cgid \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ t \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ t
+  \: (`HasFetch <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfetch-52387>`_ t, `HasCheckedFetch <class-splice-util-hascheckedfetch-36555_>`_ t cgid) \=\> cgid \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ t \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ t
 
   Fetch a contract that serves as reference data\.
 
@@ -62,7 +116,7 @@ Functions
 .. _function-splice-util-fetchbutarchivelater-86159:
 
 `fetchButArchiveLater <function-splice-util-fetchbutarchivelater-86159_>`_
-  \: `HasCheckedFetch <class-splice-util-hascheckedfetch-36555_>`_ t cgid \=\> cgid \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ t \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ t
+  \: (`HasFetch <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfetch-52387>`_ t, `HasCheckedFetch <class-splice-util-hascheckedfetch-36555_>`_ t cgid) \=\> cgid \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ t \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ t
 
   Fetch a contract that is not reference data, and should be archived later in some cases\.
 
@@ -113,6 +167,11 @@ Functions
   Please justify all its uses, and where possible prefer ``fetchAndArchive``
   so that the contract group identifier is surely performed\.
 
+.. _function-splice-util-patchscalar-11117:
+
+`patchScalar <function-splice-util-patchscalar-11117_>`_
+  \: `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ a \=\> a \-\> a \-\> a \-\> a
+
 .. _function-splice-util-patchlistasscalar-47719:
 
 `patchListAsScalar <function-splice-util-patchlistasscalar-47719_>`_
@@ -121,4 +180,34 @@ Functions
 .. _function-splice-util-patchlistasset-9274:
 
 `patchListAsSet <function-splice-util-patchlistasset-9274_>`_
-  \: (Patchable a, `Ord <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-ord-6395>`_ a) \=\> \[a\] \-\> \[a\] \-\> \[a\] \-\> \[a\]
+  \: (`Patchable <class-splice-util-patchable-41062_>`_ a, `Ord <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-ord-6395>`_ a) \=\> \[a\] \-\> \[a\] \-\> \[a\] \-\> \[a\]
+
+.. _function-splice-util-isledgertimege-43420:
+
+`isLedgerTimeGE <function-splice-util-isledgertimege-43420_>`_
+  \: `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_ \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ `Bool <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-bool-66265>`_
+
+.. _function-splice-util-isledgertimele-98309:
+
+`isLedgerTimeLE <function-splice-util-isledgertimele-98309_>`_
+  \: `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_ \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ `Bool <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-bool-66265>`_
+
+.. _function-splice-util-isledgertimegt-15401:
+
+`isLedgerTimeGT <function-splice-util-isledgertimegt-15401_>`_
+  \: `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_ \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ `Bool <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-bool-66265>`_
+
+.. _function-splice-util-isledgertimelt-87288:
+
+`isLedgerTimeLT <function-splice-util-isledgertimelt-87288_>`_
+  \: `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_ \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ `Bool <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-bool-66265>`_
+
+.. _function-splice-util-assertwithindeadline-20917:
+
+`assertWithinDeadline <function-splice-util-assertwithindeadline-20917_>`_
+  \: `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_ \-\> `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_ \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ ()
+
+.. _function-splice-util-assertdeadlineexceeded-1597:
+
+`assertDeadlineExceeded <function-splice-util-assertdeadlineexceeded-1597_>`_
+  \: `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_ \-\> `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_ \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ ()

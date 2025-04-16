@@ -69,6 +69,10 @@ Templates
          - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
          -
 
+  + **interface instance** AllocationFactory **for** `ExternalPartyAmuletRules <type-splice-externalpartyamuletrules-externalpartyamuletrules-29682_>`_
+
+  + **interface instance** TransferFactory **for** `ExternalPartyAmuletRules <type-splice-externalpartyamuletrules-externalpartyamuletrules-29682_>`_
+
 .. _type-splice-externalpartyamuletrules-transfercommand-52429:
 
 **template** `TransferCommand <type-splice-externalpartyamuletrules-transfercommand-52429_>`_
@@ -78,9 +82,7 @@ Templates
 
   We externally sign this instead of the transfer itself to support a longer delay between
   prepare/execute which would be prevented by signing the transfer directly as that one pins
-  down the mining rounds that are relatively short lived and relies on ``getTime`` which
-  means it would fail due to the max allowed skew between ledger effective time and record
-  time\.
+  down the mining rounds that are relatively short lived\.
 
   Signatory\: sender, dso
 
@@ -424,3 +426,21 @@ Data Types
   **instance** `HasFromAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184>`_ `TransferCommand <type-splice-externalpartyamuletrules-transfercommand-52429_>`_ `TransferCommand_Withdraw <type-splice-externalpartyamuletrules-transfercommandwithdraw-90837_>`_ `TransferCommand_WithdrawResult <type-splice-externalpartyamuletrules-transfercommandwithdrawresult-60664_>`_
 
   **instance** `HasToAnyChoice <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hastoanychoice-82571>`_ `TransferCommand <type-splice-externalpartyamuletrules-transfercommand-52429_>`_ `TransferCommand_Withdraw <type-splice-externalpartyamuletrules-transfercommandwithdraw-90837_>`_ `TransferCommand_WithdrawResult <type-splice-externalpartyamuletrules-transfercommandwithdrawresult-60664_>`_
+
+Functions
+---------
+
+.. _function-splice-externalpartyamuletrules-amulettransferfactorytransferimpl-9935:
+
+`amulet_transferFactory_transferImpl <function-splice-externalpartyamuletrules-amulettransferfactorytransferimpl-9935_>`_
+  \: `ExternalPartyAmuletRules <type-splice-externalpartyamuletrules-externalpartyamuletrules-29682_>`_ \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TransferFactory \-\> TransferFactory\_Transfer \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ TransferInstructionResult
+
+.. _function-splice-externalpartyamuletrules-amuletallocationfactoryallocateimpl-5710:
+
+`amulet_allocationFactory_allocateImpl <function-splice-externalpartyamuletrules-amuletallocationfactoryallocateimpl-5710_>`_
+  \: `ExternalPartyAmuletRules <type-splice-externalpartyamuletrules-externalpartyamuletrules-29682_>`_ \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ AllocationFactory \-\> AllocationFactory\_Allocate \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ AllocationInstructionResult
+
+.. _function-splice-externalpartyamuletrules-requireexpectedadminmatch-79926:
+
+`requireExpectedAdminMatch <function-splice-externalpartyamuletrules-requireexpectedadminmatch-79926_>`_
+  \: `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_ \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ ()
