@@ -188,6 +188,16 @@ Functions
 `validatorRewardAmountMetaKey <function-splice-amulet-tokenapiutils-validatorrewardamountmetakey-47315_>`_
   \: `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
 
+.. _function-splice-amulet-tokenapiutils-apprewardbeneficiariesmetakey-63876:
+
+`appRewardBeneficiariesMetaKey <function-splice-amulet-tokenapiutils-apprewardbeneficiariesmetakey-63876_>`_
+  \: `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
+.. _function-splice-amulet-tokenapiutils-apprewardbeneficiaryweightsmetakey-52370:
+
+`appRewardBeneficiaryWeightsMetaKey <function-splice-amulet-tokenapiutils-apprewardbeneficiaryweightsmetakey-52370_>`_
+  \: `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+
 .. _function-splice-amulet-tokenapiutils-reasonmetakey-98413:
 
 `reasonMetaKey <function-splice-amulet-tokenapiutils-reasonmetakey-98413_>`_
@@ -296,6 +306,16 @@ Functions
 
   Copy only the burn metadata\. Used for token standard choices to copy the burn
   from a transfer result\.
+
+.. _function-splice-amulet-tokenapiutils-beneficiariesfrommetadata-93977:
+
+`beneficiariesFromMetadata <function-splice-amulet-tokenapiutils-beneficiariesfrommetadata-93977_>`_
+  \: Metadata \-\> `Either <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-types-either-56020>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ \[AppRewardBeneficiary\])
+
+.. _function-splice-amulet-tokenapiutils-parsecommaseparated-63776:
+
+`parseCommaSeparated <function-splice-amulet-tokenapiutils-parsecommaseparated-63776_>`_
+  \: `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_ \-\> (`Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_ \-\> `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ a) \-\> `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_ \-\> `Either <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-types-either-56020>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_ \[a\]
 
 .. _function-splice-amulet-tokenapiutils-addoptionalanyvalue-87443:
 

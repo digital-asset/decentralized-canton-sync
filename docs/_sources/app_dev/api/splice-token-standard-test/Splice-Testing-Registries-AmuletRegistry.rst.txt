@@ -135,6 +135,14 @@ Functions
 
   Mark a particular registry provider part as featured\.
 
+.. _function-splice-testing-registries-amuletregistry-beneficiariestometadata-71079:
+
+`beneficiariesToMetadata <function-splice-testing-registries-amuletregistry-beneficiariestometadata-71079_>`_
+  \: \[(`Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_, `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_)\] \-\> Metadata
+
+  Encode a list of beneficiaries as metadata to pass in via token standard choices\.
+  Currently only supported for allocation execution\.
+
 .. _function-splice-testing-registries-amuletregistry-expirelockasowner-96835:
 
 `expireLockAsOwner <function-splice-testing-registries-amuletregistry-expirelockasowner-96835_>`_

@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.4.0-snapshot.20250416.1.0.vcc9c9d82
+                0.4.0-snapshot.20250417.1.0.ve86994d2
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -1131,6 +1131,14 @@
 <dt><a class="reference internal" href="#function-splice-amulet-tokenapiutils-validatorrewardamountmetakey-47315">validatorRewardAmountMetaKey</a></dt><dd><p>: <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952">Text</a></p>
 </dd>
 </dl>
+<dl class="simple" id="function-splice-amulet-tokenapiutils-apprewardbeneficiariesmetakey-63876">
+<dt><a class="reference internal" href="#function-splice-amulet-tokenapiutils-apprewardbeneficiariesmetakey-63876">appRewardBeneficiariesMetaKey</a></dt><dd><p>: <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952">Text</a></p>
+</dd>
+</dl>
+<dl class="simple" id="function-splice-amulet-tokenapiutils-apprewardbeneficiaryweightsmetakey-52370">
+<dt><a class="reference internal" href="#function-splice-amulet-tokenapiutils-apprewardbeneficiaryweightsmetakey-52370">appRewardBeneficiaryWeightsMetaKey</a></dt><dd><p>: <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952">Text</a></p>
+</dd>
+</dl>
 <dl id="function-splice-amulet-tokenapiutils-reasonmetakey-98413">
 <dt><a class="reference internal" href="#function-splice-amulet-tokenapiutils-reasonmetakey-98413">reasonMetaKey</a></dt><dd><p>: <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952">Text</a></p>
 <p>Short, human-readable reason for the transaction.</p>
@@ -1210,6 +1218,14 @@ unlocked.</p>
 <dt><a class="reference internal" href="#function-splice-amulet-tokenapiutils-copyonlyburnmeta-62003">copyOnlyBurnMeta</a></dt><dd><p>: <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153">Optional</a> Metadata -&gt; Metadata</p>
 <p>Copy only the burn metadata. Used for token standard choices to copy the burn
 from a transfer result.</p>
+</dd>
+</dl>
+<dl class="simple" id="function-splice-amulet-tokenapiutils-beneficiariesfrommetadata-93977">
+<dt><a class="reference internal" href="#function-splice-amulet-tokenapiutils-beneficiariesfrommetadata-93977">beneficiariesFromMetadata</a></dt><dd><p>: Metadata -&gt; <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-types-either-56020">Either</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952">Text</a> (<a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153">Optional</a> [AppRewardBeneficiary])</p>
+</dd>
+</dl>
+<dl class="simple" id="function-splice-amulet-tokenapiutils-parsecommaseparated-63776">
+<dt><a class="reference internal" href="#function-splice-amulet-tokenapiutils-parsecommaseparated-63776">parseCommaSeparated</a></dt><dd><p>: <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952">Text</a> -&gt; (<a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952">Text</a> -&gt; <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153">Optional</a> a) -&gt; <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952">Text</a> -&gt; <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-types-either-56020">Either</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952">Text</a> [a]</p>
 </dd>
 </dl>
 <dl id="function-splice-amulet-tokenapiutils-addoptionalanyvalue-87443">
