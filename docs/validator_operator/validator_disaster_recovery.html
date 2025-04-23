@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.4.0-snapshot.20250423.1.0.vb7104fc0
+                0.4.0-snapshot.20250423.1.0.vd72652e9
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -1049,9 +1049,9 @@ onboarded after the backup was taken.</p>
 <li><p>Stop the validator and participant using <code class="docutils literal notranslate"><span class="pre">./stop.sh</span></code>.</p></li>
 <li><p>Wipe out the existing database volume: <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">volume</span> <span class="pre">rm</span> <span class="pre">compose_postgres-splice</span></code>.</p></li>
 <li><p>Start only the postgres container: <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span> <span class="pre">up</span> <span class="pre">-d</span> <span class="pre">postgres-splice</span></code></p></li>
-<li><p>Check whether postgres is ready with: <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">exec</span> <span class="pre">compose-postgres-splice-1</span> <span class="pre">pg_isready</span></code> (rerun this command until it succeeds)</p></li>
-<li><p>Restore the validator database (assuming <cite>validator_dump_file</cite> contains the filename of the dump from which you wish to restore): <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">exec</span> <span class="pre">-i</span> <span class="pre">compose-postgres-splice-1</span> <span class="pre">psql</span> <span class="pre">-U</span> <span class="pre">cnadmin</span> <span class="pre">validator</span> <span class="pre">&lt;</span> <span class="pre">$validator_dump_file</span></code></p></li>
-<li><p>Restore the participant database (assuming <cite>participant_dump_file</cite> contains the filename of the dump from which you wish to restore, and <cite>migration_id</cite> contains the latest migration ID): <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">exec</span> <span class="pre">-i</span> <span class="pre">compose-postgres-splice-1</span> <span class="pre">psql</span> <span class="pre">-U</span> <span class="pre">cnadmin</span> <span class="pre">participant-$migration_id</span> <span class="pre">&lt;</span> <span class="pre">$participant_dump_file</span></code></p></li>
+<li><p>Check whether postgres is ready with: <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">exec</span> <span class="pre">splice-validator-postgres-splice-1</span> <span class="pre">pg_isready</span></code> (rerun this command until it succeeds)</p></li>
+<li><p>Restore the validator database (assuming <cite>validator_dump_file</cite> contains the filename of the dump from which you wish to restore): <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">exec</span> <span class="pre">-i</span> <span class="pre">splice-validator-postgres-splice-1</span> <span class="pre">psql</span> <span class="pre">-U</span> <span class="pre">cnadmin</span> <span class="pre">validator</span> <span class="pre">&lt;</span> <span class="pre">$validator_dump_file</span></code></p></li>
+<li><p>Restore the participant database (assuming <cite>participant_dump_file</cite> contains the filename of the dump from which you wish to restore, and <cite>migration_id</cite> contains the latest migration ID): <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">exec</span> <span class="pre">-i</span> <span class="pre">splice-validator-postgres-splice-1</span> <span class="pre">psql</span> <span class="pre">-U</span> <span class="pre">cnadmin</span> <span class="pre">participant-$migration_id</span> <span class="pre">&lt;</span> <span class="pre">$participant_dump_file</span></code></p></li>
 <li><p>Stop the postgres instance: <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span> <span class="pre">down</span></code></p></li>
 <li><p>Start your validator as usual</p></li>
 </ol>
