@@ -375,6 +375,10 @@ Data Types
          - Metadata
          - Additional metadata specific to the transfer instruction, used for extensibility; e\.g\., fees charged\.
 
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `TransferInstructionResult <type-splice-api-token-transferinstructionv1-transferinstructionresult-24735_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `TransferInstructionResult <type-splice-api-token-transferinstructionv1-transferinstructionresult-24735_>`_
+
   **instance** HasMethod `TransferFactory <type-splice-api-token-transferinstructionv1-transferfactory-55548_>`_ \"transferFactory\_transferImpl\" (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `TransferFactory <type-splice-api-token-transferinstructionv1-transferfactory-55548_>`_ \-\> `TransferFactory_Transfer <type-splice-api-token-transferinstructionv1-transferfactorytransfer-25365_>`_ \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ `TransferInstructionResult <type-splice-api-token-transferinstructionv1-transferinstructionresult-24735_>`_)
 
   **instance** HasMethod `TransferInstruction <type-splice-api-token-transferinstructionv1-transferinstruction-69882_>`_ \"transferInstruction\_acceptImpl\" (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `TransferInstruction <type-splice-api-token-transferinstructionv1-transferinstruction-69882_>`_ \-\> `TransferInstruction_Accept <type-splice-api-token-transferinstructionv1-transferinstructionaccept-36884_>`_ \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ `TransferInstructionResult <type-splice-api-token-transferinstructionv1-transferinstructionresult-24735_>`_)

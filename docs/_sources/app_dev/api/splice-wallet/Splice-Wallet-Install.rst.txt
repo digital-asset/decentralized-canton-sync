@@ -348,6 +348,97 @@ Templates
          - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ SubscriptionRequest
          -
 
+  + .. _type-splice-wallet-install-walletappinstalltransferfactorytransfer-23966:
+
+    **Choice** `WalletAppInstall_TransferFactory_Transfer <type-splice-wallet-install-walletappinstalltransferfactorytransfer-23966_>`_
+
+    Controller\: validatorParty
+
+    Returns\: TransferInstructionResult
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - transferFactory
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TransferFactory
+         -
+       * - transfer
+         - Transfer
+         -
+       * - extraArgs
+         - ExtraArgs
+         -
+
+  + .. _type-splice-wallet-install-walletappinstalltransferinstructionaccept-23051:
+
+    **Choice** `WalletAppInstall_TransferInstruction_Accept <type-splice-wallet-install-walletappinstalltransferinstructionaccept-23051_>`_
+
+    Controller\: validatorParty
+
+    Returns\: TransferInstructionResult
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - transferInstruction
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TransferInstruction
+         -
+       * - extraArgs
+         - ExtraArgs
+         -
+
+  + .. _type-splice-wallet-install-walletappinstalltransferinstructionreject-1446:
+
+    **Choice** `WalletAppInstall_TransferInstruction_Reject <type-splice-wallet-install-walletappinstalltransferinstructionreject-1446_>`_
+
+    Controller\: validatorParty
+
+    Returns\: TransferInstructionResult
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - transferInstruction
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TransferInstruction
+         -
+       * - extraArgs
+         - ExtraArgs
+         -
+
+  + .. _type-splice-wallet-install-walletappinstalltransferinstructionwithdraw-1151:
+
+    **Choice** `WalletAppInstall_TransferInstruction_Withdraw <type-splice-wallet-install-walletappinstalltransferinstructionwithdraw-1151_>`_
+
+    Controller\: validatorParty
+
+    Returns\: TransferInstructionResult
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - transferInstruction
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TransferInstruction
+         -
+       * - extraArgs
+         - ExtraArgs
+         -
+
   + .. _type-splice-wallet-install-walletappinstalltransferofferaccept-7295:
 
     **Choice** `WalletAppInstall_TransferOffer_Accept <type-splice-wallet-install-walletappinstalltransferofferaccept-7295_>`_
