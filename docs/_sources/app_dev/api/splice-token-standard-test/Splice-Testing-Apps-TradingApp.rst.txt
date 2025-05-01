@@ -50,6 +50,28 @@ Templates
 
     (no fields)
 
+  + .. _type-splice-testing-apps-tradingapp-otctradecancel-34465:
+
+    **Choice** `OTCTrade_Cancel <type-splice-testing-apps-tradingapp-otctradecancel-34465_>`_
+
+    Controller\: venue
+
+    Returns\: \[Allocation\_CancelResult\]
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - allocations
+         - \[`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Allocation\]
+         -
+       * - extraArgss
+         - \[ExtraArgs\]
+         -
+
   + .. _type-splice-testing-apps-tradingapp-otctradesettle-9210:
 
     **Choice** `OTCTrade_Settle <type-splice-testing-apps-tradingapp-otctradesettle-9210_>`_
@@ -65,7 +87,7 @@ Templates
        * - Field
          - Type
          - Description
-       * - allocationInstructions
+       * - allocations
          - \[`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Allocation\]
          -
        * - extraArgss
