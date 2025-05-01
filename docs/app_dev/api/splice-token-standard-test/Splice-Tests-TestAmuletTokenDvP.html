@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.4.0-snapshot.20250501.1.0.v5f694e42
+                0.4.0-snapshot.20250501.1.0.va0f8e05b
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -779,6 +779,7 @@
 </ul>
 </li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Splice.Tests.TestAmuletTokenDvP</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#data-types">Data Types</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#functions">Functions</a></li>
 </ul>
 </li>
@@ -1029,8 +1030,98 @@ DvP settlements.</p>
 <p>Note also that the delivery part of a DvP settelement can be both another
 token implementing the standard, as well as the creation of on-ledger state
 specific to your registry; e.g., a license contract.</p>
+<section id="data-types">
+<h2>Data Types<a class="headerlink" href="#data-types" title="Link to this heading"></a></h2>
+<p id="type-splice-tests-testamulettokendvp-allocatedotctrade-90362"><strong>data</strong> <a class="reference internal" href="#type-splice-tests-testamulettokendvp-allocatedotctrade-90362">AllocatedOTCTrade</a></p>
+<blockquote>
+<div><p id="constr-splice-tests-testamulettokendvp-allocatedotctrade-19245"><a class="reference internal" href="#constr-splice-tests-testamulettokendvp-allocatedotctrade-19245">AllocatedOTCTrade</a></p>
+<blockquote>
+<div><table class="docutils align-default">
+<colgroup>
+<col style="width: 27.3%" />
+<col style="width: 18.2%" />
+<col style="width: 54.5%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>alice</p></td>
+<td><p><a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932">Party</a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>bob</p></td>
+<td><p><a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932">Party</a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>provider</p></td>
+<td><p><a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932">Party</a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>providerBeneficiary1</p></td>
+<td><p><a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932">Party</a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>providerBeneficiary2</p></td>
+<td><p><a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932">Party</a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>providerBeneficiaries</p></td>
+<td><p>[(<a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932">Party</a>, <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135">Decimal</a>)]</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>registry</p></td>
+<td><p><a class="reference internal" href="Splice-Testing-Registries-AmuletRegistry.html#type-splice-testing-registries-amuletregistry-amuletregistry-76694"><span class="std std-ref">AmuletRegistry</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>otcTradeCid</p></td>
+<td><p><a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282">ContractId</a> <a class="reference internal" href="Splice-Testing-Apps-TradingApp.html#type-splice-testing-apps-tradingapp-otctrade-80775"><span class="std std-ref">OTCTrade</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>otcTrade</p></td>
+<td><p><a class="reference internal" href="Splice-Testing-Apps-TradingApp.html#type-splice-testing-apps-tradingapp-otctrade-80775"><span class="std std-ref">OTCTrade</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>amuletId</p></td>
+<td><p>InstrumentId</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713">Eq</a> <a class="reference internal" href="#type-splice-tests-testamulettokendvp-allocatedotctrade-90362">AllocatedOTCTrade</a></p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360">Show</a> <a class="reference internal" href="#type-splice-tests-testamulettokendvp-allocatedotctrade-90362">AllocatedOTCTrade</a></p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979">GetField</a> &quot;alice&quot; <a class="reference internal" href="#type-splice-tests-testamulettokendvp-allocatedotctrade-90362">AllocatedOTCTrade</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932">Party</a></p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979">GetField</a> &quot;amuletId&quot; <a class="reference internal" href="#type-splice-tests-testamulettokendvp-allocatedotctrade-90362">AllocatedOTCTrade</a> InstrumentId</p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979">GetField</a> &quot;bob&quot; <a class="reference internal" href="#type-splice-tests-testamulettokendvp-allocatedotctrade-90362">AllocatedOTCTrade</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932">Party</a></p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979">GetField</a> &quot;otcTrade&quot; <a class="reference internal" href="#type-splice-tests-testamulettokendvp-allocatedotctrade-90362">AllocatedOTCTrade</a> <a class="reference internal" href="Splice-Testing-Apps-TradingApp.html#type-splice-testing-apps-tradingapp-otctrade-80775"><span class="std std-ref">OTCTrade</span></a></p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979">GetField</a> &quot;otcTradeCid&quot; <a class="reference internal" href="#type-splice-tests-testamulettokendvp-allocatedotctrade-90362">AllocatedOTCTrade</a> (<a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282">ContractId</a> <a class="reference internal" href="Splice-Testing-Apps-TradingApp.html#type-splice-testing-apps-tradingapp-otctrade-80775"><span class="std std-ref">OTCTrade</span></a>)</p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979">GetField</a> &quot;provider&quot; <a class="reference internal" href="#type-splice-tests-testamulettokendvp-allocatedotctrade-90362">AllocatedOTCTrade</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932">Party</a></p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979">GetField</a> &quot;providerBeneficiaries&quot; <a class="reference internal" href="#type-splice-tests-testamulettokendvp-allocatedotctrade-90362">AllocatedOTCTrade</a> [(<a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932">Party</a>, <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135">Decimal</a>)]</p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979">GetField</a> &quot;providerBeneficiary1&quot; <a class="reference internal" href="#type-splice-tests-testamulettokendvp-allocatedotctrade-90362">AllocatedOTCTrade</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932">Party</a></p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979">GetField</a> &quot;providerBeneficiary2&quot; <a class="reference internal" href="#type-splice-tests-testamulettokendvp-allocatedotctrade-90362">AllocatedOTCTrade</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932">Party</a></p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979">GetField</a> &quot;registry&quot; <a class="reference internal" href="#type-splice-tests-testamulettokendvp-allocatedotctrade-90362">AllocatedOTCTrade</a> <a class="reference internal" href="Splice-Testing-Registries-AmuletRegistry.html#type-splice-testing-registries-amuletregistry-amuletregistry-76694"><span class="std std-ref">AmuletRegistry</span></a></p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;alice&quot; <a class="reference internal" href="#type-splice-tests-testamulettokendvp-allocatedotctrade-90362">AllocatedOTCTrade</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932">Party</a></p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;amuletId&quot; <a class="reference internal" href="#type-splice-tests-testamulettokendvp-allocatedotctrade-90362">AllocatedOTCTrade</a> InstrumentId</p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;bob&quot; <a class="reference internal" href="#type-splice-tests-testamulettokendvp-allocatedotctrade-90362">AllocatedOTCTrade</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932">Party</a></p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;otcTrade&quot; <a class="reference internal" href="#type-splice-tests-testamulettokendvp-allocatedotctrade-90362">AllocatedOTCTrade</a> <a class="reference internal" href="Splice-Testing-Apps-TradingApp.html#type-splice-testing-apps-tradingapp-otctrade-80775"><span class="std std-ref">OTCTrade</span></a></p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;otcTradeCid&quot; <a class="reference internal" href="#type-splice-tests-testamulettokendvp-allocatedotctrade-90362">AllocatedOTCTrade</a> (<a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282">ContractId</a> <a class="reference internal" href="Splice-Testing-Apps-TradingApp.html#type-splice-testing-apps-tradingapp-otctrade-80775"><span class="std std-ref">OTCTrade</span></a>)</p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;provider&quot; <a class="reference internal" href="#type-splice-tests-testamulettokendvp-allocatedotctrade-90362">AllocatedOTCTrade</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932">Party</a></p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;providerBeneficiaries&quot; <a class="reference internal" href="#type-splice-tests-testamulettokendvp-allocatedotctrade-90362">AllocatedOTCTrade</a> [(<a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932">Party</a>, <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135">Decimal</a>)]</p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;providerBeneficiary1&quot; <a class="reference internal" href="#type-splice-tests-testamulettokendvp-allocatedotctrade-90362">AllocatedOTCTrade</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932">Party</a></p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;providerBeneficiary2&quot; <a class="reference internal" href="#type-splice-tests-testamulettokendvp-allocatedotctrade-90362">AllocatedOTCTrade</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932">Party</a></p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;registry&quot; <a class="reference internal" href="#type-splice-tests-testamulettokendvp-allocatedotctrade-90362">AllocatedOTCTrade</a> <a class="reference internal" href="Splice-Testing-Registries-AmuletRegistry.html#type-splice-testing-registries-amuletregistry-amuletregistry-76694"><span class="std std-ref">AmuletRegistry</span></a></p>
+</div></blockquote>
+</section>
 <section id="functions">
 <h2>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h2>
+<dl class="simple" id="function-splice-tests-testamulettokendvp-setupotctrade-96214">
+<dt><a class="reference internal" href="#function-splice-tests-testamulettokendvp-setupotctrade-96214">setupOtcTrade</a></dt><dd><p>: Script <a class="reference internal" href="#type-splice-tests-testamulettokendvp-allocatedotctrade-90362">AllocatedOTCTrade</a></p>
+</dd>
+</dl>
 <dl id="function-splice-tests-testamulettokendvp-testdvp-18055">
 <dt><a class="reference internal" href="#function-splice-tests-testamulettokendvp-testdvp-18055">testDvP</a></dt><dd><p>: Script ()</p>
 <p>Test that a DvP settlement of an OTC trade works when using Amulet via the token standard.</p>

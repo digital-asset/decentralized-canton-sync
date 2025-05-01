@@ -28,14 +28,19 @@ Typeclasses
   `getAllocationFactory <function-splice-testing-tokenstandard-registryapi-getallocationfactory-44546_>`_
     \: app \-\> AllocationFactory\_Allocate \-\> Script (:ref:`EnrichedFactoryChoice <type-splice-testing-utils-enrichedfactorychoice-76896>` AllocationFactory AllocationFactory\_Allocate)
 
-  .. _function-splice-testing-tokenstandard-registryapi-getallocationtransfercontext-89606:
+  .. _function-splice-testing-tokenstandard-registryapi-getallocationtransfercontext-86176:
 
-  `getAllocationTransferContext <function-splice-testing-tokenstandard-registryapi-getallocationtransfercontext-89606_>`_
+  `getAllocation_TransferContext <function-splice-testing-tokenstandard-registryapi-getallocationtransfercontext-86176_>`_
     \: app \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Allocation \-\> Metadata \-\> Script :ref:`OpenApiChoiceContext <type-splice-testing-utils-openapichoicecontext-5726>`
 
   .. _function-splice-testing-tokenstandard-registryapi-getallocationwithdrawcontext-92853:
 
   `getAllocation_WithdrawContext <function-splice-testing-tokenstandard-registryapi-getallocationwithdrawcontext-92853_>`_
+    \: app \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Allocation \-\> Metadata \-\> Script :ref:`OpenApiChoiceContext <type-splice-testing-utils-openapichoicecontext-5726>`
+
+  .. _function-splice-testing-tokenstandard-registryapi-getallocationcancelcontext-26663:
+
+  `getAllocation_CancelContext <function-splice-testing-tokenstandard-registryapi-getallocationcancelcontext-26663_>`_
     \: app \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Allocation \-\> Metadata \-\> Script :ref:`OpenApiChoiceContext <type-splice-testing-utils-openapichoicecontext-5726>`
 
   .. _function-splice-testing-tokenstandard-registryapi-gettransferinstructionacceptcontext-72301:

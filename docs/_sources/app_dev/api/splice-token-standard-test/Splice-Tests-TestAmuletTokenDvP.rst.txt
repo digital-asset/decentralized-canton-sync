@@ -14,8 +14,106 @@ Note also that the delivery part of a DvP settelement can be both another
 token implementing the standard, as well as the creation of on\-ledger state
 specific to your registry; e\.g\., a license contract\.
 
+Data Types
+----------
+
+.. _type-splice-tests-testamulettokendvp-allocatedotctrade-90362:
+
+**data** `AllocatedOTCTrade <type-splice-tests-testamulettokendvp-allocatedotctrade-90362_>`_
+
+  .. _constr-splice-tests-testamulettokendvp-allocatedotctrade-19245:
+
+  `AllocatedOTCTrade <constr-splice-tests-testamulettokendvp-allocatedotctrade-19245_>`_
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - alice
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - bob
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - provider
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - providerBeneficiary1
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - providerBeneficiary2
+         - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+         -
+       * - providerBeneficiaries
+         - \[(`Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_, `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_)\]
+         -
+       * - registry
+         - :ref:`AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694>`
+         -
+       * - otcTradeCid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`OTCTrade <type-splice-testing-apps-tradingapp-otctrade-80775>`
+         -
+       * - otcTrade
+         - :ref:`OTCTrade <type-splice-testing-apps-tradingapp-otctrade-80775>`
+         -
+       * - amuletId
+         - InstrumentId
+         -
+
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `AllocatedOTCTrade <type-splice-tests-testamulettokendvp-allocatedotctrade-90362_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `AllocatedOTCTrade <type-splice-tests-testamulettokendvp-allocatedotctrade-90362_>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"alice\" `AllocatedOTCTrade <type-splice-tests-testamulettokendvp-allocatedotctrade-90362_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"amuletId\" `AllocatedOTCTrade <type-splice-tests-testamulettokendvp-allocatedotctrade-90362_>`_ InstrumentId
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"bob\" `AllocatedOTCTrade <type-splice-tests-testamulettokendvp-allocatedotctrade-90362_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"otcTrade\" `AllocatedOTCTrade <type-splice-tests-testamulettokendvp-allocatedotctrade-90362_>`_ :ref:`OTCTrade <type-splice-testing-apps-tradingapp-otctrade-80775>`
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"otcTradeCid\" `AllocatedOTCTrade <type-splice-tests-testamulettokendvp-allocatedotctrade-90362_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`OTCTrade <type-splice-testing-apps-tradingapp-otctrade-80775>`)
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"provider\" `AllocatedOTCTrade <type-splice-tests-testamulettokendvp-allocatedotctrade-90362_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"providerBeneficiaries\" `AllocatedOTCTrade <type-splice-tests-testamulettokendvp-allocatedotctrade-90362_>`_ \[(`Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_, `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_)\]
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"providerBeneficiary1\" `AllocatedOTCTrade <type-splice-tests-testamulettokendvp-allocatedotctrade-90362_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"providerBeneficiary2\" `AllocatedOTCTrade <type-splice-tests-testamulettokendvp-allocatedotctrade-90362_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"registry\" `AllocatedOTCTrade <type-splice-tests-testamulettokendvp-allocatedotctrade-90362_>`_ :ref:`AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694>`
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"alice\" `AllocatedOTCTrade <type-splice-tests-testamulettokendvp-allocatedotctrade-90362_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"amuletId\" `AllocatedOTCTrade <type-splice-tests-testamulettokendvp-allocatedotctrade-90362_>`_ InstrumentId
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"bob\" `AllocatedOTCTrade <type-splice-tests-testamulettokendvp-allocatedotctrade-90362_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"otcTrade\" `AllocatedOTCTrade <type-splice-tests-testamulettokendvp-allocatedotctrade-90362_>`_ :ref:`OTCTrade <type-splice-testing-apps-tradingapp-otctrade-80775>`
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"otcTradeCid\" `AllocatedOTCTrade <type-splice-tests-testamulettokendvp-allocatedotctrade-90362_>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ :ref:`OTCTrade <type-splice-testing-apps-tradingapp-otctrade-80775>`)
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"provider\" `AllocatedOTCTrade <type-splice-tests-testamulettokendvp-allocatedotctrade-90362_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"providerBeneficiaries\" `AllocatedOTCTrade <type-splice-tests-testamulettokendvp-allocatedotctrade-90362_>`_ \[(`Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_, `Decimal <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-decimal-18135>`_)\]
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"providerBeneficiary1\" `AllocatedOTCTrade <type-splice-tests-testamulettokendvp-allocatedotctrade-90362_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"providerBeneficiary2\" `AllocatedOTCTrade <type-splice-tests-testamulettokendvp-allocatedotctrade-90362_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"registry\" `AllocatedOTCTrade <type-splice-tests-testamulettokendvp-allocatedotctrade-90362_>`_ :ref:`AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694>`
+
 Functions
 ---------
+
+.. _function-splice-tests-testamulettokendvp-setupotctrade-96214:
+
+`setupOtcTrade <function-splice-tests-testamulettokendvp-setupotctrade-96214_>`_
+  \: Script `AllocatedOTCTrade <type-splice-tests-testamulettokendvp-allocatedotctrade-90362_>`_
 
 .. _function-splice-tests-testamulettokendvp-testdvp-18055:
 

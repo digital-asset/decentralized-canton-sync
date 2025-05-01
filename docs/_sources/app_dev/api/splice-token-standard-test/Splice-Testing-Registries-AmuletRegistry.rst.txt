@@ -47,11 +47,15 @@ Data Types
 
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"instrumentId\" `AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694_>`_ InstrumentId
 
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"registry\" :ref:`AllocatedOTCTrade <type-splice-tests-testamulettokendvp-allocatedotctrade-90362>` `AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694_>`_
+
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"registry\" :ref:`TestSetup <type-splice-tests-testamulettokentransfer-testsetup-23760>` `AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694_>`_
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"dso\" `AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694_>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"instrumentId\" `AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694_>`_ InstrumentId
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"registry\" :ref:`AllocatedOTCTrade <type-splice-tests-testamulettokendvp-allocatedotctrade-90362>` `AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694_>`_
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"registry\" :ref:`TestSetup <type-splice-tests-testamulettokentransfer-testsetup-23760>` `AmuletRegistry <type-splice-testing-registries-amuletregistry-amuletregistry-76694_>`_
 
