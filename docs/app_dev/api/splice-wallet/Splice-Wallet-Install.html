@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.4.0-snapshot.20250501.1.0.v097bfe8b
+                0.4.0-snapshot.20250501.1.0.v9ede3a33
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -1140,6 +1140,60 @@
 </tbody>
 </table>
 </li>
+<li><p id="type-splice-wallet-install-walletappinstallallocationfactoryallocate-87859"><strong>Choice</strong> <a class="reference internal" href="#type-splice-wallet-install-walletappinstallallocationfactoryallocate-87859">WalletAppInstall_AllocationFactory_Allocate</a></p>
+<p>Controller: validatorParty</p>
+<p>Returns: AllocationInstructionResult</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 27.3%" />
+<col style="width: 18.2%" />
+<col style="width: 54.5%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>allocationFactory</p></td>
+<td><p><a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282">ContractId</a> AllocationFactory</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>allocateArg</p></td>
+<td><p>AllocationFactory_Allocate</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</li>
+<li><p id="type-splice-wallet-install-walletappinstallallocationwithdraw-36167"><strong>Choice</strong> <a class="reference internal" href="#type-splice-wallet-install-walletappinstallallocationwithdraw-36167">WalletAppInstall_Allocation_Withdraw</a></p>
+<p>Controller: validatorParty</p>
+<p>Returns: Allocation_WithdrawResult</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 27.3%" />
+<col style="width: 18.2%" />
+<col style="width: 54.5%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>allocationCid</p></td>
+<td><p><a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282">ContractId</a> Allocation</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>withdrawArg</p></td>
+<td><p>Allocation_Withdraw</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</li>
 <li><p id="type-splice-wallet-install-walletappinstallapppaymentrequestexpire-63657"><strong>Choice</strong> <a class="reference internal" href="#type-splice-wallet-install-walletappinstallapppaymentrequestexpire-63657">WalletAppInstall_AppPaymentRequest_Expire</a></p>
 <p>Controller: validatorParty</p>
 <p>Returns: <a class="reference internal" href="#type-splice-wallet-install-walletappinstallapppaymentrequestexpireresult-40772">WalletAppInstall_AppPaymentRequest_ExpireResult</a></p>
@@ -1457,16 +1511,12 @@
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>transferFactory</p></td>
+<tr class="row-even"><td><p>transferFactoryCid</p></td>
 <td><p><a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282">ContractId</a> TransferFactory</p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p>transfer</p></td>
-<td><p>Transfer</p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p>extraArgs</p></td>
-<td><p>ExtraArgs</p></td>
+<tr class="row-odd"><td><p>transferArg</p></td>
+<td><p>TransferFactory_Transfer</p></td>
 <td></td>
 </tr>
 </tbody>
@@ -1488,12 +1538,12 @@
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>transferInstruction</p></td>
+<tr class="row-even"><td><p>transferInstructionCid</p></td>
 <td><p><a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282">ContractId</a> TransferInstruction</p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p>extraArgs</p></td>
-<td><p>ExtraArgs</p></td>
+<tr class="row-odd"><td><p>acceptArg</p></td>
+<td><p>TransferInstruction_Accept</p></td>
 <td></td>
 </tr>
 </tbody>
@@ -1515,12 +1565,12 @@
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>transferInstruction</p></td>
+<tr class="row-even"><td><p>transferInstructionCid</p></td>
 <td><p><a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282">ContractId</a> TransferInstruction</p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p>extraArgs</p></td>
-<td><p>ExtraArgs</p></td>
+<tr class="row-odd"><td><p>rejectArg</p></td>
+<td><p>TransferInstruction_Reject</p></td>
 <td></td>
 </tr>
 </tbody>
@@ -1542,12 +1592,12 @@
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>transferInstruction</p></td>
+<tr class="row-even"><td><p>transferInstructionCid</p></td>
 <td><p><a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282">ContractId</a> TransferInstruction</p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p>extraArgs</p></td>
-<td><p>ExtraArgs</p></td>
+<tr class="row-odd"><td><p>withdrawArg</p></td>
+<td><p>TransferInstruction_Withdraw</p></td>
 <td></td>
 </tr>
 </tbody>

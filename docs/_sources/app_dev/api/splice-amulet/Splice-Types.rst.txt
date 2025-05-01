@@ -59,6 +59,8 @@ Data Types
 
   **instance** HasCheckedFetch :ref:`ValidatorLicense <type-splice-validatorlicense-validatorlicense-33456>` `ForDso <type-splice-types-fordso-8725_>`_
 
+  **instance** HasCheckedFetch AllocationView `ForDso <type-splice-types-fordso-8725_>`_
+
   **instance** HasCheckedFetch TransferInstructionView `ForDso <type-splice-types-fordso-8725_>`_
 
 .. _type-splice-types-forowner-62144:

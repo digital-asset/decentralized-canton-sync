@@ -103,6 +103,50 @@ Templates
          - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
          -
 
+  + .. _type-splice-wallet-install-walletappinstallallocationfactoryallocate-87859:
+
+    **Choice** `WalletAppInstall_AllocationFactory_Allocate <type-splice-wallet-install-walletappinstallallocationfactoryallocate-87859_>`_
+
+    Controller\: validatorParty
+
+    Returns\: AllocationInstructionResult
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - allocationFactory
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ AllocationFactory
+         -
+       * - allocateArg
+         - AllocationFactory\_Allocate
+         -
+
+  + .. _type-splice-wallet-install-walletappinstallallocationwithdraw-36167:
+
+    **Choice** `WalletAppInstall_Allocation_Withdraw <type-splice-wallet-install-walletappinstallallocationwithdraw-36167_>`_
+
+    Controller\: validatorParty
+
+    Returns\: Allocation\_WithdrawResult
+
+    .. list-table::
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Field
+         - Type
+         - Description
+       * - allocationCid
+         - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Allocation
+         -
+       * - withdrawArg
+         - Allocation\_Withdraw
+         -
+
   + .. _type-splice-wallet-install-walletappinstallapppaymentrequestexpire-63657:
 
     **Choice** `WalletAppInstall_AppPaymentRequest_Expire <type-splice-wallet-install-walletappinstallapppaymentrequestexpire-63657_>`_
@@ -363,14 +407,11 @@ Templates
        * - Field
          - Type
          - Description
-       * - transferFactory
+       * - transferFactoryCid
          - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TransferFactory
          -
-       * - transfer
-         - Transfer
-         -
-       * - extraArgs
-         - ExtraArgs
+       * - transferArg
+         - TransferFactory\_Transfer
          -
 
   + .. _type-splice-wallet-install-walletappinstalltransferinstructionaccept-23051:
@@ -388,11 +429,11 @@ Templates
        * - Field
          - Type
          - Description
-       * - transferInstruction
+       * - transferInstructionCid
          - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TransferInstruction
          -
-       * - extraArgs
-         - ExtraArgs
+       * - acceptArg
+         - TransferInstruction\_Accept
          -
 
   + .. _type-splice-wallet-install-walletappinstalltransferinstructionreject-1446:
@@ -410,11 +451,11 @@ Templates
        * - Field
          - Type
          - Description
-       * - transferInstruction
+       * - transferInstructionCid
          - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TransferInstruction
          -
-       * - extraArgs
-         - ExtraArgs
+       * - rejectArg
+         - TransferInstruction\_Reject
          -
 
   + .. _type-splice-wallet-install-walletappinstalltransferinstructionwithdraw-1151:
@@ -432,11 +473,11 @@ Templates
        * - Field
          - Type
          - Description
-       * - transferInstruction
+       * - transferInstructionCid
          - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ TransferInstruction
          -
-       * - extraArgs
-         - ExtraArgs
+       * - withdrawArg
+         - TransferInstruction\_Withdraw
          -
 
   + .. _type-splice-wallet-install-walletappinstalltransferofferaccept-7295:

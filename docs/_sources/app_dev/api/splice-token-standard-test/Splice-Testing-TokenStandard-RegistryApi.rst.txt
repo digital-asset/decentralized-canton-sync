@@ -33,6 +33,11 @@ Typeclasses
   `getAllocationTransferContext <function-splice-testing-tokenstandard-registryapi-getallocationtransfercontext-89606_>`_
     \: app \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Allocation \-\> Metadata \-\> Script :ref:`OpenApiChoiceContext <type-splice-testing-utils-openapichoicecontext-5726>`
 
+  .. _function-splice-testing-tokenstandard-registryapi-getallocationwithdrawcontext-92853:
+
+  `getAllocation_WithdrawContext <function-splice-testing-tokenstandard-registryapi-getallocationwithdrawcontext-92853_>`_
+    \: app \-\> `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Allocation \-\> Metadata \-\> Script :ref:`OpenApiChoiceContext <type-splice-testing-utils-openapichoicecontext-5726>`
+
   .. _function-splice-testing-tokenstandard-registryapi-gettransferinstructionacceptcontext-72301:
 
   `getTransferInstruction_AcceptContext <function-splice-testing-tokenstandard-registryapi-gettransferinstructionacceptcontext-72301_>`_

@@ -240,6 +240,10 @@ Data Types
          - Metadata
          - Additional metadata specific to the allocation instruction, used for extensibility; e\.g\., fees charged\.
 
+  **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `AllocationInstructionResult <type-splice-api-token-allocationinstructionv1-allocationinstructionresult-30943_>`_
+
+  **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `AllocationInstructionResult <type-splice-api-token-allocationinstructionv1-allocationinstructionresult-30943_>`_
+
   **instance** HasMethod `AllocationFactory <type-splice-api-token-allocationinstructionv1-allocationfactory-42588_>`_ \"allocationFactory\_allocateImpl\" (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `AllocationFactory <type-splice-api-token-allocationinstructionv1-allocationfactory-42588_>`_ \-\> `AllocationFactory_Allocate <type-splice-api-token-allocationinstructionv1-allocationfactoryallocate-8885_>`_ \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ `AllocationInstructionResult <type-splice-api-token-allocationinstructionv1-allocationinstructionresult-30943_>`_)
 
   **instance** HasMethod `AllocationInstruction <type-splice-api-token-allocationinstructionv1-allocationinstruction-29622_>`_ \"allocationInstruction\_updateImpl\" (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `AllocationInstruction <type-splice-api-token-allocationinstructionv1-allocationinstruction-29622_>`_ \-\> `AllocationInstruction_Update <type-splice-api-token-allocationinstructionv1-allocationinstructionupdate-50223_>`_ \-\> `Update <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-update-68072>`_ `AllocationInstructionResult <type-splice-api-token-allocationinstructionv1-allocationinstructionresult-30943_>`_)
