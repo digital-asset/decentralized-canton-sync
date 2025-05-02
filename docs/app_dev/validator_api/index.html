@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.4.0-snapshot.20250502.1.0.vff74132f
+                0.4.0-snapshot.20250502.1.0.v60a8ea10
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -528,7 +528,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#internal-user-wallet-api">Internal user wallet API</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#external-custody-api">External Custody API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#external-signing-api">External Signing API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#user-management-api">User management API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#validator-management-api">Validator management API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#ans-api">ANS API</a></li>
@@ -1053,8 +1053,8 @@ which are listed below grouped as follows:</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#validator-api-user-wallet-internal"><span class="std std-ref">Internal user wallet API</span></a></p></td>
 <td><p>Internal components interacting with user wallets</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#validator-api-external-custody"><span class="std std-ref">External Custody API</span></a></p></td>
-<td><p>External custody for <a class="reference internal" href="../../glossary.html#term-Canton-Coin"><span class="xref std std-term">Canton Coin</span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#validator-api-external-signing"><span class="std std-ref">External Signing API</span></a></p></td>
+<td><p>External signing for <a class="reference internal" href="../../glossary.html#term-Canton-Coin"><span class="xref std std-term">Canton Coin</span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#validator-api-user-management"><span class="std std-ref">User management API</span></a></p></td>
 <td><p>Managing users hosted by the (super)validator node</p></td>
@@ -1225,8 +1225,8 @@ where the subject claim of the token is the user whose wallet the endpoint opera
 </tbody>
 </table>
 </section>
-<section id="external-custody-api">
-<span id="validator-api-external-custody"></span><h2>External Custody API<a class="headerlink" href="#external-custody-api" title="Link to this heading"></a></h2>
+<section id="external-signing-api">
+<span id="validator-api-external-signing"></span><h2>External Signing API<a class="headerlink" href="#external-signing-api" title="Link to this heading"></a></h2>
 <p>These endpoints are used to implement external signing of <a class="reference internal" href="../../glossary.html#term-Canton-Coin"><span class="xref std std-term">Canton Coin</span></a> transactions.</p>
 <p>External signing is a Canton feature allows setting up a party such that transaction submissions must be signed by keys held outside of the participant.
 For more information on external signing in general, see the
@@ -1414,7 +1414,7 @@ then each call to one of these endpoints is simply forwarded to the scan service
 </tr>
 <tr class="row-odd"><td><p><strong>GET</strong> /v0/scan-proxy/transfer-command/status</p></td>
 </tr>
-<tr class="row-even"><td><p><strong>GET</strong> /v0/scan-proxy/transfer-preapprovals/by-party/{party}</p></td>
+<tr class="row-even"><td><p><strong>GET</strong> /v0/scan-proxy/transfer-preapprovals/by-party/{party</p></td>
 </tr>
 </tbody>
 </table>
