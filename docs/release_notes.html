@@ -40,7 +40,7 @@
             Splice
           </a>
               <div class="version">
-                0.4.0-snapshot.20250502.1.0.v7cc2e617
+                0.4.0-snapshot.20250502.1.0.vff74132f
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -1023,6 +1023,7 @@
 <section id="upcoming">
 <h2>Upcoming<a class="headerlink" href="#upcoming" title="Link to this heading"></a></h2>
 <ul class="simple">
+<li><p>Upgrade to Canton 3.3: This upgrade requires a Hard Synchronizer migration</p></li>
 <li><p>Deployment</p>
 <ul>
 <li><p>This release includes a change to the database schema that will trigger a short database migration.
@@ -1033,6 +1034,14 @@ and much less for validator and sv applications.</p></li>
 <li><p>Improve the error message when trying to use the wallet outside of
 localhost or https. Thanks to Stephane Loeuillet for contributing
 this in <a class="reference external" href="https://github.com/hyperledger-labs/splice/pull/322">https://github.com/hyperledger-labs/splice/pull/322</a>.</p></li>
+<li><p>Docker</p>
+<ul>
+<li><p>Add jemalloc into the docker images. This is not enabled by
+default but allows for easier testing. Thanks to Stanislav
+German-Evtushenko for contributing this in
+<a class="reference external" href="https://github.com/hyperledger-labs/splice/pull/318">https://github.com/hyperledger-labs/splice/pull/318</a></p></li>
+</ul>
+</li>
 </ul>
 </section>
 <section id="id2">
