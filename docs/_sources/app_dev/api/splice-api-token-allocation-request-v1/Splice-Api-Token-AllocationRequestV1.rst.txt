@@ -111,8 +111,8 @@ Data Types
          - SettlementInfo
          - Settlement for which the assets are requested to be allocated\.
        * - transferLegs
-         - \[TransferLeg\]
-         - Transfer legs that are requested to be allocated for the execution of the settlement\.  This may or may not be a complete list of transfer legs that are part of the settlement, depending on the confidentiality requirements of the app\.
+         - `TextMap <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691>`_ TransferLeg
+         - Transfer legs that are requested to be allocated for the execution of the settlement keyed by their identifier\.  This may or may not be a complete list of transfer legs that are part of the settlement, depending on the confidentiality requirements of the app\.
        * - meta
          - Metadata
          - Additional metadata specific to the allocation request, used for extensibility\.
@@ -129,13 +129,13 @@ Data Types
 
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"settlement\" `AllocationRequestView <type-splice-api-token-allocationrequestv1-allocationrequestview-51417_>`_ SettlementInfo
 
-  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"transferLegs\" `AllocationRequestView <type-splice-api-token-allocationrequestv1-allocationrequestview-51417_>`_ \[TransferLeg\]
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"transferLegs\" `AllocationRequestView <type-splice-api-token-allocationrequestv1-allocationrequestview-51417_>`_ (`TextMap <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691>`_ TransferLeg)
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"meta\" `AllocationRequestView <type-splice-api-token-allocationrequestv1-allocationrequestview-51417_>`_ Metadata
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"settlement\" `AllocationRequestView <type-splice-api-token-allocationrequestv1-allocationrequestview-51417_>`_ SettlementInfo
 
-  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"transferLegs\" `AllocationRequestView <type-splice-api-token-allocationrequestv1-allocationrequestview-51417_>`_ \[TransferLeg\]
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"transferLegs\" `AllocationRequestView <type-splice-api-token-allocationrequestv1-allocationrequestview-51417_>`_ (`TextMap <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691>`_ TransferLeg)
 
 Functions
 ---------

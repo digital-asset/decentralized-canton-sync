@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.4.0-snapshot.20250501.1.0.v68cfc00f
+                0.4.0-snapshot.20250502.1.0.v2706c58d
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -1128,8 +1128,8 @@ the request to them.</p>
 <td><p>Settlement for which the assets are requested to be allocated.</p></td>
 </tr>
 <tr class="row-odd"><td><p>transferLegs</p></td>
-<td><p>[TransferLeg]</p></td>
-<td><p>Transfer legs that are requested to be allocated for the execution of the settlement.  This may or may not be a complete list of transfer legs that are part of the settlement, depending on the confidentiality requirements of the app.</p></td>
+<td><p><a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691">TextMap</a> TransferLeg</p></td>
+<td><p>Transfer legs that are requested to be allocated for the execution of the settlement keyed by their identifier.  This may or may not be a complete list of transfer legs that are part of the settlement, depending on the confidentiality requirements of the app.</p></td>
 </tr>
 <tr class="row-even"><td><p>meta</p></td>
 <td><p>Metadata</p></td>
@@ -1144,10 +1144,10 @@ the request to them.</p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-interface-hasinterfaceview-4492">HasInterfaceView</a> <a class="reference internal" href="#type-splice-api-token-allocationrequestv1-allocationrequest-90278">AllocationRequest</a> <a class="reference internal" href="#type-splice-api-token-allocationrequestv1-allocationrequestview-51417">AllocationRequestView</a></p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979">GetField</a> &quot;meta&quot; <a class="reference internal" href="#type-splice-api-token-allocationrequestv1-allocationrequestview-51417">AllocationRequestView</a> Metadata</p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979">GetField</a> &quot;settlement&quot; <a class="reference internal" href="#type-splice-api-token-allocationrequestv1-allocationrequestview-51417">AllocationRequestView</a> SettlementInfo</p>
-<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979">GetField</a> &quot;transferLegs&quot; <a class="reference internal" href="#type-splice-api-token-allocationrequestv1-allocationrequestview-51417">AllocationRequestView</a> [TransferLeg]</p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979">GetField</a> &quot;transferLegs&quot; <a class="reference internal" href="#type-splice-api-token-allocationrequestv1-allocationrequestview-51417">AllocationRequestView</a> (<a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691">TextMap</a> TransferLeg)</p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;meta&quot; <a class="reference internal" href="#type-splice-api-token-allocationrequestv1-allocationrequestview-51417">AllocationRequestView</a> Metadata</p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;settlement&quot; <a class="reference internal" href="#type-splice-api-token-allocationrequestv1-allocationrequestview-51417">AllocationRequestView</a> SettlementInfo</p>
-<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;transferLegs&quot; <a class="reference internal" href="#type-splice-api-token-allocationrequestv1-allocationrequestview-51417">AllocationRequestView</a> [TransferLeg]</p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;transferLegs&quot; <a class="reference internal" href="#type-splice-api-token-allocationrequestv1-allocationrequestview-51417">AllocationRequestView</a> (<a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691">TextMap</a> TransferLeg)</p>
 </div></blockquote>
 </section>
 <section id="functions">

@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.4.0-snapshot.20250501.1.0.v68cfc00f
+                0.4.0-snapshot.20250502.1.0.v2706c58d
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -1048,7 +1048,7 @@
 <td></td>
 </tr>
 <tr class="row-odd"><td><p>transferLegs</p></td>
-<td><p>[TransferLeg]</p></td>
+<td><p><a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691">TextMap</a> TransferLeg</p></td>
 <td></td>
 </tr>
 <tr class="row-even"><td><p>tradeCid</p></td>
@@ -1077,7 +1077,7 @@
 </li>
 <li><p id="type-splice-testing-apps-tradingapp-otctradecancel-34465"><strong>Choice</strong> <a class="reference internal" href="#type-splice-testing-apps-tradingapp-otctradecancel-34465">OTCTrade_Cancel</a></p>
 <p>Controller: venue</p>
-<p>Returns: [Allocation_CancelResult]</p>
+<p>Returns: <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691">TextMap</a> (<a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153">Optional</a> Allocation_CancelResult)</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 27.3%" />
@@ -1091,12 +1091,8 @@
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>allocations</p></td>
-<td><p>[<a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282">ContractId</a> Allocation]</p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p>extraArgss</p></td>
-<td><p>[ExtraArgs]</p></td>
+<tr class="row-even"><td><p>allocationsWithContext</p></td>
+<td><p><a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691">TextMap</a> (<a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282">ContractId</a> Allocation, ExtraArgs)</p></td>
 <td></td>
 </tr>
 </tbody>
@@ -1104,7 +1100,7 @@
 </li>
 <li><p id="type-splice-testing-apps-tradingapp-otctradesettle-9210"><strong>Choice</strong> <a class="reference internal" href="#type-splice-testing-apps-tradingapp-otctradesettle-9210">OTCTrade_Settle</a></p>
 <p>Controller: venue</p>
-<p>Returns: [Allocation_ExecuteTransferResult]</p>
+<p>Returns: <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691">TextMap</a> Allocation_ExecuteTransferResult</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 27.3%" />
@@ -1118,12 +1114,8 @@
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>allocations</p></td>
-<td><p>[<a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282">ContractId</a> Allocation]</p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p>extraArgss</p></td>
-<td><p>[ExtraArgs]</p></td>
+<tr class="row-even"><td><p>allocationsWithContext</p></td>
+<td><p><a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691">TextMap</a> (<a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282">ContractId</a> Allocation, ExtraArgs)</p></td>
 <td></td>
 </tr>
 </tbody>
@@ -1157,7 +1149,7 @@
 <td></td>
 </tr>
 <tr class="row-even"><td><p>transferLegs</p></td>
-<td><p>[TransferLeg]</p></td>
+<td><p><a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691">TextMap</a> TransferLeg</p></td>
 <td></td>
 </tr>
 <tr class="row-odd"><td><p>approvers</p></td>
@@ -1251,11 +1243,11 @@
 <section id="functions">
 <h2>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h2>
 <dl class="simple" id="function-splice-testing-apps-tradingapp-tradeallocations-16894">
-<dt><a class="reference internal" href="#function-splice-testing-apps-tradingapp-tradeallocations-16894">tradeAllocations</a></dt><dd><p>: SettlementInfo -&gt; [TransferLeg] -&gt; [AllocationSpecification]</p>
+<dt><a class="reference internal" href="#function-splice-testing-apps-tradingapp-tradeallocations-16894">tradeAllocations</a></dt><dd><p>: SettlementInfo -&gt; <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691">TextMap</a> TransferLeg -&gt; <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691">TextMap</a> AllocationSpecification</p>
 </dd>
 </dl>
 <dl class="simple" id="function-splice-testing-apps-tradingapp-tradingparties-11886">
-<dt><a class="reference internal" href="#function-splice-testing-apps-tradingapp-tradingparties-11886">tradingParties</a></dt><dd><p>: [TransferLeg] -&gt; <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Set.html#type-da-set-types-set-90436">Set</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932">Party</a></p>
+<dt><a class="reference internal" href="#function-splice-testing-apps-tradingapp-tradingparties-11886">tradingParties</a></dt><dd><p>: <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691">TextMap</a> TransferLeg -&gt; <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Set.html#type-da-set-types-set-90436">Set</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932">Party</a></p>
 </dd>
 </dl>
 <dl id="function-splice-testing-apps-tradingapp-require-88127">
@@ -1266,6 +1258,14 @@ transaction with a message saying that the requirement was not met.</p>
 </dl>
 <dl class="simple" id="function-splice-testing-apps-tradingapp-maketraderef-67526">
 <dt><a class="reference internal" href="#function-splice-testing-apps-tradingapp-maketraderef-67526">makeTradeRef</a></dt><dd><p>: <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282">ContractId</a> <a class="reference internal" href="#type-splice-testing-apps-tradingapp-otctradeproposal-78093">OTCTradeProposal</a> -&gt; Reference</p>
+</dd>
+</dl>
+<dl class="simple" id="function-splice-testing-apps-tradingapp-ziptextmaps-57279">
+<dt><a class="reference internal" href="#function-splice-testing-apps-tradingapp-ziptextmaps-57279">zipTextMaps</a></dt><dd><p>: <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691">TextMap</a> a -&gt; <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691">TextMap</a> b -&gt; <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691">TextMap</a> (<a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153">Optional</a> a, <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153">Optional</a> b)</p>
+</dd>
+</dl>
+<dl class="simple" id="function-splice-testing-apps-tradingapp-fortextmapwithkey-78275">
+<dt><a class="reference internal" href="#function-splice-testing-apps-tradingapp-fortextmapwithkey-78275">forTextMapWithKey</a></dt><dd><p>: <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-prelude-applicative-9257">Applicative</a> f =&gt; <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691">TextMap</a> a -&gt; (<a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952">Text</a> -&gt; a -&gt; f b) -&gt; f (<a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691">TextMap</a> b)</p>
 </dd>
 </dl>
 </section>

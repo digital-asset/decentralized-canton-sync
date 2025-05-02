@@ -27,7 +27,7 @@ Templates
        - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
        -
      * - transferLegs
-       - \[TransferLeg\]
+       - `TextMap <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691>`_ TransferLeg
        -
      * - tradeCid
        - `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `OTCTradeProposal <type-splice-testing-apps-tradingapp-otctradeproposal-78093_>`_
@@ -56,7 +56,7 @@ Templates
 
     Controller\: venue
 
-    Returns\: \[Allocation\_CancelResult\]
+    Returns\: `TextMap <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Allocation\_CancelResult)
 
     .. list-table::
        :widths: 15 10 30
@@ -65,11 +65,8 @@ Templates
        * - Field
          - Type
          - Description
-       * - allocations
-         - \[`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Allocation\]
-         -
-       * - extraArgss
-         - \[ExtraArgs\]
+       * - allocationsWithContext
+         - `TextMap <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Allocation, ExtraArgs)
          -
 
   + .. _type-splice-testing-apps-tradingapp-otctradesettle-9210:
@@ -78,7 +75,7 @@ Templates
 
     Controller\: venue
 
-    Returns\: \[Allocation\_ExecuteTransferResult\]
+    Returns\: `TextMap <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691>`_ Allocation\_ExecuteTransferResult
 
     .. list-table::
        :widths: 15 10 30
@@ -87,11 +84,8 @@ Templates
        * - Field
          - Type
          - Description
-       * - allocations
-         - \[`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Allocation\]
-         -
-       * - extraArgss
-         - \[ExtraArgs\]
+       * - allocationsWithContext
+         - `TextMap <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ Allocation, ExtraArgs)
          -
 
   + **interface instance** AllocationRequest **for** `OTCTrade <type-splice-testing-apps-tradingapp-otctrade-80775_>`_
@@ -116,7 +110,7 @@ Templates
        - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ (`ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `OTCTradeProposal <type-splice-testing-apps-tradingapp-otctradeproposal-78093_>`_)
        -
      * - transferLegs
-       - \[TransferLeg\]
+       - `TextMap <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691>`_ TransferLeg
        -
      * - approvers
        - \[`Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_\]
@@ -196,12 +190,12 @@ Functions
 .. _function-splice-testing-apps-tradingapp-tradeallocations-16894:
 
 `tradeAllocations <function-splice-testing-apps-tradingapp-tradeallocations-16894_>`_
-  \: SettlementInfo \-\> \[TransferLeg\] \-\> \[AllocationSpecification\]
+  \: SettlementInfo \-\> `TextMap <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691>`_ TransferLeg \-\> `TextMap <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691>`_ AllocationSpecification
 
 .. _function-splice-testing-apps-tradingapp-tradingparties-11886:
 
 `tradingParties <function-splice-testing-apps-tradingapp-tradingparties-11886_>`_
-  \: \[TransferLeg\] \-\> `Set <https://docs.daml.com/daml/stdlib/DA-Set.html#type-da-set-types-set-90436>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
+  \: `TextMap <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691>`_ TransferLeg \-\> `Set <https://docs.daml.com/daml/stdlib/DA-Set.html#type-da-set-types-set-90436>`_ `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
 
 .. _function-splice-testing-apps-tradingapp-require-88127:
 
@@ -215,3 +209,13 @@ Functions
 
 `makeTradeRef <function-splice-testing-apps-tradingapp-maketraderef-67526_>`_
   \: `ContractId <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282>`_ `OTCTradeProposal <type-splice-testing-apps-tradingapp-otctradeproposal-78093_>`_ \-\> Reference
+
+.. _function-splice-testing-apps-tradingapp-ziptextmaps-57279:
+
+`zipTextMaps <function-splice-testing-apps-tradingapp-ziptextmaps-57279_>`_
+  \: `TextMap <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691>`_ a \-\> `TextMap <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691>`_ b \-\> `TextMap <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ a, `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ b)
+
+.. _function-splice-testing-apps-tradingapp-fortextmapwithkey-78275:
+
+`forTextMapWithKey <function-splice-testing-apps-tradingapp-fortextmapwithkey-78275_>`_
+  \: `Applicative <https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-prelude-applicative-9257>`_ f \=\> `TextMap <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691>`_ a \-\> (`Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_ \-\> a \-\> f b) \-\> f (`TextMap <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-textmap-11691>`_ b)

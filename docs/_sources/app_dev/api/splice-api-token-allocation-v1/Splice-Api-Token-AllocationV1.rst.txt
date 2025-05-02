@@ -134,8 +134,8 @@ Data Types
          - `SettlementInfo <type-splice-api-token-allocationv1-settlementinfo-4367_>`_
          - The settlement for whose execution the assets are being allocated\.
        * - transferLegId
-         - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
-         - The numeric id of the transfer within the settlement\.
+         - `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         - A unique identifer for the transfer leg within the settlement\.
        * - transferLeg
          - `TransferLeg <type-splice-api-token-allocationv1-transferleg-71662_>`_
          - The transfer for which the assets are being allocated\.
@@ -150,7 +150,7 @@ Data Types
 
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"transferLeg\" `AllocationSpecification <type-splice-api-token-allocationv1-allocationspecification-94148_>`_ `TransferLeg <type-splice-api-token-allocationv1-transferleg-71662_>`_
 
-  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"transferLegId\" `AllocationSpecification <type-splice-api-token-allocationv1-allocationspecification-94148_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"transferLegId\" `AllocationSpecification <type-splice-api-token-allocationv1-allocationspecification-94148_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"allocation\" `AllocationView <type-splice-api-token-allocationv1-allocationview-9103_>`_ `AllocationSpecification <type-splice-api-token-allocationv1-allocationspecification-94148_>`_
 
@@ -158,7 +158,7 @@ Data Types
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"transferLeg\" `AllocationSpecification <type-splice-api-token-allocationv1-allocationspecification-94148_>`_ `TransferLeg <type-splice-api-token-allocationv1-transferleg-71662_>`_
 
-  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"transferLegId\" `AllocationSpecification <type-splice-api-token-allocationv1-allocationspecification-94148_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"transferLegId\" `AllocationSpecification <type-splice-api-token-allocationv1-allocationspecification-94148_>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
 
 .. _type-splice-api-token-allocationv1-allocationview-9103:
 
