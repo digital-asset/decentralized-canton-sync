@@ -51,11 +51,11 @@ class HttpTokenStandardTransferInstructionHandler(
           transferinstructionv1.TransferFactory_Transfer.fromJson(body.choiceArguments.noSpaces)
         ) match {
           case Success(transfer) => Future.successful(transfer)
-          case Failure(err) =>
+          case Failure(_) =>
             Future.failed(
               io.grpc.Status.INVALID_ARGUMENT
                 .withDescription(
-                  s"Field `choiceArguments` does not contain a valid `TransferFactory_Transfer`: $err"
+                  "Field `choiceArguments` does not contain a valid `TransferFactory_Transfer`."
                 )
                 .asRuntimeException()
             )
