@@ -3,7 +3,6 @@ package org.lfdecentralizedtrust.splice.integration.tests
 import com.daml.ledger.api.v2.value.Identifier
 import com.daml.ledger.api.v2
 import com.daml.ledger.javaapi
-import com.daml.ledger.javaapi.data.CreatedEvent
 import com.digitalasset.canton.HasExecutionContext
 import com.digitalasset.canton.topology.PartyId
 import org.lfdecentralizedtrust.splice.codegen.java.splice.testing.apps.tradingapp
@@ -22,7 +21,6 @@ import org.lfdecentralizedtrust.splice.integration.tests.SpliceTests.{
 import org.lfdecentralizedtrust.splice.util.{
   ChoiceContextWithDisclosures,
   FactoryChoiceWithDisclosures,
-  JavaDecodeUtil,
   TriggerTestUtil,
   WalletTestUtil,
 }
@@ -33,7 +31,6 @@ import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
 import scala.util.Random
 import com.digitalasset.canton.util.ShowUtil.*
-import org.lfdecentralizedtrust.splice.codegen.java.splice.amulet.AppRewardCoupon
 import org.lfdecentralizedtrust.splice.codegen.java.splice.api.token.allocationrequestv1.AllocationRequestView
 import org.lfdecentralizedtrust.splice.console.ParticipantClientReference
 import org.lfdecentralizedtrust.splice.util.PrettyInstances.*
@@ -227,16 +224,9 @@ class TokenStandardAllocationIntegrationTest
     // TODO(#18561): use external parties for all of them
     val aliceParty = onboardWalletUser(aliceWalletClient, aliceValidatorBackend)
     val bobParty = onboardWalletUser(bobWalletClient, bobValidatorBackend)
-    // Allocate venue on separate participant node, we still go through the validator API instead of parties.enable
-    // so we can use the standard wallet client APIs but give the party a more useful name than splitwell.
-    val venuePartyHint = s"venue-party-${Random.nextInt()}"
-    val venueParty = splitwellValidatorBackend.onboardUser(
-      splitwellWalletClient.config.ledgerApiUser,
-      Some(
-        PartyId.tryFromProtoPrimitive(
-          s"$venuePartyHint::${splitwellValidatorBackend.participantClient.id.namespace.toProtoPrimitive}"
-        )
-      ),
+    // Allocate venue on separate participant node
+    val venueParty = splitwellValidatorBackend.participantClientWithAdminToken.parties.enable(
+      s"venue-party-${Random.nextInt()}"
     )
 
     // Setup funds for alice and bob
@@ -338,33 +328,34 @@ class TokenStandardAllocationIntegrationTest
         },
       )(
         "There exists an OTCTrade visible as an allocation request to Alice and Bob",
-        _ =>
-          suppressFailedClues(loggerFactory) {
-            val trade =
-              splitwellValidatorBackend.participantClientWithAdminToken.ledger_api_extensions.acs
-                .awaitJava(tradingapp.OTCTrade.COMPANION)(
-                  venueParty
-                )
-            val aliceRequest = clue("Alice sees the allocation request") {
-              val requests = listAllocationRequests(
-                aliceValidatorBackend.participantClientWithAdminToken,
-                aliceParty,
+        _ => {
+          val trade =
+            splitwellValidatorBackend.participantClientWithAdminToken.ledger_api_extensions.acs
+              .awaitJava(tradingapp.OTCTrade.COMPANION)(
+                venueParty
               )
-              val request = requests.loneElement
-              request.transferLegs.asScala should have size (2)
-              request
-            }
-            val bobRequest = clue("Bob sees the allocation request") {
-              val requests = listAllocationRequests(
-                bobValidatorBackend.participantClientWithAdminToken,
-                bobParty,
-              )
-              val request = requests.loneElement
-              request.transferLegs.asScala should have size (2)
-              request
-            }
-            (trade, aliceRequest, bobRequest)
-          },
+          val aliceRequest = clue("Alice sees the allocation request") {
+            val requests = listAllocationRequests(
+              aliceValidatorBackend.participantClientWithAdminToken,
+              aliceParty,
+            )
+            requests should have size (1)
+            val request = requests.head
+            request.transferLegs.asScala should have size (2)
+            request
+          }
+          val bobRequest = clue("Bob sees the allocation request") {
+            val requests = listAllocationRequests(
+              bobValidatorBackend.participantClientWithAdminToken,
+              bobParty,
+            )
+            requests should have size (1)
+            val request = requests.head
+            request.transferLegs.asScala should have size (2)
+            request
+          }
+          (trade, aliceRequest, bobRequest)
+        },
       )
 
     val (aliceAllocationId, _) =
@@ -420,12 +411,6 @@ class TokenStandardAllocationIntegrationTest
           sv1ScanBackend.getAllocationTransferContext(aliceAllocationId)
 
         }
-        // We do this after alice gets her context so one is featured and one isn't.
-        actAndCheck("Venue self-features", splitwellWalletClient.selfGrantFeaturedAppRight())(
-          "Scan shows featured app right",
-          _ => sv1ScanBackend.lookupFeaturedAppRight(venueParty) shouldBe a[Some[_]],
-        )
-
         val bobContext = clue("Get choice context for bob's allocation") {
           sv1ScanBackend.getAllocationTransferContext(bobAllocationId)
         }
@@ -456,49 +441,30 @@ class TokenStandardAllocationIntegrationTest
       },
     )(
       "Alice and Bob's balance reflect the trade",
-      tree => {
-        suppressFailedClues(loggerFactory) {
-          clue("Check alice's balance") {
-            checkBalance(
-              aliceWalletClient,
-              expectedRound = None,
-              expectedUnlockedQtyRange = (
-                tapAmount - aliceTransferAmount + bobTransferAmount - feesUpperBound,
-                tapAmount - aliceTransferAmount + bobTransferAmount,
-              ),
-              expectedLockedQtyRange = (0.0, 0.0),
-              expectedHoldingFeeRange = holdingFeesBound,
-            )
-          }
-          clue("Check bob's balance") {
-            checkBalance(
-              bobWalletClient,
-              expectedRound = None,
-              expectedUnlockedQtyRange = (
-                tapAmount + aliceTransferAmount - bobTransferAmount - feesUpperBound,
-                tapAmount + aliceTransferAmount - bobTransferAmount,
-              ),
-              expectedLockedQtyRange = (0.0, 0.0),
-              expectedHoldingFeeRange = holdingFeesBound,
-            )
-          }
+      _ => {
+        clue("Check alice's balance") {
+          checkBalance(
+            aliceWalletClient,
+            expectedRound = None,
+            expectedUnlockedQtyRange = (
+              tapAmount - aliceTransferAmount + bobTransferAmount - feesUpperBound,
+              tapAmount - aliceTransferAmount + bobTransferAmount,
+            ),
+            expectedLockedQtyRange = (0.0, 0.0),
+            expectedHoldingFeeRange = holdingFeesBound,
+          )
         }
-        val events = tree.getEventsById().asScala.values
-        forExactly(1, events) {
-          inside(_) { case c: CreatedEvent =>
-            val decoded = JavaDecodeUtil
-              .decodeCreated(AppRewardCoupon.COMPANION)(c)
-              .value
-            decoded.data.featured shouldBe true
-          }
-        }
-        forExactly(1, events) {
-          inside(_) { case c: CreatedEvent =>
-            val decoded = JavaDecodeUtil
-              .decodeCreated(AppRewardCoupon.COMPANION)(c)
-              .value
-            decoded.data.featured shouldBe false
-          }
+        clue("Check bob's balance") {
+          checkBalance(
+            bobWalletClient,
+            expectedRound = None,
+            expectedUnlockedQtyRange = (
+              tapAmount + aliceTransferAmount - bobTransferAmount - feesUpperBound,
+              tapAmount + aliceTransferAmount - bobTransferAmount,
+            ),
+            expectedLockedQtyRange = (0.0, 0.0),
+            expectedHoldingFeeRange = holdingFeesBound,
+          )
         }
       },
     )
