@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.4.0-snapshot.20250506.1.0.v6f0bd71c
+                0.4.0-snapshot.20250507.1.0.v04adf282
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -1037,9 +1037,9 @@
 </li>
 <li><p>Your cluster needs a static egress IP. After acquiring that, provide it to your SV sponsor who will propose
 adding it to the IP allowlist to the other SVs.</p></li>
-<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.4.0-snapshot.20250506.1.0.v6f0bd71c_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
+<li><p>Please download the release artifacts containing the sample Helm value files, from here: <span class="raw-html"><a class="reference external" href="/cn-release-bundles/0.4.0-snapshot.20250507.1.0.v04adf282_splice-node.tar.gz">Download Bundle</a></span>, and extract the bundle:</p></li>
 </ol>
-<pre class="literal-block">tar xzvf 0.4.0-snapshot.20250506.1.0.v6f0bd71c_splice-node.tar.gz</pre>
+<pre class="literal-block">tar xzvf 0.4.0-snapshot.20250507.1.0.v04adf282_splice-node.tar.gz</pre>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p><strong>If you lose your keys, you lose access to your coins</strong>. While regular backups are not necessary to run your node,
@@ -1351,7 +1351,7 @@ kubectl<span class="w"> </span>create<span class="w"> </span>--namespace<span cl
 cluster, you will need to meet a few preconditions. The first is that
 there needs to be an environment variable defined to refer to the
 version of the Helm charts necessary to connect to this environment:</p>
-<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.4.0-snapshot.20250506.1.0.v6f0bd71c</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CHART_VERSION=0.4.0-snapshot.20250507.1.0.v04adf282</span></code></p>
 <p>Please modify the file <code class="docutils literal notranslate"><span class="pre">splice-node/examples/sv-helm/participant-values.yaml</span></code> as follows:</p>
 <ul class="simple">
 <li><p>Replace <code class="docutils literal notranslate"><span class="pre">OIDC_AUTHORITY_LEDGER_API_AUDIENCE</span></code> in the <cite>auth.targetAudience</cite> entry with audience for the ledger API. e.g. <code class="docutils literal notranslate"><span class="pre">https://ledger_api.example.com</span></code>. If you are not ready to use a custom audience, you can use the suggested default <code class="docutils literal notranslate"><span class="pre">https://canton.network.global</span></code>.</p></li>
@@ -1412,16 +1412,9 @@ validator operator party. It must be of the format
 <span class="w">  </span><span class="c1"># migrating: true</span>
 </pre></div>
 </div>
-<p>Finally, please add the following values to your <code class="docutils literal notranslate"><span class="pre">standalone-validator-values.yaml</span></code> file:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">spliceInstanceNames</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">networkName</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Canton</span><span class="nv"> </span><span class="s">Network&quot;</span>
-<span class="w">  </span><span class="nt">networkFaviconUrl</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://www.canton.network/hubfs/cn-favicon-05%201-1.png&quot;</span>
-<span class="w">  </span><span class="nt">amuletName</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Canton</span><span class="nv"> </span><span class="s">Coin&quot;</span>
-<span class="w">  </span><span class="nt">amuletNameAcronym</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;CC&quot;</span>
-<span class="w">  </span><span class="nt">nameServiceName</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Canton</span><span class="nv"> </span><span class="s">Name</span><span class="nv"> </span><span class="s">Service&quot;</span>
-<span class="w">  </span><span class="nt">nameServiceNameAcronym</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;CNS&quot;</span>
-</pre></div>
-</div>
+<p>Finally, please download the UI config values file from
+<a class="reference external" href="https://github.com/global-synchronizer-foundation/configs/blob/main/configs/ui-config-values.yaml">https://github.com/global-synchronizer-foundation/configs/blob/main/configs/ui-config-values.yaml</a>
+and add the values from it to your <code class="docutils literal notranslate"><span class="pre">standalone-validator-values.yaml</span></code>.</p>
 </section>
 <section id="installing-the-helm-charts">
 <span id="validator-helm-charts-install"></span><h3>Installing the Helm Charts<a class="headerlink" href="#installing-the-helm-charts" title="Link to this heading"></a></h3>
