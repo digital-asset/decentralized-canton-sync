@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.4.0-snapshot.20250512.1.0.v473a05bb
+                0.4.0-snapshot.20250512.1.0.vcf28fc5a
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -1082,15 +1082,8 @@ initialSynchronizerFeesConfig and onboardingFoundingSvRewardWeightBps
 cannot be set when you are deploying in the phase with migrating=true.
 Your SV app will fail to become healthy otherwise</p>
 <ol class="arabic simple" start="3">
-<li><p>You probably want to point decentralizedSynchronizerUrl at your own
-bootstrap node</p></li>
+<li><p>Remove the <code class="docutils literal notranslate"><span class="pre">decentralizedSynchronizerUrl</span></code> config from <code class="docutils literal notranslate"><span class="pre">sv-values.yaml</span></code>. It is only used for nodes that join after the initial SV.</p></li>
 </ol>
-<div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">-</span><span class="w">    </span><span class="n">decentralizedSynchronizerUrl</span><span class="p">:</span><span class="w"> </span><span class="n">https</span><span class="p">:</span><span class="c1">//sequencer-0.sv-2.whatever.global.canton.network.digitalasset.com</span>
-<span class="o">+</span><span class="w">    </span><span class="n">decentralizedSynchronizerUrl</span><span class="p">:</span><span class="w"> </span><span class="n">https</span><span class="p">:</span><span class="c1">//sequencer-0.sv-0.my.domain.com</span>
-<span class="o">+</span><span class="w">    </span><span class="c1">// or you could try cluster DNS:</span>
-<span class="o">+</span><span class="w">    </span><span class="c1">// decentralizedSynchronizerUrl: &#39;http://global-domain-0-sequencer:5008&#39;,</span>
-</pre></div>
-</div>
 </section>
 <section id="other-helm-values-you-may-need-to-consider">
 <h2>other helm values you may need to consider<a class="headerlink" href="#other-helm-values-you-may-need-to-consider" title="Link to this heading"></a></h2>
