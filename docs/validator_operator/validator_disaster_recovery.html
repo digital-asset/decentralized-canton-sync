@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.4.0-snapshot.20250514.1.0.v757dc162
+                0.4.0-snapshot.20250514.1.0.v7b2e3fea
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -147,6 +147,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#docker-compose-deployment">Docker-Compose Deployment</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#recover-the-coin-balance-of-an-external-party">Recover the Coin balance of an external party</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#disaster-recovery-from-loss-of-the-cometbft-storage-layer-of-the-global-synchronizer">Disaster recovery from loss of the CometBFT storage layer of the global synchronizer</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#technical-details-kubernetes">Technical Details (Kubernetes)</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#migrating-the-data">Migrating the Data</a></li>
@@ -1108,6 +1109,124 @@ Make sure to also adjust <code class="docutils literal notranslate"><span class=
 <code class="docutils literal notranslate"><span class="pre">&lt;new_participant_id&gt;</span></code> is a new identifier to be used for the new participant. It must be one never used before.
 Note that in subsequent restarts of the validator, you should keep providing <code class="docutils literal notranslate"><span class="pre">-P</span></code> with the same <code class="docutils literal notranslate"><span class="pre">&lt;new_participant_id&gt;</span></code>.</p>
 </section>
+</section>
+<section id="recover-the-coin-balance-of-an-external-party">
+<h2>Recover the Coin balance of an external party<a class="headerlink" href="#recover-the-coin-balance-of-an-external-party" title="Link to this heading"></a></h2>
+<p>For a party relying on external signing, a similar procedure can be
+used to recover its coin balance in case the validator originally
+hosting it becomes unusable for whatever reason.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The target validator that you use to host the party after
+recovery <strong>must</strong> be a <strong>completely new validator</strong>. An existing validator
+may brick completely due to some limitations around party
+migrations and there is no way to recover from that at
+this point. This limitation is expected to be lifted in
+the future.</p>
+</div>
+<p>First, setup a new validator following the standard <a class="reference internal" href="index.html#validator-operator"><span class="std std-ref">standard validator deployment docs</span></a>.</p>
+<p>Next, connect a <a class="reference internal" href="../deployment/console_access.html#console-access"><span class="std std-ref">Canton console</span></a> to that new validator.</p>
+<p>We now need to sign and submit the topology transaction to host the
+external party on the new node and import the ACS for that party.</p>
+<p>To do so, first generate the topology transaction. Note that the instructions here
+assume that the party is only hosted on a single participant node. If you want to host
+it on multiple nodes, you will need to adjust this.</p>
+<div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="c1">// replace YOUR_PARTY_ID by the id of your external party</span>
+<span class="kd">val</span><span class="w"> </span><span class="n">partyId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">PartyId</span><span class="p">.</span><span class="n">tryFromProtoPrimitive</span><span class="p">(</span><span class="s">&quot;YOUR_PARTY_ID&quot;</span><span class="p">)</span>
+<span class="kd">val</span><span class="w"> </span><span class="n">participantId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">participant</span><span class="p">.</span><span class="n">id</span>
+<span class="kd">val</span><span class="w"> </span><span class="n">synchronizerId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">participant</span><span class="p">.</span><span class="n">synchronizers</span><span class="p">.</span><span class="n">id_of</span><span class="p">(</span><span class="s">&quot;global&quot;</span><span class="p">)</span>
+
+<span class="c1">// generate topology transaction</span>
+<span class="kd">val</span><span class="w"> </span><span class="n">partyToParticipant</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">PartyToParticipant</span><span class="p">.</span><span class="n">tryCreate</span><span class="p">(</span>
+<span class="w">    </span><span class="n">partyId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">partyId</span><span class="p">,</span>
+<span class="w">    </span><span class="n">threshold</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">PositiveInt</span><span class="p">.</span><span class="n">one</span><span class="p">,</span>
+<span class="w">    </span><span class="n">participants</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Seq</span><span class="p">(</span>
+<span class="w">      </span><span class="nc">HostingParticipant</span><span class="p">(</span>
+<span class="w">        </span><span class="n">participantId</span><span class="p">,</span>
+<span class="w">        </span><span class="nc">ParticipantPermission</span><span class="p">.</span><span class="nc">Confirmation</span><span class="p">,</span>
+<span class="w">      </span><span class="p">)</span>
+<span class="w">    </span><span class="p">),</span>
+<span class="w">  </span><span class="p">)</span>
+
+<span class="k">import</span><span class="w"> </span><span class="nn">com</span><span class="p">.</span><span class="nn">digitalasset</span><span class="p">.</span><span class="nn">canton</span><span class="p">.</span><span class="nn">admin</span><span class="p">.</span><span class="nn">api</span><span class="p">.</span><span class="nn">client</span><span class="p">.</span><span class="nn">commands</span><span class="p">.</span><span class="nc">TopologyAdminCommands</span><span class="p">.</span><span class="nc">Write</span><span class="p">.</span><span class="nc">GenerateTransactions</span>
+<span class="kd">val</span><span class="w"> </span><span class="n">topologyTransaction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">participant</span><span class="p">.</span><span class="n">topology</span><span class="p">.</span><span class="n">transactions</span><span class="p">.</span><span class="n">generate</span><span class="p">(</span>
+<span class="w">  </span><span class="nc">Seq</span><span class="p">(</span>
+<span class="w">    </span><span class="nc">GenerateTransactions</span><span class="p">.</span><span class="nc">Proposal</span><span class="p">(</span>
+<span class="w">      </span><span class="n">partyToParticipant</span><span class="p">,</span>
+<span class="w">      </span><span class="nc">TopologyStoreId</span><span class="p">.</span><span class="nc">Synchronizer</span><span class="p">(</span><span class="n">synchronizerId</span><span class="p">),</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="w">  </span><span class="p">)</span>
+<span class="p">).</span><span class="n">head</span>
+
+<span class="c1">// Print out the hash that needs to be signed. Note that you need to sign</span>
+<span class="c1">// the actual bytes the hex string represents not the hex string</span>
+<span class="n">topologyTransaction</span><span class="p">.</span><span class="n">hash</span><span class="p">.</span><span class="n">hash</span><span class="p">.</span><span class="n">toHexString</span>
+</pre></div>
+</div>
+<p>We’ll need the topology transaction and the definitions defined here later again. Either keep your Canton console open or save them.</p>
+<p>The topology transaction hash needs to be signed externally following the
+<a class="reference external" href="https://docs.digitalasset.com/build/3.3/tutorials/app-dev/external_signing_onboarding#external-party-onboarding-transactions">documentation for external signing</a>.</p>
+<p>After you signed it externally, you need to construct the signed
+topology transaction, sign it additionally through the participant and
+then submit it through the synchronizer.</p>
+<div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="c1">// Replace HASH_SIGNATURE_HEXSTRING with the signed topology transaction hash</span>
+<span class="kd">val</span><span class="w"> </span><span class="n">signature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Signature</span><span class="p">.</span><span class="n">fromExternalSigning</span><span class="p">(</span><span class="nc">SignatureFormat</span><span class="p">.</span><span class="nc">Raw</span><span class="p">,</span><span class="w"> </span><span class="nc">HexString</span><span class="p">.</span><span class="n">parseToByteString</span><span class="p">(</span><span class="s">&quot;HASH_SIGNATURE_HEXSTRING&quot;</span><span class="p">).</span><span class="n">get</span><span class="p">,</span><span class="w"> </span><span class="n">partyId</span><span class="p">.</span><span class="n">namespace</span><span class="p">.</span><span class="n">fingerprint</span><span class="p">,</span><span class="w"> </span><span class="nc">SigningAlgorithmSpec</span><span class="p">.</span><span class="nc">Ed25519</span><span class="p">)</span>
+<span class="kd">val</span><span class="w"> </span><span class="n">topologyTxSignedByParty</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">SignedTopologyTransaction</span><span class="p">.</span><span class="n">create</span><span class="p">(</span>
+<span class="w">  </span><span class="n">topologyTransaction</span><span class="p">,</span>
+<span class="w">  </span><span class="nc">NonEmpty</span><span class="p">(</span><span class="nc">Set</span><span class="p">,</span><span class="w"> </span><span class="nc">SingleTransactionSignature</span><span class="p">(</span><span class="n">topologyTransaction</span><span class="p">.</span><span class="n">hash</span><span class="p">,</span><span class="w"> </span><span class="n">signature</span><span class="p">):</span><span class="w"> </span><span class="nc">TopologyTransactionSignature</span><span class="p">),</span>
+<span class="w">  </span><span class="n">isProposal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nc">ProtocolVersion</span><span class="p">.</span><span class="n">v33</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kd">val</span><span class="w"> </span><span class="n">topologyTxSignedByBoth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">participant</span><span class="p">.</span><span class="n">topology</span><span class="p">.</span><span class="n">transactions</span><span class="p">.</span><span class="n">sign</span><span class="p">(</span>
+<span class="w">  </span><span class="n">topologyTxSignedByParty</span><span class="p">,</span>
+<span class="w">  </span><span class="nc">TopologyStoreId</span><span class="p">.</span><span class="nc">Synchronizer</span><span class="p">(</span><span class="n">synchronizerId</span><span class="p">),</span>
+<span class="w">  </span><span class="n">signedBy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Seq</span><span class="p">(</span><span class="n">participantId</span><span class="p">.</span><span class="n">namespace</span><span class="p">.</span><span class="n">fingerprint</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">participant</span><span class="p">.</span><span class="n">topology</span><span class="p">.</span><span class="n">transactions</span><span class="p">.</span><span class="n">load</span><span class="p">(</span>
+<span class="w">  </span><span class="n">topologyTxSignedByBoth</span><span class="p">,</span>
+<span class="w">  </span><span class="nc">TopologyStoreId</span><span class="p">.</span><span class="nc">Synchronizer</span><span class="p">(</span><span class="n">synchronizerId</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>We can now check that the topology transaction got correctly applied and get the <code class="docutils literal notranslate"><span class="pre">validFrom</span></code> time:</p>
+<div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="c1">// The detailed output will slightly vary. Make sure that you see the new participant id though.</span>
+<span class="n">sv1Participant</span><span class="p">.</span><span class="n">topology</span><span class="p">.</span><span class="n">party_to_participant_mappings</span><span class="p">.</span><span class="n">list</span><span class="p">(</span><span class="n">synchronizerId</span><span class="p">,</span><span class="w"> </span><span class="n">filterParty</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">partyId</span><span class="p">.</span><span class="n">filterString</span><span class="p">)</span>
+<span class="w">  </span><span class="n">res36</span><span class="p">:</span><span class="w"> </span><span class="nc">Seq</span><span class="p">[</span><span class="n">topology</span><span class="p">.</span><span class="nc">ListPartyToParticipantResult</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Vector</span><span class="p">(</span>
+<span class="w">    </span><span class="nc">ListPartyToParticipantResult</span><span class="p">(</span>
+<span class="w">      </span><span class="n">context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">BaseResult</span><span class="p">(</span>
+<span class="w">        </span><span class="n">storeId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Synchronizer</span><span class="p">(</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">global</span><span class="o">-</span><span class="n">domain::</span><span class="mi">122025296</span><span class="n">c61</span><span class="p">...),</span>
+<span class="w">        </span><span class="n">validFrom</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2025</span><span class="o">-</span><span class="mi">05</span><span class="o">-</span><span class="mi">14</span><span class="nc">T10</span><span class="p">:</span><span class="mi">19</span><span class="p">:</span><span class="mf">33.534074</span><span class="nc">Z</span><span class="p">,</span>
+<span class="w">        </span><span class="n">validUntil</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">None</span><span class="p">,</span>
+<span class="w">        </span><span class="n">sequenced</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2025</span><span class="o">-</span><span class="mi">05</span><span class="o">-</span><span class="mi">14</span><span class="nc">T10</span><span class="p">:</span><span class="mi">19</span><span class="p">:</span><span class="mf">33.534074</span><span class="nc">Z</span><span class="p">,</span>
+<span class="w">        </span><span class="n">operation</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Replace</span><span class="p">,</span>
+<span class="w">        </span><span class="n">transactionHash</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&lt;</span><span class="nc">ByteString</span><span class="o">@</span><span class="mf">2d</span><span class="mi">53</span><span class="n">bfcc</span><span class="w"> </span><span class="n">size</span><span class="o">=</span><span class="mi">34</span><span class="w"> </span><span class="n">contents</span><span class="o">=</span><span class="s">&quot;\022 \320\215d\276\352m)\316 \231\345 \360\252WQB\331\3668\216\362\022\342S\310k\vF\267\347\374&quot;</span><span class="o">&gt;</span><span class="p">,</span>
+<span class="w">        </span><span class="n">serial</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">PositiveNumeric</span><span class="p">(</span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">),</span>
+<span class="w">        </span><span class="n">signedBy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Vector</span><span class="p">(</span><span class="mi">1220</span><span class="n">b529c1d9</span><span class="p">...)</span>
+<span class="w">      </span><span class="p">),</span>
+<span class="w">      </span><span class="n">item</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">PartyToParticipant</span><span class="p">(</span><span class="nc">YOUR_PARTY_ID</span><span class="p">,</span><span class="w"> </span><span class="nc">PositiveNumeric</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="nc">Vector</span><span class="p">(</span><span class="nc">HostingParticipant</span><span class="p">(</span><span class="nc">YOUR_PARTICIPANT_ID</span><span class="p">...,</span><span class="w"> </span><span class="nc">Submission</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="w">  </span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this example, the validFrom time is <code class="docutils literal notranslate"><span class="pre">2025-05-14T10:19:33.534074Z</span></code>.</p>
+<p>We can now query CC Scan to get the active contract set (ACS) for a party and write it to the file <code class="docutils literal notranslate"><span class="pre">acs_snapshot</span></code>:</p>
+<pre class="literal-block">// Make sure to adjust YOUR_VALID_FROM to the time you got from the previous query and YOUR_PARY_ID
+curl -sSL --fail-with-body '<span class="raw-html">https://scan.sv-1.<span class="splice-url-prefix">unknown_cluster.</span>global.canton.network.sync.global</span>/api/scan/v0/acs/YOUR_PARTY_ID?record_time=YOUR_VALID_FROM' -H 'Content-Type: application/json' | jq -r .acs_snapshot | base64 -d &gt; acs_snapshot</pre>
+<p>Lastly, we can import the ACS:</p>
+<div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="n">participant</span><span class="p">.</span><span class="n">synchronizers</span><span class="p">.</span><span class="n">disconnect_all</span><span class="p">()</span>
+<span class="n">participant</span><span class="p">.</span><span class="n">repair</span><span class="p">.</span><span class="n">import_acs_old</span><span class="p">(</span><span class="s">&quot;acs_snapshot&quot;</span><span class="p">)</span>
+<span class="n">participant</span><span class="p">.</span><span class="n">synchronizers</span><span class="p">.</span><span class="n">reconnect_all</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The party is now hosted on the node and can participat in
+transactions. The last step is to setup the necessary contracts to
+allow the validator automation to renew transfer preapprovals and
+complete transfer commands. To do so, go through the same flow used
+for initial onboarding of the party, i.e.,
+<code class="docutils literal notranslate"><span class="pre">/v0/admin/external-party/setup-proposal</span></code>,
+<code class="docutils literal notranslate"><span class="pre">/v0/admin/external-party/setup-proposal/prepare-accept</span></code> and
+<code class="docutils literal notranslate"><span class="pre">/v0/admin/external-party/setup-proposal/submit-accept</span></code>. For details
+refer to the <a class="reference internal" href="../app_dev/validator_api/index.html#validator-api-external-signing"><span class="std std-ref">docs for the validator external signing API</span></a>.</p>
 </section>
 <section id="disaster-recovery-from-loss-of-the-cometbft-storage-layer-of-the-global-synchronizer">
 <span id="validator-network-dr"></span><h2>Disaster recovery from loss of the CometBFT storage layer of the global synchronizer<a class="headerlink" href="#disaster-recovery-from-loss-of-the-cometbft-storage-layer-of-the-global-synchronizer" title="Link to this heading"></a></h2>
