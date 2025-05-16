@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.4.0-snapshot.20250516.1.0.v744ea4b0
+                0.4.0-snapshot.20250516.1.0.vdfbc5b67
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -145,6 +145,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#re-onboard-a-validator-and-recover-balances-of-all-users-it-hosts">Re-onboard a validator and recover balances of all users it hosts</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#kubernetes-deployment">Kubernetes Deployment</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#docker-compose-deployment">Docker-Compose Deployment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#limitations-and-troubleshooting">Limitations and Troubleshooting</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#recover-the-coin-balance-of-an-external-party">Recover the Coin balance of an external party</a></li>
@@ -154,7 +155,7 @@
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="#technical-details-docker-compose">Technical Details (Docker-Compose)</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="#id2">Migrating the Data</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#id1">Migrating the Data</a></li>
 </ul>
 </li>
 </ul>
@@ -1109,9 +1110,26 @@ Make sure to also adjust <code class="docutils literal notranslate"><span class=
 <code class="docutils literal notranslate"><span class="pre">&lt;new_participant_id&gt;</span></code> is a new identifier to be used for the new participant. It must be one never used before.
 Note that in subsequent restarts of the validator, you should keep providing <code class="docutils literal notranslate"><span class="pre">-P</span></code> with the same <code class="docutils literal notranslate"><span class="pre">&lt;new_participant_id&gt;</span></code>.</p>
 </section>
+<section id="limitations-and-troubleshooting">
+<h3>Limitations and Troubleshooting<a class="headerlink" href="#limitations-and-troubleshooting" title="Link to this heading"></a></h3>
+<p>In some non-standard cases, the automated re-onboarding from key backup might not succeed in migrating (i.e., recovering) a party.
+Please check the logs of the validator for warnings or error entries that may give clues.
+Among other things, the following types of parties will not be migrated by default:</p>
+<ul class="simple">
+<li><p>Parties that are hosted on multiple participants.
+These may get unhosted from the original (failed) participant, but will remain hosted on any other participants.</p></li>
+<li><p>External parties that are hosted on the validator.
+These may get unhosted from the original (failed) participant.
+Please refer to <a class="reference internal" href="#validator-recover-external-party"><span class="std std-ref">Recover the Coin balance of an external party</span></a> for instructions on how to recover external parties.</p></li>
+</ul>
+<p>In some cases you might want to force the migration attempt for a set of parties that were not migrated automatically.
+To do so, you can set the <code class="docutils literal notranslate"><span class="pre">parties-to-migrate</span></code> <a class="reference internal" href="../deployment/configuration.html#configuration"><span class="std std-ref">configuration option</span></a> on your validator app.
+A migration will be attempted for each party that you pass to this option.
+The initialization of the validator app will be interrupted on the first failed migration attempt.</p>
+</section>
 </section>
 <section id="recover-the-coin-balance-of-an-external-party">
-<h2>Recover the Coin balance of an external party<a class="headerlink" href="#recover-the-coin-balance-of-an-external-party" title="Link to this heading"></a></h2>
+<span id="validator-recover-external-party"></span><h2>Recover the Coin balance of an external party<a class="headerlink" href="#recover-the-coin-balance-of-an-external-party" title="Link to this heading"></a></h2>
 <p>For a party relying on external signing, a similar procedure can be
 used to recover its coin balance in case the validator originally
 hosting it becomes unusable for whatever reason.</p>
@@ -1298,8 +1316,8 @@ See <a class="reference internal" href="#validator-reonboard"><span class="std s
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;domain-upgrade-dump:/volume&quot;</span><span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">:/backup&quot;</span><span class="w"> </span>alpine<span class="w"> </span>sh<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;cp /backup/dump.json /volume/domain_migration_dump.json&quot;</span>
 </pre></div>
 </div>
-<section id="id2">
-<h4>Migrating the Data<a class="headerlink" href="#id2" title="Link to this heading"></a></h4>
+<section id="id1">
+<h4>Migrating the Data<a class="headerlink" href="#id1" title="Link to this heading"></a></h4>
 <p>Please follow the instructions in the <a class="reference internal" href="validator_major_upgrades.html#validator-upgrades-deploying"><span class="std std-ref">Deploying the Validator App and Participant</span></a> section
 to update the configuration of the validator app and participant to consume the migration dump file.</p>
 </section>
