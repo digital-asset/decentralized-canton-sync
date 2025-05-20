@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.4.0-snapshot.20250520.1.0.v41edc4e4
+                0.4.0-snapshot.20250520.1.0.vb9ee37f4
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -1927,6 +1927,10 @@ the amulet transfers completed via the managed pre-approval.</p>
 <td><p><a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932">Party</a></p></td>
 <td></td>
 </tr>
+<tr class="row-even"><td><p>description</p></td>
+<td><p><a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153">Optional</a> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952">Text</a></p></td>
+<td></td>
+</tr>
 </tbody>
 </table>
 </li>
@@ -3509,12 +3513,18 @@ we can reference them by contract id instead of by key.</p>
 <td><p><a class="reference internal" href="#type-splice-amuletrules-transferresult-93164">TransferResult</a></p></td>
 <td></td>
 </tr>
+<tr class="row-odd"><td><p>meta</p></td>
+<td><p><a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153">Optional</a> Metadata</p></td>
+<td></td>
+</tr>
 </tbody>
 </table>
 </div></blockquote>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713">Eq</a> <a class="reference internal" href="#type-splice-amuletrules-transferpreapprovalsendresult-68419">TransferPreapproval_SendResult</a></p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360">Show</a> <a class="reference internal" href="#type-splice-amuletrules-transferpreapprovalsendresult-68419">TransferPreapproval_SendResult</a></p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979">GetField</a> &quot;meta&quot; <a class="reference internal" href="#type-splice-amuletrules-transferpreapprovalsendresult-68419">TransferPreapproval_SendResult</a> (<a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153">Optional</a> Metadata)</p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979">GetField</a> &quot;result&quot; <a class="reference internal" href="#type-splice-amuletrules-transferpreapprovalsendresult-68419">TransferPreapproval_SendResult</a> <a class="reference internal" href="#type-splice-amuletrules-transferresult-93164">TransferResult</a></p>
+<p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;meta&quot; <a class="reference internal" href="#type-splice-amuletrules-transferpreapprovalsendresult-68419">TransferPreapproval_SendResult</a> (<a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153">Optional</a> Metadata)</p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311">SetField</a> &quot;result&quot; <a class="reference internal" href="#type-splice-amuletrules-transferpreapprovalsendresult-68419">TransferPreapproval_SendResult</a> <a class="reference internal" href="#type-splice-amuletrules-transferresult-93164">TransferResult</a></p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasexercise-70422">HasExercise</a> <a class="reference internal" href="#type-splice-amuletrules-transferpreapproval-36220">TransferPreapproval</a> <a class="reference internal" href="#type-splice-amuletrules-transferpreapprovalsend-62554">TransferPreapproval_Send</a> <a class="reference internal" href="#type-splice-amuletrules-transferpreapprovalsendresult-68419">TransferPreapproval_SendResult</a></p>
 <p><strong>instance</strong> <a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#class-da-internal-template-functions-hasfromanychoice-81184">HasFromAnyChoice</a> <a class="reference internal" href="#type-splice-amuletrules-transferpreapproval-36220">TransferPreapproval</a> <a class="reference internal" href="#type-splice-amuletrules-transferpreapprovalsend-62554">TransferPreapproval_Send</a> <a class="reference internal" href="#type-splice-amuletrules-transferpreapprovalsendresult-68419">TransferPreapproval_SendResult</a></p>

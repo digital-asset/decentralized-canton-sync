@@ -68,6 +68,9 @@ Templates
        * - nonce
          - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
          -
+       * - description
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         -
 
   + **interface instance** AllocationFactory **for** `ExternalPartyAmuletRules <type-splice-externalpartyamuletrules-externalpartyamuletrules-29682_>`_
 
@@ -114,6 +117,9 @@ Templates
      * - nonce
        - `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
        - Expected nonce value to order and deduplicate concurrent transfers\. Starts at 0 and the next value to use can then be read from TransferCommandCounter and the in\-flight TransferCommand contracts\.
+     * - description
+       - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+       -
 
   + **Choice** Archive
 

@@ -760,6 +760,9 @@ Templates
        * - sender
          - `Party <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932>`_
          -
+       * - description
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
+         -
 
 Data Types
 ----------
@@ -2441,12 +2444,19 @@ Data Types
        * - result
          - `TransferResult <type-splice-amuletrules-transferresult-93164_>`_
          -
+       * - meta
+         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata
+         -
 
   **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `TransferPreapproval_SendResult <type-splice-amuletrules-transferpreapprovalsendresult-68419_>`_
 
   **instance** `Show <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-show-show-65360>`_ `TransferPreapproval_SendResult <type-splice-amuletrules-transferpreapprovalsendresult-68419_>`_
 
+  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"meta\" `TransferPreapproval_SendResult <type-splice-amuletrules-transferpreapprovalsendresult-68419_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata)
+
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"result\" `TransferPreapproval_SendResult <type-splice-amuletrules-transferpreapprovalsendresult-68419_>`_ `TransferResult <type-splice-amuletrules-transferresult-93164_>`_
+
+  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"meta\" `TransferPreapproval_SendResult <type-splice-amuletrules-transferpreapprovalsendresult-68419_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ Metadata)
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"result\" `TransferPreapproval_SendResult <type-splice-amuletrules-transferpreapprovalsendresult-68419_>`_ `TransferResult <type-splice-amuletrules-transferresult-93164_>`_
 
