@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.4.0-snapshot.20250520.1.0.ved4067cb
+                0.4.0-snapshot.20250520.1.0.v5d4aec0c
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -1065,27 +1065,23 @@ including failing on all inputs or not implementing this interface at all.</p>
 <td><p><a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932">Party</a></p></td>
 <td><p>The expected <code class="docutils literal notranslate"><span class="pre">admin</span></code> party issuing the factory. Implementations MUST validate that this matches the admin of the factory. Callers should ensure they get <code class="docutils literal notranslate"><span class="pre">expectedAdmin</span></code> from a trusted source, e.g., a read against their own participant. That way they can ensure that it is safe to exercise a choice on a factory contract acquired from an untrusted source <em>provided</em> all vetted Daml packages only contain interface implementations that check the expected admin party.</p></td>
 </tr>
-<tr class="row-odd"><td><p>sender</p></td>
-<td><p><a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932">Party</a></p></td>
-<td><p>The sender that owns the holdings in <code class="docutils literal notranslate"><span class="pre">inputHoldingCids</span></code>. All holdings in <code class="docutils literal notranslate"><span class="pre">inputHoldingCids</span></code> must be owned by this party.</p></td>
-</tr>
-<tr class="row-even"><td><p>instrumentId</p></td>
+<tr class="row-odd"><td><p>instrumentId</p></td>
 <td><p>InstrumentId</p></td>
 <td><p>The instrument id of the holdings. All holdings in <code class="docutils literal notranslate"><span class="pre">inputHoldingCids</span></code> as well as the resulting output holdings MUST have this instrument id.</p></td>
 </tr>
-<tr class="row-odd"><td><p>inputHoldingCids</p></td>
+<tr class="row-even"><td><p>inputHoldingCids</p></td>
 <td><p>[<a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-contractid-95282">ContractId</a> Holding]</p></td>
-<td><p>The holdings that should be burnt. All holdings in <code class="docutils literal notranslate"><span class="pre">inputHoldingCids</span></code> MUST be archived by this choice.</p></td>
+<td><p>The holdings that should be burnt. All holdings in <code class="docutils literal notranslate"><span class="pre">inputHoldingCids</span></code> MUST be archived by this choice. Implementations MAY enforce additional restrictions such as all <code class="docutils literal notranslate"><span class="pre">inputHoldingCids</span></code> belonging to the same owner.</p></td>
 </tr>
-<tr class="row-even"><td><p>outputs</p></td>
+<tr class="row-odd"><td><p>outputs</p></td>
 <td><p>[<a class="reference internal" href="#type-splice-api-token-burnmintv1-burnmintoutput-36483">BurnMintOutput</a>]</p></td>
 <td><p>The holdings that should be created. The choice MUST create new holdings with the given amounts.</p></td>
 </tr>
-<tr class="row-odd"><td><p>extraActors</p></td>
+<tr class="row-even"><td><p>extraActors</p></td>
 <td><p>[<a class="reference external" href="https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-party-57932">Party</a>]</p></td>
-<td><p>Extra actors, the full actors required are the admin + extraActors. This is often the sender and the receivers but we allow different sets of actors to support token implementations with different authorization setups.</p></td>
+<td><p>Extra actors, the full actors required are the admin + extraActors. This is often the owners of inputHoldingCids and outputs but we allow different sets of actors to support token implementations with different authorization setups.</p></td>
 </tr>
-<tr class="row-even"><td><p>extraArgs</p></td>
+<tr class="row-odd"><td><p>extraArgs</p></td>
 <td><p>ExtraArgs</p></td>
 <td><p>Additional context. Implementations SHOULD include a <code class="docutils literal notranslate"><span class="pre">splice.lfdecentralizedtrust.org/reason</span></code> key in the metadata to provide a human readable description for explain why the <code class="docutils literal notranslate"><span class="pre">BurnMintFactory_BurnMint</span></code> choice was called, so that generic wallets can display it to the user.</p></td>
 </tr>
