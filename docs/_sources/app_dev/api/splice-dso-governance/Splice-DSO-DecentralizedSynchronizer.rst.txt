@@ -211,9 +211,6 @@ Data Types
        * - availableAfter
          - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_
          - Any participant should subscribe this sequencer after this time\. \^ If not set the sequencer is not yet accessible
-       * - peerUrl
-         - `Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_
-         - The public url for the BFT ordering peer endpoint used by other SVs to talk to this node
 
   **instance** `Eq <https://docs.daml.com/daml/stdlib/Prelude.html#class-ghc-classes-eq-22713>`_ `SequencerConfig <type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423_>`_
 
@@ -222,8 +219,6 @@ Data Types
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"availableAfter\" `SequencerConfig <type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_)
 
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"migrationId\" `SequencerConfig <type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
-
-  **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"peerUrl\" `SequencerConfig <type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_)
 
   **instance** `GetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-getfield-53979>`_ \"sequencer\" `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `SequencerConfig <type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423_>`_)
 
@@ -234,8 +229,6 @@ Data Types
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"availableAfter\" `SequencerConfig <type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Time <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-lf-time-63886>`_)
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"migrationId\" `SequencerConfig <type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423_>`_ `Int <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-int-37261>`_
-
-  **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"peerUrl\" `SequencerConfig <type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `Text <https://docs.daml.com/daml/stdlib/Prelude.html#type-ghc-types-text-51952>`_)
 
   **instance** `SetField <https://docs.daml.com/daml/stdlib/DA-Record.html#class-da-internal-record-setfield-4311>`_ \"sequencer\" `SynchronizerNodeConfig <type-splice-dso-decentralizedsynchronizer-synchronizernodeconfig-10457_>`_ (`Optional <https://docs.daml.com/daml/stdlib/Prelude.html#type-da-internal-prelude-optional-37153>`_ `SequencerConfig <type-splice-dso-decentralizedsynchronizer-sequencerconfig-38423_>`_)
 
