@@ -40,7 +40,7 @@
             Splice
           </a>
               <div class="version">
-                0.4.1-snapshot.20250528.1.0.v168e47a8
+                0.4.1-snapshot.20250528.1.0.v9a46b3e0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -1041,82 +1041,60 @@ For Auth0 instructions and more details on configuring authentication, see <a cl
 <h2>Okta<a class="headerlink" href="#okta" title="Link to this heading"></a></h2>
 <p>Follow these steps to configure Okta as your validator’s OIDC provider:</p>
 <ol class="arabic simple">
-<li><p>Create an application for the validator app backend.</p></li>
-</ol>
-<blockquote>
-<div><ol class="loweralpha simple">
+<li><p>Create an application for the validator app backend.</p>
+<ol class="loweralpha simple">
 <li><p>Navigate to “Admin Panel &gt; Applications &gt; Applications”, and click “Create App Integration”.</p></li>
 <li><p>Choose “API Services” as the sign-in method (not OIDC).</p></li>
 <li><p>For “App integration name”, enter <code class="docutils literal notranslate"><span class="pre">Validator</span> <span class="pre">app</span> <span class="pre">backend</span></code>.</p></li>
 <li><p>In General Settings, uncheck “Proof of possession”.</p></li>
 <li><p>Click “Save” and copy the “Client ID” and “Client Secret”.</p></li>
 </ol>
-</div></blockquote>
-<ol class="arabic simple" start="2">
-<li><p>Create an application for the wallet web UI.</p></li>
-</ol>
-<blockquote>
-<div><ol class="loweralpha simple">
+</li>
+<li><p>Create an application for the wallet web UI.</p>
+<ol class="loweralpha simple">
 <li><p>Navigate to “Admin Panel &gt; Applications &gt; Applications”, and click “Create App Integration”.</p></li>
 <li><p>Choose “OIDC” as the sign-in method then “Single-Page Application” as the application type.</p></li>
-<li><p>For “App integration name”, enter <code class="docutils literal notranslate"><span class="pre">Wallet</span> <span class="pre">web</span> <span class="pre">UI</span></code>.</p></li>
-</ol>
-<blockquote>
-<div><ul class="simple">
+<li><p>For “App integration name”, enter <code class="docutils literal notranslate"><span class="pre">Wallet</span> <span class="pre">web</span> <span class="pre">UI</span></code>.</p>
+<ul class="simple">
 <li><p>In “Sign-in redirect URIs”, enter your wallet UI URL: <code class="docutils literal notranslate"><span class="pre">https://wallet.validator.YOUR_HOSTNAME</span></code></p></li>
 <li><p>In “Sign-out redirect URIs”, enter your wallet UI URL: <code class="docutils literal notranslate"><span class="pre">https://wallet.validator.YOUR_HOSTNAME</span></code></p></li>
 <li><p>In “Trusted Origins/Base URIs”, enter your wallet UI URL: <code class="docutils literal notranslate"><span class="pre">https://wallet.validator.YOUR_HOSTNAME</span></code></p></li>
 </ul>
-</div></blockquote>
-<ol class="loweralpha simple" start="4">
+</li>
 <li><p>Assign the app to the groups you want to have access to it.</p></li>
 <li><p>Click “Save” and copy the “Client ID”.</p></li>
 </ol>
-</div></blockquote>
-<ol class="arabic simple" start="3">
-<li><p>Create an application for the CNS web UI.</p></li>
-</ol>
-<blockquote>
-<div><ol class="loweralpha simple">
+</li>
+<li><p>Create an application for the CNS web UI.</p>
+<ol class="loweralpha simple">
 <li><p>Navigate to “Admin Panel &gt; Applications &gt; Applications”, and click “Create App Integration”.</p></li>
 <li><p>Choose “OIDC” as the sign-in method then “Single-Page Application” as the application type.</p></li>
-<li><p>For “App integration name”, enter <code class="docutils literal notranslate"><span class="pre">CNS</span> <span class="pre">web</span> <span class="pre">UI</span></code>.</p></li>
-</ol>
-<blockquote>
-<div><ul class="simple">
+<li><p>For “App integration name”, enter <code class="docutils literal notranslate"><span class="pre">CNS</span> <span class="pre">web</span> <span class="pre">UI</span></code>.</p>
+<ul class="simple">
 <li><p>In “Sign-in redirect URIs”, enter your CNS UI URL : <code class="docutils literal notranslate"><span class="pre">https://cns.validator.YOUR_HOSTNAME</span></code></p></li>
 <li><p>In “Sign-out redirect URIs”, enter your CNS UI URL : <code class="docutils literal notranslate"><span class="pre">https://cns.validator.YOUR_HOSTNAME</span></code></p></li>
 <li><p>In “Trusted Origins/Base URIs”, enter your CNS UI URL : <code class="docutils literal notranslate"><span class="pre">https://cns.validator.YOUR_HOSTNAME</span></code></p></li>
 </ul>
-</div></blockquote>
-<ol class="loweralpha simple" start="4">
+</li>
 <li><p>Assign the app to the groups you want to have access to it.</p></li>
 <li><p>Click “Save” and copy the “Client ID”.</p></li>
 </ol>
-</div></blockquote>
-<ol class="arabic simple" start="4">
-<li><p>Create a client for a custom audience (optional)</p></li>
-</ol>
-<blockquote>
-<div><ul class="simple">
+</li>
+<li><p>Create a client for a custom audience (optional)</p>
+<ol class="loweralpha simple">
 <li><p>If you want other applications to access the ledger API, create an additional client by following steps 1–3.</p></li>
-</ul>
-</div></blockquote>
-<ol class="arabic simple" start="5">
-<li><p>Create a custom Authorization server per validator/environment</p></li>
 </ol>
-<blockquote>
-<div><ol class="loweralpha simple">
+</li>
+<li><p>Create a custom Authorization server per validator/environment</p>
+<ol class="loweralpha simple">
 <li><p>Navigate to “Admin Panel &gt; Directory &gt; Groups”, click “Add Group” and name the group “canton_wallet_admin”.</p></li>
 <li><p>Add another group “canton_all.”</p></li>
 <li><p>Navigate to “Admin Panel &gt; Security &gt; API”</p></li>
 <li><p>In the “Authorization Servers” tab, click “Add Authorization Server”. Define a name and audience. Note that the authorization server is used for the M2M flow and must be different for each environment/validator for security reasons.</p></li>
 <li><p>In the “Scopes” tab, add a custom scope named <code class="docutils literal notranslate"><span class="pre">daml_ledger_api</span></code>  and click “Set as a default scope”.</p></li>
 <li><p>In the “Claims” tab, change the “sub” value to “app.clientId”. If the default value is kept, it uses the user email, which requires formatting in values.yaml as <code class="docutils literal notranslate"><span class="pre">‘</span> <span class="pre">“</span> <span class="pre">email.address&#64;domain</span> <span class="pre">“</span> <span class="pre">‘</span></code>, without the spaces. This is necessary until the Helm chart is updated to properly quote them.</p></li>
-<li><p>In the “Access Policies” tab, create one policy for each of the three applications.</p></li>
-</ol>
-<blockquote>
-<div><ul class="simple">
+<li><p>In the “Access Policies” tab, create one policy for each of the three applications.</p>
+<ul class="simple">
 <li><p>Name: <code class="docutils literal notranslate"><span class="pre">Validator</span> <span class="pre">app</span> <span class="pre">backend</span></code></p></li>
 <li><p>Assigned to : <code class="docutils literal notranslate"><span class="pre">Validator</span> <span class="pre">app</span> <span class="pre">backend</span></code> created in step #1</p></li>
 <li><p>Click “Add rule.” Enter a “Rule Name” and check “Any user assigned the app” next to “User is” to define a rule that matches any user assigned to the app. Click “Create rule.”</p></li>
@@ -1127,25 +1105,22 @@ For Auth0 instructions and more details on configuring authentication, see <a cl
 <li><p>Assigned to: <code class="docutils literal notranslate"><span class="pre">CNS</span> <span class="pre">web</span> <span class="pre">UI</span></code> created in step #3</p></li>
 <li><p>Click “Add rule.” Enter a “Rule Name” and check “Assigned the app and a member of one of the following” next to “User is.” Add the group “canton_all” to define a rule that matches the group. Click “Create rule.”</p></li>
 </ul>
-</div></blockquote>
-</div></blockquote>
+</li>
+</ol>
+</li>
+</ol>
 </section>
 <section id="keycloak">
 <h2>Keycloak<a class="headerlink" href="#keycloak" title="Link to this heading"></a></h2>
 <p>Follow these steps to configure Keycloak as your validator’s OIDC provider:</p>
 <ol class="arabic simple">
-<li><p>Create a realm</p></li>
-</ol>
-<blockquote>
-<div><ul class="simple">
+<li><p>Create a realm</p>
+<ol class="loweralpha simple">
 <li><p>Navigate to “Admin Panel &gt; Manage realms”, click “Create realm”, and enter a realm name.</p></li>
-</ul>
-</div></blockquote>
-<ol class="arabic simple" start="2">
-<li><p>Create a client for the Ledger API</p></li>
 </ol>
-<blockquote>
-<div><ol class="loweralpha simple">
+</li>
+<li><p>Create a client for the Ledger API</p>
+<ol class="loweralpha simple">
 <li><p>Navigate to “Admin Panel &gt; Clients” and click “Create client”.</p></li>
 <li><p>Set the client type to “OpenID Connect”, enter <code class="docutils literal notranslate"><span class="pre">ledger-api</span></code> as the client ID, and click “Next”.</p></li>
 <li><p>In the “Capability config”, uncheck all fields and click “Next”.</p></li>
@@ -1157,67 +1132,50 @@ For Auth0 instructions and more details on configuring authentication, see <a cl
 <li><p>To add this scope to the <code class="docutils literal notranslate"><span class="pre">ledger-api</span></code> client, navigate to “Admin Panel &gt; Clients &gt; ledger_api &gt; Client scopes” and click “Add client scope”. Select <code class="docutils literal notranslate"><span class="pre">daml_ledger_api</span></code> and click “Add” with the type “Default”.</p></li>
 <li><p>Navigate to “Admin Panel &gt; Realm Settings &gt; Sessions”, and ensure that “Offline Session Max Limited” is enabled with a sufficient value for “Offline Session Max.” This enables refresh tokens, similar to “Allow Offline Access” in Auth0. Click “Save”.</p></li>
 </ol>
-</div></blockquote>
-<ol class="arabic simple" start="3">
-<li><p>Create a client for a custom audience (optional)</p></li>
-</ol>
-<blockquote>
-<div><ul class="simple">
+</li>
+<li><p>Create a client for a custom audience (optional)</p>
+<ol class="loweralpha simple">
 <li><p>If your backend services require a different audience, create another client with the “Client ID” set to <code class="docutils literal notranslate"><span class="pre">validator-app-api</span></code> (e.g., <code class="docutils literal notranslate"><span class="pre">https://validator.example.com/api</span></code>), and optionally define custom client scopes as described in step #2 to distinguish this API.</p></li>
-</ul>
-</div></blockquote>
-<ol class="arabic simple" start="4">
-<li><p>Create a client for the validator app backend.</p></li>
 </ol>
-<blockquote>
-<div><ol class="loweralpha simple">
+</li>
+<li><p>Create a client for the validator app backend.</p>
+<ol class="loweralpha simple">
 <li><p>Navigate to “Admin Panel &gt; Clients” and click “Create client”.</p></li>
 <li><p>Set the client type to “OpenID Connect”, enter <code class="docutils literal notranslate"><span class="pre">validator-app-backend</span></code> as the client ID, and click “Next”.</p></li>
 <li><p>In the “Capability config”, only check “Client authentication” and “Service accounts”. Click “Next”.</p></li>
 <li><p>In the “Login settings”, leave the “Valid redirect URIs” and “Web origins” fields blank, then click “Save”.</p></li>
 <li><p>Copy the “Client ID” from the “Settings” tab and “Client Secret” from the “Credentials” tab. The Client ID in Keycloak is the name assigned to the client at creation (<code class="docutils literal notranslate"><span class="pre">validator-app-backend</span></code>).</p></li>
 </ol>
-</div></blockquote>
-<ol class="arabic simple" start="5">
-<li><p>Create a client for the wallet web UI.</p></li>
-</ol>
-<blockquote>
-<div><ol class="loweralpha simple">
+</li>
+<li><p>Create a client for the wallet web UI.</p>
+<ol class="loweralpha simple">
 <li><p>Navigate to “Admin Panel &gt; Clients” and click “Create client”.</p></li>
 <li><p>Set the client type to “OpenID Connect”, enter <code class="docutils literal notranslate"><span class="pre">wallet-web-ui</span></code> as the client ID, and click “Next”.</p></li>
 <li><p>In the “Capability config”, only check “Standard flow” and click “Next”.</p></li>
-<li><p>In the “Login settings”, set:</p></li>
-</ol>
-<blockquote>
-<div><ul class="simple">
+<li><p>In the “Login settings”, set:</p>
+<ul class="simple">
 <li><p>“Valid redirect URIs” to: <code class="docutils literal notranslate"><span class="pre">https://wallet.validator.YOUR_HOSTNAME/*</span></code></p></li>
 <li><p>“Valid post logout redirect URIs” to: <code class="docutils literal notranslate"><span class="pre">https://wallet.validator.YOUR_HOSTNAME</span></code></p></li>
 <li><p>“Web origins” to: <code class="docutils literal notranslate"><span class="pre">https://wallet.validator.YOUR_HOSTNAME</span></code></p></li>
 <li><p>Click Save.</p></li>
 </ul>
-</div></blockquote>
-<ol class="loweralpha simple" start="5">
+</li>
 <li><p>Copy the “Client ID” from the “Settings” tab (<code class="docutils literal notranslate"><span class="pre">wallet-web-ui</span></code>).</p></li>
 </ol>
-</div></blockquote>
-<ol class="arabic simple" start="6">
-<li><p>Create a client for the CNS web UI.</p></li>
-</ol>
-<blockquote>
-<div><ol class="loweralpha simple">
-<li><p>Follow the same steps as for the wallet web UI, using <code class="docutils literal notranslate"><span class="pre">cns-ui</span></code> as the “Client ID”, setting:</p></li>
-</ol>
-<blockquote>
-<div><ul class="simple">
+</li>
+<li><p>Create a client for the CNS web UI.</p>
+<ol class="loweralpha simple">
+<li><p>Follow the same steps as for the wallet web UI, using <code class="docutils literal notranslate"><span class="pre">cns-ui</span></code> as the “Client ID”, setting:</p>
+<ul class="simple">
 <li><p>“Valid redirect URIs” to: <code class="docutils literal notranslate"><span class="pre">https://cns.validator.YOUR_HOSTNAME/*</span></code></p></li>
 <li><p>“Valid post logout redirect URIs” to: <code class="docutils literal notranslate"><span class="pre">https://cns.validator.YOUR_HOSTNAME</span></code></p></li>
 <li><p>“Web origins” to: <code class="docutils literal notranslate"><span class="pre">https://cns.validator.YOUR_HOSTNAME</span></code></p></li>
 </ul>
-</div></blockquote>
-<ol class="loweralpha simple" start="2">
+</li>
 <li><p>Copy the “Client ID” from the “Settings” tab (<code class="docutils literal notranslate"><span class="pre">cns-ui</span></code>).</p></li>
 </ol>
-</div></blockquote>
+</li>
+</ol>
 </section>
 </section>
 
