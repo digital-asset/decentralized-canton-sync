@@ -11,7 +11,13 @@ Release Notes
 Upcoming
 --------
 
-- Expose token-standard endpoints on the validator scan-proxy. The paths are the normal token standard path with a ``/api/validator/v0/scan-proxy`` prefix.
+- Validator
+
+  - Expose token-standard endpoints on the validator scan-proxy. The paths are the normal token standard path with a ``/api/validator/v0/scan-proxy`` prefix.
+
+- Sequencer
+
+  - Improve sequencer startup time by fixing a slow query.
 
 0.4.0
 -----

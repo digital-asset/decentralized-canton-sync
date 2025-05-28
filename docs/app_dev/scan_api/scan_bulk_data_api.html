@@ -41,7 +41,7 @@
             Splice
           </a>
               <div class="version">
-                0.4.1-snapshot.20250528.1.0.vbb9ad605
+                0.4.1-snapshot.20250528.1.0.v507c1dbc
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -1175,6 +1175,7 @@ on to use for sequencing future transactions on this contract.</p></li>
 <li><p><strong>update_id</strong>: Uniquely identifies an update (globally unique across networks and synchronizers).</p></li>
 <li><p><strong>record_time</strong>: The time at which the update was sequenced.
 Within a given migration and synchronizer, the record time of updates is strictly monotonically increasing (and thus unique).
+Record times between migrations can overlap; for example, if <em>rtn</em> is the latest record time for migration ID <em>n</em>, then there may exist updates with migration ID <em>n+1</em> but record time preceding <em>rtn</em>.
 The update history is mainly traversed by <code class="docutils literal notranslate"><span class="pre">migration_id</span></code>, <code class="docutils literal notranslate"><span class="pre">synchronizer_id</span></code>, and <code class="docutils literal notranslate"><span class="pre">record_time</span></code>.</p></li>
 <li><p><strong>root_event_ids</strong>: These represent the top level events of the update tree that are directly caused by commands submitted to the ledger.
 They are the starting points for all actions within the transaction, and need to be read in the order given.
