@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>How to Bootstrap a Network &mdash; Splice  documentation</title>
+  <title>Okta and Keycloak OIDC Configuration Guide &mdash; Splice  documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -25,8 +25,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Operations" href="../deployment/index.html" />
-    <link rel="prev" title="SV Operations" href="sv_operations.html" /> 
+    <link rel="prev" title="Community-Contributed Documentation" href="index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -52,7 +51,7 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Deployment and Operations</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../deployment.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../validator_operator/index.html">Validators</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../validator_operator/validator_onboarding.html">Validator Onboarding Process</a><ul>
@@ -185,140 +184,140 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">Supervalidators</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="sv_helm.html">Kubernetes-Based Deployment of a Super Validator node</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#requirements">Requirements</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#generating-an-sv-identity">Generating an SV identity</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#preparing-a-cluster-for-installation">Preparing a Cluster for Installation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#configuring-authentication">Configuring Authentication</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#oidc-provider-requirements">OIDC Provider Requirements</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#configuring-an-auth0-tenant">Configuring an Auth0 Tenant</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#configuring-authentication-on-your-sv-node">Configuring Authentication on your SV Node</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sv_operator/index.html">Supervalidators</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../sv_operator/sv_helm.html">Kubernetes-Based Deployment of a Super Validator node</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#requirements">Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#generating-an-sv-identity">Generating an SV identity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#preparing-a-cluster-for-installation">Preparing a Cluster for Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-authentication">Configuring Authentication</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#oidc-provider-requirements">OIDC Provider Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-an-auth0-tenant">Configuring an Auth0 Tenant</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-authentication-on-your-sv-node">Configuring Authentication on your SV Node</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#configuring-your-cometbft-node">Configuring your CometBFT node</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#generating-your-cometbft-node-keys">Generating your CometBFT node keys</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#configuring-your-cometbft-node-keys">Configuring your CometBFT node keys</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#configuring-cometbft-state-sync">Configuring CometBFT state sync</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-your-cometbft-node">Configuring your CometBFT node</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#generating-your-cometbft-node-keys">Generating your CometBFT node keys</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-your-cometbft-node-keys">Configuring your CometBFT node keys</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-cometbft-state-sync">Configuring CometBFT state sync</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#installing-postgres-instances">Installing Postgres instances</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#creating-k8s-secrets-for-postgres-passwords">Creating k8s Secrets for Postgres Passwords</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#postgres-in-the-cluster">Postgres in the Cluster</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#cloud-hosted-postgres">Cloud-Hosted Postgres</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#installing-postgres-instances">Installing Postgres instances</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#creating-k8s-secrets-for-postgres-passwords">Creating k8s Secrets for Postgres Passwords</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#postgres-in-the-cluster">Postgres in the Cluster</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#cloud-hosted-postgres">Cloud-Hosted Postgres</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#installing-the-software">Installing the Software</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#configuring-the-helm-charts">Configuring the Helm Charts</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#installing-the-helm-charts">Installing the Helm Charts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#installing-the-software">Installing the Software</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-the-helm-charts">Configuring the Helm Charts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#installing-the-helm-charts">Installing the Helm Charts</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#sv-network-diagram">SV Network Diagram</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#configuring-the-cluster-ingress">Configuring the Cluster Ingress</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#hostnames-and-urls">Hostnames and URLs</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#ingress-configuration">Ingress Configuration</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#id5">Requirements</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_helm.html#installation-instructions">Installation Instructions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#sv-network-diagram">SV Network Diagram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-the-cluster-ingress">Configuring the Cluster Ingress</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#hostnames-and-urls">Hostnames and URLs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#ingress-configuration">Ingress Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#id5">Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_helm.html#installation-instructions">Installation Instructions</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#configuring-the-cluster-egress">Configuring the Cluster Egress</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#logging-into-the-sv-ui">Logging into the SV UI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_helm.html#observing-the-canton-coin-scan-ui">Observing the Canton Coin Scan UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#configuring-the-cluster-egress">Configuring the Cluster Egress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#logging-into-the-wallet-ui">Logging into the wallet UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#logging-into-the-cns-ui">Logging into the CNS UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#logging-into-the-sv-ui">Logging into the SV UI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_helm.html#observing-the-canton-coin-scan-ui">Observing the Canton Coin Scan UI</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="sv_upgrades.html">Upgrades</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="sv_major_upgrade.html">Synchronizer Upgrades with Downtime</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="sv_major_upgrade.html#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_major_upgrade.html#technical-details">Technical Details</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#state-and-migration-ids">State and Migration IDs</a></li>
-<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#migration-dumps">Migration Dumps</a></li>
-<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#deploying-new-canton-components-and-cometbft-node">Deploying new Canton Components and CometBFT Node</a></li>
-<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#catching-up-before-the-migration">Catching Up Before the Migration</a></li>
-<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#updating-apps">Updating Apps</a></li>
-<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#recovering-from-a-failed-upgrade">Recovering from a failed upgrade</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sv_operator/sv_upgrades.html">Upgrades</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html">Synchronizer Upgrades with Downtime</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#technical-details">Technical Details</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#state-and-migration-ids">State and Migration IDs</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#migration-dumps">Migration Dumps</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#deploying-new-canton-components-and-cometbft-node">Deploying new Canton Components and CometBFT Node</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#catching-up-before-the-migration">Catching Up Before the Migration</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#updating-apps">Updating Apps</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#recovering-from-a-failed-upgrade">Recovering from a failed upgrade</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="sv_major_upgrade.html#organizational-details">Organizational Details</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#coordination-calls">Coordination calls</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#organizational-details">Organizational Details</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#coordination-calls">Coordination calls</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="sv_major_upgrade.html#testing">Testing</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#individual-preparation">Individual Preparation</a></li>
-<li class="toctree-l5"><a class="reference internal" href="sv_major_upgrade.html#coordinated-tests">Coordinated Tests</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#testing">Testing</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#individual-preparation">Individual Preparation</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#coordinated-tests">Coordinated Tests</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="sv_major_upgrade.html#cleanup-in-the-event-of-failure">Cleanup in the event of failure</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="sv_network_resets.html">Network Resets of DevNet and Testnet</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sv_backup.html">Backups</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="sv_backup.html#backup-of-node-identities">Backup of Node Identities</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_backup.html#backup-of-postgres-instances">Backup of Postgres Instances</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="sv_backup.html#taking-backups">Taking backups</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_backup.html#historical-backups">Historical backups</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="sv_backup.html#backup-of-cometbft">Backup of CometBFT</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="sv_backup.html#id1">Historical backups</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_major_upgrade.html#cleanup-in-the-event-of-failure">Cleanup in the event of failure</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="sv_pruning.html">Pruning</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="sv_pruning.html#sequencer-pruning">Sequencer pruning</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_pruning.html#cometbft-pruning">CometBFT pruning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sv_operator/sv_network_resets.html">Network Resets of DevNet and Testnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sv_operator/sv_backup.html">Backups</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_backup.html#backup-of-node-identities">Backup of Node Identities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_backup.html#backup-of-postgres-instances">Backup of Postgres Instances</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_backup.html#taking-backups">Taking backups</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_backup.html#historical-backups">Historical backups</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="sv_restore.html">Disaster Recovery</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="sv_restore.html#restoring-from-data-corruption">Restoring From Data Corruption</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="sv_restore.html#restoring-a-single-component-from-backups">Restoring a single component from backups</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_restore.html#restoring-a-full-sv-node-from-backups">Restoring a full SV node from backups</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="sv_restore.html#re-onboard-an-sv-and-recover-amulets-with-a-validator">Re-onboard an SV and recover Amulets with a validator</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_restore.html#disaster-recovery-from-loss-of-cometbft-layer">Disaster recovery from loss of CometBFT layer</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="sv_restore.html#technical-details">Technical Details</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="sv_restore.html#finding-a-consistent-timestamp-to-recover-the-synchronizer-from">Finding a Consistent Timestamp to Recover the Synchronizer From</a></li>
-<li class="toctree-l5"><a class="reference internal" href="sv_restore.html#creating-a-data-dump-from-the-sv-app">Creating a Data Dump from the SV App</a></li>
-<li class="toctree-l5"><a class="reference internal" href="sv_restore.html#migrating-the-data">Migrating the Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_backup.html#backup-of-cometbft">Backup of CometBFT</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_backup.html#id1">Historical backups</a></li>
 </ul>
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../sv_operator/sv_pruning.html">Pruning</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_pruning.html#sequencer-pruning">Sequencer pruning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_pruning.html#cometbft-pruning">CometBFT pruning</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="sv_operations.html">SV Operations</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="sv_operations.html#security-notice">Security Notice</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_operations.html#generate-a-validator-onboarding-secret">Generate a validator onboarding secret</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_operations.html#sv-identities-overview">Identities used by SV nodes on different layers</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="sv_operations.html#sv-identity">SV identity</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_operations.html#participant-identities">Participant identities</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_operations.html#cometbft-node-identities">CometBFT node identities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sv_operator/sv_restore.html">Disaster Recovery</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_restore.html#restoring-from-data-corruption">Restoring From Data Corruption</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_restore.html#restoring-a-single-component-from-backups">Restoring a single component from backups</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_restore.html#restoring-a-full-sv-node-from-backups">Restoring a full SV node from backups</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="sv_operations.html#updating-the-reward-weight-of-an-sv">Updating the reward weight of an SV</a></li>
-<li class="toctree-l3"><a class="reference internal" href="sv_operations.html#determining-good-synchronizer-traffic-parameters">Determining good synchronizer traffic parameters</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="sv_operations.html#determining-the-cost-of-a-single-cc-transfer">Determining the cost of a single CC transfer</a></li>
-<li class="toctree-l4"><a class="reference internal" href="sv_operations.html#considerations-around-the-read-scaling-factor">Considerations around the read scaling factor</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="sv_operations.html#lower-bound">Lower bound</a></li>
-<li class="toctree-l5"><a class="reference internal" href="sv_operations.html#upper-bound">Upper bound</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_restore.html#re-onboard-an-sv-and-recover-amulets-with-a-validator">Re-onboard an SV and recover Amulets with a validator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_restore.html#disaster-recovery-from-loss-of-cometbft-layer">Disaster recovery from loss of CometBFT layer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_restore.html#technical-details">Technical Details</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_restore.html#finding-a-consistent-timestamp-to-recover-the-synchronizer-from">Finding a Consistent Timestamp to Recover the Synchronizer From</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_restore.html#creating-a-data-dump-from-the-sv-app">Creating a Data Dump from the SV App</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_restore.html#migrating-the-data">Migrating the Data</a></li>
 </ul>
 </li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">How to Bootstrap a Network</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#cometbft-helm-values">cometbft helm values</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#scan-helm-values">scan helm values</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#sv-helm-values">sv helm values</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#other-helm-values-you-may-need-to-consider">other helm values you may need to consider</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#infra-level-things-you-might-want-to-consider">Infra-level things you might want to consider</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#how-to-run-through-a-hdm">How to run through a HDM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sv_operator/sv_operations.html">SV Operations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_operations.html#security-notice">Security Notice</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_operations.html#generate-a-validator-onboarding-secret">Generate a validator onboarding secret</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_operations.html#sv-identities-overview">Identities used by SV nodes on different layers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_operations.html#sv-identity">SV identity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_operations.html#participant-identities">Participant identities</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_operations.html#cometbft-node-identities">CometBFT node identities</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_operations.html#updating-the-reward-weight-of-an-sv">Updating the reward weight of an SV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_operations.html#determining-good-synchronizer-traffic-parameters">Determining good synchronizer traffic parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_operations.html#determining-the-cost-of-a-single-cc-transfer">Determining the cost of a single CC transfer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sv_operator/sv_operations.html#considerations-around-the-read-scaling-factor">Considerations around the read scaling factor</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_operations.html#lower-bound">Lower bound</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../sv_operator/sv_operations.html#upper-bound">Upper bound</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../sv_operator/sv_scratchnet.html">How to Bootstrap a Network</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_scratchnet.html#cometbft-helm-values">cometbft helm values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_scratchnet.html#scan-helm-values">scan helm values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_scratchnet.html#sv-helm-values">sv helm values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_scratchnet.html#other-helm-values-you-may-need-to-consider">other helm values you may need to consider</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_scratchnet.html#infra-level-things-you-might-want-to-consider">Infra-level things you might want to consider</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sv_operator/sv_scratchnet.html#how-to-run-through-a-hdm">How to run through a HDM</a></li>
 </ul>
 </li>
 </ul>
@@ -997,11 +996,11 @@
 </li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Community-Contributed</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../community/index.html">Community-Contributed Documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../community/oidc-config-okta-keycloak.html">Okta and Keycloak OIDC Configuration Guide</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../community/oidc-config-okta-keycloak.html#okta">Okta</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../community/oidc-config-okta-keycloak.html#keycloak">Keycloak</a></li>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Community-Contributed Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Okta and Keycloak OIDC Configuration Guide</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#okta">Okta</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#keycloak">Keycloak</a></li>
 </ul>
 </li>
 </ul>
@@ -1022,10 +1021,10 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="index.html">Supervalidators</a></li>
-      <li class="breadcrumb-item active">How to Bootstrap a Network</li>
+          <li class="breadcrumb-item"><a href="index.html">Community-Contributed Documentation</a></li>
+      <li class="breadcrumb-item active">Okta and Keycloak OIDC Configuration Guide</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/sv_operator/sv_scratchnet.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/community/oidc-config-okta-keycloak.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -1033,113 +1032,192 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-<section id="how-to-bootstrap-a-network">
-<span id="scratchnet"></span><h1>How to Bootstrap a Network<a class="headerlink" href="#how-to-bootstrap-a-network" title="Link to this heading"></a></h1>
-<section id="cometbft-helm-values">
-<h2>cometbft helm values<a class="headerlink" href="#cometbft-helm-values" title="Link to this heading"></a></h2>
+<section id="okta-and-keycloak-oidc-configuration-guide">
+<span id="okta-keycloak-oidc-config-guide"></span><h1>Okta and Keycloak OIDC Configuration Guide<a class="headerlink" href="#okta-and-keycloak-oidc-configuration-guide" title="Link to this heading"></a></h1>
+<p>To deploy a validator node, configure authentication using your preferred OIDC provider.
+This section provides instructions for Okta and Keycloak.
+For Auth0 instructions and more details on configuring authentication, see <a class="reference internal" href="../validator_operator/validator_helm.html#helm-validator-auth"><span class="std std-ref">Configuring Authentication</span></a>.</p>
+<section id="okta">
+<h2>Okta<a class="headerlink" href="#okta" title="Link to this heading"></a></h2>
+<p>Follow these steps to configure Okta as your validator’s OIDC provider:</p>
 <ol class="arabic simple">
-<li><p>disable state sync</p></li>
+<li><p>Create an application for the validator app backend.</p></li>
 </ol>
-<div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="n">stateSync</span><span class="p">:</span>
-<span class="o">-</span><span class="w">      </span><span class="n">enable</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
-<span class="o">-</span><span class="w">      </span><span class="n">rpcServers</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;...&quot;</span>
-<span class="o">+</span><span class="w">      </span><span class="n">enable</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
-</pre></div>
-</div>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>Navigate to “Admin Panel &gt; Applications &gt; Applications”, and click “Create App Integration”.</p></li>
+<li><p>Choose “API Services” as the sign-in method (not OIDC).</p></li>
+<li><p>For “App integration name”, enter <code class="docutils literal notranslate"><span class="pre">Validator</span> <span class="pre">app</span> <span class="pre">backend</span></code>.</p></li>
+<li><p>In General Settings, uncheck “Proof of possession”.</p></li>
+<li><p>Click “Save” and copy the “Client ID” and “Client Secret”.</p></li>
+</ol>
+</div></blockquote>
 <ol class="arabic simple" start="2">
-<li><p>For the single sv config, you are now bootstraping a single sv so put your own keys
-in:</p></li>
+<li><p>Create an application for the wallet web UI.</p></li>
 </ol>
-<div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="n">sv1</span><span class="p">:</span>
-<span class="o">+</span><span class="w">    </span><span class="n">keyAddress</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;...&quot;</span>
-<span class="o">+</span><span class="w">    </span><span class="n">nodeId</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;...&quot;</span>
-<span class="o">+</span><span class="w">    </span><span class="n">publicKey</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;...&quot;</span>
-</pre></div>
-</div>
-</section>
-<section id="scan-helm-values">
-<h2>scan helm values<a class="headerlink" href="#scan-helm-values" title="Link to this heading"></a></h2>
-<p>add 1 value:</p>
-<div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">+</span><span class="w">    </span><span class="n">isFirstSv</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
-</pre></div>
-</div>
-</section>
-<section id="sv-helm-values">
-<h2>sv helm values<a class="headerlink" href="#sv-helm-values" title="Link to this heading"></a></h2>
-<ol class="arabic simple">
-<li><p>remove joinWithKeyOnboarding</p></li>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>Navigate to “Admin Panel &gt; Applications &gt; Applications”, and click “Create App Integration”.</p></li>
+<li><p>Choose “OIDC” as the sign-in method then “Single-Page Application” as the application type.</p></li>
+<li><p>For “App integration name”, enter <code class="docutils literal notranslate"><span class="pre">Wallet</span> <span class="pre">web</span> <span class="pre">UI</span></code>.</p></li>
 </ol>
-<div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">-</span><span class="w">    </span><span class="n">joinWithKeyOnboarding</span><span class="p">:</span>
-<span class="o">-</span><span class="w">      </span><span class="n">sponsorApiUrl</span><span class="p">:</span><span class="w"> </span><span class="n">https</span><span class="p">:</span><span class="c1">//sv.sv-2.whatever.global.canton.network.digitalasset.com</span>
-</pre></div>
-</div>
-<ol class="arabic simple" start="2">
-<li><p>Add initial helm values You may use these number values or choose
-other ones</p></li>
+<blockquote>
+<div><ul class="simple">
+<li><p>In “Sign-in redirect URIs”, enter your wallet UI URL: <code class="docutils literal notranslate"><span class="pre">https://wallet.validator.YOUR_HOSTNAME</span></code></p></li>
+<li><p>In “Sign-out redirect URIs”, enter your wallet UI URL: <code class="docutils literal notranslate"><span class="pre">https://wallet.validator.YOUR_HOSTNAME</span></code></p></li>
+<li><p>In “Trusted Origins/Base URIs”, enter your wallet UI URL: <code class="docutils literal notranslate"><span class="pre">https://wallet.validator.YOUR_HOSTNAME</span></code></p></li>
+</ul>
+</div></blockquote>
+<ol class="loweralpha simple" start="4">
+<li><p>Assign the app to the groups you want to have access to it.</p></li>
+<li><p>Click “Save” and copy the “Client ID”.</p></li>
 </ol>
-<div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">+</span><span class="w">    </span><span class="n">isDevNet</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
-<span class="o">+</span><span class="w">    </span><span class="n">onboardingType</span><span class="p">:</span><span class="w"> </span><span class="n">found</span><span class="o">-</span><span class="n">dso</span>
-<span class="o">+</span>
-<span class="o">+</span><span class="w">    </span><span class="c1">// see note below about the rest of these:</span>
-<span class="o">+</span><span class="w">    </span><span class="n">initialSynchronizerFeesConfig</span><span class="p">:</span>
-<span class="o">+</span><span class="w">      </span><span class="n">baseRateBurstAmount</span><span class="p">:</span><span class="w"> </span><span class="mi">400000</span>
-<span class="o">+</span><span class="w">      </span><span class="n">baseRateBurstWindowMins</span><span class="p">:</span><span class="w"> </span><span class="mi">20</span>
-<span class="o">+</span><span class="w">      </span><span class="n">extraTrafficPrice</span><span class="p">:</span><span class="w"> </span><span class="mf">16.670000000000002</span>
-<span class="o">+</span><span class="w">      </span><span class="n">minTopupAmount</span><span class="p">:</span><span class="w"> </span><span class="mi">200000</span>
-<span class="o">+</span><span class="w">      </span><span class="n">readVsWriteScalingFactor</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span>
-<span class="o">+</span><span class="w">    </span><span class="n">onboardingFoundingSvRewardWeightBps</span><span class="p">:</span><span class="w"> </span><span class="mi">10000</span>
-</pre></div>
-</div>
-<p>the note below if you plan to practice HDMs in this environment,
-initialSynchronizerFeesConfig and onboardingFoundingSvRewardWeightBps
-cannot be set when you are deploying in the phase with migrating=true.
-Your SV app will fail to become healthy otherwise</p>
+</div></blockquote>
 <ol class="arabic simple" start="3">
-<li><p>Remove the <code class="docutils literal notranslate"><span class="pre">decentralizedSynchronizerUrl</span></code> config from <code class="docutils literal notranslate"><span class="pre">sv-values.yaml</span></code>. It is only used for nodes that join after the initial SV.</p></li>
+<li><p>Create an application for the CNS web UI.</p></li>
 </ol>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>Navigate to “Admin Panel &gt; Applications &gt; Applications”, and click “Create App Integration”.</p></li>
+<li><p>Choose “OIDC” as the sign-in method then “Single-Page Application” as the application type.</p></li>
+<li><p>For “App integration name”, enter <code class="docutils literal notranslate"><span class="pre">CNS</span> <span class="pre">web</span> <span class="pre">UI</span></code>.</p></li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li><p>In “Sign-in redirect URIs”, enter your CNS UI URL : <code class="docutils literal notranslate"><span class="pre">https://cns.validator.YOUR_HOSTNAME</span></code></p></li>
+<li><p>In “Sign-out redirect URIs”, enter your CNS UI URL : <code class="docutils literal notranslate"><span class="pre">https://cns.validator.YOUR_HOSTNAME</span></code></p></li>
+<li><p>In “Trusted Origins/Base URIs”, enter your CNS UI URL : <code class="docutils literal notranslate"><span class="pre">https://cns.validator.YOUR_HOSTNAME</span></code></p></li>
+</ul>
+</div></blockquote>
+<ol class="loweralpha simple" start="4">
+<li><p>Assign the app to the groups you want to have access to it.</p></li>
+<li><p>Click “Save” and copy the “Client ID”.</p></li>
+</ol>
+</div></blockquote>
+<ol class="arabic simple" start="4">
+<li><p>Create a client for a custom audience (optional)</p></li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li><p>If you want other applications to access the ledger API, create an additional client by following steps 1–3.</p></li>
+</ul>
+</div></blockquote>
+<ol class="arabic simple" start="5">
+<li><p>Create a custom Authorization server per validator/environment</p></li>
+</ol>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>Navigate to “Admin Panel &gt; Directory &gt; Groups”, click “Add Group” and name the group “canton_wallet_admin”.</p></li>
+<li><p>Add another group “canton_all.”</p></li>
+<li><p>Navigate to “Admin Panel &gt; Security &gt; API”</p></li>
+<li><p>In the “Authorization Servers” tab, click “Add Authorization Server”. Define a name and audience. Note that the authorization server is used for the M2M flow and must be different for each environment/validator for security reasons.</p></li>
+<li><p>In the “Scopes” tab, add a custom scope named <code class="docutils literal notranslate"><span class="pre">daml_ledger_api</span></code>  and click “Set as a default scope”.</p></li>
+<li><p>In the “Claims” tab, change the “sub” value to “app.clientId”. If the default value is kept, it uses the user email, which requires formatting in values.yaml as <code class="docutils literal notranslate"><span class="pre">‘</span> <span class="pre">“</span> <span class="pre">email.address&#64;domain</span> <span class="pre">“</span> <span class="pre">‘</span></code>, without the spaces. This is necessary until the Helm chart is updated to properly quote them.</p></li>
+<li><p>In the “Access Policies” tab, create one policy for each of the three applications.</p></li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li><p>Name: <code class="docutils literal notranslate"><span class="pre">Validator</span> <span class="pre">app</span> <span class="pre">backend</span></code></p></li>
+<li><p>Assigned to : <code class="docutils literal notranslate"><span class="pre">Validator</span> <span class="pre">app</span> <span class="pre">backend</span></code> created in step #1</p></li>
+<li><p>Click “Add rule.” Enter a “Rule Name” and check “Any user assigned the app” next to “User is” to define a rule that matches any user assigned to the app. Click “Create rule.”</p></li>
+<li><p>Name: <code class="docutils literal notranslate"><span class="pre">Wallet</span> <span class="pre">web</span> <span class="pre">UI</span></code></p></li>
+<li><p>Assigned to: <code class="docutils literal notranslate"><span class="pre">Wallet</span> <span class="pre">web</span> <span class="pre">UI</span></code> created in step #2</p></li>
+<li><p>Click “Add rule.” Enter a “Rule Name” and check “Assigned the app and a member of one of the following” next to “User is.” Add the group “canton_wallet_admin” to define a rule that matches the group. Click “Create rule.”</p></li>
+<li><p>Name: <code class="docutils literal notranslate"><span class="pre">CNS</span> <span class="pre">web</span> <span class="pre">UI</span></code></p></li>
+<li><p>Assigned to: <code class="docutils literal notranslate"><span class="pre">CNS</span> <span class="pre">web</span> <span class="pre">UI</span></code> created in step #3</p></li>
+<li><p>Click “Add rule.” Enter a “Rule Name” and check “Assigned the app and a member of one of the following” next to “User is.” Add the group “canton_all” to define a rule that matches the group. Click “Create rule.”</p></li>
+</ul>
+</div></blockquote>
+</div></blockquote>
 </section>
-<section id="other-helm-values-you-may-need-to-consider">
-<h2>other helm values you may need to consider<a class="headerlink" href="#other-helm-values-you-may-need-to-consider" title="Link to this heading"></a></h2>
-<ul class="simple">
-<li><p>in all the places you use TARGET_CLUSTER / TARGET_HOSTNAME, you’ll
-want to point to your network’s base domain</p>
-<ul>
-<li><p>for example, we’re basing our network on
-hub-scratch.global.canton.network.digitalasset.com, so we set:</p>
-<ul>
-<li><p>targetCluster = hub-scratch</p></li>
-<li><p>targetHostname =
-hub-scratch.global.canton.network.digitalasset.com</p></li>
+<section id="keycloak">
+<h2>Keycloak<a class="headerlink" href="#keycloak" title="Link to this heading"></a></h2>
+<p>Follow these steps to configure Keycloak as your validator’s OIDC provider:</p>
+<ol class="arabic simple">
+<li><p>Create a realm</p></li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li><p>Navigate to “Admin Panel &gt; Manage realms”, click “Create realm”, and enter a realm name.</p></li>
 </ul>
-</li>
+</div></blockquote>
+<ol class="arabic simple" start="2">
+<li><p>Create a client for the Ledger API</p></li>
+</ol>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>Navigate to “Admin Panel &gt; Clients” and click “Create client”.</p></li>
+<li><p>Set the client type to “OpenID Connect”, enter <code class="docutils literal notranslate"><span class="pre">ledger-api</span></code> as the client ID, and click “Next”.</p></li>
+<li><p>In the “Capability config”, uncheck all fields and click “Next”.</p></li>
+<li><p>In the “Login settings”, leave the “Valid redirect URIs” and “Web origins” fields blank, then click “Save”.</p></li>
+<li><p>Navigate to the “Admin Panel &gt; Client scopes” tab and click “Create client scope”.</p></li>
+<li><p>Enter <code class="docutils literal notranslate"><span class="pre">daml_ledger_api</span></code> as the name and select the type “Default”.</p></li>
+<li><p>In the “Mappers” tab, click “Configure a new mapper”.</p></li>
+<li><p>Select “User Client Role” as the mapper type and name it <code class="docutils literal notranslate"><span class="pre">daml_ledger_api_scope</span></code>. Enable “Add to Access Token” and disable all the other options, such as “Add to ID token”, “Add to userinfo”, and “Add to token introspection”. Click “Save”.</p></li>
+<li><p>To add this scope to the <code class="docutils literal notranslate"><span class="pre">ledger-api</span></code> client, navigate to “Admin Panel &gt; Clients &gt; ledger_api &gt; Client scopes” and click “Add client scope”. Select <code class="docutils literal notranslate"><span class="pre">daml_ledger_api</span></code> and click “Add” with the type “Default”.</p></li>
+<li><p>Navigate to “Admin Panel &gt; Realm Settings &gt; Sessions”, and ensure that “Offline Session Max Limited” is enabled with a sufficient value for “Offline Session Max.” This enables refresh tokens, similar to “Allow Offline Access” in Auth0. Click “Save”.</p></li>
+</ol>
+</div></blockquote>
+<ol class="arabic simple" start="3">
+<li><p>Create a client for a custom audience (optional)</p></li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li><p>If your backend services require a different audience, create another client with the “Client ID” set to <code class="docutils literal notranslate"><span class="pre">validator-app-api</span></code> (e.g., <code class="docutils literal notranslate"><span class="pre">https://validator.example.com/api</span></code>), and optionally define custom client scopes as described in step #2 to distinguish this API.</p></li>
 </ul>
-</li>
-<li><p>if you use walletSweep, you probably won’t use it in this scratch
-environment unless you also plan to deploy a validator</p></li>
+</div></blockquote>
+<ol class="arabic simple" start="4">
+<li><p>Create a client for the validator app backend.</p></li>
+</ol>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>Navigate to “Admin Panel &gt; Clients” and click “Create client”.</p></li>
+<li><p>Set the client type to “OpenID Connect”, enter <code class="docutils literal notranslate"><span class="pre">validator-app-backend</span></code> as the client ID, and click “Next”.</p></li>
+<li><p>In the “Capability config”, only check “Client authentication” and “Service accounts”. Click “Next”.</p></li>
+<li><p>In the “Login settings”, leave the “Valid redirect URIs” and “Web origins” fields blank, then click “Save”.</p></li>
+<li><p>Copy the “Client ID” from the “Settings” tab and “Client Secret” from the “Credentials” tab. The Client ID in Keycloak is the name assigned to the client at creation (<code class="docutils literal notranslate"><span class="pre">validator-app-backend</span></code>).</p></li>
+</ol>
+</div></blockquote>
+<ol class="arabic simple" start="5">
+<li><p>Create a client for the wallet web UI.</p></li>
+</ol>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>Navigate to “Admin Panel &gt; Clients” and click “Create client”.</p></li>
+<li><p>Set the client type to “OpenID Connect”, enter <code class="docutils literal notranslate"><span class="pre">wallet-web-ui</span></code> as the client ID, and click “Next”.</p></li>
+<li><p>In the “Capability config”, only check “Standard flow” and click “Next”.</p></li>
+<li><p>In the “Login settings”, set:</p></li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li><p>“Valid redirect URIs” to: <code class="docutils literal notranslate"><span class="pre">https://wallet.validator.YOUR_HOSTNAME/*</span></code></p></li>
+<li><p>“Valid post logout redirect URIs” to: <code class="docutils literal notranslate"><span class="pre">https://wallet.validator.YOUR_HOSTNAME</span></code></p></li>
+<li><p>“Web origins” to: <code class="docutils literal notranslate"><span class="pre">https://wallet.validator.YOUR_HOSTNAME</span></code></p></li>
+<li><p>Click Save.</p></li>
 </ul>
-</section>
-<section id="infra-level-things-you-might-want-to-consider">
-<h2>Infra-level things you might want to consider<a class="headerlink" href="#infra-level-things-you-might-want-to-consider" title="Link to this heading"></a></h2>
-<ul class="simple">
-<li><p>Configure the IP allowlist to expose the cluster to an internal VPN
-or similar network you control. It is not recommended to expose it
-to the public internet at this point.</p></li>
-<li><p>approved SV identities (which make their way into sv helm values): if
-you are deploying a single bootstraping node, you can set this to []</p></li>
+</div></blockquote>
+<ol class="loweralpha simple" start="5">
+<li><p>Copy the “Client ID” from the “Settings” tab (<code class="docutils literal notranslate"><span class="pre">wallet-web-ui</span></code>).</p></li>
+</ol>
+</div></blockquote>
+<ol class="arabic simple" start="6">
+<li><p>Create a client for the CNS web UI.</p></li>
+</ol>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>Follow the same steps as for the wallet web UI, using <code class="docutils literal notranslate"><span class="pre">cns-ui</span></code> as the “Client ID”, setting:</p></li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li><p>“Valid redirect URIs” to: <code class="docutils literal notranslate"><span class="pre">https://cns.validator.YOUR_HOSTNAME/*</span></code></p></li>
+<li><p>“Valid post logout redirect URIs” to: <code class="docutils literal notranslate"><span class="pre">https://cns.validator.YOUR_HOSTNAME</span></code></p></li>
+<li><p>“Web origins” to: <code class="docutils literal notranslate"><span class="pre">https://cns.validator.YOUR_HOSTNAME</span></code></p></li>
 </ul>
-</section>
-<section id="how-to-run-through-a-hdm">
-<h2>How to run through a HDM<a class="headerlink" href="#how-to-run-through-a-hdm" title="Link to this heading"></a></h2>
-<ul class="simple">
-<li><p>if your network is size 1 all your votes go through immediately, so
-you can schedule a HDM for like 5 minutes in the future</p>
-<ul>
-<li><p>New vote &amp;gt; Set DSO Rules Configuration &amp;gt; check “Set next scheduled
-synchronizer upgrade”</p></li>
-</ul>
-</li>
-<li><p>then you should be able to just run through the process as normal</p></li>
-</ul>
+</div></blockquote>
+<ol class="loweralpha simple" start="2">
+<li><p>Copy the “Client ID” from the “Settings” tab (<code class="docutils literal notranslate"><span class="pre">cns-ui</span></code>).</p></li>
+</ol>
+</div></blockquote>
 </section>
 </section>
 
@@ -1165,8 +1243,7 @@ synchronizer upgrade”</p></li>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="sv_operations.html" class="btn btn-neutral float-left" title="SV Operations" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../deployment/index.html" class="btn btn-neutral float-right" title="Operations" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="Community-Contributed Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>
