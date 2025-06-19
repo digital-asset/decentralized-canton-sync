@@ -18,7 +18,7 @@ import org.lfdecentralizedtrust.splice.integration.tests.SpliceTests.SpliceTestC
 import com.digitalasset.canton.topology.{PartyId, SynchronizerId}
 import com.digitalasset.canton.SynchronizerAlias
 
-// TODO(#736): these should eventually be defined analogue to Canton's `participant1` references etc
+// TODO(DACH-NY/canton-network-node#736): these should eventually be defined analogue to Canton's `participant1` references etc
 // however, this is likely only possible once we depend on Canton as a library
 trait CommonAppInstanceReferences {
   def decentralizedSynchronizerId(implicit env: SpliceTestConsoleEnvironment): SynchronizerId =
@@ -31,6 +31,9 @@ trait CommonAppInstanceReferences {
     sv1Backend.config.domains.global.alias
 
   def dsoParty(implicit env: SpliceTestConsoleEnvironment): PartyId = sv1ScanBackend.getDsoPartyId()
+
+  def activeSvs(implicit env: SpliceTestConsoleEnvironment): Seq[SvAppBackendReference] =
+    env.svs.local
 
   def sv1Backend(implicit env: SpliceTestConsoleEnvironment): SvAppBackendReference = svb("sv1")
 

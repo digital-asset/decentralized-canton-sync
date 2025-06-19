@@ -77,6 +77,7 @@ class UpdateHistory(
     val backfillingRequired: BackfillingRequirement,
     override protected val loggerFactory: NamedLoggerFactory,
     enableissue12777Workaround: Boolean,
+    enableImportUpdateBackfill: Boolean,
     val oMetrics: Option[HistoryMetrics] = None,
 )(implicit
     ec: ExecutionContext,
@@ -110,7 +111,7 @@ class UpdateHistory(
         includeCreatedEventBlob = false,
       )
 
-      // TODO(#12780): This can be removed eventually
+      // TODO(#948): This can be removed eventually
       def issue12777Workaround()(implicit tc: TraceContext): Future[Unit] = {
         val action = for {
           oldHistoryIdOpt <- sql"""
@@ -245,7 +246,13 @@ class UpdateHistory(
 
           _ <- cleanUpDataAfterDomainMigration(newHistoryId)
 
-          _ <- deleteInvalidAcsSnapshots(newHistoryId)
+          _ <-
+            if (enableImportUpdateBackfill) {
+              deleteInvalidAcsSnapshots(newHistoryId)
+            } else {
+              logger.info(s"Not deleting invalid ACS snapshots for history $newHistoryId")
+              Future.unit
+            }
         } yield {
           state.updateAndGet(
             _.copy(
@@ -321,12 +328,25 @@ class UpdateHistory(
               )
             case Some(lastIngestedOffset) =>
               if (offset <= lastIngestedOffset) {
-                logger.warn(
-                  s"Update offset $offset <= last ingested offset $lastIngestedOffset for ${description()}, skipping database actions. " +
-                    "This is expected if the SQL query was automatically retried after a transient database error. " +
-                    "Otherwise, this is unexpected and most likely caused by two identical UpdateIngestionService instances " +
-                    "ingesting into the same logical database."
-                )
+                updateOrCheckpoint match {
+                  case _: TreeUpdateOrOffsetCheckpoint.Update =>
+                    logger.warn(
+                      s"Update offset $offset <= last ingested offset $lastIngestedOffset for ${description()}, skipping database actions. " +
+                        "This is expected if the SQL query was automatically retried after a transient database error. " +
+                        "Otherwise, this is unexpected and most likely caused by two identical UpdateIngestionService instances " +
+                        "ingesting into the same logical database."
+                    )
+                  case _: TreeUpdateOrOffsetCheckpoint.Checkpoint =>
+                    // we can receive an offset equal to the last ingested and that can be safely ignore
+                    if (offset < lastIngestedOffset) {
+                      logger.warn(
+                        s"Checkpoint offset $offset < last ingested offset $lastIngestedOffset for ${description()}, skipping database actions. " +
+                          "This is expected if the SQL query was automatically retried after a transient database error. " +
+                          "Otherwise, this is unexpected and most likely caused by two identical UpdateIngestionService instances " +
+                          "ingesting into the same logical database."
+                      )
+                    }
+                }
                 DBIO.successful(())
               } else {
                 logger.debug(
@@ -636,6 +656,7 @@ class UpdateHistory(
   private[this] def deleteInvalidAcsSnapshots(
       historyId: Long
   )(implicit tc: TraceContext): Future[Unit] = {
+    assert(enableImportUpdateBackfill)
     def migrationsWithCorruptSnapshots(): Future[Set[Long]] = {
       for {
         migrationsWithImportUpdates <- storage
@@ -1397,7 +1418,7 @@ class UpdateHistory(
         Integer.valueOf(EventId.nodeIdFromEventId(row.eventId)) -> row.toCreatedEvent.event
       )
       .toMap
-    // TODO(#17370) - remove this conversion as it's costly
+    // TODO(#640) - remove this conversion as it's costly
     val nodesWithChildren = exerciseRows
       .map(exercise =>
         EventId.nodeIdFromEventId(exercise.eventId) -> exercise.childEventIds
@@ -1698,14 +1719,11 @@ class UpdateHistory(
           -- Note: to make update ids consistent across SVs, we use the contract id as the update id.
           max(c.contract_id)
         from
-          update_history_transactions tx,
           update_history_creates c
         where
-          tx.history_id = $historyId and
-
-          tx.migration_id = $migrationId and
-          tx.record_time = ${CantonTimestamp.MinValue} and
-          tx.row_id = c.update_row_id
+          history_id = $historyId and
+          migration_id = $migrationId and
+          record_time = ${CantonTimestamp.MinValue}
       """.as[Option[String]].head,
       s"getLastImportUpdateId",
     )
@@ -1716,10 +1734,20 @@ class UpdateHistory(
   ): Future[Option[Long]] = {
     def previousId(table: String) = {
       storage.query(
+        // The following is equivalent to:
+        //     select max(migration_id)
+        //     from #$table
+        //     where history_id = $historyId and migration_id < $migrationId
+        // but uses a recursive CTE to avoid a backwards-index-scan which attempts to read most of the table.
         sql"""
-             select max(migration_id)
-             from #$table
-             where history_id = $historyId and migration_id < $migrationId
+          WITH RECURSIVE t AS (
+             (SELECT migration_id FROM #$table where history_id = $historyId and migration_id < $migrationId ORDER BY migration_id LIMIT 1)
+             UNION ALL
+             SELECT (SELECT migration_id FROM #$table WHERE history_id = $historyId and migration_id < $migrationId and migration_id > t.migration_id ORDER BY migration_id LIMIT 1)
+             FROM t
+             WHERE t.migration_id IS NOT NULL
+             )
+          SELECT MAX(migration_id) FROM t WHERE migration_id IS NOT NULL;
            """.as[Option[Long]].head,
         s"getPreviousMigrationId.$table",
       )
@@ -1814,7 +1842,8 @@ class UpdateHistory(
 
   def getBackfillingState()(implicit
       tc: TraceContext
-  ): Future[BackfillingState] = getBackfillingStateForHistory(historyId)
+  ): Future[BackfillingState] =
+    getBackfillingStateForHistory(historyId)
 
   private[this] def getBackfillingStateForHistory(historyId: Long)(implicit
       tc: TraceContext
@@ -1835,6 +1864,9 @@ class UpdateHistory(
           .map {
             case Some((updatesComplete, importUpdatesComplete)) =>
               if (updatesComplete && importUpdatesComplete) {
+                BackfillingState.Complete
+              } else if (updatesComplete && !enableImportUpdateBackfill) {
+                // If import update backfilling is disabled, behave as if it was not implemented
                 BackfillingState.Complete
               } else {
                 BackfillingState.InProgress(

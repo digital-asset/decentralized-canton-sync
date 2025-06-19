@@ -180,7 +180,7 @@ function clusterCertificate(
 
   gcp.secretmanager.SecretVersion.get(
     'dns01-sa-key-secret',
-    `projects/${GCP_PROJECT}/secrets/${gcpSecretName}/versions/1`
+    `projects/${GCP_PROJECT}/secrets/${gcpSecretName}/versions/latest`
   ).secretData.apply(dns01SaKeySecret => {
     new k8s.core.v1.Secret(
       'clouddns-dns01-solver-svc-acct',
@@ -191,7 +191,7 @@ function clusterCertificate(
         },
         type: 'Opaque',
         data: {
-          // TODO(#9227): Handle this correctly in dump-config. Currently it gets here with an undefined value.
+          // TODO(#973): Handle this correctly in dump-config. Currently it gets here with an undefined value.
           'key.json': btoa(dns01SaKeySecret || 'dns-secret'),
         },
       },

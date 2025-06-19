@@ -31,8 +31,6 @@ class WalletTimeBasedIntegrationTest
     with SplitwellTestUtil
     with TriggerTestUtil {
 
-  private val splitwellDarPath = "daml/splitwell/.daml/dist/splitwell-current.dar"
-
   override def environmentDefinition: SpliceEnvironmentDefinition =
     EnvironmentDefinition
       .simpleTopology1SvWithSimTime(this.getClass.getSimpleName)
@@ -98,10 +96,10 @@ class WalletTimeBasedIntegrationTest
         },
         cancelAllSubscriptions(aliceWalletClient),
       ) {
-        val ansSubscriptionRenewalPaymentTrigger =
-          sv1Backend.dsoDelegateBasedAutomation.trigger[AnsSubscriptionRenewalPaymentTrigger]
+        val ansSubscriptionRenewalPaymentTriggers =
+          activeSvs.map(_.dsoDelegateBasedAutomation.trigger[AnsSubscriptionRenewalPaymentTrigger])
         setTriggersWithin(
-          triggersToPauseAtStart = Seq(ansSubscriptionRenewalPaymentTrigger),
+          triggersToPauseAtStart = ansSubscriptionRenewalPaymentTriggers,
           triggersToResumeAtStart = Seq.empty,
         ) {
           actAndCheck(
@@ -110,7 +108,7 @@ class WalletTimeBasedIntegrationTest
               // To reach the renewal period of alice1 subscription, we need to advance (90 - 30 days) = 60 days
               // We have already advanced by 30 days previously (10 days * 3)
               // So we will have to advance  (90 - 30 - 30 days) = 30 days to make alice1 subscription expired
-              // TODO (#7609): consider replacing with stopping and starting triggers
+              // TODO (#996): consider replacing with stopping and starting triggers
               advanceTimeAndWaitForRoundAutomation(Duration.ofDays(30))
               advanceTimeToRoundOpen
             },
@@ -133,7 +131,7 @@ class WalletTimeBasedIntegrationTest
       }
     }
 
-    // TODO(#8376): this one was trickier to make a non-time-based test
+    // TODO(#977): this one was trickier to make a non-time-based test
     "auto-expire locked amulet" in { implicit env =>
       val aliceUserParty = onboardWalletUser(aliceWalletClient, aliceValidatorBackend)
       val aliceValidatorParty = aliceValidatorBackend.getValidatorPartyId()
@@ -204,7 +202,7 @@ class WalletTimeBasedIntegrationTest
       setTriggersWithin(
         Seq.empty,
         triggersToResumeAtStart =
-          Seq(sv1Backend.dsoDelegateBasedAutomation.trigger[ExpiredLockedAmuletTrigger]),
+          activeSvs.map(_.dsoDelegateBasedAutomation.trigger[ExpiredLockedAmuletTrigger]),
       ) {
         clue("Check wallet after advancing to next 2 rounds") {
           eventually()(aliceWalletClient.list().lockedAmulets shouldBe empty)
@@ -272,7 +270,7 @@ class WalletTimeBasedIntegrationTest
         actAndCheck(
           "Advance time until ANS entry is up for renewal", {
             // We time the advances so that automation doesn't trigger before payments can be made.
-            // TODO (#7609): consider replacing with stopping and starting triggers
+            // TODO (#996): consider replacing with stopping and starting triggers
             advanceTimeAndWaitForRoundAutomation(Duration.ofDays(89).minus(Duration.ofMinutes(17)))
             advanceTimeToRoundOpen
           },
