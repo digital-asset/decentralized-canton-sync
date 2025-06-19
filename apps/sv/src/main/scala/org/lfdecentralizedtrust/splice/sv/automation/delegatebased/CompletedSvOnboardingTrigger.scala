@@ -18,10 +18,9 @@ import com.digitalasset.canton.util.ShowUtil.*
 import io.opentelemetry.api.trace.Tracer
 
 import scala.concurrent.{ExecutionContext, Future}
-
 import CompletedSvOnboardingTrigger.*
 
-//TODO(#3756) reconsider this trigger
+//TODO(DACH-NY/canton-network-node#3756) reconsider this trigger
 class CompletedSvOnboardingTrigger(
     override protected val context: TriggerContext,
     override protected val svTaskContext: SvTaskBasedTrigger.Context,
@@ -40,12 +39,19 @@ class CompletedSvOnboardingTrigger(
   private val store = svTaskContext.dsoStore
 
   override def completeTaskAsDsoDelegate(
-      dsoRules: DsoRulesContract
+      dsoRules: DsoRulesContract,
+      controller: String,
   )(implicit tc: TraceContext): Future[TaskOutcome] = {
     for {
       svOnboardings <- store.listSvOnboardingRequestsBySvs(dsoRules)
+      controllerArgument <- getSvControllerArgument(controller)
       cmds = svOnboardings.map(co =>
-        dsoRules.exercise(_.exerciseDsoRules_ArchiveSvOnboardingRequest(co.contractId))
+        dsoRules.exercise(
+          _.exerciseDsoRules_ArchiveSvOnboardingRequest(
+            co.contractId,
+            controllerArgument,
+          )
+        )
       )
       _ <- Future.sequence(
         cmds.map(cmd =>
