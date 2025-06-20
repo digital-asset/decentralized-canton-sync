@@ -61,6 +61,7 @@ class DbSplitwellStore(
       domainMigrationInfo = domainMigrationInfo,
       participantId = participantId,
       enableissue12777Workaround = false,
+      enableImportUpdateBackfill = false,
       BackfillingRequirement.BackfillingNotRequired,
     )
     with AcsTables
@@ -169,7 +170,7 @@ class DbSplitwellStore(
             splitwellCodegen.Group.COMPANION
           )(_)
         )
-        // TODO(#9249): filter on the database side
+        // TODO(DACH-NY/canton-network-node#9249): filter on the database side
         filteredResult = result.filter(c => groupMembers(c.payload).contains(user.toProtoPrimitive))
       } yield filteredResult
     }
@@ -256,7 +257,7 @@ class DbSplitwellStore(
           splitwellCodegen.BalanceUpdate.COMPANION
         )(_)
       )
-      // TODO(#9249): filter on the database side
+      // TODO(DACH-NY/canton-network-node#9249): filter on the database side
       filteredResult = result.filter(c =>
         groupMembers(c.payload.group).contains(user.toProtoPrimitive)
       )
@@ -288,7 +289,7 @@ class DbSplitwellStore(
         splitwellCodegen.SplitwellInstall.COMPANION,
         preferredId,
       )
-      // TODO(#9249): filter on the database side
+      // TODO(DACH-NY/canton-network-node#9249): filter on the database side
       .map(_.filter(co => allGroupMembers(co.payload.user)))
       .map(_.view.map(_.payload.user).toSet)
   } yield othersGroups.collect(Function unlift { case (otherId, groups) =>

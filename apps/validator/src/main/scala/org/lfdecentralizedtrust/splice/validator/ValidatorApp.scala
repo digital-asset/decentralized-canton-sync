@@ -134,9 +134,6 @@ class ValidatorApp(
   override def packagesForJsonDecoding =
     super.packagesForJsonDecoding ++ DarResources.wallet.all ++ DarResources.amuletNameService.all ++ DarResources.dsoGovernance.all
 
-  def packagesForUploading =
-    super.packagesForJsonDecoding ++ DarResources.wallet.all ++ DarResources.amuletNameService.all
-
   override def preInitializeBeforeLedgerConnection()(implicit
       traceContext: TraceContext
   ): Future[Unit] = for {
@@ -216,7 +213,7 @@ class ValidatorApp(
                     case Seq() =>
                       sys.error("Expected at least one sequencer connection but got 0")
                     case Seq(connections) => connections
-                    // TODO (#13301) handle this in a cleaner way (or just drop hard domain migration support at some point)
+                    // TODO (DACH-NY/canton-network-node#13301) handle this in a cleaner way (or just drop hard domain migration support at some point)
                     case _ =>
                       sys.error(
                         s"Hard domain migrations and soft domain migrations are incompatible, got sequencer connections: $allSequencerConnections"
@@ -298,7 +295,6 @@ class ValidatorApp(
                   connection,
                   participantAdminConnection,
                   config.domains.global.alias,
-                  retryProvider,
                   loggerFactory,
                 )
                 appInitStep("Migrating party data") {
@@ -319,10 +315,6 @@ class ValidatorApp(
                             logger,
                             retryProvider,
                           ),
-                        Seq(
-                          DarResources.amulet.bootstrap,
-                          DarResources.amuletNameService.bootstrap,
-                        ),
                         partiesToMigrate.map(_.map(party => PartyId.tryFromProtoPrimitive(party))),
                       )
                   } yield ()
@@ -705,7 +697,7 @@ class ValidatorApp(
           val acsTimestamp =
             readRestoreDump.map(dump => CantonTimestamp.assertFromInstant(dump.acsTimestamp))
           Future.successful(
-            // TODO(#9731): get migration id from sponsor sv / scan instead of configuring here
+            // TODO(DACH-NY/canton-network-node#9731): get migration id from sponsor sv / scan instead of configuring here
             DomainMigrationInfo(
               config.domainMigrationId,
               acsTimestamp,
@@ -851,7 +843,7 @@ class ValidatorApp(
       })
       _ <- appInitStep(s"Onboard validator wallet users") {
         val users = if (config.validatorWalletUsers.isEmpty) {
-          // TODO(#12764) also onboard ledgerApiUser if both users are set
+          // TODO(#760) also onboard ledgerApiUser if both users are set
           Seq(config.ledgerApiUser)
         } else {
           config.validatorWalletUsers
@@ -878,7 +870,12 @@ class ValidatorApp(
 
       verifier = config.auth match {
         case AuthConfig.Hs256Unsafe(audience, secret) => new HMACVerifier(audience, secret)
-        case AuthConfig.Rs256(audience, jwksUrl) => new RSAVerifier(audience, jwksUrl)
+        case AuthConfig.Rs256(audience, jwksUrl, connectionTimeout, readTimeout) =>
+          new RSAVerifier(
+            audience,
+            jwksUrl,
+            RSAVerifier.TimeoutsConfig(connectionTimeout, readTimeout),
+          )
       }
 
       handler =

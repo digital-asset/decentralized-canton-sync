@@ -10,7 +10,7 @@ Reference applications for funding, operating, and incentivizing the use of a de
 
 Splice is a set of reference applications designed to allow entities to operate, fund, and govern publicly available decentralized Canton synchronizers that provide connectivity and interoperability infrastructure for the Canton Network, as well as to provide bootstrapping rewards and incentives to early users of that service. The Canton Network is the set of all applications, built using the Daml blockchain application platform, that form shared blockchain state via the Canton Protocol.
 
-Splice introduces a reference method for operating a publicly available decentralized Canton synchronizer. Each node in the decentralized synchronizer is operated by an entity known in Splice as a "Super Validator". Splice refers to a group of Super Validators actively operating nodes in a decentralized synchronizer at any point in time as the "decentralized synchronizer operator" (dso). The Splice code uses a code construct called a "decentralized synchronizer operator party" (dso party) to accumulate signatures from and take actions on behalf of the currently-active set of Super Validators.  
+Splice introduces a reference method for operating a publicly available decentralized Canton synchronizer. Each node in the decentralized synchronizer is operated by an entity known in Splice as a "Super Validator". Splice refers to a group of Super Validators actively operating nodes in a decentralized synchronizer at any point in time as the "decentralized synchronizer operator" (dso). The Splice code uses a code construct called a "decentralized synchronizer operator party" (dso party) to accumulate signatures from and take actions on behalf of the currently-active set of Super Validators.
 
 Splice aims to help Super Validator operating groups create a transparent economic ecosystem that will, over time, fund operations of and extensions to multiple public synchronization services in the Canton Network.
 
@@ -32,7 +32,7 @@ Daml applications may choose any Canton synchronizer on a per-transaction basis 
 
 Operating groups may charge a fee for traffic that uses their synchronizer. The fee may be metered in USD per megabyte, and levied via an on-chain payment utility. This utility is an implementation of the Splice reference application called Amulet.
 
-The Amulet reference application specifies how to implement on-chain payments using “amulets” which represent the ability to pay an operating group to synchronize a transaction with a payload of a given size. Together with the full suite of Splice applications, amulets allow a collective of entities to deploy, operate, fund, and govern a decentralized Canton synchronizer, and incentivize application developers and their customers to use that synchronizer to create blockchain state among their nodes. Each operating group configures an Amulet implementation to charge for use of the synchronizer, and distribute their own named version of amulets as rewards to incentivize early use of the service.
+The Amulet reference application specifies how to implement on-chain payments using “amulets” which represent the ability to pay an operating group to synchronize a transaction with a payload of a given size. Together with the full suite of Splice applications, amulets allow a group of entities to deploy, operate, fund, and govern a decentralized Canton synchronizer, and incentivize application developers and their customers to use that synchronizer to create blockchain state among their nodes. Each operating group configures an Amulet implementation to charge for use of the synchronizer, and distribute their own named version of amulets as rewards to incentivize early use of the service.
 
 To provide a mapping between the value of its specific amulet and fiat currencies, the synchronizer operating group may use tooling included in Splice to jointly vote on a fee rate in megabytes per USD, and a nominal conversion rate between USD and the amulet configured by that operating group. This provides a base intrinsic value for the amulet used by the operating group: each amulet represents the value of creating and maintaining high guarantees of synchronized state across multiple computers, for a given data volume of messages shared among those computers. Should a market for that operating group’s amulet develop, the operating group may align the on-ledger price to the market price at its discretion. Synchronizer operating groups can incentivize use of their synchronizer by issuing their amulets to members of the operating group, to application providers, and to Canton participant node operators (“Validators”).
 
@@ -70,9 +70,9 @@ Splice’s interlocking system of incentives and fees includes:
 
 ## Status
 
-The code that forms Splice was first implemented in June 2023 as part of a TestNet synchronizer operated by the members of an initial  Validator Collective. At that time Splice was a set of applications with various names including Canton Coin and Canton Name Service. The TestNet synchronizer has operated continuously since that time, with regular tests and software upgrades, using the code proposed for Splice to implement its operations, governance and payment applications. In late December 2023, Digital Asset and 46 separate financial institutions demonstrated 30 decentralized application deployments that synchronized roughly 350 financial transactions via the TestNet synchronizer.
+The code that forms Splice was first implemented in June 2023 as part of a TestNet synchronizer operated by the members of an initial set of Super Validators. At that time Splice was a set of applications with various names including Canton Coin and Canton Name Service. The TestNet synchronizer has operated continuously since that time, with regular tests and software upgrades, using the code proposed for Splice to implement its operations, governance and payment applications. In late December 2023, Digital Asset and 46 separate financial institutions demonstrated 30 decentralized application deployments that synchronized roughly 350 financial transactions via the TestNet synchronizer.
 
-The collective operating this TestNet currently includes Digital Asset and three other organizations, with four additional organizations currently in the process of applying to join.
+The group of Super Validators operating this TestNet currently includes Digital Asset and three other organizations, with four additional organizations currently in the process of applying to join.
 
 Digital Asset has funded an engineering team to develop the Splice reference applications. Digital Asset is working to build a team of collaborators who can decentralize responsibility for further development as part of the Open Source Software process.
 
@@ -106,11 +106,30 @@ Any group operating a Canton synchronizer may accept and implement new versions 
 
 The following diagram shows how the Splice applications interact with the Daml platform from Digital Asset.
 
-![SV Node Architecture](./images/Splice-Canton-Global-Synchronizer-2.jpg)
+![SV Node Architecture](./images/Splice-Canton-Decentralized-Synchronizer.jpg)
 
 
 ### Notes:
 
 The Validator module contains the Wallet module and the Traffic Acquisition module.
 
-The SV App module contains the Amulet smart contract code and the Amulet configuration variables, as well as the Synchronizer Governance app. 
+The SV App module contains the Amulet smart contract code and the Amulet configuration variables, as well as the Synchronizer Governance app.
+
+## Repository Status
+
+This repository is in the process of being contributed from the private repository of Digital Asset.
+
+As of now, it has the following limitations:
+
+- No CI or other periodic testing is running directly on this repository. This repository
+  is currently updated daily as a copy of Digital Asset's
+  [open source repository](https://github.com/digital-asset/decentralized-canton-sync).
+  Over the coming months, we will migrate the CI environment to this repository, and
+  shift our development efforts to be directly against it.
+
+- The code currently still refers to terms which are either copyrighted by Digital Asset,
+  or otherwise should be removed from this reposotiry, such as Canton and Canton Coin. We
+  are in the process of a thorough renaming, and will complete that over the coming months.
+  Note that this repository will still vendor Canton from its
+  [open source repository](https://github.com/digital-asset/canton)
+  as some of its code is reused by the Splice apps for convenience.
