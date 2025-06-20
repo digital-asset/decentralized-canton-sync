@@ -29,8 +29,6 @@ class WalletExpirationsIntegrationTest
     with SplitwellTestUtil
     with TriggerTestUtil {
 
-  private val splitwellDarPath = "daml/splitwell/.daml/dist/splitwell-current.dar"
-
   override def environmentDefinition: SpliceEnvironmentDefinition =
     EnvironmentDefinition
       .simpleTopology1Sv(this.getClass.getSimpleName)
@@ -177,7 +175,7 @@ class WalletExpirationsIntegrationTest
       setTriggersWithin(
         Seq.empty,
         triggersToResumeAtStart =
-          Seq(sv1Backend.dsoDelegateBasedAutomation.trigger[ExpiredAmuletTrigger]),
+          activeSvs.map(_.dsoDelegateBasedAutomation.trigger[ExpiredAmuletTrigger]),
       ) {
         clue("Check wallet after advancing to next 2 rounds") {
           eventually()(aliceWalletClient.list().amulets shouldBe empty)
