@@ -59,7 +59,7 @@ trait UserWalletStore extends TxLogAppStore[TxLogEntry] with TransferInputStore 
   ] =
     // Note: a party can have WalletAppInstall contracts if there are multiple end-users that share the same party
     // here we just take the first one, preferring an assigned one if available
-    // TODO(#12550): remove this confusing behavior and create only one WalletAppInstall per user-party
+    // TODO(DACH-NY/canton-network-node#12550): remove this confusing behavior and create only one WalletAppInstall per user-party
     lookupArbitraryPreferAssigned(installCodegen.WalletAppInstall.COMPANION)
 
   final def getInstall()(implicit ec: ExecutionContext, tc: TraceContext): Future[
@@ -344,13 +344,24 @@ trait UserWalletStore extends TxLogAppStore[TxLogEntry] with TransferInputStore 
   )(implicit
       tc: TraceContext,
       ec: ExecutionContext,
-  ): Future[Seq[AssignedContract[
-    transferOffersCodegen.TransferOffer.ContractId,
-    transferOffersCodegen.TransferOffer,
-  ]]] = {
+  ): Future[
+    (
+        Seq[AssignedContract[
+          transferOffersCodegen.TransferOffer.ContractId,
+          transferOffersCodegen.TransferOffer,
+        ]],
+        Seq[AssignedContract[
+          transferOffersCodegen.AcceptedTransferOffer.ContractId,
+          transferOffersCodegen.AcceptedTransferOffer,
+        ]],
+    )
+  ] = {
     for {
       transferOffers <- multiDomainAcsStore.listAssignedContracts(
         transferOffersCodegen.TransferOffer.COMPANION
+      )
+      acceptedTransferOffers <- multiDomainAcsStore.listAssignedContracts(
+        transferOffersCodegen.AcceptedTransferOffer.COMPANION
       )
     } yield {
       val offersFilteredFrom = fromParty match {
@@ -363,7 +374,18 @@ trait UserWalletStore extends TxLogAppStore[TxLogEntry] with TransferInputStore 
         case Some(toParty) =>
           offersFilteredFrom.filter(_.payload.receiver == toParty.toProtoPrimitive)
       }
-      offersFilteredTo
+
+      val acceptedOffersFilteredFrom = fromParty match {
+        case None => acceptedTransferOffers
+        case Some(fromParty) =>
+          acceptedTransferOffers.filter(_.payload.sender == fromParty.toProtoPrimitive)
+      }
+      val acceptedOffersFilteredTo = toParty match {
+        case None => acceptedOffersFilteredFrom
+        case Some(toParty) =>
+          acceptedOffersFilteredFrom.filter(_.payload.receiver == toParty.toProtoPrimitive)
+      }
+      (offersFilteredTo, acceptedOffersFilteredTo)
     }
   }
 

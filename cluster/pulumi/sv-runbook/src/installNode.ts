@@ -45,10 +45,11 @@ import {
   SvCometBftGovernanceKey,
   svCometBftGovernanceKeySecret,
   svCometBftGovernanceKeyFromSecret,
+  failOnAppVersionMismatch,
 } from 'splice-pulumi-common';
+import { updateHistoryBackfillingValues } from 'splice-pulumi-common-sv';
 import { spliceConfig } from 'splice-pulumi-common/src/config/config';
 import { CloudPostgres, SplicePostgres } from 'splice-pulumi-common/src/postgres';
-import { failOnAppVersionMismatch } from 'splice-pulumi-common/src/upgrades';
 
 import { SvAppConfig, ValidatorAppConfig } from './config';
 import { installCanton } from './decentralizedSynchronizer';
@@ -278,7 +279,7 @@ async function installSvAndValidator(
     extraBeneficiaries,
     onboardingPollingInterval: svOnboardingPollingInterval,
     disableOnboardingParticipantPromotionDelay,
-    failOnAppVersionMismatch: failOnAppVersionMismatch(),
+    failOnAppVersionMismatch: failOnAppVersionMismatch,
     initialAmuletPrice,
   };
 
@@ -341,6 +342,7 @@ async function installSvAndValidator(
     ...defaultScanValues,
     ...persistenceForPostgres(appsPg, defaultScanValues),
     ...spliceInstanceNames,
+    ...updateHistoryBackfillingValues,
     metrics: {
       enable: true,
     },

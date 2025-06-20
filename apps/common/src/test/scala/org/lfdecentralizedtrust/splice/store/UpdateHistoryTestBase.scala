@@ -252,6 +252,7 @@ abstract class UpdateHistoryTestBase
       backfillingRequired,
       loggerFactory,
       enableissue12777Workaround = true,
+      enableImportUpdateBackfill = true,
     )
   }
 
@@ -343,7 +344,7 @@ object UpdateHistoryTestBase {
   }
 
   private def withoutLostData(tree: TransactionTree, mode: LostDataMode): TransactionTree = {
-    // TODO(#17370) - remove this data loss
+    // TODO(#640) - remove this data loss
     // we recalculate the last descendant id because it's lost during the ingestion and it's recalculated based on the visible events
     val nodesWithChildren = tree.getEventsById.asScala.view.map {
       case (nodeId, event: ExercisedEvent) =>
