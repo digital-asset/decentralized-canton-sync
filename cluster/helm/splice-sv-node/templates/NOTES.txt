@@ -1,1 +1,0 @@
-Global Synchronizer SV App Backend and Web UI

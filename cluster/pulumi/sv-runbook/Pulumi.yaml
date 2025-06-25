@@ -1,3 +1,0 @@
-name: sv-runbook
-runtime: nodejs
-description: Deploy an SV Node per the instructions in the runbook

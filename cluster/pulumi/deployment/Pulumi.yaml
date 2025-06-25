@@ -1,4 +1,0 @@
-name: deployment
-runtime:
-  name: nodejs
-description: Pulumi k8s operator

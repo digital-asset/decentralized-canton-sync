@@ -1,5 +1,0 @@
-persistence:
-  secretName: apps-pg-secret
-
-db:
-  volumeSize: 48Gi

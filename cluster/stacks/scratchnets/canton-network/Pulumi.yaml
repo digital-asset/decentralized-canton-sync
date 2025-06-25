@@ -1,5 +1,0 @@
----
-name: canton-network
-description: "Deploy Canton Network to Kubernetes"
-runtime: nodejs
-main: "../../../pulumi/canton-network/src/index.ts"
