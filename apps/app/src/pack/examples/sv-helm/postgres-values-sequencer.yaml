@@ -1,2 +1,0 @@
-persistence:
-  secretName: sequencer-pg-secret

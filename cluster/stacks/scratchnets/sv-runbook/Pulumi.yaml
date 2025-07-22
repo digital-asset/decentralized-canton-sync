@@ -1,4 +1,0 @@
-name: sv-runbook
-runtime: nodejs
-description: Deploy an SV Node per the instructions in the runbook
-main: "../../../pulumi/sv-runbook/src/index.ts"

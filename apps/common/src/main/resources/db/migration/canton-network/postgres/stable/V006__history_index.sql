@@ -1,1 +1,0 @@
-create index updt_hist_tran_hi_rt_di on update_history_transactions (history_id, record_time, domain_id);
