@@ -646,7 +646,6 @@ object EnvironmentDefinition extends CommonAppInstanceReferences {
     EnvironmentDefinition(baseConfig = withConsolePreviewCommands(config), context = testName)
   }
 
-  // TODO(DACH-NY/canton-network-internal#7687): Revisit usages once the dedicated `enable-key-download` flag is available
   private def withConsolePreviewCommands(config: SpliceConfig): SpliceConfig =
     config.focus(_.features.enablePreviewCommands).replace(true)
 
